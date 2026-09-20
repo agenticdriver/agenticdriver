@@ -11,7 +11,7 @@ import {
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const string = { type: "string" },
-  count = { type: "integer", minimum: 0 };
+  count = { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER };
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
@@ -69,7 +69,7 @@ const schemas = {
     type: "object",
     required: ["code", "message", "retryable"],
     properties: {
-      code: string,
+      code: { type: "string", minLength: 1 },
       message: string,
       retryable: { type: "boolean" },
     },
@@ -103,7 +103,11 @@ const schemas = {
     properties: {
       type: string,
       runId: string,
-      sequence: { type: "integer", minimum: 1 },
+      sequence: {
+        type: "integer",
+        minimum: 1,
+        maximum: Number.MAX_SAFE_INTEGER,
+      },
       timestamp: { type: "string", format: "date-time" },
       optional: {
         type: "boolean",
@@ -164,7 +168,7 @@ const schemas = {
       {
         properties: {
           type: { const: "usage.reported" },
-          step: count,
+          step: { type: "integer", minimum: 1 },
           usage: ref("Usage"),
         },
         required: ["step", "usage"],

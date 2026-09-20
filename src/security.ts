@@ -32,20 +32,36 @@ export async function readLimited(
 ): Promise<string> {
   if (!response.body) return "";
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
   let bytes = 0,
     text = "";
   try {
     while (true) {
       const next = await reader.read();
-      if (next.done) return text + decoder.decode();
+      if (next.done) {
+        try {
+          return text + decoder.decode();
+        } catch {
+          throw new DriverError(
+            "INVALID_RESPONSE",
+            "The response is not valid UTF-8.",
+          );
+        }
+      }
       bytes += next.value.byteLength;
       if (bytes > maxBytes)
         throw new DriverError(
           "RESPONSE_TOO_LARGE",
           "The response exceeded the size limit.",
         );
-      text += decoder.decode(next.value, { stream: true });
+      try {
+        text += decoder.decode(next.value, { stream: true });
+      } catch {
+        throw new DriverError(
+          "INVALID_RESPONSE",
+          "The response is not valid UTF-8.",
+        );
+      }
     }
   } finally {
     await reader.cancel().catch(() => {});

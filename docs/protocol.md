@@ -61,6 +61,9 @@ A connection ending without a valid terminal event is never successful.
 Applications accept the final result rather than treating intermediate text as
 an accepted artifact. Cancellation cannot undo an external action already taken.
 
+The shared [conformance suite](conformance.md) specifies byte limits, line-ending
+handling, payload validation and transport failure cases for every client.
+
 Current clients send `AgenticDriver-Accept-Optional-Events: true`. They validate
 the envelope of an unfamiliar event, then skip it only when `optional` is the
 boolean `true`. Unknown required types produce `UNSUPPORTED_EVENT`; malformed

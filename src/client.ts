@@ -18,16 +18,16 @@ export interface ClientOptions {
 }
 const errorSchema = z.object({
   error: z.object({
-    code: z.string(),
+    code: z.string().min(1),
     message: z.string(),
     retryable: z.boolean(),
   }),
 });
 const usageSchema = z.object({
-  inputTokens: z.number().nonnegative().optional(),
-  outputTokens: z.number().nonnegative().optional(),
-  cachedInputTokens: z.number().nonnegative().optional(),
-  reasoningTokens: z.number().nonnegative().optional(),
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
+  cachedInputTokens: z.number().int().nonnegative().optional(),
+  reasoningTokens: z.number().int().nonnegative().optional(),
   costUsd: z.number().nonnegative().optional(),
 });
 const resultSchema = z.object({
@@ -83,7 +83,7 @@ const envelopeSchema = z.object({
   type: z.string().min(1),
   runId: z.string().min(1),
   sequence: z.number().int().positive(),
-  timestamp: z.string(),
+  timestamp: z.iso.datetime({ offset: true }),
   optional: z.boolean().optional(),
 });
 
@@ -163,7 +163,7 @@ export class AgenticClient {
         supportedVersions: z.array(z.string()),
         features: z.array(z.string()),
       })
-      .safeParse(JSON.parse(await readLimited(response)));
+      .safeParse(await readResponseJson(response));
     if (
       !parsed.success ||
       !parsed.data.supportedVersions.includes(PROTOCOL_VERSION)
@@ -201,7 +201,7 @@ export class AgenticClient {
           }),
         ),
       })
-      .safeParse(JSON.parse(await readLimited(response)));
+      .safeParse(await readResponseJson(response));
     if (!result.success)
       throw new DriverError(
         "INVALID_RESPONSE",
@@ -263,6 +263,8 @@ export class AgenticClient {
         if (
           !envelope.success ||
           envelope.data.sequence !== sequence + 1 ||
+          (sequence === 0 && envelope.data.type !== "run.started") ||
+          (sequence !== 0 && envelope.data.type === "run.started") ||
           (runId !== undefined && envelope.data.runId !== runId)
         )
           throw new DriverError(
@@ -287,6 +289,19 @@ export class AgenticClient {
             "The event stream contained an invalid event payload.",
           );
         const event: RunEvent = { ...envelope.data, ...payload.data };
+        if (
+          (event.type === "run.started" &&
+            (event.provider !== request.provider ||
+              event.model !== request.model)) ||
+          (event.type === "run.completed" &&
+            (event.result.runId !== runId ||
+              event.result.provider !== request.provider ||
+              event.result.model !== request.model))
+        )
+          throw new DriverError(
+            "INVALID_STREAM",
+            "The event result does not belong to the requested run.",
+          );
         yield event;
         if (
           ["run.completed", "run.failed", "run.cancelled"].includes(event.type)
@@ -311,26 +326,54 @@ function combineTimeout(
   return signal ? AbortSignal.any([signal, timeout]) : timeout;
 }
 
+async function readResponseJson(response: Response): Promise<unknown> {
+  const data = await readLimited(response);
+  try {
+    return JSON.parse(data) as unknown;
+  } catch {
+    throw new DriverError(
+      "INVALID_RESPONSE",
+      "The driver returned malformed JSON.",
+    );
+  }
+}
+
 /** Handles arbitrary byte boundaries, CRLF, comments, and multi-line SSE data fields. */
 export async function* readSse(
   body: ReadableStream<Uint8Array>,
 ): AsyncGenerator<string> {
   const reader = body.getReader(),
-    decoder = new TextDecoder();
+    decoder = new TextDecoder("utf-8", { fatal: true }),
+    encoder = new TextEncoder();
   let buffer = "",
     fields: string[] = [],
-    frameBytes = 0;
+    frameBytes = 0,
+    skipLf = false;
   try {
     while (true) {
       const { done, value } = await reader.read();
-      buffer += done
-        ? decoder.decode()
-        : decoder.decode(value, { stream: true });
+      try {
+        buffer += done
+          ? decoder.decode()
+          : decoder.decode(value, { stream: true });
+      } catch {
+        throw new DriverError(
+          "INVALID_STREAM",
+          "The event stream is not valid UTF-8.",
+        );
+      }
       let newline: number;
-      while ((newline = buffer.indexOf("\n")) !== -1) {
-        const line = buffer.slice(0, newline).replace(/\r$/, "");
+      while (true) {
+        if (skipLf && buffer.length) {
+          if (buffer[0] === "\n") buffer = buffer.slice(1);
+          skipLf = false;
+        }
+        newline = buffer.search(/[\r\n]/);
+        if (newline === -1) break;
+        const line = buffer.slice(0, newline);
+        skipLf = buffer[newline] === "\r";
         buffer = buffer.slice(newline + 1);
-        frameBytes += line.length;
+        frameBytes += encoder.encode(line).byteLength;
         if (frameBytes > 2_000_000)
           throw new DriverError(
             "RESPONSE_TOO_LARGE",
@@ -343,7 +386,7 @@ export async function* readSse(
         } else if (line.startsWith("data:"))
           fields.push(line.slice(5).replace(/^ /, ""));
       }
-      if (buffer.length + frameBytes > 2_000_000)
+      if (encoder.encode(buffer).byteLength + frameBytes > 2_000_000)
         throw new DriverError(
           "RESPONSE_TOO_LARGE",
           "An event exceeded the size limit.",

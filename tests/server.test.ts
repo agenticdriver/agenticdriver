@@ -236,7 +236,7 @@ test("SSE parser handles byte splits, UTF-8, CRLF, and multiline data", async ()
 test("a truncated SSE response cannot masquerade as success", async () => {
   const fetcher = (async () =>
     new Response(
-      'data: {"type":"run.started","provider":"mock","model":"demo","runId":"r","sequence":1,"timestamp":"now"}\n\n',
+      'data: {"type":"run.started","provider":"mock","model":"demo","runId":"r","sequence":1,"timestamp":"2026-09-20T12:00:00Z"}\n\n',
       { headers: { "Content-Type": "text/event-stream" } },
     )) as typeof fetch;
   const client = new AgenticClient({

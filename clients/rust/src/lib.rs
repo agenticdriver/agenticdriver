@@ -3,8 +3,9 @@ use reqwest::blocking::{Client as HttpClient, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufReader, Read};
 use std::time::Duration;
+mod validation;
 
 pub type Result<T> = std::result::Result<T, Error>;
 pub const PROTOCOL_VERSION: &str = "1.0";
@@ -107,10 +108,15 @@ pub struct Message {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Usage {
+    #[serde(default, deserialize_with = "validation::optional_count")]
     pub input_tokens: Option<u64>,
+    #[serde(default, deserialize_with = "validation::optional_count")]
     pub output_tokens: Option<u64>,
+    #[serde(default, deserialize_with = "validation::optional_count")]
     pub cached_input_tokens: Option<u64>,
+    #[serde(default, deserialize_with = "validation::optional_count")]
     pub reasoning_tokens: Option<u64>,
+    #[serde(default, deserialize_with = "validation::optional_cost")]
     pub cost_usd: Option<f64>,
 }
 #[derive(Debug, Deserialize)]
@@ -244,7 +250,14 @@ impl AgenticClient {
             };
         }
         if let Some(version) = response.headers().get("AgenticDriver-Version") {
-            if version.to_str().ok() != Some(PROTOCOL_VERSION) {
+            if response
+                .headers()
+                .get_all("AgenticDriver-Version")
+                .iter()
+                .count()
+                != 1
+                || version.to_str().ok() != Some(PROTOCOL_VERSION)
+            {
                 return Err(protocol_error(
                     "UNSUPPORTED_PROTOCOL_VERSION",
                     "The host selected an unsupported wire protocol version.",
@@ -277,7 +290,14 @@ impl AgenticClient {
         Ok(read_json::<Catalog>(self.request("v1/providers", None, false)?)?.providers)
     }
     pub fn run(&self, request: &RunRequest) -> Result<RunResult> {
-        read_json(self.request("v1/runs", Some(request), false)?)
+        let result: RunResult = read_json(self.request("v1/runs", Some(request), false)?)?;
+        if !validation::result_valid(&result, request) {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "The driver returned an invalid run result.",
+            ));
+        }
+        Ok(result)
     }
     /// Return false from `visit` to close the response and cancel an unfinished run.
     /// Use a blocking worker when calling this synchronous API from an async runtime.
@@ -290,42 +310,49 @@ impl AgenticClient {
             .unwrap_or("")
             .contains("text/event-stream")
         {
-            return Err(Error::Protocol("Expected an SSE response."));
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Expected an SSE response.",
+            ));
         }
-        let mut reader = BufReader::new(response);
+        let mut reader = validation::SseLines::new(BufReader::new(response));
         let mut fields = Vec::new();
         let mut sequence = 0;
         let mut run_id = String::new();
         let mut size = 0;
         loop {
-            let mut line = Vec::new();
-            let n = reader
-                .by_ref()
-                .take(2_000_001)
-                .read_until(b'\n', &mut line)?;
-            if n == 0 {
-                return Err(Error::Protocol(
+            let Some(line) = reader.next_line()? else {
+                return Err(protocol_error(
+                    "INCOMPLETE_STREAM",
                     "Connection closed before a terminal run event.",
                 ));
-            }
-            size += n;
+            };
+            size += line.len();
             if size > 2_000_000 {
-                return Err(Error::Protocol("An event exceeded 2 MB."));
+                return Err(protocol_error(
+                    "RESPONSE_TOO_LARGE",
+                    "An event exceeded 2 MB.",
+                ));
             }
-            let line = std::str::from_utf8(&line)
-                .map_err(|_| Error::Protocol("Invalid event encoding."))?
-                .trim_end_matches(['\r', '\n']);
             if let Some(data) = line.strip_prefix("data:") {
                 fields.push(data.strip_prefix(' ').unwrap_or(data).to_owned());
             }
             if line.is_empty() {
                 if !fields.is_empty() {
-                    let event: Event = serde_json::from_str(&fields.join("\n"))?;
-                    if event.run_id.is_empty()
+                    let event: Event = serde_json::from_str(&fields.join("\n")).map_err(|_| {
+                        protocol_error(
+                            "INVALID_STREAM",
+                            "The event contained invalid JSON or an invalid payload.",
+                        )
+                    })?;
+                    if !validation::event_valid(&event, request, sequence == 0)
                         || event.sequence != sequence + 1
                         || (!run_id.is_empty() && run_id != event.run_id)
                     {
-                        return Err(Error::Protocol("Invalid or out-of-order event."));
+                        return Err(protocol_error(
+                            "INVALID_STREAM",
+                            "Invalid or out-of-order event.",
+                        ));
                     }
                     run_id.clone_from(&event.run_id);
                     sequence = event.sequence;
@@ -392,7 +419,15 @@ fn read_json<T: serde::de::DeserializeOwned>(response: Response) -> Result<T> {
     let mut data = Vec::new();
     response.take(2_000_001).read_to_end(&mut data)?;
     if data.len() > 2_000_000 {
-        return Err(Error::Protocol("Response exceeded 2 MB."));
+        return Err(protocol_error(
+            "RESPONSE_TOO_LARGE",
+            "Response exceeded 2 MB.",
+        ));
     }
-    Ok(serde_json::from_slice(&data)?)
+    serde_json::from_slice(&data).map_err(|_| {
+        protocol_error(
+            "INVALID_RESPONSE",
+            "The driver returned invalid JSON or an invalid response shape.",
+        )
+    })
 }

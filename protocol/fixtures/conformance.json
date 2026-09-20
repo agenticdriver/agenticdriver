@@ -1,0 +1,602 @@
+{
+  "wireVersion": "1.0",
+  "maxEventBytes": 2000000,
+  "baseEvents": [
+    {
+      "type": "run.started",
+      "runId": "compat-run",
+      "sequence": 1,
+      "timestamp": "2026-09-20T12:00:00.000Z",
+      "provider": "mock",
+      "model": "demo",
+      "futureField": true
+    },
+    {
+      "type": "text.delta",
+      "runId": "compat-run",
+      "sequence": 2,
+      "timestamp": "2026-09-20T12:00:00.000Z",
+      "text": "Hello 🌍",
+      "futureField": "ignored"
+    },
+    {
+      "type": "run.completed",
+      "runId": "compat-run",
+      "sequence": 3,
+      "timestamp": "2026-09-20T12:00:00.000Z",
+      "result": {
+        "runId": "compat-run",
+        "provider": "mock",
+        "model": "demo",
+        "text": "Hello 🌍",
+        "usage": {},
+        "steps": 1,
+        "finishReason": "stop",
+        "futureResultField": {
+          "safe": "ignored"
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "fragmented-unicode",
+      "chunkSizes": [1, 2, 3, 7]
+    },
+    {
+      "id": "crlf-and-multiline",
+      "lineEnding": "\r\n",
+      "multiline": true,
+      "chunkSizes": [3, 1, 11]
+    },
+    {
+      "id": "carriage-return-lines",
+      "lineEnding": "\r",
+      "chunkSizes": [2, 5, 1]
+    },
+    {
+      "id": "utf8-bom",
+      "bom": true,
+      "chunkSizes": [1, 2, 7]
+    },
+    {
+      "id": "large-unicode-frame",
+      "repeatText": {
+        "character": "🌍",
+        "count": 70000
+      }
+    },
+    {
+      "id": "oversize-unicode-frame",
+      "repeatText": {
+        "character": "🌍",
+        "count": 500001
+      },
+      "expectedError": "RESPONSE_TOO_LARGE"
+    },
+    {
+      "id": "empty-stream",
+      "raw": "",
+      "expectedError": "INCOMPLETE_STREAM"
+    },
+    {
+      "id": "missing-terminal",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        }
+      ],
+      "expectedError": "INCOMPLETE_STREAM"
+    },
+    {
+      "id": "unterminated-frame",
+      "raw": "data: {\"type\":\"run.started\"}",
+      "expectedError": "INCOMPLETE_STREAM"
+    },
+    {
+      "id": "invalid-json",
+      "raw": "data: {broken}\n\n",
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "invalid-utf8",
+      "rawHex": "646174613a20ff0a0a",
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "event-is-null",
+      "events": [null],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "missing-start",
+      "events": [
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "duplicate-start",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "sequence-gap",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "changed-run",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "wrong-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "bad-timestamp",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "yesterday",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "missing-completed-result",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "wrong-result-run",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "wrong-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "wrong-result-model",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "other",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "negative-usage",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {
+              "inputTokens": -1
+            },
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "invalid-text-delta",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": 12,
+          "futureField": "ignored"
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "failure-without-details",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "future-terminal-error",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored",
+          "error": {
+            "code": "FUTURE_PROVIDER_CONDITION",
+            "message": "Future failure",
+            "retryable": true
+          }
+        }
+      ],
+      "expectedError": "FUTURE_PROVIDER_CONDITION"
+    },
+    {
+      "id": "wrong-content-type",
+      "contentType": "application/json",
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "redirect-denied",
+      "redirect": true,
+      "expectTransportError": true
+    },
+    {
+      "id": "cancel-stream",
+      "cancel": true,
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        }
+      ]
+    },
+    {
+      "id": "bad-catalog",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock"
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "bad-protocol",
+      "operation": "protocol",
+      "json": {
+        "protocol": "agenticdriver",
+        "version": "1.0"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "malformed-catalog-json",
+      "operation": "providers",
+      "raw": "{bad",
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "invalid-finish-reason-type",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": {},
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "invalid-progress-phase-type",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.progress",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored",
+          "phase": {}
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "null-usage-count",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {
+              "inputTokens": null
+            },
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "invalid-auth-mode-type",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": {},
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    }
+  ]
+}

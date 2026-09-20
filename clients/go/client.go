@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 const ProtocolVersion = "1.0"
@@ -149,11 +150,11 @@ func (c *Client) request(ctx context.Context, path string, body any, stream bool
 		var payload struct {
 			Error *Error `json:"error"`
 		}
-		_ = json.NewDecoder(io.LimitReader(res.Body, 64000)).Decode(&payload)
-		if payload.Error != nil {
+		decodeErr := json.NewDecoder(io.LimitReader(res.Body, 64000)).Decode(&payload)
+		if decodeErr == nil && payload.Error != nil {
 			return nil, payload.Error
 		}
-		return nil, &Error{Code: "HTTP_ERROR", Message: fmt.Sprintf("Driver returned HTTP %d.", res.StatusCode)}
+		return nil, &Error{Code: "HTTP_ERROR", Message: fmt.Sprintf("Driver returned HTTP %d.", res.StatusCode), Retryable: res.StatusCode == 429 || res.StatusCode >= 500}
 	}
 	if values, present := res.Header[http.CanonicalHeaderKey("AgenticDriver-Version")]; present && (len(values) != 1 || values[0] != ProtocolVersion) {
 		res.Body.Close()
@@ -170,7 +171,13 @@ func decode(res *http.Response, target any) error {
 	if len(data) > 2000000 {
 		return &Error{Code: "RESPONSE_TOO_LARGE", Message: "Response exceeded 2 MB."}
 	}
-	return json.Unmarshal(data, target)
+	if !utf8.Valid(data) {
+		return &Error{Code: "INVALID_RESPONSE", Message: "The response is not valid UTF-8."}
+	}
+	if err := json.Unmarshal(data, target); err != nil {
+		return &Error{Code: "INVALID_RESPONSE", Message: "The driver returned invalid JSON or an invalid response shape."}
+	}
+	return nil
 }
 func (c *Client) Providers(ctx context.Context) ([]Provider, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -183,6 +190,9 @@ func (c *Client) Providers(ctx context.Context) ([]Provider, error) {
 		Providers []Provider `json:"providers"`
 	}
 	err = decode(res, &payload)
+	if err == nil && payload.Providers == nil {
+		err = &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid provider catalog."}
+	}
 	return payload.Providers, err
 }
 func (c *Client) Protocol(ctx context.Context) (ProtocolInfo, error) {
@@ -214,6 +224,9 @@ func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
 		return result, err
 	}
 	err = decode(res, &result)
+	if err == nil && (result.Provider != request.Provider || result.Model != request.Model) {
+		err = &Error{Code: "INVALID_RESPONSE", Message: "The result does not match the requested provider and model."}
+	}
 	return result, err
 }
 
@@ -230,12 +243,17 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 		return &Error{Code: "INVALID_RESPONSE", Message: "Expected SSE."}
 	}
 	scanner := bufio.NewScanner(res.Body)
-	scanner.Buffer(make([]byte, 4096), 2000000)
+	scanner.Buffer(make([]byte, 4096), maxWireBytes+2)
+	scanner.Split(splitSSELines())
 	fields := []string{}
 	sequence, size := 0, 0
 	runID := ""
+	firstLine := true
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := stripBOM(scanner.Text(), &firstLine)
+		if !utf8.ValidString(line) {
+			return &Error{Code: "INVALID_STREAM", Message: "The event stream is not valid UTF-8."}
+		}
 		size += len(line)
 		if size > 2000000 {
 			return &Error{Code: "RESPONSE_TOO_LARGE", Message: "Event exceeded 2 MB."}
@@ -250,9 +268,9 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 			data := []byte(strings.Join(fields, "\n"))
 			var event Event
 			if err := json.Unmarshal(data, &event); err != nil {
-				return err
+				return &Error{Code: "INVALID_STREAM", Message: "The event stream contained invalid JSON or an invalid payload."}
 			}
-			if event.Type == "" || event.RunID == "" || event.Sequence != sequence+1 || (runID != "" && event.RunID != runID) {
+			if !eventValid(data, event, request, sequence == 0) || event.Sequence != sequence+1 || (runID != "" && event.RunID != runID) {
 				return &Error{Code: "INVALID_STREAM", Message: "Invalid or out-of-order event."}
 			}
 			sequence, runID = event.Sequence, event.RunID
