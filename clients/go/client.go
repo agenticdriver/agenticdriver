@@ -15,6 +15,15 @@ import (
 	"time"
 )
 
+const ProtocolVersion = "1.0"
+
+type ProtocolInfo struct {
+	Protocol          string   `json:"protocol"`
+	Version           string   `json:"version"`
+	SupportedVersions []string `json:"supportedVersions"`
+	Features          []string `json:"features"`
+}
+
 type Error struct {
 	Code      string `json:"code"`
 	Message   string `json:"message"`
@@ -24,17 +33,18 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
-	Provider        string            `json:"provider"`
-	Model           string            `json:"model"`
-	Input           string            `json:"input"`
-	Instructions    string            `json:"instructions,omitempty"`
-	History         []Message         `json:"history,omitempty"`
-	Tools           []string          `json:"tools,omitempty"`
-	MaxSteps        int               `json:"maxSteps,omitempty"`
-	MaxOutputTokens int               `json:"maxOutputTokens,omitempty"`
-	IdleTimeoutMs   int               `json:"idleTimeoutMs,omitempty"`
-	OutputSchema    map[string]any    `json:"outputSchema,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
+	Provider             string            `json:"provider"`
+	Model                string            `json:"model"`
+	Input                string            `json:"input"`
+	Instructions         string            `json:"instructions,omitempty"`
+	History              []Message         `json:"history,omitempty"`
+	Tools                []string          `json:"tools,omitempty"`
+	RequiredCapabilities []string          `json:"requiredCapabilities,omitempty"`
+	MaxSteps             int               `json:"maxSteps,omitempty"`
+	MaxOutputTokens      int               `json:"maxOutputTokens,omitempty"`
+	IdleTimeoutMs        int               `json:"idleTimeoutMs,omitempty"`
+	OutputSchema         map[string]any    `json:"outputSchema,omitempty"`
+	Metadata             map[string]string `json:"metadata,omitempty"`
 }
 type Message struct {
 	Role    string `json:"role"`
@@ -74,6 +84,7 @@ type Event struct {
 	RunID     string          `json:"runId"`
 	Sequence  int             `json:"sequence"`
 	Timestamp string          `json:"timestamp"`
+	Optional  bool            `json:"optional,omitempty"`
 	Text      string          `json:"text,omitempty"`
 	Result    *Result         `json:"result,omitempty"`
 	Error     *Error          `json:"error,omitempty"`
@@ -120,6 +131,8 @@ func (c *Client) request(ctx context.Context, path string, body any, stream bool
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("AgenticDriver-Version", ProtocolVersion)
+	req.Header.Set("AgenticDriver-Accept-Optional-Events", "true")
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -141,6 +154,10 @@ func (c *Client) request(ctx context.Context, path string, body any, stream bool
 			return nil, payload.Error
 		}
 		return nil, &Error{Code: "HTTP_ERROR", Message: fmt.Sprintf("Driver returned HTTP %d.", res.StatusCode)}
+	}
+	if values, present := res.Header[http.CanonicalHeaderKey("AgenticDriver-Version")]; present && (len(values) != 1 || values[0] != ProtocolVersion) {
+		res.Body.Close()
+		return nil, &Error{Code: "UNSUPPORTED_PROTOCOL_VERSION", Message: "The host selected an unsupported wire protocol version."}
 	}
 	return res, nil
 }
@@ -167,6 +184,26 @@ func (c *Client) Providers(ctx context.Context) ([]Provider, error) {
 	}
 	err = decode(res, &payload)
 	return payload.Providers, err
+}
+func (c *Client) Protocol(ctx context.Context) (ProtocolInfo, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	var info ProtocolInfo
+	res, err := c.request(ctx, "v1/protocol", nil, false)
+	if err != nil {
+		return info, err
+	}
+	if err = decode(res, &info); err != nil {
+		return info, err
+	}
+	supported := false
+	for _, version := range info.SupportedVersions {
+		supported = supported || version == ProtocolVersion
+	}
+	if info.Protocol != "agenticdriver" || info.Version != ProtocolVersion || !supported || info.Features == nil {
+		return info, &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid protocol descriptor."}
+	}
+	return info, nil
 }
 func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -219,6 +256,13 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 				return &Error{Code: "INVALID_STREAM", Message: "Invalid or out-of-order event."}
 			}
 			sequence, runID = event.Sequence, event.RunID
+			if !knownEvent(event.Type) {
+				if !event.Optional {
+					return &Error{Code: "UNSUPPORTED_EVENT", Message: "The host sent an unknown required event type."}
+				}
+				fields, size = nil, 0
+				continue
+			}
 			event.Raw = data
 			if err := visit(event); err != nil {
 				return err
@@ -240,4 +284,13 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 		return err
 	}
 	return &Error{Code: "INCOMPLETE_STREAM", Message: "Connection closed before a terminal event."}
+}
+
+func knownEvent(kind string) bool {
+	switch kind {
+	case "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled":
+		return true
+	default:
+		return false
+	}
 }

@@ -7,6 +7,16 @@ use std::io::{BufRead, BufReader, Read};
 use std::time::Duration;
 
 pub type Result<T> = std::result::Result<T, Error>;
+pub const PROTOCOL_VERSION: &str = "1.0";
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolInfo {
+    pub protocol: String,
+    pub version: String,
+    pub supported_versions: Vec<String>,
+    pub features: Vec<String>,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct DriverError {
@@ -62,6 +72,8 @@ pub struct RunRequest {
     pub history: Vec<Message>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub required_capabilities: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_steps: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -138,6 +150,8 @@ pub struct Event {
     pub run_id: String,
     pub sequence: u64,
     pub timestamp: String,
+    #[serde(default)]
+    pub optional: bool,
     pub text: Option<String>,
     pub result: Option<RunResult>,
     pub error: Option<DriverError>,
@@ -203,14 +217,18 @@ impl AgenticClient {
         } else {
             self.http.get(url)
         };
-        request = request.bearer_auth(&self.token).header(
-            "Accept",
-            if stream {
-                "text/event-stream"
-            } else {
-                "application/json"
-            },
-        );
+        request = request
+            .bearer_auth(&self.token)
+            .header("AgenticDriver-Version", PROTOCOL_VERSION)
+            .header("AgenticDriver-Accept-Optional-Events", "true")
+            .header(
+                "Accept",
+                if stream {
+                    "text/event-stream"
+                } else {
+                    "application/json"
+                },
+            );
         if body.is_none() {
             request = request.timeout(Duration::from_secs(10));
         }
@@ -225,7 +243,31 @@ impl AgenticClient {
                 Err(_) => Err(Error::Protocol("The driver returned an HTTP error.")),
             };
         }
+        if let Some(version) = response.headers().get("AgenticDriver-Version") {
+            if version.to_str().ok() != Some(PROTOCOL_VERSION) {
+                return Err(protocol_error(
+                    "UNSUPPORTED_PROTOCOL_VERSION",
+                    "The host selected an unsupported wire protocol version.",
+                ));
+            }
+        }
         Ok(response)
+    }
+    pub fn protocol(&self) -> Result<ProtocolInfo> {
+        let info: ProtocolInfo = read_json(self.request("v1/protocol", None, false)?)?;
+        if info.protocol != "agenticdriver"
+            || info.version != PROTOCOL_VERSION
+            || !info
+                .supported_versions
+                .iter()
+                .any(|v| v == PROTOCOL_VERSION)
+        {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "The driver returned an invalid protocol descriptor.",
+            ));
+        }
+        Ok(info)
     }
     pub fn providers(&self) -> Result<Vec<Provider>> {
         #[derive(Deserialize)]
@@ -287,6 +329,29 @@ impl AgenticClient {
                     }
                     run_id.clone_from(&event.run_id);
                     sequence = event.sequence;
+                    if !matches!(
+                        event.kind.as_str(),
+                        "run.started"
+                            | "step.started"
+                            | "text.delta"
+                            | "run.progress"
+                            | "tool.called"
+                            | "tool.completed"
+                            | "usage.reported"
+                            | "run.completed"
+                            | "run.failed"
+                            | "run.cancelled"
+                    ) {
+                        if !event.optional {
+                            return Err(protocol_error(
+                                "UNSUPPORTED_EVENT",
+                                "The host sent an unknown required event type.",
+                            ));
+                        }
+                        fields.clear();
+                        size = 0;
+                        continue;
+                    }
                     let terminal = matches!(
                         event.kind.as_str(),
                         "run.completed" | "run.failed" | "run.cancelled"
@@ -315,6 +380,13 @@ impl AgenticClient {
             }
         }
     }
+}
+fn protocol_error(code: &str, message: &str) -> Error {
+    Error::Driver(DriverError {
+        code: code.into(),
+        message: message.into(),
+        retryable: false,
+    })
 }
 fn read_json<T: serde::de::DeserializeOwned>(response: Response) -> Result<T> {
     let mut data = Vec::new();

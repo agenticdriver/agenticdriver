@@ -12,13 +12,25 @@
         "operationId": "health",
         "security": [],
         "responses": {
-          "200": { "description": "Host health and protocol version" }
+          "200": {
+            "description": "Host health and protocol version",
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
         }
       }
     },
     "/v1/providers": {
       "get": {
         "operationId": "listProviders",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
         "responses": {
           "200": {
             "description": "Only provider instances allowed by this token",
@@ -35,6 +47,12 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
             }
           },
           "default": {
@@ -42,6 +60,52 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/protocol": {
+      "get": {
+        "operationId": "getProtocol",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Authenticated wire-version and host-feature discovery. An omitted version header selects the original 1.0 contract.",
+        "responses": {
+          "200": {
+            "description": "Supported protocol versions and host features",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProtocolInfo" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
               }
             }
           }
@@ -51,6 +115,10 @@
     "/v1/runs": {
       "post": {
         "operationId": "run",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
         "description": "Accept: application/json for one result; text/event-stream for ordered events. Disconnect cancels an unfinished run. No retries, reconnection, or resumable server state.",
         "requestBody": {
           "required": true,
@@ -71,6 +139,12 @@
                 "schema": { "type": "string" },
                 "description": "SSE data is a JSON RunEvent; id is its sequence; event is its type."
               }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
             }
           },
           "default": {
@@ -79,6 +153,12 @@
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
               }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
             }
           }
         }
@@ -86,6 +166,26 @@
     }
   },
   "components": {
+    "parameters": {
+      "ProtocolVersion": {
+        "name": "AgenticDriver-Version",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string", "default": "1.0" },
+        "description": "Exact wire version to select. Unsupported values fail before provider/tool execution. Independent of package versions."
+      },
+      "OptionalEvents": {
+        "name": "AgenticDriver-Accept-Optional-Events",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": ["true", "false"],
+          "default": "false"
+        },
+        "description": "Opt in to unknown advisory event types marked optional:true. Older clients omit this header and receive only the original event types."
+      }
+    },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
       "RunRequest": {
@@ -122,6 +222,14 @@
               "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
             }
           },
+          "requiredCapabilities": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9._-]{0,79}$"
+            }
+          },
           "maxSteps": { "type": "integer", "minimum": 1, "maximum": 64 },
           "maxOutputTokens": {
             "type": "integer",
@@ -146,6 +254,19 @@
         },
         "required": ["provider", "model", "input"],
         "additionalProperties": false
+      },
+      "ProtocolInfo": {
+        "type": "object",
+        "required": ["protocol", "version", "supportedVersions", "features"],
+        "properties": {
+          "protocol": { "const": "agenticdriver" },
+          "version": { "type": "string" },
+          "supportedVersions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "features": { "type": "array", "items": { "type": "string" } }
+        }
       },
       "Usage": {
         "type": "object",
@@ -192,7 +313,8 @@
           "code": { "type": "string" },
           "message": { "type": "string" },
           "retryable": { "type": "boolean" }
-        }
+        },
+        "description": "Stable code, displayable message and retryability hint. Clients preserve unknown codes; retryable never authorizes automatic replay of tool effects."
       },
       "Provider": {
         "type": "object",
@@ -210,7 +332,8 @@
             "properties": {
               "tools": { "type": "boolean" },
               "textStreaming": { "type": "boolean" }
-            }
+            },
+            "additionalProperties": { "type": "boolean" }
           }
         }
       },
@@ -221,7 +344,11 @@
           "type": { "type": "string" },
           "runId": { "type": "string" },
           "sequence": { "type": "integer", "minimum": 1 },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "timestamp": { "type": "string", "format": "date-time" },
+          "optional": {
+            "type": "boolean",
+            "description": "An unknown type may be skipped only when optional is explicitly true; its envelope and sequence must still be validated."
+          }
         },
         "oneOf": [
           {
@@ -297,6 +424,31 @@
               "error": { "$ref": "#/components/schemas/ErrorInfo" }
             },
             "required": ["error"]
+          },
+          {
+            "properties": {
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "not": {
+                  "enum": [
+                    "run.started",
+                    "step.started",
+                    "text.delta",
+                    "run.progress",
+                    "tool.called",
+                    "tool.completed",
+                    "usage.reported",
+                    "run.completed",
+                    "run.failed",
+                    "run.cancelled"
+                  ]
+                }
+              },
+              "optional": { "const": true }
+            },
+            "required": ["optional"],
+            "description": "Advisory extension. Hosts send new event types only to clients that explicitly accept optional events. They cannot carry required state transitions or actions."
           }
         ]
       }

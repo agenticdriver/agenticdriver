@@ -25,6 +25,10 @@ or HTTPS remotely. The latter returns JSON or SSE according to `Accept`. The
 protocol is described in [OpenAPI](../protocol/openapi.json); regenerate request
 schemas with `npm run protocol` after contract changes.
 
+The wire version is negotiated separately from package versions. See
+[protocol compatibility](protocol.md) for discovery, required capabilities,
+event extension rules and stable errors.
+
 ## Authentication and execution ownership
 
 A driver token identifies a trusted `subject` and exact provider/tool allowlists.

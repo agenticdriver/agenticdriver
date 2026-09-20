@@ -22,6 +22,7 @@ fn protocol_round_trip() {
         .map(|path| std::fs::read(path).unwrap());
     let client = AgenticClient::with_ca_pem(&url, token, ca.as_deref()).unwrap();
     assert_eq!(client.providers().unwrap()[0].id, "mock");
+    assert_eq!(client.protocol().unwrap().version, "1.0");
     let mut request = RunRequest::new("mock", "demo", "Unicode 🌍 round trip");
     request.idle_timeout_ms = Some(10000);
     assert_eq!(

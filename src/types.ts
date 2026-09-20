@@ -27,6 +27,12 @@ export const RunRequestSchema = z
       .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
       .max(32)
       .optional(),
+    /** Required provider capabilities must be advertised as true before execution. */
+    requiredCapabilities: z
+      .array(z.string().regex(/^[a-zA-Z][a-zA-Z0-9._-]{0,79}$/))
+      .max(32)
+      .refine((values) => new Set(values).size === values.length)
+      .optional(),
     maxSteps: z.number().int().min(1).max(64).optional(),
     maxOutputTokens: z.number().int().min(1).max(65_536).optional(),
     /** No timer by default. Zero also disables it unless the host requires one. */
@@ -103,7 +109,11 @@ export interface ProviderInfo {
   name: string;
   vendor: string;
   authMode: AuthMode;
-  capabilities: { tools: boolean; textStreaming: boolean };
+  capabilities: {
+    tools: boolean;
+    textStreaming: boolean;
+    [capability: string]: boolean;
+  };
   /** A server-owned allowlist. Omit to accept any explicit model ID. */
   models?: string[];
   usageStatId?: string;

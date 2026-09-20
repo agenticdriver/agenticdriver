@@ -101,6 +101,15 @@ export class AgenticDriver {
         "UNSUPPORTED_MODEL",
         "The model is not enabled for this provider instance.",
       );
+    if (
+      request.requiredCapabilities?.some(
+        (name) => provider.info.capabilities[name] !== true,
+      )
+    )
+      throw new DriverError(
+        "UNSUPPORTED_CAPABILITY",
+        "The provider does not support every required capability.",
+      );
     if (request.tools?.length && !provider.info.capabilities.tools)
       throw new DriverError(
         "UNSUPPORTED_TOOLS",

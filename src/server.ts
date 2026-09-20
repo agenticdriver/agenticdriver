@@ -9,6 +9,13 @@ import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
 import { DriverError, publicError } from "./errors.js";
 import { isLoopback } from "./security.js";
+import {
+  negotiateProtocolVersion,
+  OPTIONAL_EVENTS_HEADER,
+  protocolInfo,
+  PROTOCOL_VERSION,
+  PROTOCOL_VERSION_HEADER,
+} from "./protocol.js";
 import type { RunRequest } from "./types.js";
 
 export interface AccessToken {
@@ -66,6 +73,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader(PROTOCOL_VERSION_HEADER, PROTOCOL_VERSION);
     if (options.tls)
       res.setHeader("Strict-Transport-Security", "max-age=31536000");
     let release: (() => void) | undefined;
@@ -79,11 +87,12 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           );
         res.setHeader("Access-Control-Allow-Origin", origin);
         res.setHeader("Vary", "Origin");
+        res.setHeader("Access-Control-Expose-Headers", PROTOCOL_VERSION_HEADER);
         if (req.method === "OPTIONS") {
           res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
           res.setHeader(
             "Access-Control-Allow-Headers",
-            "Authorization, Content-Type, Accept",
+            `Authorization, Content-Type, Accept, ${PROTOCOL_VERSION_HEADER}, ${OPTIONAL_EVENTS_HEADER}`,
           );
           res.writeHead(204);
           res.end();
@@ -106,6 +115,13 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "UNAUTHORIZED",
           "A valid driver bearer token is required.",
         );
+      negotiateProtocolVersion(
+        req.headers[PROTOCOL_VERSION_HEADER.toLowerCase()],
+      );
+      if (req.url === "/v1/protocol" && req.method === "GET") {
+        json(res, 200, protocolInfo());
+        return;
+      }
       if (req.url === "/v1/providers" && req.method === "GET") {
         json(res, 200, {
           providers: driver
@@ -261,6 +277,8 @@ function statusFor(code: string) {
       "UNKNOWN_TOOL",
       "UNSUPPORTED_MODEL",
       "UNSUPPORTED_TOOLS",
+      "UNSUPPORTED_CAPABILITY",
+      "UNSUPPORTED_PROTOCOL_VERSION",
     ].includes(code)
   )
     return 400;

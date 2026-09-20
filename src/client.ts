@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { DriverError } from "./errors.js";
 import { readLimited, secureBaseUrl } from "./security.js";
+import {
+  checkResponseVersion,
+  OPTIONAL_EVENTS_HEADER,
+  PROTOCOL_VERSION,
+  PROTOCOL_VERSION_HEADER,
+  RUN_EVENT_TYPES,
+  type ProtocolInfo,
+} from "./protocol.js";
 import type { ProviderInfo, RunEvent, RunRequest, RunResult } from "./types.js";
 
 export interface ClientOptions {
@@ -72,9 +80,11 @@ const eventSchema = z.discriminatedUnion("type", [
   }),
 ]);
 const envelopeSchema = z.object({
-  runId: z.string(),
+  type: z.string().min(1),
+  runId: z.string().min(1),
   sequence: z.number().int().positive(),
   timestamp: z.string(),
+  optional: z.boolean().optional(),
 });
 
 /** Browser-compatible client. Credentials here authenticate to your driver, not a model vendor. */
@@ -100,6 +110,8 @@ export class AgenticClient {
       method: body ? "POST" : "GET",
       headers: {
         Authorization: `Bearer ${this.options.token}`,
+        [PROTOCOL_VERSION_HEADER]: PROTOCOL_VERSION,
+        [OPTIONAL_EVENTS_HEADER]: "true",
         Accept: stream ? "text/event-stream" : "application/json",
         ...(body ? { "Content-Type": "application/json" } : {}),
       },
@@ -128,7 +140,39 @@ export class AgenticClient {
         response.status === 429 || response.status >= 500,
       );
     }
+    try {
+      checkResponseVersion(response.headers.get(PROTOCOL_VERSION_HEADER));
+    } catch (error) {
+      await response.body?.cancel().catch(() => {});
+      throw error;
+    }
     return response;
+  }
+  async protocol(
+    options: { signal?: AbortSignal } = {},
+  ): Promise<ProtocolInfo> {
+    const response = await this.request(
+      "v1/protocol",
+      undefined,
+      combineTimeout(options.signal, 10_000),
+    );
+    const parsed = z
+      .object({
+        protocol: z.literal("agenticdriver"),
+        version: z.literal(PROTOCOL_VERSION),
+        supportedVersions: z.array(z.string()),
+        features: z.array(z.string()),
+      })
+      .safeParse(JSON.parse(await readLimited(response)));
+    if (
+      !parsed.success ||
+      !parsed.data.supportedVersions.includes(PROTOCOL_VERSION)
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The driver returned an invalid protocol descriptor.",
+      );
+    return parsed.data;
   }
   async providers(
     options: { signal?: AbortSignal } = {},
@@ -148,10 +192,12 @@ export class AgenticClient {
             authMode: z.enum(["api-key", "cli-session", "none"]),
             models: z.array(z.string()).optional(),
             usageStatId: z.string().optional(),
-            capabilities: z.object({
-              tools: z.boolean(),
-              textStreaming: z.boolean(),
-            }),
+            capabilities: z
+              .object({
+                tools: z.boolean(),
+                textStreaming: z.boolean(),
+              })
+              .catchall(z.boolean()),
           }),
         ),
       })
@@ -213,11 +259,9 @@ export class AgenticClient {
             "The event stream contained malformed JSON.",
           );
         }
-        const envelope = envelopeSchema.safeParse(raw),
-          payload = eventSchema.safeParse(raw);
+        const envelope = envelopeSchema.safeParse(raw);
         if (
           !envelope.success ||
-          !payload.success ||
           envelope.data.sequence !== sequence + 1 ||
           (runId !== undefined && envelope.data.runId !== runId)
         )
@@ -227,7 +271,22 @@ export class AgenticClient {
           );
         runId = envelope.data.runId;
         sequence = envelope.data.sequence;
-        const event: RunEvent = { ...payload.data, ...envelope.data };
+        if (
+          !(RUN_EVENT_TYPES as readonly string[]).includes(envelope.data.type)
+        ) {
+          if (envelope.data.optional === true) continue;
+          throw new DriverError(
+            "UNSUPPORTED_EVENT",
+            "The host sent an unknown required event type.",
+          );
+        }
+        const payload = eventSchema.safeParse(raw);
+        if (!payload.success)
+          throw new DriverError(
+            "INVALID_STREAM",
+            "The event stream contained an invalid event payload.",
+          );
+        const event: RunEvent = { ...envelope.data, ...payload.data };
         yield event;
         if (
           ["run.completed", "run.failed", "run.cancelled"].includes(event.type)

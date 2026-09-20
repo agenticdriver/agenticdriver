@@ -15,6 +15,7 @@ from agenticdriver import AgenticClient, DriverError
 def check_clients(url, token, ca, env):
     client = AgenticClient(url, token, ca_file=ca)
     assert client.providers()[0]["id"] == "mock"
+    assert client.protocol()["version"] == "1.0"
     request = {"provider": "mock", "model": "demo", "input": "Unicode 🌍 round trip", "idleTimeoutMs": 10_000}
     assert client.run(**request)["text"] == "AgenticDriver is connected."
     assert list(client.stream(**request))[-1]["type"] == "run.completed"
@@ -24,7 +25,8 @@ def check_clients(url, token, ca, env):
     except DriverError as error:
         assert error.code == "UNAUTHORIZED"
     print(f"Python client passed ({url.split(':')[0]})", flush=True)
-    for command, directory in [(["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["go", "test", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]:
+    env = {**env, "PYTHONPATH": str(ROOT / "clients/python/src")}
+    for command, directory in [([sys.executable, "-m", "unittest", "discover", "-s", "clients/python/tests"], ROOT), (["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["go", "test", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]:
         subprocess.run(command, cwd=directory, env=env, check=True, timeout=180)
 
 

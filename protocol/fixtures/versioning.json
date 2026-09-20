@@ -1,0 +1,254 @@
+{
+  "wireVersion": "1.0",
+  "cases": [
+    {
+      "id": "legacy-host",
+      "headers": {},
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedTypes": ["run.started", "text.delta", "run.completed"]
+    },
+    {
+      "id": "current-host-additive-fields",
+      "headers": {
+        "AgenticDriver-Version": "1.0"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedTypes": ["run.started", "text.delta", "run.completed"]
+    },
+    {
+      "id": "future-optional-event",
+      "headers": {
+        "AgenticDriver-Version": "1.0"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "provider.advisory",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "optional": true,
+          "detail": {
+            "future": true
+          }
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedTypes": ["run.started", "text.delta", "run.completed"]
+    },
+    {
+      "id": "future-required-event",
+      "headers": {
+        "AgenticDriver-Version": "1.0"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "provider.new-required-step",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        }
+      ],
+      "expectedError": "UNSUPPORTED_EVENT"
+    },
+    {
+      "id": "optional-is-not-truthy",
+      "headers": {
+        "AgenticDriver-Version": "1.0"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "provider.advisory",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "optional": false
+        }
+      ],
+      "expectedError": "UNSUPPORTED_EVENT"
+    },
+    {
+      "id": "incompatible-response-version",
+      "headers": {
+        "AgenticDriver-Version": "2.0"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "UNSUPPORTED_PROTOCOL_VERSION"
+    },
+    {
+      "id": "unknown-error-code",
+      "headers": {
+        "AgenticDriver-Version": "1.0"
+      },
+      "status": 503,
+      "json": {
+        "error": {
+          "code": "FUTURE_PROVIDER_CONDITION",
+          "message": "A future transient condition.",
+          "retryable": true,
+          "futureField": true
+        }
+      },
+      "expectedError": "FUTURE_PROVIDER_CONDITION",
+      "retryable": true
+    }
+  ]
+}

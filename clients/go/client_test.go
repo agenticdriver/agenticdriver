@@ -44,6 +44,10 @@ func TestProtocolRoundTrip(t *testing.T) {
 	if err != nil || len(providers) != 1 || providers[0].ID != "mock" {
 		t.Fatalf("catalog: %v %v", providers, err)
 	}
+	protocol, err := client.Protocol(context.Background())
+	if err != nil || protocol.Version != ProtocolVersion {
+		t.Fatalf("protocol: %v %v", protocol, err)
+	}
 	request := Request{Provider: "mock", Model: "demo", Input: "Unicode 🌍 round trip", IdleTimeoutMs: 10000}
 	result, err := client.Run(context.Background(), request)
 	if err != nil || result.Text != "AgenticDriver is connected." {

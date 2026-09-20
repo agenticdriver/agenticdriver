@@ -5,6 +5,7 @@ const client = new AgenticClient({
   token: process.env.AGENTICDRIVER_TEST_TOKEN!,
 });
 assert.equal((await client.providers())[0]?.id, "mock");
+assert.equal((await client.protocol()).version, "1.0");
 const request = {
   provider: "mock",
   model: "demo",
