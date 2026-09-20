@@ -69,16 +69,29 @@ type Result struct {
 	FinishReason string          `json:"finishReason"`
 }
 type Provider struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Vendor       string   `json:"vendor"`
-	AuthMode     string   `json:"authMode"`
-	Models       []string `json:"models,omitempty"`
-	UsageStatID  string   `json:"usageStatId,omitempty"`
+	ID           string          `json:"id"`
+	Name         string          `json:"name"`
+	Vendor       string          `json:"vendor"`
+	AuthMode     string          `json:"authMode"`
+	Models       []string        `json:"models,omitempty"`
+	UsageStatID  string          `json:"usageStatId,omitempty"`
+	Health       *ProviderHealth `json:"health,omitempty"`
+	ModelCatalog *ModelCatalog   `json:"modelCatalog,omitempty"`
 	Capabilities struct {
 		Tools         bool `json:"tools"`
 		TextStreaming bool `json:"textStreaming"`
 	} `json:"capabilities"`
+}
+type ProviderHealth struct {
+	Status    string `json:"status"`
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	CheckedAt string `json:"checkedAt"`
+}
+type ModelCatalog struct {
+	Source   string   `json:"source"`
+	Models   []string `json:"models"`
+	Complete bool     `json:"complete"`
 }
 type Event struct {
 	Type      string          `json:"type"`
@@ -180,9 +193,19 @@ func decode(res *http.Response, target any) error {
 	return nil
 }
 func (c *Client) Providers(ctx context.Context) ([]Provider, error) {
+	return c.providers(ctx, false)
+}
+func (c *Client) RefreshProviders(ctx context.Context) ([]Provider, error) {
+	return c.providers(ctx, true)
+}
+func (c *Client) providers(ctx context.Context, refresh bool) ([]Provider, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	res, err := c.request(ctx, "v1/providers", nil, false)
+	path := "v1/providers"
+	if refresh {
+		path += "?refresh=true"
+	}
+	res, err := c.request(ctx, path, nil, false)
 	if err != nil {
 		return nil, err
 	}

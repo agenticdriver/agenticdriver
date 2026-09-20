@@ -10,6 +10,7 @@ import {
   type ApiProviderOptions,
 } from "./http.js";
 import { collectChat } from "./streams.js";
+import { apiInspection } from "./discovery.js";
 
 const wire = z.object({
   choices: z.array(
@@ -50,6 +51,7 @@ export function openaiCompatible(
   const vendor = options.vendor ?? "openai-compatible";
   return {
     info: apiInfo(vendor, "OpenAI-compatible API", options, vendor),
+    inspect: apiInspection(options, options.baseUrl, "bearer"),
     async complete(request, context) {
       const messages: unknown[] = request.instructions
         ? [{ role: "system", content: request.instructions }]

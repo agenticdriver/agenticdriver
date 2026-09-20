@@ -36,6 +36,7 @@ export function protocolInfo(): ProtocolInfo {
       "optional-idle-timeout",
       "required-capabilities",
       "optional-events",
+      "provider-discovery",
     ],
   };
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ModelCatalogSchema, ProviderHealthSchema } from "./types.js";
 import { DriverError } from "./errors.js";
 import { readLimited, secureBaseUrl } from "./security.js";
 import {
@@ -175,10 +176,10 @@ export class AgenticClient {
     return parsed.data;
   }
   async providers(
-    options: { signal?: AbortSignal } = {},
+    options: { signal?: AbortSignal; refresh?: boolean } = {},
   ): Promise<ProviderInfo[]> {
     const response = await this.request(
-      "v1/providers",
+      options.refresh ? "v1/providers?refresh=true" : "v1/providers",
       undefined,
       combineTimeout(options.signal, 10_000),
     );
@@ -192,6 +193,8 @@ export class AgenticClient {
             authMode: z.enum(["api-key", "cli-session", "none"]),
             models: z.array(z.string()).optional(),
             usageStatId: z.string().optional(),
+            health: ProviderHealthSchema.optional(),
+            modelCatalog: ModelCatalogSchema.optional(),
             capabilities: z
               .object({
                 tools: z.boolean(),

@@ -92,6 +92,25 @@ func (provider *Provider) UnmarshalJSON(data []byte) error {
 		_, ok := stringValue(raw)
 		valid = valid && ok
 	}
+	if raw, present := value["health"]; present {
+		h, ok := object(raw)
+		status, _ := stringValue(h["status"])
+		checked, _ := stringValue(h["checkedAt"])
+		_, dateErr := time.Parse(time.RFC3339Nano, checked)
+		valid = valid && ok && stringField(h, "code", false) && stringField(h, "message", true) && dateErr == nil &&
+			(status == "ready" || status == "unauthenticated" || status == "unavailable" || status == "unsupported" || status == "unknown")
+	}
+	if raw, present := value["modelCatalog"]; present {
+		catalog, ok := object(raw)
+		source, _ := stringValue(catalog["source"])
+		var models []json.RawMessage
+		valid = valid && ok && boolValue(catalog["complete"]) && json.Unmarshal(catalog["models"], &models) == nil && models != nil && len(models) <= 1000 &&
+			(source == "provider" || source == "configured" || source == "unavailable")
+		for _, model := range models {
+			_, isString := stringValue(model)
+			valid = valid && isString
+		}
+	}
 	if !valid || (decoded.AuthMode != "none" && decoded.AuthMode != "api-key" && decoded.AuthMode != "cli-session") {
 		return &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid provider catalog."}
 	}

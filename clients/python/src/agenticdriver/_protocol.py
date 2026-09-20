@@ -70,6 +70,17 @@ def valid_catalog(value):
             return False
         if "usageStatId" in provider and not isinstance(provider["usageStatId"], str):
             return False
+        if "health" in provider:
+            health = provider["health"]
+            if (not isinstance(health, dict) or health.get("status") not in ("ready", "unauthenticated", "unavailable", "unsupported", "unknown") or
+                    not text(health.get("code")) or not text(health.get("message"), True) or not valid_timestamp(health.get("checkedAt"))):
+                return False
+        if "modelCatalog" in provider:
+            catalog = provider["modelCatalog"]
+            if (not isinstance(catalog, dict) or catalog.get("source") not in ("provider", "configured", "unavailable") or
+                    type(catalog.get("complete")) is not bool or not isinstance(catalog.get("models"), list) or
+                    len(catalog["models"]) > 1000 or not all(isinstance(v, str) for v in catalog["models"])):
+                return False
     return True
 
 

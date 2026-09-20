@@ -1,10 +1,40 @@
-use crate::{protocol_error, Event, Result, RunRequest, RunResult, Usage};
+use crate::{
+    protocol_error, Event, ModelCatalog, ProviderHealth, Result, RunRequest, RunResult, Usage,
+};
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use std::io::BufRead;
 
 pub(crate) const MAX_BYTES: usize = 2_000_000;
 const MAX_INTEGER: u64 = 9_007_199_254_740_991;
+
+pub(crate) fn optional_health<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<ProviderHealth>, D::Error> {
+    let value = ProviderHealth::deserialize(deserializer)?;
+    if !matches!(
+        value.status.as_str(),
+        "ready" | "unauthenticated" | "unavailable" | "unsupported" | "unknown"
+    ) || value.code.is_empty()
+        || !timestamp_valid(&value.checked_at)
+    {
+        return Err(serde::de::Error::custom("Invalid provider health"));
+    }
+    Ok(Some(value))
+}
+pub(crate) fn optional_catalog<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<ModelCatalog>, D::Error> {
+    let value = ModelCatalog::deserialize(deserializer)?;
+    if !matches!(
+        value.source.as_str(),
+        "provider" | "configured" | "unavailable"
+    ) || value.models.len() > 1000
+    {
+        return Err(serde::de::Error::custom("Invalid model catalog"));
+    }
+    Ok(Some(value))
+}
 
 pub(crate) fn optional_count<'de, D: Deserializer<'de>>(
     deserializer: D,

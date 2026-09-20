@@ -51,25 +51,26 @@ function localCli(
       }[vendor]
     ] = options.accountDirectory;
   let checked: Promise<void> | undefined;
-  const preflight = () =>
-    (checked ??= (async () => {
-      const help = await runProcess(
-        binary,
-        vendor === "codex" ? ["exec", "--help"] : ["--help"],
-        { env, signal: AbortSignal.timeout(10_000), includeStderr: true },
+  const checkFeatures = async (signal: AbortSignal, cwd?: string) => {
+    const help = await runProcess(
+      binary,
+      vendor === "codex" ? ["exec", "--help"] : ["--help"],
+      { env, cwd, signal, includeStderr: true },
+    );
+    const required =
+      vendor === "codex"
+        ? ["--ignore-user-config", "--ephemeral", "--sandbox", "--json"]
+        : vendor === "claude-code"
+          ? ["--restricted", "--safe-mode", "--strict-mcp-config", "--tools"]
+          : ["--admin-policy", "--output-format", "--extensions"];
+    if (!required.every((flag) => help.includes(flag)))
+      throw new DriverError(
+        "CLI_UPGRADE_REQUIRED",
+        "Upgrade the CLI to a version with the required restricted execution features.",
       );
-      const required =
-        vendor === "codex"
-          ? ["--ignore-user-config", "--ephemeral", "--sandbox", "--json"]
-          : vendor === "claude-code"
-            ? ["--restricted", "--safe-mode", "--strict-mcp-config", "--tools"]
-            : ["--admin-policy", "--output-format", "--extensions"];
-      if (!required.every((flag) => help.includes(flag)))
-        throw new DriverError(
-          "CLI_UPGRADE_REQUIRED",
-          "Upgrade the CLI to a version with the required restricted execution features.",
-        );
-    })().catch((error) => {
+  };
+  const preflight = () =>
+    (checked ??= checkFeatures(AbortSignal.timeout(10_000)).catch((error) => {
       checked = undefined;
       throw error;
     }));
@@ -92,6 +93,42 @@ function localCli(
         "claude-code": "claude",
         "gemini-cli": "gemini",
       }[vendor],
+    },
+    async inspect({ signal }) {
+      const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-inspect-"));
+      try {
+        await checkFeatures(signal, cwd);
+        if (vendor === "gemini-cli") return { code: "CLI_STATUS_UNKNOWN" };
+        let exitCode: number | null = null;
+        // Output can contain account identifiers or masked keys. Retain nothing in the result.
+        await runProcess(
+          binary,
+          vendor === "codex" ? ["login", "status"] : ["auth", "status"],
+          {
+            env,
+            cwd,
+            signal,
+            acceptedExitCodes: [0, 1],
+            onExit: (code) => {
+              exitCode = code;
+            },
+          },
+        );
+        return {
+          code: exitCode === 0 ? "CLI_SESSION_PRESENT" : "CLI_AUTH_REQUIRED",
+        };
+      } catch (error) {
+        signal.throwIfAborted();
+        if (
+          error instanceof DriverError &&
+          (error.code === "CLI_UNAVAILABLE" ||
+            error.code === "CLI_UPGRADE_REQUIRED")
+        )
+          return { code: error.code };
+        return { code: "CLI_STATUS_UNKNOWN" };
+      } finally {
+        await rm(cwd, { recursive: true, force: true });
+      }
     },
     async complete(request, context) {
       if (request.tools.length)
@@ -286,6 +323,8 @@ export function runProcess(
     input?: string;
     includeStderr?: boolean;
     onLine?: (line: string) => void;
+    acceptedExitCodes?: number[];
+    onExit?: (code: number | null) => void;
   },
 ): Promise<string> {
   options.signal.throwIfAborted();
@@ -369,6 +408,7 @@ export function runProcess(
     options.signal.addEventListener("abort", abort, { once: true });
     if (options.signal.aborted) abort();
     child.once("close", (code) => {
+      options.onExit?.(code);
       options.signal.removeEventListener("abort", abort);
       if (killTimer) clearTimeout(killTimer);
       terminate("SIGKILL");
@@ -378,7 +418,10 @@ export function runProcess(
         failure = error;
       }
       if (failure) reject(failure);
-      else if (code !== 0)
+      else if (
+        code === null ||
+        !(options.acceptedExitCodes ?? [0]).includes(code)
+      )
         reject(
           new DriverError(
             "CLI_FAILED",

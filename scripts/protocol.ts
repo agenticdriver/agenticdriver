@@ -1,7 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
-import { RunRequestSchema } from "../src/types.js";
+import {
+  RunRequestSchema,
+  ModelCatalogSchema,
+  ProviderHealthSchema,
+} from "../src/types.js";
 import {
   PROTOCOL_VERSION,
   PROTOCOL_VERSION_HEADER,
@@ -15,6 +19,14 @@ const string = { type: "string" },
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
+  ProviderHealth: z.toJSONSchema(ProviderHealthSchema, {
+    target: "draft-2020-12",
+    io: "input",
+  }),
+  ModelCatalog: z.toJSONSchema(ModelCatalogSchema, {
+    target: "draft-2020-12",
+    io: "input",
+  }),
   RunRequest: requestSchema,
   ProtocolInfo: {
     type: "object",
@@ -86,6 +98,8 @@ const schemas = {
       authMode: { enum: ["api-key", "cli-session", "none"] },
       models: { type: "array", items: string },
       usageStatId: string,
+      health: ref("ProviderHealth"),
+      modelCatalog: ref("ModelCatalog"),
       capabilities: {
         type: "object",
         required: ["tools", "textStreaming"],
@@ -238,7 +252,16 @@ const document = {
     "/v1/providers": {
       get: {
         operationId: "listProviders",
-        parameters,
+        parameters: [
+          ...parameters,
+          {
+            name: "refresh",
+            in: "query",
+            schema: { const: "true" },
+            description:
+              "Refresh account health and model inventory, subject to the host's minimum refresh interval. Omit to use the normal cache.",
+          },
+        ],
         responses: {
           "200": {
             description: "Only provider instances allowed by this token",

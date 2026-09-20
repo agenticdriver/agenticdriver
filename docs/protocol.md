@@ -51,6 +51,11 @@ Host `features` describe transport/runtime behavior; provider `capabilities`
 describe a selected execution instance. Neither implies that a provider account
 is currently signed in, healthy or within quota.
 
+Hosts advertising `provider-discovery` add optional `health` and `modelCatalog`
+fields to each authorized provider and accept `GET /v1/providers?refresh=true`.
+See [account discovery](discovery.md) for caching, health states and probe limits.
+The existing `models` field remains the host's allowlist; discovery is advisory.
+
 ## Events and extensions
 
 Every wire event has a nonempty type and run ID, a timestamp and a positive

@@ -10,6 +10,7 @@ import {
   type ApiProviderOptions,
 } from "./http.js";
 import { collectOpenAI } from "./streams.js";
+import { apiInspection } from "./discovery.js";
 
 const wire = z.object({
   status: z.string(),
@@ -48,6 +49,7 @@ export function openai(options: ApiProviderOptions): ProviderAdapter {
   const post = streamTransport(options, "https://api.openai.com/v1/", "bearer");
   return {
     info: apiInfo("openai", "OpenAI", options, "openai-api"),
+    inspect: apiInspection(options, "https://api.openai.com/v1/", "bearer"),
     async complete(request, context) {
       const input = request.messages.flatMap((message): unknown[] => {
         if (message.role === "tool")

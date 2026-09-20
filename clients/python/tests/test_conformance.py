@@ -50,6 +50,9 @@ class ClientConformance(unittest.TestCase):
                     raise failure
 
     def test_real_host_scope_progress_and_tls(self):
+        refreshed = self.client().providers(refresh=True)[0]
+        self.assertEqual(refreshed["health"]["code"], "DISCOVERY_UNSUPPORTED")
+        self.assertEqual(refreshed["modelCatalog"]["source"], "configured")
         request = {"provider": "mock", "model": "demo", "input": "Hello"}
         with self.assertRaises(DriverError) as error:
             self.client(token="wrong-token").run(**request)

@@ -44,6 +44,10 @@ func TestProtocolRoundTrip(t *testing.T) {
 	if err != nil || len(providers) != 1 || providers[0].ID != "mock" {
 		t.Fatalf("catalog: %v %v", providers, err)
 	}
+	providers, err = client.RefreshProviders(context.Background())
+	if err != nil || len(providers) != 1 || providers[0].Health == nil || providers[0].Health.Code != "DISCOVERY_UNSUPPORTED" || providers[0].ModelCatalog == nil || providers[0].ModelCatalog.Source != "configured" {
+		t.Fatalf("refreshed catalog: %v %v", providers, err)
+	}
 	protocol, err := client.Protocol(context.Background())
 	if err != nil || protocol.Version != ProtocolVersion {
 		t.Fatalf("protocol: %v %v", protocol, err)

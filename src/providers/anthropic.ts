@@ -10,6 +10,7 @@ import {
   type ApiProviderOptions,
 } from "./http.js";
 import { collectAnthropic } from "./streams.js";
+import { apiInspection } from "./discovery.js";
 
 const wire = z.object({
   content: z.array(
@@ -41,6 +42,11 @@ export function anthropic(options: ApiProviderOptions): ProviderAdapter {
   );
   return {
     info: apiInfo("anthropic", "Claude API", options, "claude"),
+    inspect: apiInspection(
+      options,
+      "https://api.anthropic.com/v1/",
+      "anthropic",
+    ),
     async complete(request, context) {
       const messages: { role: string; content: unknown[] }[] = [];
       for (const message of request.messages) {

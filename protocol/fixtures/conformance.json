@@ -597,6 +597,159 @@
         ]
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "discovery-metadata",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            },
+            "health": {
+              "status": "unknown",
+              "code": "FUTURE_DISCOVERY_CODE",
+              "message": "Account state is unknown",
+              "checkedAt": "2026-09-20T12:00:00.000Z",
+              "futureField": true
+            },
+            "modelCatalog": {
+              "source": "provider",
+              "models": ["demo"],
+              "complete": true,
+              "futureField": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "invalid-health",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            },
+            "health": null,
+            "modelCatalog": {
+              "source": "provider",
+              "models": ["demo"],
+              "complete": true,
+              "futureField": true
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "invalid-health-time",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            },
+            "health": {
+              "status": "unknown",
+              "code": "FUTURE_DISCOVERY_CODE",
+              "message": "Account state is unknown",
+              "checkedAt": "now",
+              "futureField": true
+            },
+            "modelCatalog": {
+              "source": "provider",
+              "models": ["demo"],
+              "complete": true,
+              "futureField": true
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "invalid-catalog-model",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            },
+            "health": {
+              "status": "unknown",
+              "code": "FUTURE_DISCOVERY_CODE",
+              "message": "Account state is unknown",
+              "checkedAt": "2026-09-20T12:00:00.000Z",
+              "futureField": true
+            },
+            "modelCatalog": {
+              "source": "provider",
+              "models": [null],
+              "complete": true,
+              "futureField": true
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "invalid-catalog-completeness",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Mock",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": true
+            },
+            "health": {
+              "status": "unknown",
+              "code": "FUTURE_DISCOVERY_CODE",
+              "message": "Account state is unknown",
+              "checkedAt": "2026-09-20T12:00:00.000Z",
+              "futureField": true
+            },
+            "modelCatalog": {
+              "source": "provider",
+              "models": ["demo"],
+              "complete": null,
+              "futureField": true
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

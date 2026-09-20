@@ -11,6 +11,7 @@ import {
   type ApiProviderOptions,
 } from "./http.js";
 import { collectGemini } from "./streams.js";
+import { apiInspection } from "./discovery.js";
 
 const wire = z.object({
   candidates: z
@@ -57,6 +58,11 @@ export function gemini(options: ApiProviderOptions): ProviderAdapter {
   );
   return {
     info: apiInfo("gemini", "Gemini API", options, "gemini"),
+    inspect: apiInspection(
+      options,
+      "https://generativelanguage.googleapis.com/v1beta/",
+      "google",
+    ),
     async complete(request, context) {
       const contents: { role: string; parts: unknown[] }[] = [];
       for (const message of request.messages) {

@@ -63,8 +63,8 @@ class AgenticClient:
             raise DriverError("RESPONSE_TOO_LARGE", "The response exceeded 2 MB.")
         return parse_json(data)
 
-    def providers(self) -> list[dict[str, Any]]:
-        with self._request("v1/providers") as response:
+    def providers(self, *, refresh: bool = False) -> list[dict[str, Any]]:
+        with self._request("v1/providers?refresh=true" if refresh else "v1/providers") as response:
             catalog = self._json(response)
             if not valid_catalog(catalog):
                 raise DriverError("INVALID_RESPONSE", "The driver returned an invalid provider catalog.")

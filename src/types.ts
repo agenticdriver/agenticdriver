@@ -104,6 +104,47 @@ export interface ProviderTurn {
   native?: unknown;
   finishReason?: "stop" | "length";
 }
+export const ProviderHealthSchema = z.object({
+  status: z.enum([
+    "ready",
+    "unauthenticated",
+    "unavailable",
+    "unsupported",
+    "unknown",
+  ]),
+  code: z.string().min(1),
+  message: z.string(),
+  checkedAt: z.iso.datetime({ offset: true }),
+});
+export type ProviderHealth = z.infer<typeof ProviderHealthSchema>;
+export const ModelCatalogSchema = z.object({
+  source: z.enum(["provider", "configured", "unavailable"]),
+  models: z.array(z.string()).max(1000),
+  complete: z.boolean(),
+});
+export type ModelCatalog = z.infer<typeof ModelCatalogSchema>;
+/** Inspection codes are converted to fixed public messages; raw diagnostics are never returned. */
+export type ProviderInspectionCode =
+  | "CATALOG_AVAILABLE"
+  | "AUTH_REQUIRED"
+  | "AUTH_REJECTED"
+  | "ACCESS_DENIED"
+  | "RATE_LIMITED"
+  | "PROVIDER_UNREACHABLE"
+  | "DISCOVERY_UNSUPPORTED"
+  | "INVALID_DISCOVERY_RESPONSE"
+  | "CLI_UNAVAILABLE"
+  | "CLI_UPGRADE_REQUIRED"
+  | "CLI_SESSION_PRESENT"
+  | "CLI_AUTH_REQUIRED"
+  | "CLI_STATUS_UNKNOWN"
+  | "DISCOVERY_TIMEOUT"
+  | "DISCOVERY_FAILED";
+export interface ProviderInspection {
+  code: ProviderInspectionCode;
+  models?: string[];
+  complete?: boolean;
+}
 export interface ProviderInfo {
   id: string;
   name: string;
@@ -117,9 +158,14 @@ export interface ProviderInfo {
   /** A server-owned allowlist. Omit to accept any explicit model ID. */
   models?: string[];
   usageStatId?: string;
+  /** Advisory discovery metadata. It never changes the allowlist or run selection. */
+  health?: ProviderHealth;
+  modelCatalog?: ModelCatalog;
 }
 export interface ProviderAdapter {
   readonly info: ProviderInfo;
+  /** Read-only, non-generation probe. Must honor cancellation and keep credentials private. */
+  inspect?(context: { signal: AbortSignal }): Promise<ProviderInspection>;
   complete(
     request: ProviderRequest,
     context: ProviderContext,

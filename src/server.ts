@@ -122,11 +122,16 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         json(res, 200, protocolInfo());
         return;
       }
-      if (req.url === "/v1/providers" && req.method === "GET") {
+      if (
+        (req.url === "/v1/providers" ||
+          req.url === "/v1/providers?refresh=true") &&
+        req.method === "GET"
+      ) {
         json(res, 200, {
-          providers: driver
-            .listProviders()
-            .filter((p) => principal.providers.includes(p.id)),
+          providers: await driver.discoverProviders({
+            providers: principal.providers,
+            refresh: req.url.endsWith("?refresh=true"),
+          }),
         });
         return;
       }

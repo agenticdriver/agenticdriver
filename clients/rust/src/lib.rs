@@ -147,6 +147,24 @@ pub struct Provider {
     pub models: Option<Vec<String>>,
     pub usage_stat_id: Option<String>,
     pub capabilities: Capabilities,
+    #[serde(default, deserialize_with = "validation::optional_health")]
+    pub health: Option<ProviderHealth>,
+    #[serde(default, deserialize_with = "validation::optional_catalog")]
+    pub model_catalog: Option<ModelCatalog>,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderHealth {
+    pub status: String,
+    pub code: String,
+    pub message: String,
+    pub checked_at: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct ModelCatalog {
+    pub source: String,
+    pub models: Vec<String>,
+    pub complete: bool,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -283,11 +301,22 @@ impl AgenticClient {
         Ok(info)
     }
     pub fn providers(&self) -> Result<Vec<Provider>> {
+        self.provider_catalog(false)
+    }
+    pub fn refresh_providers(&self) -> Result<Vec<Provider>> {
+        self.provider_catalog(true)
+    }
+    fn provider_catalog(&self, refresh: bool) -> Result<Vec<Provider>> {
         #[derive(Deserialize)]
         struct Catalog {
             providers: Vec<Provider>,
         }
-        Ok(read_json::<Catalog>(self.request("v1/providers", None, false)?)?.providers)
+        let path = if refresh {
+            "v1/providers?refresh=true"
+        } else {
+            "v1/providers"
+        };
+        Ok(read_json::<Catalog>(self.request(path, None, false)?)?.providers)
     }
     pub fn run(&self, request: &RunRequest) -> Result<RunResult> {
         let result: RunResult = read_json(self.request("v1/runs", Some(request), false)?)?;

@@ -3,6 +3,7 @@ import { Ajv, type ValidateFunction } from "ajv";
 import { abortable, DriverError, publicError } from "./errors.js";
 import { RunRequestSchema } from "./types.js";
 import { withProgress } from "./progress.js";
+import { ProviderDiscovery, type DiscoveryOptions } from "./discovery.js";
 import type {
   EventPayload,
   ExecutionContext,
@@ -21,6 +22,7 @@ import type {
 
 export interface DriverOptions {
   providers: ProviderAdapter[];
+  discovery?: DiscoveryOptions;
   tools?: Tool[];
   approve?: (
     call: ToolCall,
@@ -37,6 +39,7 @@ export interface DriverOptions {
 }
 
 export class AgenticDriver {
+  private readonly discovery: ProviderDiscovery;
   private readonly providers = new Map<string, ProviderAdapter>();
   private readonly tools = new Map<
     string,
@@ -48,6 +51,7 @@ export class AgenticDriver {
     validateFormats: false,
   });
   constructor(private readonly options: DriverOptions) {
+    this.discovery = new ProviderDiscovery(options.discovery);
     for (const provider of options.providers) {
       if (this.providers.has(provider.info.id))
         throw new Error(`Duplicate provider instance: ${provider.info.id}`);
@@ -79,6 +83,29 @@ export class AgenticDriver {
 
   listProviders() {
     return structuredClone([...this.providers.values()].map((p) => p.info));
+  }
+
+  /** Embedded callers are trusted. Remote hosts must supply their authorized instance IDs. */
+  async discoverProviders(
+    options: {
+      providers?: readonly string[];
+      refresh?: boolean;
+      signal?: AbortSignal;
+    } = {},
+  ) {
+    options.signal?.throwIfAborted();
+    const operation = Promise.all(
+      [...this.providers.values()]
+        .filter(
+          (provider) =>
+            !options.providers || options.providers.includes(provider.info.id),
+        )
+        .map((provider) =>
+          this.discovery.get(provider, options.refresh ?? false),
+        ),
+    );
+    // Cancelling one reader never cancels a probe shared by other authorized readers.
+    return options.signal ? abortable(operation, options.signal) : operation;
   }
 
   /** Also used by the remote host to reject invalid runs before sending SSE headers. */

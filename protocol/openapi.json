@@ -29,7 +29,13 @@
         "operationId": "listProviders",
         "parameters": [
           { "$ref": "#/components/parameters/ProtocolVersion" },
-          { "$ref": "#/components/parameters/OptionalEvents" }
+          { "$ref": "#/components/parameters/OptionalEvents" },
+          {
+            "name": "refresh",
+            "in": "query",
+            "schema": { "const": "true" },
+            "description": "Refresh account health and model inventory, subject to the host's minimum refresh interval. Omit to use the normal cache."
+          }
         ],
         "responses": {
           "200": {
@@ -188,6 +194,47 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "ProviderHealth": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "unauthenticated",
+              "unavailable",
+              "unsupported",
+              "unknown"
+            ]
+          },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string" },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          }
+        },
+        "required": ["status", "code", "message", "checkedAt"]
+      },
+      "ModelCatalog": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": ["provider", "configured", "unavailable"]
+          },
+          "models": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "complete": { "type": "boolean" }
+        },
+        "required": ["source", "models", "complete"]
+      },
       "RunRequest": {
         "type": "object",
         "properties": {
@@ -342,6 +389,8 @@
           "authMode": { "enum": ["api-key", "cli-session", "none"] },
           "models": { "type": "array", "items": { "type": "string" } },
           "usageStatId": { "type": "string" },
+          "health": { "$ref": "#/components/schemas/ProviderHealth" },
+          "modelCatalog": { "$ref": "#/components/schemas/ModelCatalog" },
           "capabilities": {
             "type": "object",
             "required": ["tools", "textStreaming"],
