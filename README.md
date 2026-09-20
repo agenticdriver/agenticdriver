@@ -20,6 +20,8 @@ protocol fixtures; real paid/account-backed inference has not been certified.
   validated JSON output, optional inactivity timeouts, and cancellation.
 - A Node.js execution host with HTTPS, bearer authentication, provider/tool
   scopes, exact browser-origin allowlists, request limits, and concurrency limits.
+- An [installable host CLI](docs/host.md) with `init`, `serve`, `status`, `doctor`,
+  and `run`, explicit account/model selection, and separate credential references.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
@@ -149,6 +151,10 @@ CLI adapters currently expose text generation only. Supply selected passages,
 briefs, or emails as context for those adapters. Unsupported tools fail explicitly.
 
 ## Local and remote host
+
+For a configuration-driven installation, use the [host CLI guide](docs/host.md).
+It covers local archive installation, secret references, TLS, service setup and
+restart recovery. The following source example is useful when embedding the host:
 
 ```bash
 export AGENTICDRIVER_TOKEN="$(openssl rand -hex 32)"

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
+import { HostConfigSchema } from "../src/host.js";
 import {
   RunRequestSchema,
   ModelCatalogSchema,
@@ -363,4 +364,16 @@ await mkdir(new URL("../protocol/", import.meta.url), { recursive: true });
 await writeFile(
   new URL("../protocol/openapi.json", import.meta.url),
   await format(JSON.stringify(document), { parser: "json" }),
+);
+await writeFile(
+  new URL("../protocol/host-config.schema.json", import.meta.url),
+  await format(
+    JSON.stringify(
+      z.toJSONSchema(HostConfigSchema, {
+        target: "draft-2020-12",
+        io: "input",
+      }),
+    ),
+    { parser: "json" },
+  ),
 );

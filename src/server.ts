@@ -62,6 +62,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
   });
   const active = new Set<AbortController>(),
     subjectRuns = new Map<string, number>();
+  const requests = new Set<Promise<void>>();
+  let closing = false;
+  let closed: Promise<void> | undefined;
   const maxConcurrent = options.maxConcurrentRuns ?? 32,
     maxPerSubject = options.maxConcurrentRunsPerSubject ?? 4;
   if (
@@ -78,6 +81,12 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       res.setHeader("Strict-Transport-Security", "max-age=31536000");
     let release: (() => void) | undefined;
     try {
+      if (closing)
+        throw new DriverError(
+          "HOST_SHUTTING_DOWN",
+          "The execution host is shutting down.",
+          true,
+        );
       const origin = req.headers.origin;
       if (origin) {
         if (!options.allowedOrigins?.includes(origin))
@@ -161,6 +170,12 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "Compressed requests are not supported.",
         );
       const request = driver.validate(await readRequest(req));
+      if (closing)
+        throw new DriverError(
+          "HOST_SHUTTING_DOWN",
+          "The execution host is shutting down.",
+          true,
+        );
       if (
         !principal.providers.includes(request.provider) ||
         request.tools?.some((name) => !principal.tools.includes(name))
@@ -241,12 +256,14 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       release?.();
     }
   };
+  const handle = (req: IncomingMessage, res: ServerResponse) => {
+    const pending = handler(req, res);
+    requests.add(pending);
+    void pending.finally(() => requests.delete(pending)).catch(() => {});
+  };
   const server = options.tls
-    ? httpsServer(
-        { ...options.tls, minVersion: "TLSv1.2" },
-        (req, res) => void handler(req, res),
-      )
-    : httpServer((req, res) => void handler(req, res));
+    ? httpsServer({ ...options.tls, minVersion: "TLSv1.2" }, handle)
+    : httpServer(handle);
   server.requestTimeout = 30_000;
   server.headersTimeout = 10_000;
   server.keepAliveTimeout = 5000;
@@ -262,12 +279,18 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     throw new Error("Could not determine server address.");
   return {
     url: `${options.tls ? "https" : "http"}://${host.includes(":") ? `[${host}]` : host}:${address.port}`,
-    async close() {
-      for (const controller of active) controller.abort();
-      server.closeAllConnections();
-      await new Promise<void>((resolve, reject) =>
-        server.close((error) => (error ? reject(error) : resolve())),
-      );
+    close(): Promise<void> {
+      return (closed ??= (async () => {
+        closing = true;
+        const stopped = new Promise<void>((resolve, reject) =>
+          server.close((error) => (error ? reject(error) : resolve())),
+        );
+        for (const controller of active) controller.abort();
+        server.closeAllConnections();
+        await stopped;
+        // Let cancellation persist terminal records and release per-run resources.
+        await Promise.allSettled([...requests]);
+      })());
     },
   };
 }
@@ -296,6 +319,7 @@ function statusFor(code: string) {
       "OPERATION_STORE_ERROR",
       "OPERATION_STORE_FULL",
       "OPERATION_RECORD_LIMIT",
+      "HOST_SHUTTING_DOWN",
     ].includes(code)
   )
     return 503;
