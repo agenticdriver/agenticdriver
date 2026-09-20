@@ -90,6 +90,7 @@ export function openai(options: ApiProviderOptions): ProviderAdapter {
           },
           context,
           collectOpenAI,
+          request.retry,
         ),
       );
       const length =

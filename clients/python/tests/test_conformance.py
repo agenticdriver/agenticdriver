@@ -54,6 +54,17 @@ class ClientConformance(unittest.TestCase):
         self.assertEqual(refreshed["health"]["code"], "DISCOVERY_UNSUPPORTED")
         self.assertEqual(refreshed["modelCatalog"]["source"], "configured")
         request = {"provider": "mock", "model": "demo", "input": "Hello"}
+        keyed = dict(request, idempotencyKey="python-client", retry={"maxAttempts": 1})
+        accepted = self.client().run(**keyed)
+        self.assertEqual(self.client().run(**keyed), accepted)
+        with self.assertRaises(DriverError) as conflict:
+            self.client().run(**dict(keyed, input="changed"))
+        self.assertEqual(conflict.exception.code, "IDEMPOTENCY_CONFLICT")
+        with self.assertRaises(DriverError) as uncertain:
+            self.client().run(**dict(request, input="conformance-uncertain"))
+        self.assertEqual(uncertain.exception.outcome, "uncertain")
+        self.assertEqual(uncertain.exception.code, "IDLE_TIMEOUT")
+        self.assertFalse(uncertain.exception.retryable)
         with self.assertRaises(DriverError) as error:
             self.client(token="wrong-token").run(**request)
         self.assertEqual(error.exception.code, "UNAUTHORIZED")

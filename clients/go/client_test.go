@@ -57,6 +57,28 @@ func TestProtocolRoundTrip(t *testing.T) {
 	if err != nil || result.Text != "AgenticDriver is connected." {
 		t.Fatalf("result: %v %v", result, err)
 	}
+	request.IdempotencyKey = "go-client"
+	request.Retry = &RetryPolicy{MaxAttempts: 1}
+	accepted, err := client.Run(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	replayed, err := client.Run(context.Background(), request)
+	if err != nil || replayed.RunID != accepted.RunID {
+		t.Fatalf("replay: %v %v", replayed, err)
+	}
+	changed := request
+	changed.Input = "changed"
+	_, err = client.Run(context.Background(), changed)
+	if failure, ok := err.(*Error); !ok || failure.Code != "IDEMPOTENCY_CONFLICT" {
+		t.Fatalf("conflict: %v", err)
+	}
+	changed.IdempotencyKey = ""
+	changed.Input = "conformance-uncertain"
+	_, err = client.Run(context.Background(), changed)
+	if failure, ok := err.(*Error); !ok || failure.Outcome != "uncertain" || failure.Code != "IDLE_TIMEOUT" || failure.Retryable {
+		t.Fatalf("uncertain: %v", err)
+	}
 	terminal := false
 	err = client.Stream(context.Background(), request, func(event Event) error { terminal = event.Type == "run.completed"; return nil })
 	if err != nil || !terminal {

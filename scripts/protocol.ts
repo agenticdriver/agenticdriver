@@ -84,6 +84,11 @@ const schemas = {
       code: { type: "string", minLength: 1 },
       message: string,
       retryable: { type: "boolean" },
+      outcome: {
+        const: "uncertain",
+        description:
+          "Effects may have occurred; reconcile them before any replacement operation.",
+      },
     },
     description:
       "Stable code, displayable message and retryability hint. Clients preserve unknown codes; retryable never authorizes automatic replay of tool effects.",

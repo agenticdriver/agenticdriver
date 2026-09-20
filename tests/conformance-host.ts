@@ -8,6 +8,8 @@ import {
   setTimeout as delay,
 } from "node:timers/promises";
 import { AgenticDriver } from "../src/driver.js";
+import { MemoryOperationStore } from "../src/operations.js";
+import { DriverError } from "../src/errors.js";
 import { mockProvider } from "../src/providers/mock.js";
 import { serve } from "../src/server.js";
 import type { ServerResponse } from "node:http";
@@ -49,9 +51,17 @@ const metrics = { cancelled: 0, redirects: 0, unauthorized: 0 };
 const pending = new Set<ServerResponse>();
 const driver = await serve(
   new AgenticDriver({
+    operations: new MemoryOperationStore(),
     providers: [
       mockProvider(async (request, context) => {
         const input = request.messages.at(-1)?.content;
+        if (input === "conformance-uncertain")
+          throw new DriverError(
+            "IDLE_TIMEOUT",
+            "The fixture tool outcome is uncertain.",
+            false,
+            "uncertain",
+          );
         if (input === "conformance-stall") return new Promise(() => {});
         if (input === "conformance-progress") {
           for (let n = 0; n < 16; n++) {

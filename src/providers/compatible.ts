@@ -92,6 +92,7 @@ export function openaiCompatible(
           },
           context,
           collectChat,
+          request.retry,
         ),
       );
       const choice = result.choices[0];

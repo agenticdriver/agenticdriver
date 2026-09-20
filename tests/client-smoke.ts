@@ -16,6 +16,20 @@ const request = {
   idleTimeoutMs: 10_000,
 };
 assert.equal((await client.run(request)).text, "AgenticDriver is connected.");
+const keyed = {
+  ...request,
+  idempotencyKey: "typescript-client",
+  retry: { maxAttempts: 1 },
+};
+const accepted = await client.run(keyed);
+assert.deepEqual(await client.run(keyed), accepted);
+await assert.rejects(client.run({ ...keyed, input: "changed" }), {
+  code: "IDEMPOTENCY_CONFLICT",
+});
+await assert.rejects(
+  client.run({ ...request, input: "conformance-uncertain" }),
+  { code: "IDLE_TIMEOUT", outcome: "uncertain", retryable: false },
+);
 const types = [];
 for await (const event of client.stream(request)) types.push(event.type);
 assert.equal(types.at(-1), "run.completed");

@@ -24,7 +24,9 @@ export interface ProtocolInfo {
   features: string[];
 }
 
-export function protocolInfo(): ProtocolInfo {
+export function protocolInfo(
+  options: { idempotency?: boolean } = {},
+): ProtocolInfo {
   return {
     protocol: "agenticdriver",
     version: PROTOCOL_VERSION,
@@ -37,6 +39,7 @@ export function protocolInfo(): ProtocolInfo {
       "required-capabilities",
       "optional-events",
       "provider-discovery",
+      ...(options.idempotency ? ["idempotency"] : []),
     ],
   };
 }

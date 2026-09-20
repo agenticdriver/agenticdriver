@@ -4,6 +4,12 @@ import { abortable, DriverError, publicError } from "./errors.js";
 import { RunRequestSchema } from "./types.js";
 import { withProgress } from "./progress.js";
 import { ProviderDiscovery, type DiscoveryOptions } from "./discovery.js";
+import {
+  newOperation,
+  operationKey,
+  recoveryEvents,
+  type OperationStore,
+} from "./operations.js";
 import type {
   EventPayload,
   ExecutionContext,
@@ -23,6 +29,8 @@ import type {
 export interface DriverOptions {
   providers: ProviderAdapter[];
   discovery?: DiscoveryOptions;
+  /** Explicitly configure a store before accepting idempotency keys. */
+  operations?: OperationStore;
   tools?: Tool[];
   approve?: (
     call: ToolCall,
@@ -35,11 +43,13 @@ export interface DriverOptions {
     maxSteps?: number;
     idleTimeoutMs?: number;
     maxOutputTokens?: number;
+    maxAttempts?: number;
   };
 }
 
 export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
+  private readonly activeOperations = new Set<string>();
   private readonly providers = new Map<string, ProviderAdapter>();
   private readonly tools = new Map<
     string,
@@ -85,6 +95,10 @@ export class AgenticDriver {
     return structuredClone([...this.providers.values()].map((p) => p.info));
   }
 
+  get supportsIdempotency(): boolean {
+    return this.options.operations !== undefined;
+  }
+
   /** Embedded callers are trusted. Remote hosts must supply their authorized instance IDs. */
   async discoverProviders(
     options: {
@@ -117,11 +131,24 @@ export class AgenticDriver {
         "The run request does not match the v1 schema.",
       );
     const request = parsed.data;
+    if (request.idempotencyKey && !this.options.operations)
+      throw new DriverError(
+        "IDEMPOTENCY_UNAVAILABLE",
+        "Configure an operation store on the execution host before using idempotency keys.",
+      );
     const provider = this.providers.get(request.provider);
     if (!provider)
       throw new DriverError(
         "UNKNOWN_PROVIDER",
         "The provider instance is not configured.",
+      );
+    if (
+      (request.retry?.maxAttempts ?? 1) > 1 &&
+      !provider.info.capabilities.safeRetries
+    )
+      throw new DriverError(
+        "UNSUPPORTED_CAPABILITY",
+        "This provider adapter does not support safe provider retries.",
       );
     if (provider.info.models && !provider.info.models.includes(request.model))
       throw new DriverError(
@@ -173,6 +200,7 @@ export class AgenticDriver {
           event.error.code,
           event.error.message,
           event.error.retryable,
+          event.error.outcome,
         );
     }
     throw new DriverError(
@@ -186,9 +214,84 @@ export class AgenticDriver {
     options: RunOptions = {},
   ): AsyncGenerator<RunEvent> {
     const request = this.validate(input);
+    const runId = randomUUID();
+    if (!request.idempotencyKey) {
+      yield* this.execute(request, options, runId);
+      return;
+    }
+    if (options.signal?.aborted)
+      throw publicError(options.signal.reason, options.signal);
+    const subject = options.subject ?? "local";
+    const proposed = newOperation(request, runId);
+    const claim = await this.options.operations!.claim(
+      subject,
+      request.idempotencyKey,
+      proposed,
+    );
+    const key = operationKey(subject, request.idempotencyKey);
+    if (!claim.created) {
+      if (claim.record.fingerprint !== proposed.fingerprint)
+        throw new DriverError(
+          "IDEMPOTENCY_CONFLICT",
+          "This idempotency key was already accepted with a different request.",
+        );
+      if (claim.record.state === "running" && this.activeOperations.has(key))
+        throw new DriverError(
+          "OPERATION_IN_PROGRESS",
+          "This operation is already executing. No duplicate operation was started.",
+          true,
+        );
+      for (const event of recoveryEvents(claim.record)) {
+        options.signal?.throwIfAborted();
+        yield event;
+      }
+      return;
+    }
+    this.activeOperations.add(key);
+    let terminal = false,
+      last: RunEvent | undefined;
+    try {
+      for await (const event of this.execute(request, options, runId)) {
+        await claim.writer.append(event);
+        last = event;
+        terminal = ["run.completed", "run.failed", "run.cancelled"].includes(
+          event.type,
+        );
+        yield event;
+      }
+    } catch (error) {
+      if (!last) throw error;
+      yield {
+        type: "run.failed",
+        runId,
+        sequence: last.sequence + 1,
+        timestamp: new Date().toISOString(),
+        error: (error instanceof DriverError
+          ? error
+          : new DriverError(
+              "OPERATION_STORE_ERROR",
+              "The operation record could not be committed. Its outcome may be uncertain; do not replay it with a new key.",
+              false,
+              "uncertain",
+            )
+        ).toJSON(),
+      };
+    } finally {
+      if (!terminal)
+        await claim.writer.interrupt().catch(() => {
+          /* Existing accepted record remains an uncertainty barrier. */
+        });
+      this.activeOperations.delete(key);
+    }
+  }
+
+  private async *execute(
+    request: RunRequest,
+    options: RunOptions,
+    runId: string,
+  ): AsyncGenerator<RunEvent> {
     const provider = this.providers.get(request.provider)!;
-    const runId = randomUUID(),
-      startedAt = Date.now();
+    const startedAt = Date.now();
     const controller = new AbortController();
     const idleLimits = [
       request.idleTimeoutMs,
@@ -225,6 +328,7 @@ export class AgenticDriver {
       usage: Usage = {},
       turns = 0;
     let status: UsageRecord["status"] = "cancelled";
+    let toolOutcomePending = false;
     const event = (payload: EventPayload): RunEvent => ({
       ...payload,
       runId,
@@ -282,6 +386,15 @@ export class AgenticDriver {
                   inputSchema: tool.inputSchema,
                 })),
                 maxOutputTokens,
+                retry: request.retry
+                  ? {
+                      ...request.retry,
+                      maxAttempts: Math.min(
+                        request.retry.maxAttempts,
+                        this.options.limits?.maxAttempts ?? 5,
+                      ),
+                    }
+                  : undefined,
               },
               providerContext,
             ),
@@ -388,6 +501,7 @@ export class AgenticDriver {
             );
           signal.throwIfAborted();
           let output: Json;
+          toolOutcomePending = true;
           try {
             output = (yield* withProgress(
               (toolContext) => tool.execute(call.arguments, toolContext),
@@ -407,6 +521,7 @@ export class AgenticDriver {
               "Tool output must be JSON and at most 1 MB.",
             );
           signal.throwIfAborted();
+          toolOutcomePending = false;
           messages.push({
             role: "tool",
             content: encoded,
@@ -418,9 +533,20 @@ export class AgenticDriver {
       }
     } catch (error) {
       status = signal.aborted ? "cancelled" : "failed";
+      const cause = publicError(error, signal);
+      const failure = toolOutcomePending
+        ? new DriverError(
+            ["IDLE_TIMEOUT", "CANCELLED"].includes(cause.code)
+              ? cause.code
+              : "TOOL_OUTCOME_UNCERTAIN",
+            "The tool operation stopped before its outcome was confirmed. Its effects are uncertain; reconcile them before any replacement operation.",
+            false,
+            "uncertain",
+          )
+        : cause;
       yield event({
         type: status === "cancelled" ? "run.cancelled" : "run.failed",
-        error: publicError(error, signal).toJSON(),
+        error: failure.toJSON(),
       });
     } finally {
       clearTimeout(timer);

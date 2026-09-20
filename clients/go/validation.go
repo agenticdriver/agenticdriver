@@ -52,6 +52,12 @@ func usageValid(data []byte) bool {
 }
 func errorValid(data []byte) bool {
 	value, ok := object(data)
+	if outcome, present := value["outcome"]; present {
+		text, _ := stringValue(outcome)
+		if text != "uncertain" {
+			return false
+		}
+	}
 	return ok && stringField(value, "code", false) && stringField(value, "message", true) && boolValue(value["retryable"])
 }
 

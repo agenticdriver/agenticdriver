@@ -8,6 +8,12 @@ use std::io::BufRead;
 pub(crate) const MAX_BYTES: usize = 2_000_000;
 const MAX_INTEGER: u64 = 9_007_199_254_740_991;
 
+pub(crate) fn optional_outcome<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<crate::ErrorOutcome>, D::Error> {
+    Ok(Some(crate::ErrorOutcome::deserialize(deserializer)?))
+}
+
 pub(crate) fn optional_health<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> std::result::Result<Option<ProviderHealth>, D::Error> {

@@ -89,6 +89,7 @@ export function anthropic(options: ApiProviderOptions): ProviderAdapter {
           },
           context,
           collectAnthropic,
+          request.retry,
         ),
       );
       if (

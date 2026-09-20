@@ -6,11 +6,24 @@ export type JsonObject = { [key: string]: Json };
 export type AuthMode = "api-key" | "cli-session" | "none";
 
 const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
+export const RetryPolicySchema = z
+  .object({
+    maxAttempts: z.number().int().min(1).max(5),
+    baseDelayMs: z.number().int().min(0).max(60_000).optional(),
+    maxDelayMs: z.number().int().min(0).max(60_000).optional(),
+  })
+  .strict();
+export type RetryPolicy = z.infer<typeof RetryPolicySchema>;
 export const RunRequestSchema = z
   .object({
     provider: id,
     model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
     input: z.string().min(1).max(100_000),
+    idempotencyKey: z
+      .string()
+      .regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/)
+      .optional(),
+    retry: RetryPolicySchema.optional(),
     instructions: z.string().max(100_000).optional(),
     history: z
       .array(
@@ -95,6 +108,7 @@ export interface ProviderRequest {
   messages: ProviderMessage[];
   tools: ToolDefinition[];
   maxOutputTokens: number;
+  retry?: RetryPolicy;
 }
 export interface ProviderTurn {
   text: string;
@@ -185,6 +199,8 @@ export interface ErrorInfo {
   code: string;
   message: string;
   retryable: boolean;
+  /** An accepted operation or invoked tool may have produced effects that need reconciliation. */
+  outcome?: "uncertain";
 }
 type EventPayload =
   | { type: "run.started"; provider: string; model: string }

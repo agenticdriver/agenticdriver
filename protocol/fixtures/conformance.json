@@ -750,6 +750,60 @@
         ]
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "invalid-error-outcome",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "IDLE_TIMEOUT",
+            "message": "Stopped",
+            "retryable": false,
+            "outcome": {}
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "null-error-outcome",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "IDLE_TIMEOUT",
+            "message": "Stopped",
+            "retryable": false,
+            "outcome": null
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
     }
   ]
 }

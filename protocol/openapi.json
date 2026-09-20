@@ -247,6 +247,28 @@
             "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
           },
           "input": { "type": "string", "minLength": 1, "maxLength": 100000 },
+          "idempotencyKey": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "retry": {
+            "type": "object",
+            "properties": {
+              "maxAttempts": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "baseDelayMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60000
+              },
+              "maxDelayMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60000
+              }
+            },
+            "required": ["maxAttempts"],
+            "additionalProperties": false
+          },
           "instructions": { "type": "string", "maxLength": 100000 },
           "history": {
             "maxItems": 100,
@@ -375,7 +397,11 @@
         "properties": {
           "code": { "type": "string", "minLength": 1 },
           "message": { "type": "string" },
-          "retryable": { "type": "boolean" }
+          "retryable": { "type": "boolean" },
+          "outcome": {
+            "const": "uncertain",
+            "description": "Effects may have occurred; reconcile them before any replacement operation."
+          }
         },
         "description": "Stable code, displayable message and retryability hint. Clients preserve unknown codes; retryable never authorizes automatic replay of tool effects."
       },

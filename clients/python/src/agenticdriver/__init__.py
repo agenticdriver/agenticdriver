@@ -53,7 +53,7 @@ class AgenticClient:
             finally:
                 error.close()
             if valid_error(payload):
-                raise DriverError(payload["code"], payload["message"], payload["retryable"]) from None
+                raise DriverError(payload["code"], payload["message"], payload["retryable"], payload.get("outcome")) from None
             raise DriverError("HTTP_ERROR", f"Driver returned HTTP {error.code}.", error.code == 429 or error.code >= 500) from None
 
     @staticmethod

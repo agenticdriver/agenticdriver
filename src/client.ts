@@ -22,6 +22,7 @@ const errorSchema = z.object({
     code: z.string().min(1),
     message: z.string(),
     retryable: z.boolean(),
+    outcome: z.literal("uncertain").optional(),
   }),
 });
 const usageSchema = z.object({
@@ -134,6 +135,7 @@ export class AgenticClient {
           error.data.error.code,
           error.data.error.message,
           error.data.error.retryable,
+          error.data.error.outcome,
         );
       throw new DriverError(
         "HTTP_ERROR",
@@ -223,6 +225,7 @@ export class AgenticClient {
           event.error.code,
           event.error.message,
           event.error.retryable,
+          event.error.outcome,
         );
     }
     throw new DriverError(

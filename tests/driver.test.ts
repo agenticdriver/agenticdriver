@@ -273,7 +273,7 @@ test("the idle timer restarts after progress and cancels a subsequently stalled 
   });
   await assert.rejects(
     driver.run({ ...request, tools: ["search"], idleTimeoutMs: 50 }),
-    { code: "IDLE_TIMEOUT" },
+    { code: "IDLE_TIMEOUT", outcome: "uncertain", retryable: false },
   );
   assert.equal(toolSignal.aborted, true);
 });

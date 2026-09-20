@@ -2,7 +2,13 @@ import { z } from "zod";
 import { DriverError } from "../errors.js";
 import { readLimited, secureBaseUrl } from "../security.js";
 import { readSse } from "../client.js";
-import type { JsonObject, ProviderInfo, ProviderContext } from "../types.js";
+import { fetchWithSafeRetries } from "./retry.js";
+import type {
+  JsonObject,
+  ProviderInfo,
+  ProviderContext,
+  RetryPolicy,
+} from "../types.js";
 
 export interface ApiProviderOptions {
   apiKey: string | (() => string | Promise<string>);
@@ -23,7 +29,7 @@ export function apiInfo(
     name: options.name ?? name,
     vendor,
     authMode: "api-key",
-    capabilities: { tools: true, textStreaming: true },
+    capabilities: { tools: true, textStreaming: true, safeRetries: true },
     models: options.models,
     usageStatId,
   };
@@ -42,6 +48,7 @@ export function streamTransport(
       events: AsyncIterable<unknown>,
       context: ProviderContext,
     ) => Promise<unknown>,
+    retry?: RetryPolicy,
   ): Promise<unknown> => {
     const { signal } = context;
     const key =
@@ -65,7 +72,8 @@ export function streamTransport(
     }
     let response: Response;
     try {
-      response = await (options.fetch ?? globalThis.fetch)(
+      response = await fetchWithSafeRetries(
+        options.fetch ?? globalThis.fetch,
         new URL(path, base),
         {
           method: "POST",
@@ -74,6 +82,7 @@ export function streamTransport(
           signal,
           redirect: "error",
         },
+        retry,
       );
     } catch (error) {
       if (signal.aborted) throw error;

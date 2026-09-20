@@ -29,6 +29,7 @@ type Error struct {
 	Code      string `json:"code"`
 	Message   string `json:"message"`
 	Retryable bool   `json:"retryable"`
+	Outcome   string `json:"outcome,omitempty"`
 }
 
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
@@ -37,6 +38,8 @@ type Request struct {
 	Provider             string            `json:"provider"`
 	Model                string            `json:"model"`
 	Input                string            `json:"input"`
+	IdempotencyKey       string            `json:"idempotencyKey,omitempty"`
+	Retry                *RetryPolicy      `json:"retry,omitempty"`
 	Instructions         string            `json:"instructions,omitempty"`
 	History              []Message         `json:"history,omitempty"`
 	Tools                []string          `json:"tools,omitempty"`
@@ -46,6 +49,11 @@ type Request struct {
 	IdleTimeoutMs        int               `json:"idleTimeoutMs,omitempty"`
 	OutputSchema         map[string]any    `json:"outputSchema,omitempty"`
 	Metadata             map[string]string `json:"metadata,omitempty"`
+}
+type RetryPolicy struct {
+	MaxAttempts int  `json:"maxAttempts"`
+	BaseDelayMs *int `json:"baseDelayMs,omitempty"`
+	MaxDelayMs  *int `json:"maxDelayMs,omitempty"`
 }
 type Message struct {
 	Role    string `json:"role"`

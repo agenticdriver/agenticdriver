@@ -24,6 +24,13 @@ pub struct DriverError {
     pub code: String,
     pub message: String,
     pub retryable: bool,
+    #[serde(default, deserialize_with = "validation::optional_outcome")]
+    pub outcome: Option<ErrorOutcome>,
+}
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ErrorOutcome {
+    Uncertain,
 }
 #[derive(Debug)]
 pub enum Error {
@@ -68,6 +75,10 @@ pub struct RunRequest {
     pub model: String,
     pub input: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub idempotency_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retry: Option<RetryPolicy>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub instructions: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub history: Vec<Message>,
@@ -85,6 +96,15 @@ pub struct RunRequest {
     pub output_schema: Option<Value>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub metadata: BTreeMap<String, String>,
+}
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RetryPolicy {
+    pub max_attempts: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_delay_ms: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_delay_ms: Option<u32>,
 }
 impl RunRequest {
     pub fn new(
@@ -417,6 +437,7 @@ impl AgenticClient {
                             code: e.code.clone(),
                             message: e.message.clone(),
                             retryable: e.retryable,
+                            outcome: e.outcome,
                         })
                     } else {
                         None
@@ -442,6 +463,7 @@ fn protocol_error(code: &str, message: &str) -> Error {
         code: code.into(),
         message: message.into(),
         retryable: false,
+        outcome: None,
     })
 }
 fn read_json<T: serde::de::DeserializeOwned>(response: Response) -> Result<T> {

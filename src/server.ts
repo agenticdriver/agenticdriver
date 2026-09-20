@@ -119,7 +119,11 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         req.headers[PROTOCOL_VERSION_HEADER.toLowerCase()],
       );
       if (req.url === "/v1/protocol" && req.method === "GET") {
-        json(res, 200, protocolInfo());
+        json(
+          res,
+          200,
+          protocolInfo({ idempotency: driver.supportsIdempotency }),
+        );
         return;
       }
       if (
@@ -196,6 +200,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         signal: controller.signal,
       };
       if (req.headers.accept?.includes("text/event-stream")) {
+        const events = driver.stream(request, runOptions);
+        // Claims and conflicts must be resolved before a successful stream response is committed.
+        let next = await events.next();
         res.writeHead(200, {
           "Content-Type": "text/event-stream; charset=utf-8",
           "X-Accel-Buffering": "no",
@@ -206,7 +213,8 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             res.write(": heartbeat\n\n");
         }, 15_000);
         try {
-          for await (const event of driver.stream(request, runOptions)) {
+          while (!next.done) {
+            const event = next.value;
             if (res.destroyed) break;
             if (
               !res.write(
@@ -214,9 +222,11 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
               )
             )
               await once(res, "drain", { signal: controller.signal });
+            next = await events.next();
           }
         } finally {
           clearInterval(heartbeat);
+          await events.return(undefined);
         }
         res.end();
       } else json(res, 200, await driver.run(request, runOptions));
@@ -272,11 +282,29 @@ function statusFor(code: string) {
   if (["FORBIDDEN", "ORIGIN_DENIED", "APPROVAL_REQUIRED"].includes(code))
     return 403;
   if (code === "BODY_TOO_LARGE") return 413;
+  if (
+    [
+      "IDEMPOTENCY_CONFLICT",
+      "OPERATION_IN_PROGRESS",
+      "OPERATION_UNCERTAIN",
+      "TOOL_OUTCOME_UNCERTAIN",
+    ].includes(code)
+  )
+    return 409;
+  if (
+    [
+      "OPERATION_STORE_ERROR",
+      "OPERATION_STORE_FULL",
+      "OPERATION_RECORD_LIMIT",
+    ].includes(code)
+  )
+    return 503;
   if (code === "BUSY" || code === "RATE_LIMITED") return 429;
   if (code === "IDLE_TIMEOUT" || code === "TIMEOUT") return 504;
   if (
     [
       "INVALID_REQUEST",
+      "IDEMPOTENCY_UNAVAILABLE",
       "INVALID_SCHEMA",
       "UNKNOWN_PROVIDER",
       "UNKNOWN_TOOL",

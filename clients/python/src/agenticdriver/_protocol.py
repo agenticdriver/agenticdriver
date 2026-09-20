@@ -44,7 +44,7 @@ def valid_usage(value):
 
 def valid_error(value):
     return (isinstance(value, dict) and text(value.get("code")) and text(value.get("message"), True)
-            and type(value.get("retryable")) is bool)
+            and type(value.get("retryable")) is bool and ("outcome" not in value or value["outcome"] == "uncertain"))
 
 
 def valid_result(value, request, run_id=None):

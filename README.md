@@ -22,6 +22,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
   scopes, exact browser-origin allowlists, request limits, and concurrency limits.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
+- [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
 - Per-run token accounting and a usage hook/JSONL sink; a read-only Usagestat
   client for account quotas, provider metadata, and existing icon references.
 

@@ -1,4 +1,4 @@
-use agenticdriver::{AgenticClient, RunRequest};
+use agenticdriver::{AgenticClient, Error, ErrorOutcome, RetryPolicy, RunRequest};
 
 #[test]
 fn rejects_insecure_urls() {
@@ -39,6 +39,29 @@ fn protocol_round_trip() {
         "AgenticDriver is connected."
     );
     let mut terminal = false;
+    request.idempotency_key = Some("rust-client".into());
+    request.retry = Some(RetryPolicy {
+        max_attempts: 1,
+        base_delay_ms: None,
+        max_delay_ms: None,
+    });
+    let accepted = client.run(&request).unwrap();
+    assert_eq!(client.run(&request).unwrap().run_id, accepted.run_id);
+    request.input = "changed".into();
+    match client.run(&request) {
+        Err(Error::Driver(error)) => assert_eq!(error.code, "IDEMPOTENCY_CONFLICT"),
+        other => panic!("Expected conflict, got {other:?}"),
+    }
+    request.input = "Unicode 🌍 round trip".into();
+    let uncertain = RunRequest::new("mock", "demo", "conformance-uncertain");
+    match client.run(&uncertain) {
+        Err(Error::Driver(error)) => {
+            assert_eq!(error.code, "IDLE_TIMEOUT");
+            assert_eq!(error.outcome, Some(ErrorOutcome::Uncertain));
+            assert!(!error.retryable);
+        }
+        other => panic!("Expected uncertain outcome, got {other:?}"),
+    }
     client
         .stream(&request, |event| {
             terminal = event.kind == "run.completed";

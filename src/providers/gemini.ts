@@ -117,6 +117,7 @@ export function gemini(options: ApiProviderOptions): ProviderAdapter {
           },
           context,
           collectGemini,
+          request.retry,
         ),
       );
       const candidate = result.candidates?.[0];

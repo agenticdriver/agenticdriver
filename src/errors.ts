@@ -5,6 +5,7 @@ export class DriverError extends Error {
     public readonly code: string,
     message: string,
     public readonly retryable = false,
+    public readonly outcome?: "uncertain",
   ) {
     super(message);
     this.name = "DriverError";
@@ -14,6 +15,7 @@ export class DriverError extends Error {
       code: this.code,
       message: this.message,
       retryable: this.retryable,
+      ...(this.outcome ? { outcome: this.outcome } : {}),
     };
   }
 }

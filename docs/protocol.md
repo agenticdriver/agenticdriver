@@ -93,7 +93,11 @@ Errors retain `{ code, message, retryable }`. Codes are stable identifiers;
 messages may improve and are not suitable for branching. Unknown codes retain
 their message and retryability and still represent failure. The `retryable`
 flag describes a potentially transient condition, not permission to replay
-side effects. The SDK currently does not automatically retry.
+side effects. Optional `outcome: "uncertain"` marks effects requiring reconciliation;
+it is preserved even when the original error code is `IDLE_TIMEOUT` or `CANCELLED`.
+The SDK retries only when explicitly requested through a supported provider's
+`retry` policy. See [idempotency and recovery](idempotency.md) for accepted-key
+deduplication, compact outcome replay, safe retry boundaries and storage guarantees.
 
 | Codes                                                                                                                                                | Meaning                                                                                                       |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
