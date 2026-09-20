@@ -54,6 +54,9 @@ class ClientConformance(unittest.TestCase):
         self.assertEqual(refreshed["health"]["code"], "DISCOVERY_UNSUPPORTED")
         self.assertEqual(refreshed["modelCatalog"]["source"], "configured")
         request = {"provider": "mock", "model": "demo", "input": "Hello"}
+        estimated = self.client().run(**dict(request, input="conformance-cost"))
+        self.assertEqual(estimated["usage"]["apiEquivalentCostUsd"], 0.25)
+        self.assertNotIn("costUsd", estimated["usage"])
         keyed = dict(request, idempotencyKey="python-client", retry={"maxAttempts": 1})
         accepted = self.client().run(**keyed)
         self.assertEqual(self.client().run(**keyed), accepted)

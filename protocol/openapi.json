@@ -360,7 +360,12 @@
             "minimum": 0,
             "maximum": 9007199254740991
           },
-          "costUsd": { "type": "number", "minimum": 0 }
+          "costUsd": { "type": "number", "minimum": 0 },
+          "apiEquivalentCostUsd": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Reported API-equivalent estimate; never subscription spend or an invoice charge."
+          }
         },
         "description": "Measurements are omitted when unknown. Cached input is a subset of input tokens. Totals are omitted if any model step lacks that measurement."
       },

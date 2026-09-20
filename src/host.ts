@@ -27,6 +27,7 @@ import {
   type SecretResolver,
 } from "./secrets.js";
 import { jsonlUsageSink } from "./usagestat.js";
+import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
 import type { ServerOptions } from "./server.js";
 export { SecretReferenceSchema, secretResolver } from "./secrets.js";
@@ -36,6 +37,7 @@ const instance = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
 const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
 const common = {
   id: instance,
+  accountId: UsageIdSchema.optional(),
   name: z.string().min(1).max(100).optional(),
   models: z.array(model).min(1).max(1000),
 };
@@ -58,6 +60,9 @@ const cli = z
 export const HostConfigSchema = z
   .object({
     version: z.literal(1),
+    usage: UsageOptionsSchema.omit({ accounts: true })
+      .extend({ hostId: UsageIdSchema })
+      .optional(),
     listen: z
       .object({
         host: z.string().min(1).default("127.0.0.1"),
@@ -144,6 +149,11 @@ export function validateHostConfig(input: unknown): HostConfig {
       "The host configuration does not match the version 1 schema. Check provider types, model IDs and secret references.",
     );
   const config = parsed.data;
+  if (config.providers.some((p) => p.accountId) && !config.usage?.hostId)
+    throw new DriverError(
+      "USAGE_IDENTITY_REQUIRED",
+      "Account bindings require a persistent usage.hostId in the host configuration.",
+    );
   if (
     new Set(config.providers.map((p) => p.id)).size !==
       config.providers.length ||
@@ -273,6 +283,14 @@ export function configuredDriver(
   const sink = usagePath ? jsonlUsageSink(usagePath) : undefined;
   return new AgenticDriver({
     providers,
+    usage: {
+      ...config.usage,
+      accounts: Object.fromEntries(
+        config.providers.flatMap((p) =>
+          p.accountId ? [[p.id, p.accountId]] : [],
+        ),
+      ),
+    },
     tools: options.tools,
     approve: options.approve,
     limits: config.limits,

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
 import {
@@ -47,6 +48,7 @@ const wire = z.object({
       candidatesTokenCount: tokenCount,
       cachedContentTokenCount: tokenCount,
       thoughtsTokenCount: tokenCount,
+      totalTokenCount: tokenCount,
     })
     .optional(),
 });
@@ -57,6 +59,7 @@ export function gemini(options: ApiProviderOptions): ProviderAdapter {
     "google",
   );
   return {
+    usageSource: "provider-response",
     info: apiInfo("gemini", "Gemini API", options, "gemini"),
     inspect: apiInspection(
       options,
@@ -157,9 +160,12 @@ export function gemini(options: ApiProviderOptions): ProviderAdapter {
           ? {
               inputTokens: u.promptTokenCount,
               outputTokens:
-                u.candidatesTokenCount === undefined
-                  ? undefined
-                  : u.candidatesTokenCount + (u.thoughtsTokenCount ?? 0),
+                sumKnownCounts(u.candidatesTokenCount, u.thoughtsTokenCount) ??
+                (u.totalTokenCount !== undefined &&
+                u.promptTokenCount !== undefined &&
+                u.totalTokenCount >= u.promptTokenCount
+                  ? u.totalTokenCount - u.promptTokenCount
+                  : undefined),
               cachedInputTokens: u.cachedContentTokenCount,
               reasoningTokens: u.thoughtsTokenCount,
             }

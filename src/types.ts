@@ -60,13 +60,20 @@ export const RunRequestSchema = z
 export type RunRequest = z.infer<typeof RunRequestSchema>;
 
 /** Unknown measurements are omitted, never invented or treated as free usage. */
-export interface Usage {
-  inputTokens?: number;
-  outputTokens?: number;
-  cachedInputTokens?: number;
-  reasoningTokens?: number;
-  costUsd?: number;
-}
+const tokenCount = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
+export const UsageSchema = z.object({
+  inputTokens: tokenCount.optional(),
+  outputTokens: tokenCount.optional(),
+  cachedInputTokens: tokenCount.optional(),
+  reasoningTokens: tokenCount.optional(),
+  /** Explicit provider-reported cost; never inferred from a subscription plan. */
+  costUsd: z.number().nonnegative().optional(),
+  /** Reported API-equivalent estimate, not an invoice or subscription charge. */
+  apiEquivalentCostUsd: z.number().nonnegative().optional(),
+});
+export type Usage = z.infer<typeof UsageSchema>;
+export type UsageSource =
+  "provider-response" | "cli-report" | "adapter-report" | "synthetic";
 export interface ToolCall {
   id: string;
   name: string;
@@ -178,6 +185,8 @@ export interface ProviderInfo {
 }
 export interface ProviderAdapter {
   readonly info: ProviderInfo;
+  /** Provenance of this adapter's measurements, not a claim that they are invoice totals. */
+  readonly usageSource?: UsageSource;
   /** Read-only, non-generation probe. Must honor cancellation and keep credentials private. */
   inspect?(context: { signal: AbortSignal }): Promise<ProviderInspection>;
   complete(
@@ -223,7 +232,12 @@ export interface RunOptions {
   subject?: string;
 }
 export interface UsageRecord {
-  schema: "agenticdriver.usage.v1";
+  schema: "agenticdriver.usage.v2";
+  /** Stable aggregate event identity; retries at a sink must retain it. */
+  eventId: string;
+  hostId: string;
+  /** Explicit trusted host binding; absent means the billing account is unbound. */
+  accountId?: string;
   runId: string;
   subject: string;
   provider: string;
@@ -231,7 +245,21 @@ export interface UsageRecord {
   model: string;
   authMode: AuthMode;
   status: "completed" | "failed" | "cancelled";
+  source: UsageSource;
+  startedAt: string;
+  finishedAt: string;
+  /** Sink deletion policy; omitted means the sink must choose its own retention. */
+  expiresAt?: string;
+  /** Totals only for fields reported by every started model step. */
   usage: Usage;
+  /** Known subtotals; never treat these as complete run cost or quota usage. */
+  observedUsage: Usage;
+  coverage: {
+    startedSteps: number;
+    completedSteps: number;
+    reportedSteps: Partial<Record<keyof Usage, number>>;
+  };
   durationMs: number;
+  /** Trusted host labels only. Run-request metadata is never copied into metering. */
   metadata: Record<string, string>;
 }

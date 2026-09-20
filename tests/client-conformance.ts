@@ -73,6 +73,9 @@ for (const example of fixtures.cases) {
 }
 
 const client = new AgenticClient({ url, token });
+const estimated = await client.run({ ...request, input: "conformance-cost" });
+assert.equal(estimated.usage.apiEquivalentCostUsd, 0.25);
+assert.equal(estimated.usage.costUsd, undefined);
 await assert.rejects(
   new AgenticClient({ url, token: "wrong-token" }).run(request),
   { code: "UNAUTHORIZED" },

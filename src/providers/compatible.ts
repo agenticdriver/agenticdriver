@@ -50,6 +50,7 @@ export function openaiCompatible(
   const post = streamTransport(options, options.baseUrl, "bearer");
   const vendor = options.vendor ?? "openai-compatible";
   return {
+    usageSource: "provider-response",
     info: apiInfo(vendor, "OpenAI-compatible API", options, vendor),
     inspect: apiInspection(options, options.baseUrl, "bearer"),
     async complete(request, context) {

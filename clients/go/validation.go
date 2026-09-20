@@ -43,8 +43,8 @@ func usageValid(data []byte) bool {
 	if !ok {
 		return false
 	}
-	for _, name := range []string{"inputTokens", "outputTokens", "cachedInputTokens", "reasoningTokens", "costUsd"} {
-		if raw, present := value[name]; present && !numberValue(raw, false, name != "costUsd") {
+	for _, name := range []string{"inputTokens", "outputTokens", "cachedInputTokens", "reasoningTokens", "costUsd", "apiEquivalentCostUsd"} {
+		if raw, present := value[name]; present && !numberValue(raw, false, name != "costUsd" && name != "apiEquivalentCostUsd") {
 			return false
 		}
 	}

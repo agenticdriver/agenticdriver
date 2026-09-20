@@ -55,6 +55,11 @@ const driver = await serve(
     providers: [
       mockProvider(async (request, context) => {
         const input = request.messages.at(-1)?.content;
+        if (input === "conformance-cost")
+          return {
+            text: "AgenticDriver is connected.",
+            usage: { apiEquivalentCostUsd: 0.25 },
+          };
         if (input === "conformance-uncertain")
           throw new DriverError(
             "IDLE_TIMEOUT",

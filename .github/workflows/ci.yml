@@ -21,6 +21,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.89.0
       - run: npm ci
       - run: npm run check
-      - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json
+      - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json
       - run: npm run test:clients
       - run: npm run test:install

@@ -138,6 +138,8 @@ pub struct Usage {
     pub reasoning_tokens: Option<u64>,
     #[serde(default, deserialize_with = "validation::optional_cost")]
     pub cost_usd: Option<f64>,
+    #[serde(default, deserialize_with = "validation::optional_cost")]
+    pub api_equivalent_cost_usd: Option<f64>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -103,7 +103,11 @@ test("Anthropic streaming preserves thinking signatures, fragmented tool input, 
         message: {
           content: [],
           stop_reason: null,
-          usage: { input_tokens: 2, cache_read_input_tokens: 3 },
+          usage: {
+            input_tokens: 2,
+            cache_read_input_tokens: 3,
+            cache_creation_input_tokens: 0,
+          },
         },
       },
       {
@@ -154,7 +158,15 @@ test("Anthropic streaming preserves thinking signatures, fragmented tool input, 
     [
       {
         type: "message_start",
-        message: { content: [], stop_reason: null, usage: { input_tokens: 6 } },
+        message: {
+          content: [],
+          stop_reason: null,
+          usage: {
+            input_tokens: 6,
+            cache_read_input_tokens: 0,
+            cache_creation_input_tokens: 0,
+          },
+        },
       },
       {
         type: "content_block_start",
@@ -203,7 +215,11 @@ test("Gemini streaming carries signed function calls into the next turn", async 
     [
       {
         candidates: [{ content: { parts: [signed] }, finishReason: "STOP" }],
-        usageMetadata: { promptTokenCount: 2, candidatesTokenCount: 1 },
+        usageMetadata: {
+          promptTokenCount: 2,
+          candidatesTokenCount: 1,
+          thoughtsTokenCount: 0,
+        },
       },
     ],
     [

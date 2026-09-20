@@ -4,6 +4,7 @@ import { abortable, DriverError, publicError } from "./errors.js";
 import { RunRequestSchema } from "./types.js";
 import { withProgress } from "./progress.js";
 import { ProviderDiscovery, type DiscoveryOptions } from "./discovery.js";
+import { UsageAccumulator, UsagePolicy, type UsageOptions } from "./usage.js";
 import {
   newOperation,
   operationKey,
@@ -22,7 +23,6 @@ import type {
   RunResult,
   Tool,
   ToolCall,
-  Usage,
   UsageRecord,
 } from "./types.js";
 
@@ -37,6 +37,7 @@ export interface DriverOptions {
     context: ExecutionContext,
   ) => Promise<boolean> | boolean;
   onUsage?: (record: UsageRecord) => Promise<void> | void;
+  usage?: UsageOptions;
   onTelemetryError?: (error: unknown) => void;
   /** Host limits always win over larger caller limits. */
   limits?: {
@@ -49,6 +50,7 @@ export interface DriverOptions {
 
 export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
+  private readonly usagePolicy: UsagePolicy;
   private readonly activeOperations = new Set<string>();
   private readonly providers = new Map<string, ProviderAdapter>();
   private readonly tools = new Map<
@@ -62,6 +64,7 @@ export class AgenticDriver {
   });
   constructor(private readonly options: DriverOptions) {
     this.discovery = new ProviderDiscovery(options.discovery);
+    this.usagePolicy = new UsagePolicy(options.usage, options.providers);
     for (const provider of options.providers) {
       if (this.providers.has(provider.info.id))
         throw new Error(`Duplicate provider instance: ${provider.info.id}`);
@@ -97,6 +100,11 @@ export class AgenticDriver {
 
   get supportsIdempotency(): boolean {
     return this.options.operations !== undefined;
+  }
+
+  /** Trusted host-side identity for explicit account/quota bindings; never derive this from request metadata. */
+  usageIdentity(provider: string, subject: string) {
+    return this.usagePolicy.identity(provider, subject);
   }
 
   /** Embedded callers are trusted. Remote hosts must supply their authorized instance IDs. */
@@ -324,9 +332,8 @@ export class AgenticDriver {
       subject: options.subject ?? "local",
       reportProgress,
     };
-    let sequence = 0,
-      usage: Usage = {},
-      turns = 0;
+    let sequence = 0;
+    const meter = new UsageAccumulator();
     let status: UsageRecord["status"] = "cancelled";
     let toolOutcomePending = false;
     const event = (payload: EventPayload): RunEvent => ({
@@ -374,8 +381,9 @@ export class AgenticDriver {
         yield event({ type: "step.started", step });
         signal.throwIfAborted();
         const { value: turn, streamed } = yield* withProgress(
-          (providerContext) =>
-            provider.complete(
+          (providerContext) => {
+            meter.start();
+            return provider.complete(
               {
                 model: request.model,
                 instructions,
@@ -397,16 +405,17 @@ export class AgenticDriver {
                   : undefined,
               },
               providerContext,
-            ),
+            );
+          },
           context,
           "model",
           (error) => controller.abort(error),
           event,
         );
         signal.throwIfAborted();
-        usage = sumUsage(usage, turn.usage ?? {}, turns++ === 0);
+        const stepUsage = meter.add(turn.usage);
         if (turn.usage)
-          yield event({ type: "usage.reported", step, usage: turn.usage });
+          yield event({ type: "usage.reported", step, usage: stepUsage });
         if (turn.text && !streamed)
           yield event({ type: "text.delta", text: turn.text });
         const calls = turn.toolCalls ?? [];
@@ -437,7 +446,7 @@ export class AgenticDriver {
               model: request.model,
               text: turn.text,
               ...(output === undefined ? {} : { output }),
-              usage,
+              usage: meter.snapshot().usage,
               steps: step,
               finishReason: turn.finishReason ?? "stop",
             },
@@ -553,19 +562,16 @@ export class AgenticDriver {
       controller.abort();
       try {
         // Keep telemetry optional and bounded; a failed sink must not replay a successful run.
-        const record: UsageRecord = {
-          schema: "agenticdriver.usage.v1",
+        const record = this.usagePolicy.record({
           runId,
           subject: context.subject,
-          provider: provider.info.id,
-          vendor: provider.info.vendor,
+          provider: request.provider,
           model: request.model,
-          authMode: provider.info.authMode,
           status,
-          usage,
-          durationMs: Date.now() - startedAt,
-          metadata: request.metadata ?? {},
-        };
+          startedAt,
+          finishedAt: Date.now(),
+          meter,
+        });
         if (this.options.onUsage)
           await abortable(
             Promise.resolve(this.options.onUsage(record)),
@@ -580,26 +586,4 @@ export class AgenticDriver {
       }
     }
   }
-}
-
-function sumUsage(previous: Usage, next: Usage, first: boolean): Usage {
-  const result: Usage = {};
-  for (const key of [
-    "inputTokens",
-    "outputTokens",
-    "cachedInputTokens",
-    "reasoningTokens",
-    "costUsd",
-  ] as const) {
-    const value = next[key],
-      prior = previous[key];
-    if (
-      value !== undefined &&
-      Number.isFinite(value) &&
-      value >= 0 &&
-      (first || prior !== undefined)
-    )
-      result[key] = (first ? 0 : prior!) + value;
-  }
-  return result;
 }

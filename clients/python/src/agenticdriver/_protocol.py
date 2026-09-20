@@ -35,9 +35,9 @@ def valid_usage(value):
     for key in ["inputTokens", "outputTokens", "cachedInputTokens", "reasoningTokens"]:
         if key in value and not count(value[key]):
             return False
-    cost = value.get("costUsd", 0)
     try:
-        return type(cost) in {int, float} and math.isfinite(cost) and cost >= 0
+        return all(type(value.get(key, 0)) in {int, float} and math.isfinite(value.get(key, 0)) and value.get(key, 0) >= 0
+                   for key in ["costUsd", "apiEquivalentCostUsd"])
     except OverflowError:
         return False
 

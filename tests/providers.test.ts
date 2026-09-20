@@ -108,7 +108,12 @@ test("Anthropic preserves tool-use blocks and includes cached input in usage tot
     {
       stop_reason: "end_turn",
       content: [{ type: "text", text: "Found" }],
-      usage: { input_tokens: 8, output_tokens: 2 },
+      usage: {
+        input_tokens: 8,
+        output_tokens: 2,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+      },
     },
   ]);
   const result = await run(
@@ -253,7 +258,7 @@ test("CLI normalization requires success markers and rejects unexpected tools", 
   assert.equal(
     normalizeCli(
       "claude-code",
-      '{"type":"result","is_error":false,"result":"done","usage":{"input_tokens":2,"cache_read_input_tokens":4,"output_tokens":3}}',
+      '{"type":"result","is_error":false,"result":"done","usage":{"input_tokens":2,"cache_read_input_tokens":4,"cache_creation_input_tokens":0,"output_tokens":3}}',
     ).usage?.inputTokens,
     6,
   );

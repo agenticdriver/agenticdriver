@@ -48,6 +48,7 @@ const wire = z.object({
 export function openai(options: ApiProviderOptions): ProviderAdapter {
   const post = streamTransport(options, "https://api.openai.com/v1/", "bearer");
   return {
+    usageSource: "provider-response",
     info: apiInfo("openai", "OpenAI", options, "openai-api"),
     inspect: apiInspection(options, "https://api.openai.com/v1/", "bearer"),
     async complete(request, context) {

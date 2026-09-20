@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
+import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import type {
   ProviderAdapter,
@@ -75,6 +76,7 @@ function localCli(
       throw error;
     }));
   return {
+    usageSource: "cli-report",
     info: {
       id: options.id ?? vendor,
       name:
@@ -682,15 +684,14 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
       return {
         text: result.result,
         usage: {
-          inputTokens:
-            u?.input_tokens === undefined
-              ? undefined
-              : u.input_tokens +
-                (u.cache_read_input_tokens ?? 0) +
-                (u.cache_creation_input_tokens ?? 0),
+          inputTokens: sumKnownCounts(
+            u?.input_tokens,
+            u?.cache_read_input_tokens,
+            u?.cache_creation_input_tokens,
+          ),
           outputTokens: u?.output_tokens,
           cachedInputTokens: u?.cache_read_input_tokens,
-          costUsd: result.total_cost_usd,
+          apiEquivalentCostUsd: result.total_cost_usd,
         },
       };
     }
@@ -724,21 +725,18 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
         "CLI_FAILED",
         "Gemini CLI failed to complete the request.",
       );
-    const modelUsage = Object.values(result.stats?.models ?? {})
-      .map((m) => m.tokens)
-      .filter((t) => t !== undefined);
+    const modelUsage = Object.values(result.stats?.models ?? {}).map(
+      (m) => m.tokens,
+    );
     const sum = (field: "prompt" | "candidates" | "cached" | "thoughts") =>
-      modelUsage.length && modelUsage.every((u) => u[field] !== undefined)
-        ? modelUsage.reduce((n, u) => n + u[field]!, 0)
-        : undefined;
+      sumKnownCounts(...modelUsage.map((usage) => usage?.[field]));
     const candidates = sum("candidates"),
       thoughts = sum("thoughts");
     return {
       text: result.response,
       usage: {
         inputTokens: sum("prompt"),
-        outputTokens:
-          candidates === undefined ? undefined : candidates + (thoughts ?? 0),
+        outputTokens: sumKnownCounts(candidates, thoughts),
         cachedInputTokens: sum("cached"),
         reasoningTokens: thoughts,
       },

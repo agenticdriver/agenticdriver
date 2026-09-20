@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
+import { UsageRecordSchema } from "../src/usage.js";
 import {
   RunRequestSchema,
   ModelCatalogSchema,
@@ -47,6 +48,12 @@ const schemas = {
       cachedInputTokens: count,
       reasoningTokens: count,
       costUsd: { type: "number", minimum: 0 },
+      apiEquivalentCostUsd: {
+        type: "number",
+        minimum: 0,
+        description:
+          "Reported API-equivalent estimate; never subscription spend or an invoice charge.",
+      },
     },
     description:
       "Measurements are omitted when unknown. Cached input is a subset of input tokens. Totals are omitted if any model step lacks that measurement.",
@@ -373,6 +380,15 @@ await writeFile(
         target: "draft-2020-12",
         io: "input",
       }),
+    ),
+    { parser: "json" },
+  ),
+);
+await writeFile(
+  new URL("../protocol/usage-record.schema.json", import.meta.url),
+  await format(
+    JSON.stringify(
+      z.toJSONSchema(UsageRecordSchema, { target: "draft-2020-12" }),
     ),
     { parser: "json" },
   ),

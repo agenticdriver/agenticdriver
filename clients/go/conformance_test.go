@@ -123,6 +123,12 @@ func TestRealHostConformance(t *testing.T) {
 	_, err = restricted.Run(context.Background(), request)
 	requireCode(err, "FORBIDDEN")
 	client := conformanceClient(t, base, token, true)
+	estimateRequest := request
+	estimateRequest.Input = "conformance-cost"
+	estimated, estimateError := client.Run(context.Background(), estimateRequest)
+	if estimateError != nil || estimated.Usage.APIEquivalentCostUSD == nil || *estimated.Usage.APIEquivalentCostUSD != 0.25 || estimated.Usage.CostUSD != nil {
+		t.Fatalf("estimated usage: %v %v", estimated, estimateError)
+	}
 	forbidden := request
 	forbidden.Tools = []string{"echo"}
 	_, err = client.Run(context.Background(), forbidden)

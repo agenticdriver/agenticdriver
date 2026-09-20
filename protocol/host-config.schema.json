@@ -3,6 +3,26 @@
   "type": "object",
   "properties": {
     "version": { "type": "number", "const": 1 },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "hostId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+        },
+        "labels": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9._-]{0,63}$"
+          },
+          "additionalProperties": { "type": "string", "maxLength": 128 }
+        },
+        "retentionDays": { "type": "integer", "minimum": 1, "maximum": 3650 }
+      },
+      "required": ["hostId"],
+      "additionalProperties": false
+    },
     "listen": {
       "default": { "host": "127.0.0.1", "port": 7433 },
       "type": "object",
@@ -83,6 +103,10 @@
             "type": "object",
             "properties": {
               "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
@@ -169,6 +193,10 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "accountId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
               "name": { "type": "string", "minLength": 1, "maxLength": 100 },
               "models": {
                 "minItems": 1,
@@ -193,6 +221,10 @@
             "type": "object",
             "properties": {
               "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },

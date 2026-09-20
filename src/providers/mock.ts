@@ -16,6 +16,7 @@ export function mockProvider(
   }),
 ): ProviderAdapter {
   return {
+    usageSource: "synthetic",
     info: {
       id: "mock",
       name: "Offline demo",

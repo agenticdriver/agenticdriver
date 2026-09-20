@@ -60,11 +60,12 @@ type Message struct {
 	Content string `json:"content"`
 }
 type Usage struct {
-	InputTokens       *int64   `json:"inputTokens,omitempty"`
-	OutputTokens      *int64   `json:"outputTokens,omitempty"`
-	CachedInputTokens *int64   `json:"cachedInputTokens,omitempty"`
-	ReasoningTokens   *int64   `json:"reasoningTokens,omitempty"`
-	CostUSD           *float64 `json:"costUsd,omitempty"`
+	InputTokens          *int64   `json:"inputTokens,omitempty"`
+	OutputTokens         *int64   `json:"outputTokens,omitempty"`
+	CachedInputTokens    *int64   `json:"cachedInputTokens,omitempty"`
+	ReasoningTokens      *int64   `json:"reasoningTokens,omitempty"`
+	CostUSD              *float64 `json:"costUsd,omitempty"`
+	APIEquivalentCostUSD *float64 `json:"apiEquivalentCostUsd,omitempty"`
 }
 type Result struct {
 	RunID        string          `json:"runId"`

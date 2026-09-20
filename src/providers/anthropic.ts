@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
 import {
@@ -41,6 +42,7 @@ export function anthropic(options: ApiProviderOptions): ProviderAdapter {
     "anthropic",
   );
   return {
+    usageSource: "provider-response",
     info: apiInfo("anthropic", "Claude API", options, "claude"),
     inspect: apiInspection(
       options,
@@ -124,12 +126,11 @@ export function anthropic(options: ApiProviderOptions): ProviderAdapter {
         finishReason: result.stop_reason === "max_tokens" ? "length" : "stop",
         usage: usage
           ? {
-              inputTokens:
-                usage.input_tokens === undefined
-                  ? undefined
-                  : usage.input_tokens +
-                    (usage.cache_read_input_tokens ?? 0) +
-                    (usage.cache_creation_input_tokens ?? 0),
+              inputTokens: sumKnownCounts(
+                usage.input_tokens,
+                usage.cache_read_input_tokens,
+                usage.cache_creation_input_tokens,
+              ),
               outputTokens: usage.output_tokens,
               cachedInputTokens: usage.cache_read_input_tokens,
             }

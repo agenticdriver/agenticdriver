@@ -23,7 +23,7 @@ const help = `AgenticDriver — local and secure remote execution host
   agenticdriver doctor [--config PATH] [--json]
   agenticdriver run --provider ID --model ID [--input TEXT] [--config PATH] [--json]
 
-init also accepts --provider-id, --api-key-env, --base-url, --account-directory,
+init also accepts --provider-id, --account-id, --api-key-env, --base-url, --account-directory,
 --binary and --port. It creates a mock configuration unless a provider is selected.
 run reads stdin when --input is omitted, and accepts --url, --token-id,
 --idempotency-key, --idle-timeout-ms and --max-attempts. Run inactivity timeouts
@@ -65,6 +65,7 @@ function commandOptions(command: string) {
       ...strings([
         "provider",
         "provider-id",
+        "account-id",
         "model",
         "api-key-env",
         "base-url",
@@ -131,6 +132,7 @@ async function initialize(path: string, values: Values) {
   const provider = {
     kind,
     id,
+    accountId: argument(values, "account-id"),
     models: [model],
     ...(api
       ? {
@@ -159,6 +161,7 @@ async function initialize(path: string, values: Values) {
   };
   const config = validateHostConfig({
     version: 1,
+    usage: { hostId: randomUUID() },
     listen: { host: "127.0.0.1", port: numberArgument(values, "port") ?? 7433 },
     providers: [provider],
     tokens: [

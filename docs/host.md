@@ -71,6 +71,12 @@ host, then initialize with `--provider codex`, `claude-code`, or `gemini-cli` an
 subscription or converted to API keys. See [provider setup](providers.md) for the
 supported restrictions and current certification limits.
 
+`init` also writes a persistent `usage.hostId`. Add `--account-id YOUR_OPAQUE_ID`
+to bind the selected provider to a known account for metering and quota joins.
+Existing configurations can set each provider's `accountId` together with
+`usage.hostId`; `usage.labels` and `usage.retentionDays` are optional host metering
+policy. See [account-scoped usage](usage.md) before sending records to shared storage.
+
 ## Commands and configuration paths
 
 | Command  | Behavior                                                                                           |

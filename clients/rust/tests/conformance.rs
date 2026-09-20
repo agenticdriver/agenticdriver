@@ -72,6 +72,11 @@ fn real_host_conformance() {
         Some("FORBIDDEN")
     );
     let peer = client(&url, &token, true);
+    let estimated = peer
+        .run(&RunRequest::new("mock", "demo", "conformance-cost"))
+        .unwrap();
+    assert_eq!(estimated.usage.api_equivalent_cost_usd, Some(0.25));
+    assert_eq!(estimated.usage.cost_usd, None);
     let mut forbidden = RunRequest::new("mock", "demo", "Hello");
     forbidden.tools = vec!["echo".into()];
     assert_eq!(code(&peer.run(&forbidden).unwrap_err()), Some("FORBIDDEN"));

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { ModelCatalogSchema, ProviderHealthSchema } from "./types.js";
+import {
+  ModelCatalogSchema,
+  ProviderHealthSchema,
+  UsageSchema,
+} from "./types.js";
 import { DriverError } from "./errors.js";
 import { readLimited, secureBaseUrl } from "./security.js";
 import {
@@ -25,13 +29,7 @@ const errorSchema = z.object({
     outcome: z.literal("uncertain").optional(),
   }),
 });
-const usageSchema = z.object({
-  inputTokens: z.number().int().nonnegative().optional(),
-  outputTokens: z.number().int().nonnegative().optional(),
-  cachedInputTokens: z.number().int().nonnegative().optional(),
-  reasoningTokens: z.number().int().nonnegative().optional(),
-  costUsd: z.number().nonnegative().optional(),
-});
+const usageSchema = UsageSchema;
 const resultSchema = z.object({
   runId: z.string(),
   provider: z.string(),
