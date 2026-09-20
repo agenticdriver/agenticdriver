@@ -1,0 +1,798 @@
+{
+  "schemaVersion": 1,
+  "owner": "agenticdriver",
+  "title": "AgenticDriver SDK — Implementation Roadmap",
+  "description": "Bring your own agents to applications: shared SDK, local and secure remote execution, four language clients, usage integration, and three application workstreams.",
+  "visibility": "PRIVATE",
+  "projectUrl": "https://github.com/orgs/agenticdriver/projects/1",
+  "fields": {
+    "Component": [
+      "Protocol",
+      "Runtime",
+      "Providers",
+      "Tools and context",
+      "Local host",
+      "Remote access",
+      "Language clients",
+      "Usage and metadata",
+      "Observability",
+      "Applications",
+      "Quality and security",
+      "Releases and docs"
+    ],
+    "Phase": ["Alpha", "Beta", "v1", "Later"],
+    "Priority": ["P0", "P1", "P2"],
+    "Target": [
+      "agenticdriver",
+      "brandstorm",
+      "agentic-literature-review",
+      "ai-workspace",
+      "usagestat"
+    ]
+  },
+  "decisions": [
+    "Call the product an SDK. Keep runtime, protocol, host, providers and language clients in one SDK repository initially; applications remain in their own repositories.",
+    "The SDK repository remains under the personal account until a transfer is explicitly chosen. This organization project can track work across owners and repositories.",
+    "Support all three application workstreams: Brandstorm, agentic-literature-review and AI Workspace.",
+    "No default total run deadline and no default inactivity timeout. Applications can opt into idleTimeoutMs; actual model or tool progress resets it, transport heartbeats do not.",
+    "Use official provider authentication and supported integration routes. CLI sessions may use subscription or API billing; never assume every subscription is an API entitlement.",
+    "Applications own domain data, accepted artifacts and business workflows. The SDK supplies execution primitives and optional host services.",
+    "Keep provider credentials on the execution host. Requests select configured instances and explicitly permitted tools.",
+    "Use project drafts initially. Convert each draft into an issue in its Target repository when work is picked up, retaining its roadmap ID and dependencies."
+  ],
+  "baseline": [
+    "A local v0.1 implementation exists: TypeScript runtime, HTTP/SSE host, API adapters, restricted text-only CLI adapters, and TypeScript, Python, Go and Rust clients.",
+    "Tool input and output validation, cancellation, optional inactivity handling, scoped bearer authentication, usage callbacks and Usagestat read integration are implemented.",
+    "All three repositories have initial integrations and synthetic examples. Brandstorm and LitAgent use remote clients; AI Workspace has a mailbox-backed triage interface.",
+    "Local tests, type checks, builds and four-client HTTP/HTTPS checks passed during implementation. Provider execution is fixture-tested; live provider accounts and all supported operating systems have not been certified.",
+    "The SDK has not been published. Consumer dependencies currently use sibling checkouts. CLI adapters do not yet support application tools; the host does not yet provide durable jobs, device pairing or a relay."
+  ],
+  "phases": {
+    "Alpha": "Installable SDK, live provider validation, usable language clients and a connected workflow in each application.",
+    "Beta": "Account lifecycle, richer tools and context, optional durable execution, and complete application workflows.",
+    "v1": "Compatibility, security, operational and documentation release gates met for the supported matrix.",
+    "Later": "Optional capabilities that must not hold up the core SDK. No release dates are implied."
+  },
+  "items": [
+    {
+      "id": "AD-001",
+      "title": "Define protocol versioning, capabilities and error compatibility",
+      "component": "Protocol",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": [],
+      "current": "OpenAPI and ordered run events exist, but there is no documented schema evolution or client/host version negotiation policy.",
+      "scope": "Specify supported versions, capability discovery, stable error codes, event extension rules and compatibility guarantees across every language client.",
+      "acceptance": [
+        "Version and capability negotiation reject incompatible requests before execution.",
+        "Additive fields and unknown optional events have a documented compatibility policy with old/new client fixtures.",
+        "Document cancellation, terminal events and the existing disabled-by-default inactivity semantics as protocol guarantees."
+      ]
+    },
+    {
+      "id": "AD-002",
+      "title": "Build shared protocol conformance fixtures for every client",
+      "component": "Protocol",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001"],
+      "current": "The four clients have a working HTTP/HTTPS smoke harness and separate tests.",
+      "scope": "Create language-neutral fixtures and a reference host that exercise identical protocol behavior across TypeScript, Python, Go and Rust.",
+      "acceptance": [
+        "Every client passes fragmented Unicode/SSE, large frames, typed errors, terminal ordering, malformed streams and cancellation cases.",
+        "Certificate verification, forbidden redirects, auth scoping and connection cleanup are checked consistently.",
+        "A controlled clock or deterministic progress source verifies optional idle expiration and absence of a default run timer."
+      ]
+    },
+    {
+      "id": "AD-003",
+      "title": "Add refreshable provider, model and account health discovery",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001"],
+      "current": "Hosts expose configured provider instances, explicit model allowlists and capability flags; account setup and catalog refresh are manual.",
+      "scope": "Expose safe connection health and refreshable model inventory, while distinguishing unavailable, unauthenticated and unsupported capabilities.",
+      "acceptance": [
+        "Multiple instances of one vendor remain distinguishable and visible only to authorized subjects.",
+        "Expired credentials and missing CLI binaries produce actionable, redacted status without triggering billable model runs.",
+        "Model selection stays explicit; authentication or quota errors never silently switch provider, account or billing mode."
+      ]
+    },
+    {
+      "id": "AD-004",
+      "title": "Support explicit conversation continuation and session state",
+      "component": "Runtime",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-010"],
+      "current": "History can be supplied to a run and native provider state is preserved within its tool loop; there is no cross-run session contract.",
+      "scope": "Design opt-in session handles and portable application history with explicit provider-specific continuation capabilities.",
+      "acceptance": [
+        "Applications can continue an authorized conversation and delete its stored state.",
+        "Provider-specific opaque state is scoped to its account and never exposed as private reasoning text.",
+        "Unsupported provider switching is explicit, with bounded context and documented retention; no hidden long-term memory is introduced."
+      ]
+    },
+    {
+      "id": "AD-005",
+      "title": "Add optional durable jobs, status lookup and event replay",
+      "component": "Runtime",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-006", "AD-016"],
+      "current": "The host is stateless between runs, and disconnecting an active request cancels its execution.",
+      "scope": "Offer a pluggable host-side job store and queue for applications that need background reviews or inbox processing. Keep the lightweight in-process path available.",
+      "acceptance": [
+        "Explicit detached jobs support submit, inspect, cancel and reconnect/replay using an ordered cursor with tenant isolation.",
+        "Restart recovery distinguishes queued, interrupted and completed jobs without repeating completed tool effects.",
+        "Applications retain workflow checkpoints and domain state; persistence and retention are configured rather than silently enabled.",
+        "No job duration deadline is introduced; idle policies and worker leases have separate documented meanings."
+      ]
+    },
+    {
+      "id": "AD-006",
+      "title": "Define idempotency and opt-in retry behavior",
+      "component": "Runtime",
+      "phase": "Beta",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001"],
+      "current": "The SDK intentionally performs no automatic retries, including after application tool effects.",
+      "scope": "Add request deduplication and bounded, opt-in retries for demonstrably safe failures; document indeterminate provider and tool outcomes.",
+      "acceptance": [
+        "Replaying an idempotency key does not execute an accepted operation twice; conflicting request payloads are rejected.",
+        "Retryable provider failures respect server hints and cancellation without changing the chosen model or credentials.",
+        "A tool effect followed by connection loss yields a recoverable recorded outcome or explicit uncertainty, never blind replay."
+      ]
+    },
+    {
+      "id": "AD-007",
+      "title": "Expose interactive tool approval requests and decisions",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-006"],
+      "current": "A host approval callback can allow a tool, but clients have no authenticated approval request/response lifecycle.",
+      "scope": "Add structured approval events and explicit decisions so applications can show proposed actions before execution.",
+      "acceptance": [
+        "Decisions bind to the authenticated subject, run, tool name and exact arguments; stale or altered decisions are rejected.",
+        "Deny, cancel and application-selected expiry paths are defined and audited without side effects.",
+        "Waiting for a person has explicit lifecycle and idle-policy semantics; approval UI stays in the consuming application."
+      ]
+    },
+    {
+      "id": "AD-008",
+      "title": "Let Python, Go, Rust and remote applications supply tools",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-006", "AD-007"],
+      "current": "Application tools are registered in the TypeScript execution host. Other clients can select these tools but cannot host their own callbacks.",
+      "scope": "Define an authenticated tool executor transport and language bindings for application-owned functions, with JSON Schema inputs and results.",
+      "acceptance": [
+        "One application-defined tool runs from each supported language against a local and remote driver.",
+        "Invocation IDs, allowlists, schema validation, progress, cancellation, output bounds and approval decisions survive the round trip.",
+        "Disconnected executors fail clearly; requests cannot introduce arbitrary shell commands or replace authenticated identity."
+      ]
+    },
+    {
+      "id": "AD-009",
+      "title": "Bridge approved application tools into supported native agents via MCP",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-007", "AD-008", "AD-021", "AD-022", "AD-023"],
+      "current": "Native CLI integrations are deliberately text-only with native tools and MCP disabled.",
+      "scope": "Add an opt-in MCP bridge exposing only registered application tools to native runtimes where official integration mechanisms permit it.",
+      "acceptance": [
+        "Capability flags distinguish verified tool-enabled integrations from text-only or unsupported providers.",
+        "A native agent completes a tool round trip with schema validation, approval, cancellation and usage attribution.",
+        "Ambient MCP servers, hooks, extensions and local filesystem tools remain outside the application allowlist; least-privilege behavior is tested."
+      ]
+    },
+    {
+      "id": "AD-010",
+      "title": "Define attachments, context references and artifact delivery",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-003"],
+      "current": "The portable contract supports text and validated JSON. Apps manually supply selected evidence and store returned text artifacts.",
+      "scope": "Add bounded document/image inputs, application-owned content references and output artifacts with explicit provider capabilities.",
+      "acceptance": [
+        "Local and remote workflows can send a selected document or image without exposing arbitrary host paths.",
+        "Reference authorization, media types, size limits, retention and cancellation cleanup are specified and tested.",
+        "Applications retain citation/provenance metadata and approve canonical artifact changes; unsupported modalities fail before execution."
+      ]
+    },
+    {
+      "id": "AD-011",
+      "title": "Ship an installable local host CLI with configuration and diagnostics",
+      "component": "Local host",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-003"],
+      "current": "The host is started by an example TypeScript script and environment variables.",
+      "scope": "Provide init, serve, status and doctor commands with validated configuration, provider setup guidance and graceful shutdown.",
+      "acceptance": [
+        "A fresh installation can run a mock workflow and connect an explicitly selected provider without editing SDK source.",
+        "Configuration separates non-secret settings from OS keychain or supplied secret-store references; diagnostics redact credentials.",
+        "Loopback is the default; non-loopback exposure requires the existing secure transport and authentication conditions.",
+        "Service installation and upgrades document the running user, config paths and shutdown/cancellation behavior."
+      ]
+    },
+    {
+      "id": "AD-012",
+      "title": "Harden native process isolation across supported operating systems",
+      "component": "Local host",
+      "phase": "Beta",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-011", "AD-021", "AD-022", "AD-023"],
+      "current": "CLI adapters restrict flags, environment, working directory and output; mutually untrusted accounts still require separate OS users or containers.",
+      "scope": "Implement and document per-account execution isolation, subprocess cleanup and platform-specific process tree termination.",
+      "acceptance": [
+        "Linux, macOS and Windows tests demonstrate cancellation leaves no surviving agent child processes or temporary prompt files.",
+        "Concurrent accounts cannot read another account's credentials, workspace, output or inherited environment.",
+        "Unsupported isolation guarantees are explicit; restricted CLI flags alone are never described as an OS sandbox."
+      ]
+    },
+    {
+      "id": "AD-013",
+      "title": "Add device pairing and revocable scoped credentials",
+      "component": "Remote access",
+      "phase": "Beta",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-011"],
+      "current": "Hosts use a startup token registry. There is no user-facing pairing, token expiry or rotation without restart.",
+      "scope": "Add explicit app-to-host pairing, short-lived access credentials and independently revocable grants for devices, providers and tools.",
+      "acceptance": [
+        "Pairing requires a deliberate device/user confirmation and cannot be completed by an unrelated web origin.",
+        "Grant rotation, expiry and revocation take effect without leaking provider credentials or confusing account identity.",
+        "OS secret storage and backend service credentials are supported; browser credentials have narrow scopes and documented storage constraints."
+      ]
+    },
+    {
+      "id": "AD-014",
+      "title": "Package a secure self-hosted remote deployment",
+      "component": "Remote access",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-011"],
+      "current": "The HTTPS host, scoped bearer tokens and exact-origin CORS work; remote installation is manual.",
+      "scope": "Provide a container/service deployment recipe with TLS or a loopback TLS proxy, health checks, secrets injection and operational guidance.",
+      "acceptance": [
+        "A fresh remote deployment runs a selected workflow from each language client using verified TLS.",
+        "Reverse proxy streaming, disconnect cancellation, headers, graceful shutdown and capacity errors are exercised.",
+        "Deployment templates do not impose a default total run deadline; unavoidable provider or infrastructure limits are documented."
+      ]
+    },
+    {
+      "id": "AD-015",
+      "title": "Evaluate and implement an optional outbound relay for private devices",
+      "component": "Remote access",
+      "phase": "Later",
+      "priority": "P2",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-013", "AD-014", "AD-041"],
+      "current": "A hosted application cannot automatically reach a user's laptop; it needs a reachable HTTPS host or trusted tunnel.",
+      "scope": "Compare a documented tunnel integration with an outbound relay, then implement the smallest supported option that solves device reachability.",
+      "acceptance": [
+        "A browser/server reaches a paired local driver behind NAT without exposing an unauthenticated listening port.",
+        "The relay's trust boundary, encryption endpoints, metadata visibility, revocation and reconnect behavior are documented and tested.",
+        "Provider credentials stay on the execution machine; direct local and remote modes work without the relay."
+      ]
+    },
+    {
+      "id": "AD-016",
+      "title": "Add tenant-aware scheduling and optional resource budgets",
+      "component": "Runtime",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-029"],
+      "current": "The host bounds concurrency globally and per subject, plus step and output sizes; it has no fair queue or account-aware admission policy.",
+      "scope": "Add explicit concurrency, queue and optional token/cost policies that applications or operators can configure per account and subject.",
+      "acceptance": [
+        "One tenant cannot starve all others; queue saturation and rejected admissions return typed, actionable errors.",
+        "Unknown usage or cost remains unknown, with a defined policy instead of being counted as zero.",
+        "Admission and spend controls never introduce an implicit elapsed-time cutoff or silently select a different provider."
+      ]
+    },
+    {
+      "id": "AD-017",
+      "title": "Validate the OpenAI API adapter against live supported models",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002"],
+      "current": "The Responses adapter streams text and preserves native tool-loop state; protocol behavior has been tested with fixtures.",
+      "scope": "Run an opt-in live conformance suite using a host-owned API credential and explicit model IDs.",
+      "acceptance": [
+        "Record successful streaming, tool calls, structured output, usage, cancellation and a three-app smoke path.",
+        "Exercise supported refusal, truncation, throttling and invalid-auth behavior with sanitized fixtures.",
+        "Publish the verified model/API matrix and verification date; account credentials and paid tests remain opt-in."
+      ]
+    },
+    {
+      "id": "AD-018",
+      "title": "Validate the Anthropic API adapter against live supported models",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002"],
+      "current": "The Messages adapter streams text/tool input and retains signed thinking blocks inside the native loop; verification uses fixtures.",
+      "scope": "Certify the official API path with explicit models, including reasoning-capable tool turns where supported.",
+      "acceptance": [
+        "Streaming, tools, output validation, cache/token accounting and cancellation pass a live suite.",
+        "Native signed state survives multiple tool turns without exposing private reasoning content to apps.",
+        "Document observed authentication, capacity, refusal and truncation behavior with a dated support matrix."
+      ]
+    },
+    {
+      "id": "AD-019",
+      "title": "Validate the Gemini API adapter against live supported models",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002"],
+      "current": "The streaming generateContent adapter preserves function-call thought signatures and normalizes usage from fixtures.",
+      "scope": "Certify text, reasoning-capable function calling and validated outputs against explicitly configured official models.",
+      "acceptance": [
+        "Multi-turn tools retain required native signatures, with text progress and cancellation visible to clients.",
+        "Safety blocks, limits, output truncation, cache counts and thought-token accounting have verified handling.",
+        "Publish supported endpoints/models and capability limits without inferring subscription entitlements."
+      ]
+    },
+    {
+      "id": "AD-020",
+      "title": "Validate xAI API support and add a native Responses adapter",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002"],
+      "current": "xAI uses the existing compatible Chat Completions adapter. Native xAI Responses is not implemented.",
+      "scope": "Verify the currently supported xAI integration contracts and implement a native adapter where it improves supported capabilities.",
+      "acceptance": [
+        "Live text, tools, streaming, usage and cancellation work with explicit xAI API credentials and models.",
+        "Native state and error handling have conformance fixtures; migration preserves the configured account and model.",
+        "Documentation distinguishes API support from the separate, unverified Grok subscription path."
+      ]
+    },
+    {
+      "id": "AD-021",
+      "title": "Certify the official Codex CLI session adapter",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002", "AD-003"],
+      "current": "The adapter uses official CLI flags, stdin and restricted execution, with fake-process tests and item-level progress rather than guaranteed token streaming.",
+      "scope": "Validate supported installed CLI versions with the user's own normal sign-in and document subscription/API billing distinctions.",
+      "acceptance": [
+        "Live text runs, progress, usage when reported, cancellation and expired-session errors work without credential extraction.",
+        "Temporary workspace isolation, disabled ambient hooks/tools and account selection are verified against the real binary.",
+        "Document the version range and actual streaming capabilities; unsupported versions fail preflight with useful guidance."
+      ]
+    },
+    {
+      "id": "AD-022",
+      "title": "Certify the official Claude Code integration and authentication path",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002", "AD-003"],
+      "current": "The restricted CLI text adapter uses stream-json, but live account execution and supported distribution scenarios still need verification.",
+      "scope": "Check current official integration requirements and test the supported end-user CLI route; use the API route for unsupported hosted consumer-auth scenarios.",
+      "acceptance": [
+        "A supported live CLI session streams and cancels correctly without exposing credentials or enabling ambient tools.",
+        "Document supported versions, sign-in ownership and deployment constraints using current official guidance.",
+        "CLI cost estimates are labeled separately from actual subscription charges; unsupported auth routes are not advertised as available."
+      ]
+    },
+    {
+      "id": "AD-023",
+      "title": "Certify the official Gemini CLI session adapter",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002", "AD-003"],
+      "current": "The headless stream-json adapter applies explicit restrictions and preserves the CLI's account directory; behavior is fixture-tested.",
+      "scope": "Verify supported live CLI versions and their normal cached-auth routes, quotas, progress and tool-disable controls.",
+      "acceptance": [
+        "Live text runs, progress, cancellation, quota failures and expired-session errors are normalized.",
+        "No ambient extensions, hooks, context files or tools become available through an application request.",
+        "Document actual auth modes, usage fields and supported versions; do not infer the user's subscription tier."
+      ]
+    },
+    {
+      "id": "AD-024",
+      "title": "Publish a provider extension contract and custom/local endpoint example",
+      "component": "Providers",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-002", "AD-003"],
+      "current": "ProviderAdapter and an OpenAI-compatible factory exist, but third-party implementers have no packaged compatibility kit.",
+      "scope": "Document and stabilize adapter construction, credentials, capabilities, progress, cancellation and native state; demonstrate a configured local or enterprise endpoint.",
+      "acceptance": [
+        "An independent adapter passes the shared conformance suite without modifying the runtime or clients.",
+        "Local endpoints use explicit host-owned URLs and models; remote callers cannot redirect requests to arbitrary hosts.",
+        "Extensions declare versions and capabilities, and are loaded only by trusted host configuration."
+      ]
+    },
+    {
+      "id": "AD-025",
+      "title": "Finish TypeScript and JavaScript installation and client ergonomics",
+      "component": "Language clients",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-002"],
+      "current": "The SDK has typed local execution and a browser-safe fetch client; consumers currently install from a sibling checkout.",
+      "scope": "Polish the public TypeScript/JavaScript API, entry points, errors and examples for browser and server applications.",
+      "acceptance": [
+        "An installed package works in a plain JavaScript app, TypeScript server and browser bundle without importing server secrets or Node-only code.",
+        "run, stream, provider discovery and AbortSignal behavior have concise examples and stable types.",
+        "Bundle/export checks and compiled declarations run from the packed artifact, independent of the monorepo source tree."
+      ]
+    },
+    {
+      "id": "AD-026",
+      "title": "Add typed synchronous and asynchronous Python clients",
+      "component": "Language clients",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-002"],
+      "current": "A standard-library synchronous client provides run and stream operations with verified TLS and no default run timeout.",
+      "scope": "Add typed request/event/result models, an async interface and idiomatic lifecycle management while preserving a simple installation.",
+      "acceptance": [
+        "Sync and async usage pass shared fixtures, with stream context management and cancellation releasing connections.",
+        "A fresh Python application installs a built wheel and runs local-host and remote HTTPS workflows.",
+        "Type checking, custom CA support and explicit timeout behavior are documented; no implicit run deadline is introduced."
+      ]
+    },
+    {
+      "id": "AD-027",
+      "title": "Stabilize the Go client module and streaming lifecycle",
+      "component": "Language clients",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-002"],
+      "current": "The Go client supports JSON runs and streamed callbacks using caller-owned contexts.",
+      "scope": "Finish typed events/results, error inspection, HTTP transport injection and a consumable module path.",
+      "acceptance": [
+        "A separate Go module installs the client and runs against local and remote hosts without repository-relative replacements.",
+        "Context cancellation, callback termination and transport errors release goroutines and response bodies.",
+        "Shared conformance tests and race checks pass; caller context deadlines remain explicit application choices."
+      ]
+    },
+    {
+      "id": "AD-028",
+      "title": "Add an async Rust client and finish crate ergonomics",
+      "component": "Language clients",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-002"],
+      "current": "The Rust crate uses blocking reqwest, typed requests and callback streaming with its default total request timeout disabled.",
+      "scope": "Provide async streaming and cancellation alongside an optional blocking interface, stable event/error types and documented feature flags.",
+      "acceptance": [
+        "A separate Rust application installs a packaged crate and runs both client styles against local and HTTPS hosts.",
+        "Dropping or cancelling a stream stops upstream work and cleans up resources; TLS verification stays enabled.",
+        "Conformance, minimal-feature and minimum-supported-Rust checks pass without adding a hidden run deadline."
+      ]
+    },
+    {
+      "id": "AD-029",
+      "title": "Define account-scoped usage identity and accounting semantics",
+      "component": "Usage and metadata",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-003"],
+      "current": "Usage callbacks include trusted subject, run, provider instance and model; Usagestat mappings are provider-level and account joins are application-owned.",
+      "scope": "Specify stable execution/account identifiers, usage provenance, incomplete totals and the relationship between run metering and account quota snapshots.",
+      "acceptance": [
+        "Two accounts of the same vendor cannot receive each other's usage or quota attribution.",
+        "Unknown token/cost data remains absent; cache subsets, reasoning counts and API-equivalent estimates have explicit meanings.",
+        "Identity, schema versioning and retention support a durable sink without logging prompts, private reasoning or credentials."
+      ]
+    },
+    {
+      "id": "AD-030",
+      "title": "Add a durable Usagestat run-metering ingestion contract",
+      "component": "Usage and metadata",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "usagestat",
+      "dependsOn": ["AD-006", "AD-029"],
+      "current": "Usagestat has public read APIs but no run-event ingestion endpoint; AgenticDriver offers callbacks and a single-process JSONL sink.",
+      "scope": "Design and implement an authenticated ingestion boundary in Usagestat and a matching optional AgenticDriver sink, without duplicating existing provider probes.",
+      "acceptance": [
+        "Retries deduplicate completed run records using a scoped stable key and preserve partial or unknown measurements.",
+        "Buffered delivery, backpressure, offline recovery and reconciliation are tested; telemetry failure does not replay model or tool work.",
+        "Per-account access and retention are enforced, with explicit schema compatibility between both repositories."
+      ]
+    },
+    {
+      "id": "AD-031",
+      "title": "Reuse Usagestat provider icons, metadata and quota freshness",
+      "component": "Usage and metadata",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-029"],
+      "current": "The read client preserves provider metadata, icon references, usage snapshots and the actual limits schema; remote icon paths are not browser assets.",
+      "scope": "Add documented app-facing catalog helpers and a trusted asset delivery/cache recipe shared by the three integrations.",
+      "acceptance": [
+        "Apps show the correct provider/account identity, accessible names and licensed icon variants without copying Usagestat probe logic.",
+        "Missing icons and stale/error quota snapshots have explicit fallback displays; quotas are not treated as exact per-run usage.",
+        "Remote asset delivery uses catalog allowlists, never an arbitrary filesystem read endpoint or credential-bearing URL."
+      ]
+    },
+    {
+      "id": "AD-032",
+      "title": "Expose structured diagnostics, metrics and optional tracing",
+      "component": "Observability",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-001", "AD-029"],
+      "current": "Run events and prompt-free usage callbacks expose lifecycle data; there is no standard tracing or operational metrics integration.",
+      "scope": "Add optional OpenTelemetry-compatible spans/metrics and structured diagnostic hooks for host, provider and tool execution.",
+      "acceptance": [
+        "Applications correlate their request ID with run/provider/tool spans, queue time, progress and final outcomes.",
+        "Content and secret redaction is the default; private reasoning is not exported, and diagnostic verbosity is explicitly configured.",
+        "Broken exporters do not stall execution or cause retries; instrumentation overhead and cardinality are bounded."
+      ]
+    },
+    {
+      "id": "AD-033",
+      "title": "Add Brandstorm connection setup, account selection and live validation",
+      "component": "Applications",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "brandstorm",
+      "dependsOn": ["AD-003", "AD-011", "AD-025", "AD-031"],
+      "current": "The Bridge adapter is implemented and tested, with keychain-backed token configuration and namespaced model discovery; there is no dedicated setup UI.",
+      "scope": "Create a complete settings flow to add a local or remote AgenticDriver connection, select its permitted provider/model and diagnose connection failures.",
+      "acceptance": [
+        "A user configures the connection through the existing UI, selects an explicit model and completes a live structured brainstorm.",
+        "Connection/auth errors, cancellation and incomplete output map to Brandstorm's existing lifecycle without silent fallback.",
+        "The adapter consumes an installable SDK artifact; credentials remain in the existing secure configuration store."
+      ]
+    },
+    {
+      "id": "AD-034",
+      "title": "Extend Brandstorm brainstorming with scoped context, tools and proposals",
+      "component": "Applications",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "brandstorm",
+      "dependsOn": ["AD-033", "AD-007", "AD-008", "AD-010"],
+      "current": "The adapter supports text and JSON artifacts; attachments and application tools are explicitly unsupported.",
+      "scope": "Connect selected brand briefs, assets and research to registered tools, and compose the application's brainstorming stages around SDK runs.",
+      "acceptance": [
+        "A complete brief-to-directions workflow uses authorized project context and streams progress into the existing interface.",
+        "Proposed names, positioning and identity artifacts are validated and reviewed before becoming accepted project data.",
+        "Cancellation, resumable app checkpoints and capability differences are visible; unsupported CLI features fail before work starts."
+      ]
+    },
+    {
+      "id": "AD-035",
+      "title": "Finish LitAgent connection settings and refreshable driver discovery",
+      "component": "Applications",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agentic-literature-review",
+      "dependsOn": ["AD-003", "AD-011", "AD-025", "AD-031"],
+      "current": "The server discovers configured driver instances at startup, uses existing provider settings and saves returned text as proposed cache artifacts.",
+      "scope": "Add connection management and catalog refresh without restart, plus actionable health and account/model selection in the existing provider settings.",
+      "acceptance": [
+        "A permitted remote instance can be connected, refreshed, enabled and disabled through existing application controls.",
+        "A live evidence-backed question completes with interruption, errors and usage mapped to LitAgent's lifecycle.",
+        "Secrets stay server-side and cached adapters immediately respect settings changes; canonical research files remain behind the app's acceptance flow."
+      ]
+    },
+    {
+      "id": "AD-036",
+      "title": "Power resumable literature review stages with evidence-linked tools",
+      "component": "Applications",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agentic-literature-review",
+      "dependsOn": ["AD-035", "AD-005", "AD-008", "AD-010"],
+      "current": "The direct Q&A path supplies indexed evidence, and the standalone SDK demo validates citation IDs against synthetic passages.",
+      "scope": "Integrate application-owned search, passage retrieval, screening, extraction and synthesis stages using selected evidence and durable app checkpoints.",
+      "acceptance": [
+        "A review can resume after disconnect/restart without repeating accepted paper processing or writing directly to the canonical library.",
+        "Claims link to accessible source passages; citation existence and evidence support are evaluated separately.",
+        "Metadata, relevance and synthesis changes remain proposals with provenance and acceptance/rejection in LitAgent."
+      ]
+    },
+    {
+      "id": "AD-037",
+      "title": "Connect AI Workspace triage to a real authenticated mailbox",
+      "component": "Applications",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "ai-workspace",
+      "dependsOn": ["AD-017", "AD-025", "AD-029"],
+      "current": "The backend produces schema-validated summaries, priorities, reply drafts and task suggestions through a Mailbox interface; its demo uses synthetic messages.",
+      "scope": "Implement an application-owned mailbox connector and minimal persisted thread store, with user consent, credential storage and subject/thread authorization.",
+      "acceptance": [
+        "An authenticated user processes a real selected thread and receives a validated summary, draft and task proposal.",
+        "Cross-user thread access, identity overrides and email prompt injection cannot grant extra tools or send messages.",
+        "Mail synchronization and provider authentication remain application services; the shared SDK sees only authorized context and tools."
+      ]
+    },
+    {
+      "id": "AD-038",
+      "title": "Build AI Workspace review and approved action workflows",
+      "component": "Applications",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "ai-workspace",
+      "dependsOn": ["AD-037", "AD-005", "AD-006", "AD-007"],
+      "current": "Triage returns proposals only; there is no inbox UI, approval flow, send/archive operation or durable background processing.",
+      "scope": "Add an inbox review surface and application-owned tools for explicitly approved drafts, tasks and message actions.",
+      "acceptance": [
+        "A user can edit and approve a draft or action with a preview of exact recipients, content and affected messages.",
+        "Retries or reconnects do not duplicate sending, task creation or archive operations; actions have an audit trail.",
+        "Background triage can resume and cancel, while sender content never supplies authorization for external actions."
+      ]
+    },
+    {
+      "id": "AD-039",
+      "title": "Create end-to-end evaluations for all three application scenarios",
+      "component": "Quality and security",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002", "AD-033", "AD-035", "AD-037"],
+      "current": "Synthetic examples and integration tests verify contracts, but there is no shared scenario evaluation suite with recorded quality criteria.",
+      "scope": "Maintain small, reproducible brand, literature and email datasets and optional live-provider runs with application-specific scoring.",
+      "acceptance": [
+        "Evaluate brand constraint adherence, literature evidence support and email action correctness separately from transport success.",
+        "Include malicious retrieved text, wrong-tenant access, unsupported capabilities and cancellation during tool work.",
+        "CI runs deterministic fixtures; paid live evaluations require explicitly supplied credentials and record model/version provenance."
+      ]
+    },
+    {
+      "id": "AD-040",
+      "title": "Expand CI across operating systems, versions and network failure modes",
+      "component": "Quality and security",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-002", "AD-025", "AD-026", "AD-027", "AD-028"],
+      "current": "CI checks one Ubuntu environment with Node, Python, Go and Rust plus packaged-artifact smoke tests.",
+      "scope": "Add a declared support matrix and fault-injection checks for hosts, language clients and native process adapters.",
+      "acceptance": [
+        "Supported OS/runtime combinations validate package installation, protocol conformance and platform-specific cancellation.",
+        "Proxy buffering, slow consumers, broken streams, TLS failures and disconnect races have reproducible coverage.",
+        "Fake-clock tests preserve disabled-by-default inactivity behavior; CLI version checks use sanitized fixtures plus opt-in real binaries."
+      ]
+    },
+    {
+      "id": "AD-041",
+      "title": "Review and test execution, pairing and tenant trust boundaries",
+      "component": "Quality and security",
+      "phase": "v1",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-007", "AD-008", "AD-012", "AD-013", "AD-014"],
+      "current": "The foundation includes explicit allowlists, TLS, origin checks and redaction, but new pairing, tool transports and isolation features need an integrated review.",
+      "scope": "Document the threat model and run targeted security tests against the supported local, remote and multi-account configurations.",
+      "acceptance": [
+        "Verify bearer theft boundaries, pairing replay, tenant isolation, tool argument substitution, untrusted content and credential/log leakage defenses.",
+        "Check host-owned URLs and attachment resolvers against redirect, path traversal and server-side request risks.",
+        "Record findings and resolve release-blocking defects, with regression coverage and explicit residual trust assumptions."
+      ]
+    },
+    {
+      "id": "AD-042",
+      "title": "Publish versioned SDK packages and remove sibling-checkout dependencies",
+      "component": "Releases and docs",
+      "phase": "Alpha",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-025", "AD-026", "AD-027", "AD-028", "AD-040"],
+      "current": "Package manifests and dry runs exist; the SDK has not been published, and the three applications point at sibling source checkouts.",
+      "scope": "Set up npm, Python, Go and Rust releases with chosen available package identities, versioning, changelogs and reproducible artifacts; keep one source repository.",
+      "acceptance": [
+        "Fresh external projects install each released language package and complete a documented mock workflow.",
+        "Release automation uses scoped publishing credentials or supported trusted publishing, and verifies the packaged contents.",
+        "Brandstorm, LitAgent and AI Workspace pin a published SDK version and work without a sibling checkout.",
+        "Document coordinated protocol compatibility even if client packages are versioned independently; registry publication is a deliberate release action."
+      ]
+    },
+    {
+      "id": "AD-043",
+      "title": "Write SDK onboarding, provider setup and three application recipes",
+      "component": "Releases and docs",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-011", "AD-014", "AD-025", "AD-026", "AD-027", "AD-028"],
+      "current": "README and architecture/provider/application docs cover the foundation; examples require a source checkout.",
+      "scope": "Create install-first documentation and a documentation site for agenticdriver.dev, with language quickstarts, provider setup, troubleshooting and all three recipes.",
+      "acceptance": [
+        "Each quickstart is exercised from packaged artifacts and clearly labels synthetic versus live execution.",
+        "Explain local and remote credentials, actual subscription support, capabilities, optional inactivity and explicit cancellation in plain language.",
+        "Include an extension guide, compatibility matrix and migration notes; site deployment and domain changes are handled as a separate authorized release step."
+      ]
+    },
+    {
+      "id": "AD-044",
+      "title": "Complete v1 operational and compatibility release gates",
+      "component": "Quality and security",
+      "phase": "v1",
+      "priority": "P0",
+      "target": "agenticdriver",
+      "dependsOn": [
+        "AD-017",
+        "AD-018",
+        "AD-019",
+        "AD-020",
+        "AD-021",
+        "AD-022",
+        "AD-023",
+        "AD-032",
+        "AD-034",
+        "AD-036",
+        "AD-038",
+        "AD-039",
+        "AD-040",
+        "AD-041",
+        "AD-042",
+        "AD-043"
+      ],
+      "current": "The local foundation is tested, but it has no stable-release support commitment or production workload evidence.",
+      "scope": "Define and meet explicit v1 criteria for supported providers, clients, deployment modes and application workflows.",
+      "acceptance": [
+        "Sustained concurrent workloads demonstrate bounded memory, queue behavior, cancellation cleanup and recovery without artificial run deadlines.",
+        "All three applications complete supported real workflows, with known limitations and provider verification dates recorded.",
+        "Upgrade/rollback, compatibility, incident diagnostics and support policy are documented; deferred features remain clearly outside v1 guarantees."
+      ]
+    },
+    {
+      "id": "AD-045",
+      "title": "Investigate an official Grok subscription integration route",
+      "component": "Providers",
+      "phase": "Later",
+      "priority": "P2",
+      "target": "agenticdriver",
+      "dependsOn": [],
+      "current": "Grok is available through the xAI API adapter. No Grok subscription adapter is implemented or verified.",
+      "scope": "Check current official xAI/Grok interfaces for a supported end-user subscription integration and record the feasibility decision.",
+      "acceptance": [
+        "The decision cites official authentication and integration documentation and distinguishes availability from speculation.",
+        "If a supported interface exists, define its adapter, capability and conformance work before advertising support.",
+        "If none exists, document API-only support; do not scrape browser sessions, extract consumer tokens or imply subscription credits can fund API requests."
+      ]
+    }
+  ]
+}

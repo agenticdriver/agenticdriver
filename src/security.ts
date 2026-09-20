@@ -1,0 +1,54 @@
+import { DriverError } from "./errors.js";
+
+export function isLoopback(host: string): boolean {
+  return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(
+    host.toLowerCase(),
+  );
+}
+
+/** No redirects or URL credentials: neither may silently move a bearer/API key. */
+export function secureBaseUrl(value: string): URL {
+  const url = new URL(value);
+  if (
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
+    (url.protocol !== "https:" &&
+      !(url.protocol === "http:" && isLoopback(url.hostname)))
+  ) {
+    throw new DriverError(
+      "INSECURE_TRANSPORT",
+      "Use HTTPS, or HTTP on a loopback address, without URL credentials, query, or fragment.",
+    );
+  }
+  if (!url.pathname.endsWith("/")) url.pathname += "/";
+  return url;
+}
+
+export async function readLimited(
+  response: Response,
+  maxBytes = 2_000_000,
+): Promise<string> {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0,
+    text = "";
+  try {
+    while (true) {
+      const next = await reader.read();
+      if (next.done) return text + decoder.decode();
+      bytes += next.value.byteLength;
+      if (bytes > maxBytes)
+        throw new DriverError(
+          "RESPONSE_TOO_LARGE",
+          "The response exceeded the size limit.",
+        );
+      text += decoder.decode(next.value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+}

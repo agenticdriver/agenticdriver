@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.tgz
+__pycache__/
+*.egg-info/
+.venv/
+clients/rust/target/
+build/
+.DS_Store

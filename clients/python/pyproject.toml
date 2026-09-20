@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agenticdriver"
+version = "0.1.0"
+description = "Python client for the AgenticDriver SDK"
+requires-python = ">=3.10"
+license = "MIT"
+
+[tool.setuptools.packages.find]
+where = ["src"]

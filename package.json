@@ -1,0 +1,61 @@
+{
+  "name": "agenticdriver",
+  "version": "0.1.0",
+  "description": "Bring-your-own-agent SDK for local and remote applications",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "import": "./dist/providers/index.js"
+    },
+    "./usagestat": {
+      "types": "./dist/usagestat.d.ts",
+      "import": "./dist/usagestat.js"
+    }
+  },
+  "files": [
+    "dist",
+    "protocol",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "demo": "tsx examples/brandstorm.ts",
+    "demo:server": "tsx examples/server.ts",
+    "test:clients": "python3 scripts/test-clients.py",
+    "protocol": "tsx scripts/protocol.ts",
+    "format": "prettier --write src tests examples protocol docs README.md package.json tsconfig*.json",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prettier": "^3.6.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "AgenticDriver SDK protocol", "version": "1.0.0" },
+  "servers": [
+    { "url": "https://driver.example.com" },
+    { "url": "http://127.0.0.1:7433", "description": "Loopback development" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "security": [],
+        "responses": {
+          "200": { "description": "Host health and protocol version" }
+        }
+      }
+    },
+    "/v1/providers": {
+      "get": {
+        "operationId": "listProviders",
+        "responses": {
+          "200": {
+            "description": "Only provider instances allowed by this token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["providers"],
+                  "properties": {
+                    "providers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Provider" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs": {
+      "post": {
+        "operationId": "run",
+        "description": "Accept: application/json for one result; text/event-stream for ordered events. Disconnect cancels an unfinished run. No retries, reconnection, or resumable server state.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RunRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed JSON result or an SSE stream with one terminal event",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RunResult" }
+              },
+              "text/event-stream": {
+                "schema": { "type": "string" },
+                "description": "SSE data is a JSON RunEvent; id is its sequence; event is its type."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
+    "schemas": {
+      "RunRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+          },
+          "input": { "type": "string", "minLength": 1, "maxLength": 100000 },
+          "instructions": { "type": "string", "maxLength": 100000 },
+          "history": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": { "type": "string", "enum": ["user", "assistant"] },
+                "content": { "type": "string", "maxLength": 100000 }
+              },
+              "required": ["role", "content"],
+              "additionalProperties": false
+            }
+          },
+          "tools": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+            }
+          },
+          "maxSteps": { "type": "integer", "minimum": 1, "maximum": 64 },
+          "maxOutputTokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536
+          },
+          "idleTimeoutMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "outputSchema": {
+            "type": "object",
+            "propertyNames": { "type": "string" },
+            "additionalProperties": {}
+          },
+          "metadata": {
+            "type": "object",
+            "propertyNames": { "type": "string", "maxLength": 80 },
+            "additionalProperties": { "type": "string", "maxLength": 500 }
+          }
+        },
+        "required": ["provider", "model", "input"],
+        "additionalProperties": false
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "inputTokens": { "type": "integer", "minimum": 0 },
+          "outputTokens": { "type": "integer", "minimum": 0 },
+          "cachedInputTokens": { "type": "integer", "minimum": 0 },
+          "reasoningTokens": { "type": "integer", "minimum": 0 },
+          "costUsd": { "type": "number", "minimum": 0 }
+        },
+        "description": "Measurements are omitted when unknown. Cached input is a subset of input tokens. Totals are omitted if any model step lacks that measurement."
+      },
+      "RunResult": {
+        "type": "object",
+        "required": [
+          "runId",
+          "provider",
+          "model",
+          "text",
+          "usage",
+          "steps",
+          "finishReason"
+        ],
+        "properties": {
+          "runId": { "type": "string" },
+          "provider": { "type": "string" },
+          "model": { "type": "string" },
+          "text": { "type": "string" },
+          "output": {},
+          "usage": { "$ref": "#/components/schemas/Usage" },
+          "steps": { "type": "integer", "minimum": 1 },
+          "finishReason": { "enum": ["stop", "length"] }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "$ref": "#/components/schemas/ErrorInfo" } }
+      },
+      "ErrorInfo": {
+        "type": "object",
+        "required": ["code", "message", "retryable"],
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "retryable": { "type": "boolean" }
+        }
+      },
+      "Provider": {
+        "type": "object",
+        "required": ["id", "name", "vendor", "authMode", "capabilities"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "vendor": { "type": "string" },
+          "authMode": { "enum": ["api-key", "cli-session", "none"] },
+          "models": { "type": "array", "items": { "type": "string" } },
+          "usageStatId": { "type": "string" },
+          "capabilities": {
+            "type": "object",
+            "required": ["tools", "textStreaming"],
+            "properties": {
+              "tools": { "type": "boolean" },
+              "textStreaming": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "RunEvent": {
+        "type": "object",
+        "required": ["type", "runId", "sequence", "timestamp"],
+        "properties": {
+          "type": { "type": "string" },
+          "runId": { "type": "string" },
+          "sequence": { "type": "integer", "minimum": 1 },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "type": { "const": "run.started" },
+              "provider": { "type": "string" },
+              "model": { "type": "string" }
+            },
+            "required": ["provider", "model"]
+          },
+          {
+            "properties": {
+              "type": { "const": "step.started" },
+              "step": { "type": "integer", "minimum": 1 }
+            },
+            "required": ["step"]
+          },
+          {
+            "properties": {
+              "type": { "const": "text.delta" },
+              "text": { "type": "string" }
+            },
+            "required": ["text"]
+          },
+          {
+            "properties": {
+              "type": { "const": "run.progress" },
+              "phase": { "enum": ["model", "tool"] }
+            },
+            "required": ["phase"]
+          },
+          {
+            "properties": {
+              "type": { "const": "tool.called" },
+              "call": {
+                "type": "object",
+                "required": ["id", "name", "arguments"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "arguments": { "type": "object" }
+                }
+              }
+            },
+            "required": ["call"]
+          },
+          {
+            "properties": {
+              "type": { "const": "tool.completed" },
+              "callId": { "type": "string" },
+              "output": {}
+            },
+            "required": ["callId", "output"]
+          },
+          {
+            "properties": {
+              "type": { "const": "usage.reported" },
+              "step": { "type": "integer", "minimum": 0 },
+              "usage": { "$ref": "#/components/schemas/Usage" }
+            },
+            "required": ["step", "usage"]
+          },
+          {
+            "properties": {
+              "type": { "const": "run.completed" },
+              "result": { "$ref": "#/components/schemas/RunResult" }
+            },
+            "required": ["result"]
+          },
+          {
+            "properties": {
+              "type": { "enum": ["run.failed", "run.cancelled"] },
+              "error": { "$ref": "#/components/schemas/ErrorInfo" }
+            },
+            "required": ["error"]
+          }
+        ]
+      }
+    }
+  }
+}
