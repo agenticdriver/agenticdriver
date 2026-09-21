@@ -1,8 +1,11 @@
-"""Install the exact candidate archives into fresh applications and run the docs.
+"""Install reviewed packages into fresh applications and run the docs.
 
+By default, use candidate archives. --registry selects already published
+channels, whose remote contents must match the candidate before installation.
 No registry upload, real account, provider API or sibling checkout is used.
 Infrastructure watchdogs below do not change SDK run/inactivity defaults.
 """
+import argparse
 import json
 import os
 from pathlib import Path
@@ -14,6 +17,7 @@ import tarfile
 import tempfile
 
 from release import ROOT, verify
+from publish import check_registry
 from tls_fixture import create_tls_fixture
 
 
@@ -22,9 +26,18 @@ def run(args, cwd, env):
                           check=True, capture_output=True, timeout=300)
 
 
-candidate = Path(sys.argv[1]).resolve()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("candidate", type=Path)
+parser.add_argument("--registry", action="append", default=[],
+                    choices=["npm", "python", "rust", "go"],
+                    help="Install this exact published version instead of its local archive; repeatable")
+args = parser.parse_args()
+candidate = args.candidate.resolve()
 manifest = verify(candidate)
 packages = manifest["packages"]
+registries = set(args.registry)
+for registry in sorted(registries):
+    check_registry(candidate, registry)
 # Do not inherit an application/provider account or custom module search path.
 env = {key: value for key, value in os.environ.items()
        if not key.startswith("AGENTICDRIVER_") and key not in {"PYTHONPATH", "PYTHONHOME"}}
@@ -33,9 +46,19 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-release-test-") as direct
     javascript = work / "javascript"
     javascript.mkdir()
     (javascript / "package.json").write_text('{"private":true,"type":"module"}')
+    npm_package = (packages["npm"]["name"] + "@" + packages["npm"]["version"]
+                   if "npm" in registries else candidate / packages["npm"]["archive"])
     run(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
-         candidate / packages["npm"]["archive"]], javascript, env)
+         "--registry=https://registry.npmjs.org", "--cache=" + str(work / "npm-cache"),
+         npm_package], javascript, env)
     installed = javascript / "node_modules/@agenticdriver/sdk"
+    installed_metadata = json.loads((installed / "package.json").read_text())
+    assert installed_metadata["name"] == packages["npm"]["name"]
+    assert installed_metadata["version"] == packages["npm"]["version"]
+    if "npm" in registries:
+        lock = json.loads((javascript / "package-lock.json").read_text())
+        dependency = lock["packages"]["node_modules/@agenticdriver/sdk"]
+        assert dependency["resolved"].startswith("https://registry.npmjs.org/")
     for name in ["brandstorm", "literature-review", "email-workspace"]:
         shutil.copyfile(installed / f"examples/javascript/{name}.mts", javascript / f"{name}.mts")
         result = run(["node", "--experimental-strip-types", f"{name}.mts"], javascript, env)
@@ -60,14 +83,20 @@ process.on('SIGTERM', () => { void host.close().then(() => process.exit(0)); });
         application.mkdir()
         run([sys.executable, "-m", "venv", ".venv"], application, env)
         executable = application / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        run([executable, "-m", "pip", "install", "--quiet", candidate / packages["python"][kind]], application, env)
+        python_package = (packages["python"]["name"] + "==" + packages["python"]["version"]
+                          if "python" in registries else candidate / packages["python"][kind])
+        install_options = (["--index-url", "https://pypi.org/simple", "--no-cache-dir",
+                            "--only-binary=agenticdriver" if kind == "wheel" else "--no-binary=agenticdriver"]
+                           if "python" in registries else [])
+        run([executable, "-m", "pip", "install", "--quiet", *install_options, python_package], application, env)
         shutil.copyfile(installed / "examples/quickstart/client.py", application / "client.py")
         applications.append(([executable, "client.py"], application))
     go = work / "go"
     go.mkdir()
     module = packages["go"]["name"]
-    go_env = {**env, "GOPROXY": (candidate / "go").as_uri(), "GONOPROXY": "none",
-              "GONOSUMDB": module, "GOWORK": "off", "GOFLAGS": "-mod=mod",
+    go_env = {**env, "GOPROXY": "https://proxy.golang.org" if "go" in registries else (candidate / "go").as_uri(),
+              "GONOPROXY": "none", "GOPRIVATE": "", "GOSUMDB": "sum.golang.org",
+              "GONOSUMDB": "none" if "go" in registries else module, "GOWORK": "off", "GOFLAGS": "-mod=mod",
               "GOPATH": str(work / "gopath"), "GOMODCACHE": str(work / "modules"),
               "GIT_TERMINAL_PROMPT": "0"}
     run(["go", "mod", "init", "example.test/release-client"], go, go_env)
@@ -85,17 +114,24 @@ process.on('SIGTERM', () => { void host.close().then(() => process.exit(0)); });
         # verify() rejected all links, traversal, duplicates and oversized members.
         bundle.extractall(vendor, filter="data")
     package = f'{packages["rust"]["name"]}-{packages["rust"]["version"]}'
+    rust_dependency = ('"=' + packages["rust"]["version"] + '"' if "rust" in registries
+                       else '{ path = "vendor/' + package + '" }')
     (rust / "Cargo.toml").write_text(f'''[package]
 name = "release-client"
 version = "0.0.0"
 edition = "2021"
 [dependencies]
-agenticdriver = {{ path = "vendor/{package}" }}
+agenticdriver = {rust_dependency}
 ''')
     shutil.copyfile(vendor / package / "Cargo.lock", rust / "Cargo.lock")
     shutil.copyfile(installed / "examples/quickstart/client.rs", rust / "src/main.rs")
     rust_env = {**env, "CARGO_TARGET_DIR": str(ROOT / "clients/rust/target")}
     run(["cargo", "+1.89.0", "build"], rust, rust_env)
+    if "rust" in registries:
+        metadata = json.loads(run(["cargo", "+1.89.0", "metadata", "--locked", "--format-version=1"], rust, rust_env).stdout)
+        sdk = next(package for package in metadata["packages"] if package["name"] == "agenticdriver")
+        assert sdk["version"] == packages["rust"]["version"]
+        assert sdk["source"] == "registry+https://github.com/rust-lang/crates.io-index"
     applications.append((["cargo", "+1.89.0", "run", "--locked", "--quiet"], rust))
     ca, cert, key = create_tls_fixture(work)
     token = secrets.token_urlsafe(32)
@@ -113,7 +149,7 @@ agenticdriver = {{ path = "vendor/{package}" }}
         for command, application in applications:
             result = run(command, application, client_env)
             assert result.stdout.strip() == "AgenticDriver is connected.", application.name
-            print("Exact candidate quickstart passed over verified HTTPS: " + application.name, flush=True)
+            print("Reviewed package quickstart passed over verified HTTPS: " + application.name, flush=True)
     finally:
         host.terminate()
         try:
@@ -121,4 +157,5 @@ agenticdriver = {{ path = "vendor/{package}" }}
         except subprocess.TimeoutExpired:
             host.kill()
             host.wait()
-print("Candidate npm, Python wheel+sdist, Go module and Rust crate passed; no package was published.")
+print("npm, Python wheel+sdist, Go module and Rust crate passed; registry installs: "
+      + (", ".join(sorted(registries)) or "none (candidate archives)") + ". No upload performed.")

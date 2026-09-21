@@ -1,9 +1,11 @@
 # Release candidates and publication
 
-**No SDK registry package has been published.** Candidate versions are 0.1.0,
-with wire protocol 1.0. Development archives are installable through the
-[quickstart](quickstart.md). The [changelog](../CHANGELOG.md) records behavior
-and remaining live-provider limitations.
+**Version 0.1.0 is published on npm, crates.io and the public Go module proxy**,
+with wire protocol 1.0. PyPI publication is waiting for approval of the selected
+`agenticdriver` organization. The reviewed Python wheel and sdist remain usable
+as archives. See the [release verification record](validation/release-0.1.0.md)
+for immutable source, digests, installation evidence and outstanding app migrations.
+Real-provider certification remains separate from package publication.
 
 ## Distribution inventory
 
@@ -13,18 +15,19 @@ transferred from the personal account. npm uses **`@agenticdriver/sdk`**, while
 PyPI and crates.io keep **`agenticdriver`**. `release/config.json` records the
 selected owners, package names and bootstrap maintainer.
 
-Read-only checks on 2026-09-21 found no published package at those coordinates.
-This does not reserve a name or prove publishing permission. The npm CLI verified
-`hashimkarim` as an owner of the `agenticdriver` npm organization. The GitHub
-`agenticdriver:maintainers` team exists with that user as a maintainer. PyPI
-organization/project setup and crates.io bootstrap authentication are pending.
+Publication on 2026-09-21 used reviewed commit
+`442ca9c627717f0cdb42ad8260a9692357c79a87` and its successful eight-job SDK CI run.
+The npm organization owns `@agenticdriver/sdk`; `agenticdriver:developers` has
+write access. crates.io ownership includes `github:agenticdriver:maintainers`
+and `hashimkarim` as individual administrator. Both registry publishers are bound
+to this organization repository. PyPI organization approval is pending.
 
 | Channel   | Candidate identity                                  | Version source                  | Current state                                               |
 | --------- | --------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
-| npm       | `@agenticdriver/sdk`                                | Root `package.json`             | Organization access verified; first upload pending          |
-| PyPI      | `agenticdriver`                                     | `clients/python/pyproject.toml` | Organization/project publisher setup pending                |
-| crates.io | `agenticdriver`                                     | `clients/rust/Cargo.toml`       | GitHub team prepared; bootstrap and crate ownership pending |
-| Go        | `github.com/agenticdriver/agenticdriver/clients/go` | `release/config.json`           | Public source available; no version tag published           |
+| npm       | `@agenticdriver/sdk`                                | Root `package.json`             | 0.1.0 published; fresh registry installation passed          |
+| PyPI      | `agenticdriver`                                     | `clients/python/pyproject.toml` | Organization approval pending; no PyPI upload                |
+| crates.io | `agenticdriver`                                     | `clients/rust/Cargo.toml`       | 0.1.0 published; team ownership and install verified |
+| Go        | `github.com/agenticdriver/agenticdriver/clients/go` | `release/config.json`           | v0.1.0 tagged; public proxy installation passed           |
 
 These channels match the SDK's language packages. Node also supplies the host
 CLI; Python and Rust are libraries, not `pipx`/`cargo install` apps. OS package
@@ -101,9 +104,9 @@ are verified. The selected release target is 0.1.0 under `agenticdriver`, with p
 source and public packages. Authenticate the selected registry identities and
 configure their publishing destinations before uploading the tested candidate.
 Public Go installation uses the public module proxy and checksum database.
-The npm CLI authenticated as the organization member `hashimkarim` on 2026-09-21.
-PyPI and crates.io publishing access still needs verification; no credentials
-live in this repo.
+The initial npm and crates.io uploads authenticated as `hashimkarim` on
+2026-09-21. Native credentials remain outside the repository. PyPI has not been
+uploaded under a personal account while organization approval is pending.
 
 The current first-publication requirements differ:
 
@@ -149,7 +152,9 @@ Configure the registry-side trusted publishers with these exact values:
 | Environment       | `npm`                            | `python`                               | `rust`                                                           |
 | First upload      | Organization member login        | Organization project trusted publisher | Scoped member token, then team ownership                         |
 
-npm's binding permits `npm publish`; staged publishing is not used. The Python
+npm's binding permits `npm publish`. The registry currently reports both
+`createPackage` and `createStagedPackage` after the CLI requested only
+`--allow-publish`; this workflow only uses direct publication. The Python
 upload uses the pinned PyPA action and OIDC. Rust checks Cargo's repackaged files
 against the candidate before acquiring its short-lived crates.io identity.
 Only the Go job has `contents: write`, to create `clients/go/vX.Y.Z` at the
@@ -169,10 +174,12 @@ files; a conflicting digest or unexpected file stops the entire attempt. HTTP
 available. Every channel verifies its actual remote metadata after publication.
 
 Use native registry authentication. Keep credentials out of source, artifacts
-and command arguments; preserve other package owners/tokens. Hosted CI could not
-start while the repository was private on 2026-09-21 because of an account
-billing/spending restriction. The user subsequently authorized public visibility;
-fresh CI must establish the current result. No billing or spending settings changed.
+and command arguments; preserve other package owners/tokens. The publication
+commit passed [SDK CI 35612779939](https://github.com/agenticdriver/agenticdriver/actions/runs/35612779939)
+after the authorized public-repository transfer. Linux, macOS, Windows,
+container/TLS, documentation and exact-artifact installation checks passed.
+No billing or spending settings changed. Registry publisher settings were read
+back successfully; a later OIDC upload is not claimed by the initial native-login uploads.
 
 ## Release and recover
 
@@ -190,6 +197,16 @@ in a new version with a changelog entry.
 Install each exact registry version in a fresh app and run its synthetic workflow,
 TLS and cancellation checks. Coordinate the three app agents to pin coordinates
 and lockfiles, rerun integrations, then remove development archives/source aliases.
+The same installation harness can select published channels after verifying
+their remote contents against the reviewed bundle:
+
+```sh
+python3 scripts/test-release.py /absolute/path/to/reviewed-bundle \
+  --registry npm --registry rust --registry go
+```
+
+Omitted channels still use the reviewed local archives. Add `--registry python`
+only after the organization's PyPI files exist. This command performs no uploads.
 Current artifacts remain valid until migration is verified. [Migration notes](migrations.md)
 cover protocol, auth and canonical data; language versions may advance independently
 while retaining an explicitly compatible wire protocol.
