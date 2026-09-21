@@ -133,12 +133,17 @@ The current first-publication requirements differ:
 ### Publisher bindings
 
 The manual [publication workflow](../.github/workflows/publish.yml) accepts one
-`registry` (`npm`, `python`, `rust` or `go`) and a `ci_run` ID. Run it on
-`sdk-roadmap` at the **same commit** as the successful SDK checks run. It rejects
+`registry` (`npm`, `python`, `rust` or `go`) and a `ci_run` ID. Dispatch it from
+`sdk-roadmap`. By default it checks out that workflow revision; optional
+`candidate_commit` selects a full immutable commit SHA for a delayed channel,
+such as Python awaiting organization approval. The checked-out candidate must
+be the **same commit** as the successful SDK checks run. It rejects
 pull-request runs, unrelated workflows/repositories, failed/incomplete checks,
 changed source revisions and mismatched candidate identities. It downloads and
 verifies that run's exact candidate bundle; it does not rebuild npm or Python.
-Artifacts expire after 14 days, so a missing bundle requires a fresh CI run.
+CI artifacts expire after 14 days, so a missing CI bundle requires a fresh
+SDK checks run at the exact reviewed source. Released archives are also preserved
+on the [0.1.0 GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0).
 
 Configure the registry-side trusted publishers with these exact values:
 

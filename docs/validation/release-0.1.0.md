@@ -19,6 +19,12 @@ remaining v1 roadmap gates.
   Cargo's repackaged archive was compared before upload and also matched byte for
   byte. Existing versions and Go tags were not replaced.
 
+The [GitHub 0.1.0 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0)
+contains the preserved candidate bundle plus individual npm, Python and Rust
+archives. All eight uploaded asset digests matched the reviewed files before
+publication. `ASSET-SHA256SUMS` covers the flattened release assets; the bundled
+`SHA256SUMS` retains the original artifact paths.
+
 ## Published packages
 
 | Language | Exact dependency | Verified ownership or source |
@@ -68,14 +74,31 @@ these first uploads. Configuration verification is not proof of a subsequent
 OIDC upload. npm reports both direct and staged publication permissions despite
 the CLI request for direct publication only; the workflow uses `npm publish`.
 
+## Application migration evidence
+
+The owning application threads migrated their own dependencies and independently
+checked the npm archive hashes. Source commits and remote branch heads were
+verified after their pushes. All three pin `@agenticdriver/sdk` exactly to 0.1.0.
+
+| Application | Pushed commit and branch | Reported application checks |
+| --- | --- | --- |
+| AI Workspace | `743e5df3e055fc83a4c44e59a097be5a4a2a0f89`, `main` | Clean install, five adapter tests, synthetic demo, 66 app tests, typechecks and both builds; default checks also pass with the optional SDK absent |
+| Brandstorm | `29a0b72bffc6ef05790b7f33999877ebeaa3ae80`, `agenticdriver-connection-setup` | Frozen pnpm install, 94 unit tests, provider-management browser fixture, lint, typecheck and all 26 build tasks |
+| LitAgent | `c21b14c7a5bfcd62a82d0094085a517599ac0575`, `chat-reliability` | Fresh frozen Bun install, typecheck, 117 tests, workspace build and two desktop-width chat fixtures |
+
+Each migrated application resolves the installed registry package without an
+SDK sibling checkout. The Brandstorm integration branch is not merged into its
+original dirty checkout. LitAgent's separate unmerged AD-035 fixture branch still
+has its historical archive and must retain the registry pin when integrated.
+These branch boundaries are not deployment or live-provider acceptance.
+
 ## Remaining AD-042 work
 
 - Wait for the PyPI `agenticdriver` organization approval, then create its project
   and trusted publisher with environment `python`. Publish and verify these
   exact Python artifacts.
-- Have Brandstorm, LitAgent and AI Workspace pin the published package, regenerate
-  their lockfiles, remove SDK source aliases, and pass their own fixture checks.
-  SDK examples are not substitutes for application migration evidence.
+- Preserve the verified app registry pins when their independently developed
+  branches are integrated; do not reinstate earlier source aliases or archives.
 - Preserve the published source and artifacts when later SDK changes are made;
   changed package contents require a new version.
 
