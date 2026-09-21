@@ -169,6 +169,11 @@ including the Usagestat quota helper and the limits of observed budgets.
 
 ## Secret references and diagnostics
 
+Applications that need device pairing and credential rotation use the
+[Better Auth/AuthYard integration](authentication.md) with the programmatic host.
+It reuses these secret references for confidential service credentials. The
+configuration-driven CLI's static-token mode remains explicit and separate.
+
 Custom hosts can attach [optional diagnostics](diagnostics.md) through
 `configuredDriver(config, { diagnostics })`. Structured records and the
 OpenTelemetry bridge exclude content by construction, bound exporter queues,

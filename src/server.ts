@@ -9,7 +9,6 @@ import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
 import {
   JobService,
-  JobOperationSchema,
   type JobStore,
   type JobWorkerOptions,
   type JobOperation,
@@ -18,19 +17,17 @@ import {
   type JobEventsRequest,
 } from "./jobs.js";
 import {
-  SessionOperationSchema,
   type SessionOperation,
   type SessionCreate,
   type SessionIdentity,
 } from "./session-types.js";
 import type { ApprovalDecision } from "./approval-types.js";
 import {
-  ApplicationToolGrantSchema,
   type ApplicationToolGrant,
   type ToolExecutionIdentity,
   type ToolExecutionResult,
 } from "./tool-types.js";
-import { DriverError, publicError } from "./errors.js";
+import { abortable, DriverError, publicError } from "./errors.js";
 import { isLoopback } from "./security.js";
 import {
   negotiateProtocolVersion,
@@ -41,7 +38,6 @@ import {
 } from "./protocol.js";
 import type { RunRequest } from "./types.js";
 import {
-  RetrievalIdSchema,
   RetrievalSearchSchema,
   RetrievalIndexRequestSchema,
   RetrievalDeleteSchema,
@@ -51,6 +47,16 @@ import type { RetrievalOperation } from "./retrieval.js";
 import { FairScheduler, type SchedulingOptions } from "./scheduling.js";
 import { performance } from "node:perf_hooks";
 import { diagnosticCorrelation, type HostDiagnostic } from "./diagnostics.js";
+import {
+  accessPolicy,
+  authenticatedPrincipal,
+  type HostAuthentication,
+} from "./authorization.js";
+export type {
+  AccessPolicy,
+  AuthenticatedPrincipal,
+  HostAuthentication,
+} from "./authorization.js";
 
 export interface AccessToken {
   jobs?: JobOperation[];
@@ -74,7 +80,10 @@ export interface ServerOptions {
     store: JobStore | (() => Promise<JobStore>);
     onError?(error: unknown): void;
   };
-  tokens: AccessToken[];
+  /** Static service credentials, or authentication, never both. */
+  tokens?: AccessToken[];
+  /** Application-owned Better Auth authentication and current resource policy. */
+  authentication?: HostAuthentication;
   host?: string;
   port?: number;
   tls?: { key: string | Buffer; cert: string | Buffer };
@@ -122,10 +131,20 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       "TLS_REQUIRED",
       "A non-loopback listener requires TLS key and certificate.",
     );
-  if (!options.tokens.length)
-    throw new Error("Configure at least one access token.");
+  if (Boolean(options.tokens?.length) === Boolean(options.authentication))
+    throw new Error(
+      "Configure access tokens or application authentication, never both.",
+    );
+  if (
+    options.jobs &&
+    options.authentication &&
+    !options.authentication.resolveJobPrincipal
+  )
+    throw new Error(
+      "Application authentication requires a durable principal resolver for detached jobs.",
+    );
   const hashes = new Set<string>();
-  const tokens = options.tokens.map((entry) => {
+  const tokens = (options.tokens ?? []).map((entry) => {
     if (entry.token.length < 32 || !entry.subject || entry.subject.length > 128)
       throw new Error(
         "Tokens require at least 32 characters and a subject of 1 to 128 characters.",
@@ -134,35 +153,10 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     if (hashes.has(digest.toString("hex")))
       throw new Error("Duplicate access token.");
     hashes.add(digest.toString("hex"));
-    const applicationTools = ApplicationToolGrantSchema.array()
-      .max(32)
-      .parse(entry.applicationTools ?? []);
-    if (
-      new Set(applicationTools.map((tool) => tool.name)).size !==
-      applicationTools.length
-    )
-      throw new Error("Application tool token grants must have unique names.");
     return {
-      jobs: JobOperationSchema.array()
-        .max(3)
-        .parse(entry.jobs ?? []),
-      sessions: SessionOperationSchema.array()
-        .max(4)
-        .parse(entry.sessions ?? []),
-      applicationTools,
+      ...accessPolicy(entry),
       digest,
-      subject: entry.subject,
-      providers: [...entry.providers],
-      tools: [...(entry.tools ?? [])],
-      approveTools: [...(entry.approveTools ?? [])],
-      retrieval: Object.fromEntries(
-        ["search", "index", "delete"].map((operation) => [
-          operation,
-          (entry.retrieval?.[operation as RetrievalOperation] ?? []).map((id) =>
-            RetrievalIdSchema.parse(id),
-          ),
-        ]),
-      ) as Record<RetrievalOperation, string[]>,
+      id: digest.toString("hex"),
     };
   });
   const active = new Set<AbortController>();
@@ -192,6 +186,18 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
   const ownsJobStore = typeof options.jobs?.store === "function";
   let jobStore: JobStore | undefined;
   let jobs: JobService | undefined;
+  const hostClosing = new AbortController();
+  const authenticate = async (bearer: string, signal: AbortSignal) => {
+    if (options.authentication) {
+      const value = await abortable(
+        options.authentication.authenticate(bearer, signal),
+        signal,
+      );
+      return value ? authenticatedPrincipal(value) : undefined;
+    }
+    const digest = createHash("sha256").update(bearer).digest();
+    return tokens.find((entry) => timingSafeEqual(entry.digest, digest));
+  };
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     const observedAt = Date.now(),
       observedStart = performance.now();
@@ -213,6 +219,13 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     if (options.tls)
       res.setHeader("Strict-Transport-Security", "max-age=31536000");
     let release: (() => void) | undefined;
+    const disconnected = new AbortController();
+    const stopAuthentication = () => disconnected.abort();
+    res.once("close", stopAuthentication);
+    const authSignal = AbortSignal.any([
+      disconnected.signal,
+      hostClosing.signal,
+    ]);
     try {
       if (starting)
         throw new DriverError(
@@ -252,12 +265,11 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         return;
       }
       const auth = req.headers.authorization;
-      const digest = createHash("sha256")
-        .update(auth?.startsWith("Bearer ") ? auth.slice(7) : "")
-        .digest();
-      const principal = tokens.find((entry) =>
-        timingSafeEqual(entry.digest, digest),
-      );
+      const bearer = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+      const principal =
+        bearer.length > 0 && bearer.length <= 4096 && !/[\s\0]/.test(bearer)
+          ? await authenticate(bearer, authSignal)
+          : undefined;
       if (!principal)
         throw new DriverError(
           "UNAUTHORIZED",
@@ -363,7 +375,8 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             "JOBS_UNAVAILABLE",
             "This host has not enabled durable jobs.",
           );
-        const identity = principal.digest.toString("hex");
+        const identity = principal.id;
+        const ceiling = { ...principal, retrieval: principal.retrieval.search };
         // Cancel observation/resolver work when its reader disconnects. The
         // persisted job has its own lifecycle and never receives this signal.
         const observation = new AbortController();
@@ -378,15 +391,16 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         };
         const result =
           jobOperation === "submit"
-            ? await jobs.submit(body as JobSubmit, identity)
+            ? await jobs.submit(body as JobSubmit, identity, ceiling)
             : jobOperation === "read"
-              ? await jobs.read(body as JobIdentity, identity)
+              ? await jobs.read(body as JobIdentity, identity, ceiling)
               : jobOperation === "cancel"
-                ? await jobs.cancel(body as JobIdentity, identity)
+                ? await jobs.cancel(body as JobIdentity, identity, ceiling)
                 : await jobs.events(
                     body as JobEventsRequest,
                     identity,
                     observation.signal,
+                    ceiling,
                   );
         json(res, 200, result);
         return;
@@ -508,7 +522,22 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         diagnostics: (correlation =
           driver.diagnostics?.correlation(request?.metadata, correlation) ??
           correlation),
-        admission: () => ticket.wait(),
+        admission: async () => {
+          await ticket.wait();
+          if (options.authentication) {
+            const current = await authenticate(bearer, authSignal);
+            if (
+              !current ||
+              current.id !== principal.id ||
+              JSON.stringify(accessPolicy(current)) !==
+                JSON.stringify(accessPolicy(principal))
+            )
+              throw new DriverError(
+                "FORBIDDEN",
+                "The application's authorization changed before execution.",
+              );
+          }
+        },
         sessionOperations: principal.sessions,
         subject: principal.subject,
         signal: controller.signal,
@@ -517,7 +546,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           .map((grant) => grant.name),
       };
       if (retrievalOperation) {
-        await ticket.wait();
+        await runOptions.admission();
         const result =
           retrievalOperation === "ingest"
             ? await driver.ingestContext(
@@ -580,6 +609,8 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       const failure = publicError(error);
       json(res, statusFor(failure.code), { error: failure.toJSON() });
     } finally {
+      res.off("close", stopAuthentication);
+      disconnected.abort();
       release?.();
       driver.diagnostics?.host(
         diagnosticOperation(req.url),
@@ -625,10 +656,18 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         ...options.jobs,
         store: jobStore,
         scheduler,
-        resolvePrincipal: (id) => {
-          const token = tokens.find(
-            (entry) => entry.digest.toString("hex") === id,
-          );
+        resolvePrincipal: async (id) => {
+          const resolved = options.authentication
+            ? await abortable(
+                options.authentication.resolveJobPrincipal!(
+                  id,
+                  hostClosing.signal,
+                ),
+                hostClosing.signal,
+              )
+            : tokens.find((entry) => entry.id === id);
+          const token = resolved ? authenticatedPrincipal(resolved) : undefined;
+          if (token && token.id !== id) return undefined;
           return token
             ? { ...token, retrieval: token.retrieval.search }
             : undefined;
@@ -653,6 +692,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     close(): Promise<void> {
       return (closed ??= (async () => {
         closing = true;
+        hostClosing.abort();
         const stopped = new Promise<void>((resolve, reject) =>
           server.close((error) => (error ? reject(error) : resolve())),
         );
@@ -717,6 +757,7 @@ function statusFor(code: string) {
   )
     return 400;
   if (code === "UNAUTHORIZED") return 401;
+  if (["AUTH_UNAVAILABLE", "INVALID_AUTH_POLICY"].includes(code)) return 503;
   if (["APPROVAL_NOT_FOUND", "TOOL_EXECUTION_NOT_FOUND"].includes(code))
     return 404;
   if (

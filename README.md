@@ -175,7 +175,13 @@ briefs, or emails as context for those adapters. Unsupported tools fail explicit
 
 For a configuration-driven installation, use the [host CLI guide](docs/host.md).
 It covers local archive installation, secret references, TLS, service setup and
-restart recovery. The following source example is useful when embedding the host:
+restart recovery.
+
+For application authentication, use [Better Auth with AuthYard](docs/authentication.md):
+device consent, short-lived OAuth credentials, revocation and explicit provider/tool
+scopes. The SDK uses the application's existing auth runtime and canonical identities.
+
+The following source example is useful when embedding the host:
 
 ```bash
 export AGENTICDRIVER_TOKEN="$(openssl rand -hex 32)"
@@ -282,6 +288,7 @@ npm run check
 npm run test:clients   # Node, Python, Go, Rust, and OpenSSL required
 npm run test:python    # Installed wheel, sync/async, typing, HTTP and verified HTTPS
 npm run test:install   # Packed SDK, JS/TS examples, browser bundle and CLI
+npm run test:auth      # Node 24+, real pinned Better Auth + AuthYard contracts
 ```
 
 The client suite starts temporary hosts and verifies all four clients over HTTP
@@ -289,10 +296,10 @@ and HTTPS with certificate verification enabled. Tests cover tool loops, provide
 wire formats, signed conversation state, scopes, cancellation, incomplete streams,
 usage, and subprocess handling. No live LLM account is needed.
 
-The current implementation is stateless between runs: pass `history` explicitly.
-Optional idempotency records can reconcile accepted operations without rerunning
-effects. Durable jobs, live stream resumption, browser pairing, an outbound
-device relay and MCP tool bridging remain roadmap work. Remote
+Runs accept explicit `history`, or applications can opt into scoped sessions and
+durable jobs. Optional idempotency records reconcile accepted operations without
+rerunning effects. Live foreground stream resumption, an outbound device relay
+and native MCP tool bridging remain roadmap work. Remote
 applications must be able to reach the execution host through HTTPS or an
 operator-managed tunnel. Native CLI tooling and subscription access differ by
 provider; see the documented [support matrix](docs/providers.md).

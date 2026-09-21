@@ -34,7 +34,7 @@ const principalSchema = z.object({
 export type JobPrincipal = z.input<typeof principalSchema>;
 export interface JobServiceOptions extends JobWorkerOptions {
   store: JobStore;
-  /** Resolve current authority at every API call and again before dispatch after restart. */
+  /** Resolve current authority at every API call, before dispatch and while work is active. */
   resolvePrincipal(
     id: string,
   ): JobPrincipal | undefined | Promise<JobPrincipal | undefined>;
@@ -107,6 +107,7 @@ export class JobService {
     id: string,
     operation: JobOperation,
     expectedSubject?: string,
+    ceiling?: JobPrincipal,
   ) {
     const parsed = principalSchema.safeParse(
       await abortable(
@@ -123,6 +124,33 @@ export class JobService {
         "FORBIDDEN",
         "Current host credentials do not grant this job operation.",
       );
+    if (ceiling) {
+      const limit = principalSchema.safeParse(ceiling);
+      if (
+        !limit.success ||
+        limit.data.subject !== parsed.data.subject ||
+        !limit.data.jobs.includes(operation)
+      )
+        throw new DriverError(
+          "FORBIDDEN",
+          "The request credential does not grant this job operation.",
+        );
+      return {
+        ...parsed.data,
+        providers: parsed.data.providers.filter((value) =>
+          limit.data.providers.includes(value),
+        ),
+        tools: parsed.data.tools.filter((value) =>
+          limit.data.tools.includes(value),
+        ),
+        jobs: parsed.data.jobs.filter((value) =>
+          limit.data.jobs.includes(value),
+        ),
+        retrieval: parsed.data.retrieval.filter((value) =>
+          limit.data.retrieval.includes(value),
+        ),
+      };
+    }
     return parsed.data;
   }
   private scope(
@@ -164,7 +192,11 @@ export class JobService {
       );
     return { hostId: identity.hostId, accountId: identity.accountId };
   }
-  async submit(input: JobSubmit, principalId: string): Promise<JobInfo> {
+  async submit(
+    input: JobSubmit,
+    principalId: string,
+    ceiling?: JobPrincipal,
+  ): Promise<JobInfo> {
     this.assertOpen();
     const parsed = JobSubmitSchema.safeParse(input);
     if (!parsed.success)
@@ -172,7 +204,12 @@ export class JobService {
         "INVALID_JOB",
         "The job submission does not match the schema.",
       );
-    const principal = await this.principal(principalId, "submit");
+    const principal = await this.principal(
+      principalId,
+      "submit",
+      undefined,
+      ceiling,
+    );
     const request = this.validate(parsed.data.request);
     this.scope(request, principal);
     const account = this.account(request, principal.subject);
@@ -191,12 +228,18 @@ export class JobService {
     input: JobIdentity,
     principalId: string,
     operation: "read" | "cancel",
+    ceiling?: JobPrincipal,
   ) {
     this.assertOpen();
     const parsed = JobIdentitySchema.safeParse(input);
     if (!parsed.success)
       throw new DriverError("INVALID_JOB", "Supply a valid job identity.");
-    const principal = await this.principal(principalId, operation);
+    const principal = await this.principal(
+      principalId,
+      operation,
+      undefined,
+      ceiling,
+    );
     const record = await this.options.store.read(
       principal.subject,
       parsed.data.id,
@@ -204,13 +247,21 @@ export class JobService {
     this.scope(record.request, principal);
     return record;
   }
-  async read(input: JobIdentity, principalId: string): Promise<JobInfo> {
+  async read(
+    input: JobIdentity,
+    principalId: string,
+    ceiling?: JobPrincipal,
+  ): Promise<JobInfo> {
     return structuredClone(
-      (await this.lookup(input, principalId, "read")).info,
+      (await this.lookup(input, principalId, "read", ceiling)).info,
     );
   }
-  async cancel(input: JobIdentity, principalId: string): Promise<JobInfo> {
-    const record = await this.lookup(input, principalId, "cancel");
+  async cancel(
+    input: JobIdentity,
+    principalId: string,
+    ceiling?: JobPrincipal,
+  ): Promise<JobInfo> {
+    const record = await this.lookup(input, principalId, "cancel", ceiling);
     const cancelled = await this.options.store.cancel(
       record.subject,
       record.info.id,
@@ -229,6 +280,7 @@ export class JobService {
     input: JobEventsRequest,
     principalId: string,
     signal?: AbortSignal,
+    ceiling?: JobPrincipal,
   ): Promise<JobEventPage> {
     const parsed = JobEventsRequestSchema.safeParse(input);
     if (!parsed.success)
@@ -240,6 +292,7 @@ export class JobService {
       { id: parsed.data.id },
       principalId,
       "read",
+      ceiling,
     );
     if (parsed.data.after > record.info.cursor)
       throw new DriverError(
@@ -323,6 +376,20 @@ export class JobService {
   private async pump() {
     const records = await this.options.store.queued(this.owner);
     for (const entry of this.active.values()) {
+      if (!entry.controller.signal.aborted) {
+        try {
+          this.scope(
+            entry.record.request,
+            await this.principal(
+              entry.record.principal,
+              "submit",
+              entry.record.subject,
+            ),
+          );
+        } catch (error) {
+          entry.controller.abort(publicError(error));
+        }
+      }
       const current = await this.options.store
         .read(entry.record.subject, entry.record.info.id)
         .catch((error: unknown) => {

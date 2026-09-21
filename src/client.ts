@@ -56,7 +56,7 @@ import {
   ProviderHealthSchema,
   UsageSchema,
 } from "./types.js";
-import { cancelOnClose, DriverError } from "./errors.js";
+import { abortable, cancelOnClose, DriverError } from "./errors.js";
 export { DriverError } from "./errors.js";
 export { PROTOCOL_VERSION } from "./protocol.js";
 export type { ProtocolInfo } from "./protocol.js";
@@ -97,7 +97,8 @@ export type * from "./job-types.js";
 
 export interface ClientOptions {
   url: string;
-  token: string;
+  /** A resolver can read rotated credentials from the application's auth/secret store. */
+  token: string | ((signal?: AbortSignal) => string | Promise<string>);
   fetch?: typeof globalThis.fetch;
 }
 /** A client may cancel transport; subject and provider credentials belong to the host. */
@@ -229,10 +230,32 @@ export class AgenticClient {
     signal?: AbortSignal,
     stream = false,
   ): Promise<Response> {
+    signal?.throwIfAborted();
+    let token: string;
+    try {
+      const pending = Promise.resolve(
+        typeof this.options.token === "function"
+          ? this.options.token(signal)
+          : this.options.token,
+      );
+      token = await (signal ? abortable(pending, signal) : pending);
+    } catch {
+      if (signal?.aborted) throw signal.reason;
+      throw new DriverError(
+        "AUTH_UNAVAILABLE",
+        "The application's driver credential could not be resolved.",
+      );
+    }
+    if (!token || token.length > 4096 || /[\s\0]/.test(token))
+      throw new DriverError(
+        "AUTH_REQUIRED",
+        "A valid driver bearer token is required.",
+      );
+    signal?.throwIfAborted();
     const response = await this.fetcher(new URL(path, this.base), {
       method: body ? "POST" : "GET",
       headers: {
-        Authorization: `Bearer ${this.options.token}`,
+        Authorization: `Bearer ${token}`,
         [PROTOCOL_VERSION_HEADER]: PROTOCOL_VERSION,
         [OPTIONAL_EVENTS_HEADER]: "true",
         Accept: stream ? "text/event-stream" : "application/json",

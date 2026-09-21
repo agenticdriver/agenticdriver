@@ -23,6 +23,14 @@
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
+    "./better-auth": {
+      "types": "./dist/better-auth.d.ts",
+      "import": "./dist/better-auth.js"
+    },
+    "./pairing": {
+      "types": "./dist/pairing.d.ts",
+      "import": "./dist/pairing.js"
+    },
     "./host": {
       "types": "./dist/host.d.ts",
       "import": "./dist/host.js"
@@ -91,6 +99,7 @@
     "test:python": "python3 scripts/test-clients.py --python-only",
     "test:rust": "python3 scripts/test-clients.py --rust-only",
     "test:install": "tsx scripts/test-install.ts",
+    "test:auth": "npm run build && npm ci --prefix integrations/better-auth && npm test --prefix integrations/better-auth",
     "test:usagestat": "tsx scripts/test-usagestat.ts",
     "check:antigravity": "tsx scripts/check-antigravity.ts",
     "protocol": "tsx scripts/protocol.ts",

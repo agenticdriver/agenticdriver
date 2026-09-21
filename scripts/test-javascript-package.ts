@@ -73,6 +73,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         "examples/jobs.mts",
         "examples/provider-extension.mts",
         "examples/diagnostics.mts",
+        "examples/auth.mts",
       ],
     }),
   );
@@ -87,7 +88,12 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         types: [],
         noEmit: true,
       },
-      files: ["examples/browser.ts", "browser-types.ts", "browser-catalog.ts"],
+      files: [
+        "examples/browser.ts",
+        "browser-types.ts",
+        "browser-catalog.ts",
+        "browser-pairing.ts",
+      ],
     }),
   );
   await writeFile(
@@ -135,6 +141,19 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   `,
   );
   await writeFile(
+    join(app, "browser-pairing.ts"),
+    `
+    import {BetterAuthPairingClient,type PairingRequest,type PairingCredentials} from "agenticdriver/pairing";
+    import {AgenticClient} from "agenticdriver/client";
+    const pairing = new BetterAuthPairingClient({issuer:"https://app.example/api/auth",resource:"https://driver.example",clientId:"registered-device",scopes:["driver:read"]});
+    export const begin = (signal:AbortSignal):Promise<PairingRequest> => pairing.start(signal);
+    export const wait = (request:PairingRequest,signal:AbortSignal):Promise<PairingCredentials> => pairing.wait(request,signal);
+    const client = new AgenticClient({url:"https://driver.example",token:async signal => {signal?.throwIfAborted();return "app-resolved-token";}});
+    void client;
+    console.log("Installed pairing browser bundle passed");
+  `,
+  );
+  await writeFile(
     join(app, "browser-catalog.ts"),
     `
     import {providerPresentation,quotaPresentation,type UsageStatProvider,type UsageStatQuotaIdentity} from "agenticdriver/catalog";
@@ -176,6 +195,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     entryPoints: {
       browser: "examples/browser.ts",
       catalog: "browser-catalog.ts",
+      pairing: "browser-pairing.ts",
     },
     bundle: true,
     platform: "browser",
@@ -187,6 +207,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   });
   const safeModules = new Set([
     "client.js",
+    "pairing.js",
     "approval-types.js",
     "tool-types.js",
     "session-types.js",
@@ -261,6 +282,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       { cwd: app, timeout: 10000 },
     );
     assert.match(server.stdout, /Installed TypeScript server is connected/);
+    const auth = await run(
+      process.execPath,
+      [join(app, "compiled-server/auth.mjs")],
+      { cwd: app, timeout: 10000 },
+    );
+    assert.match(
+      auth.stdout,
+      /Installed auth types, scoped host and rotated credential resolver passed/,
+    );
     const scheduling = await run(
       process.execPath,
       [join(app, "compiled-server/scheduling.mjs")],
@@ -337,6 +367,11 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       timeout: 10000,
     });
     assert.match(catalog.stdout, /Installed catalog browser bundle passed/);
+    const pairing = await run(process.execPath, [join(app, "www/pairing.js")], {
+      cwd: app,
+      timeout: 10000,
+    });
+    assert.match(pairing.stdout, /Installed pairing browser bundle passed/);
   } finally {
     assert.equal((await host.stop()).code, 0);
   }

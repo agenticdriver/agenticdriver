@@ -15,6 +15,9 @@ compatibility targets; upstream maintained releases remain the deployment choice
 
 Node 22.13.0 is the package minimum, including the optional SQLite-backed
 services exposed by the main entry. Python requires 3.10, Go 1.22 and Rust 1.89.
+The separate [Better Auth/AuthYard integration](authentication.md) requires
+Node 24+ for the application auth runtime. Its pinned real-package contracts run
+on the Node 24/26 rows; this does not raise the core SDK/client minimum.
 The Rust package is checked with neither feature, `async`, `blocking`, and both.
 `stable` selects the current upstream stable toolchain when CI runs; setup logs
 record the resolved version. `AGENTICDRIVER_TEST_RUST_TOOLCHAIN` overrides the

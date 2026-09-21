@@ -544,7 +544,7 @@ export async function configuredServer(
   config: HostConfig,
   configPath: string,
   secrets: SecretResolver = secretResolver(dirname(resolve(configPath))),
-): Promise<ServerOptions> {
+): Promise<ServerOptions & { tokens: NonNullable<ServerOptions["tokens"]> }> {
   config = validateHostConfig(config);
   const tokens = await Promise.all(
     config.tokens.map(async (entry) => ({

@@ -1,0 +1,17 @@
+{
+  "name": "agenticdriver-better-auth-contracts",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test auth.test.mjs"
+  },
+  "dependencies": {
+    "@authplane/better-auth": "file:vendor/authplane-better-auth-0.2.0.tgz",
+    "@better-auth/core": "1.7.3",
+    "@better-auth/oauth-provider": "1.7.3",
+    "better-auth": "1.7.3"
+  }
+}

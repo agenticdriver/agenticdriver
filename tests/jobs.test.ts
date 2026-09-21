@@ -88,6 +88,61 @@ const proposed = (key: string, subject = "alice") => ({
   fingerprint: newOperation(base, "unused").fingerprint,
 });
 
+test("request credentials narrow durable grants and revocation interrupts a running job", async (t) => {
+  const { store, cleanup } = await setup(t);
+  let allowed = true,
+    started = false;
+  const runtime = driver({
+    providers: [
+      mockProvider(async (_input, context) => {
+        started = true;
+        return new Promise((resolve) =>
+          context.signal.addEventListener(
+            "abort",
+            () => resolve({ text: "interrupted" }),
+            { once: true },
+          ),
+        );
+      }),
+    ],
+  });
+  const service = await JobService.open(runtime, {
+    store,
+    pollIntervalMs: 10,
+    resolvePrincipal: () => (allowed ? alice : undefined),
+  });
+  cleanup.push(() => service.close());
+  const narrower = { ...alice, providers: [] };
+  await assert.rejects(
+    service.submit({ key: "denied", request: base }, "grant", narrower),
+    { code: "FORBIDDEN" },
+  );
+  const job = await service.submit(
+    { key: "running", request: base },
+    "grant",
+    alice,
+  );
+  await until(async () => started, Boolean);
+  for (const read of [
+    () => service.read({ id: job.id }, "grant", narrower),
+    () =>
+      service.events({ id: job.id, after: 0 }, "grant", undefined, narrower),
+    () => service.cancel({ id: job.id }, "grant", narrower),
+    () => service.read({ id: job.id }, "grant", { ...alice, subject: "other" }),
+  ])
+    await assert.rejects(read(), { code: "FORBIDDEN" });
+  allowed = false;
+  const stopped = await until(
+    () => store.read("alice", job.id),
+    (record) => ["failed", "cancelled"].includes(record.info.state),
+  );
+  const terminal = stopped.events.at(-1)!;
+  assert.ok(
+    terminal.type === "run.failed" || terminal.type === "run.cancelled",
+  );
+  assert.equal(terminal.error.code, "FORBIDDEN");
+});
+
 test("an actual process crash preserves completed jobs and tool effects while queued work survives", async (t) => {
   const { store, path, directory, cleanup } = await setup(t);
   const completed = await store.submit(proposed("before-crash"));

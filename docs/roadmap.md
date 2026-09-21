@@ -342,13 +342,14 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 
 **Current state:** Hosts use a startup token registry. There is no user-facing pairing, token expiry or rotation without restart.
 
-**Scope:** Add explicit app-to-host pairing, short-lived access credentials and independently revocable grants for devices, providers and tools.
+**Scope:** Use Better Auth, paired with the existing AuthYard controlPlane connector, for explicit app-to-host pairing, short-lived access credentials and independently revocable grants for devices, providers and tools. Keep canonical identity and session storage in the application auth runtime.
 
 **Completion criteria:**
 
 - [ ] Pairing requires a deliberate device/user confirmation and cannot be completed by an unrelated web origin.
 - [ ] Grant rotation, expiry and revocation take effect without leaking provider credentials or confusing account identity.
 - [ ] OS secret storage and backend service credentials are supported; browser credentials have narrow scopes and documented storage constraints.
+- [ ] The supported Better Auth and AuthYard connector versions are pinned and exercised together; management outages do not require a parallel identity system or expose provider credentials.
 
 **Depends on:** [AD-001](#ad-001), [AD-011](#ad-011)
 

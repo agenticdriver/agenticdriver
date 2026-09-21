@@ -6,6 +6,7 @@ dist/
 *.pem
 *.key
 *.tgz
+!integrations/better-auth/vendor/authplane-better-auth-0.2.0.tgz
 __pycache__/
 .mypy_cache/
 *.egg-info/

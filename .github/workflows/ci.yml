@@ -72,6 +72,8 @@ jobs:
           $poppler.DirectoryName >> $env:GITHUB_PATH
       - run: npm ci
       - run: npm run check
+      - if: matrix.node != '22.13.0'
+        run: npm run test:auth
       - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json
       - run: npm run test:clients
       - run: python scripts/test-go-install.py --local-archive
