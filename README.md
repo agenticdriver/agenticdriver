@@ -74,14 +74,21 @@ AGENTICDRIVER_PROVIDER=codex AGENTICDRIVER_MODEL=YOUR_MODEL npm run demo
 
 ## Embed in TypeScript
 
-From an application alongside this repository, build the SDK, then install it:
+Install a built archive into the application. The archive and its lockfile
+integrity pin the tested package independently of the SDK checkout:
 
 ```bash
-# In agenticdriver
-npm run build
+# In an SDK checkout pinned to the chosen commit
+npm ci
+npm run test:package
+npm pack --pack-destination /tmp
 # In the application
-npm install ../agenticdriver
+npm install --save-exact /tmp/agenticdriver-0.1.0.tgz
 ```
+
+Keep the archive with the application or in your artifact store so a clean install
+can use the same bytes. See the [package contract and receipts](docs/packages.md).
+The npm registry release remains pending.
 
 ```ts
 import { AgenticDriver } from "agenticdriver";
@@ -226,7 +233,7 @@ with HTTPS and JSON can call the protocol; four language packages are included.
 
 | Language                | Local installation                                                                             | Interface                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                            |
+| TypeScript / JavaScript | `npm install --save-exact /path/to/agenticdriver-0.1.0.tgz`                                    | `AgenticClient.run()` / `.stream()`                            |
 | Python 3.10+            | `pip install ./clients/python`                                                                 | `AgenticClient.run(**request)` / `.stream(**request)`          |
 | Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
 | Rust                    | `agenticdriver = { path = "../agenticdriver/clients/rust" }` in Cargo.toml                     | `AgenticClient.run(&request)` / `.stream(&request, callback)`  |
@@ -263,6 +270,7 @@ and [architecture and boundaries](docs/architecture.md).
 
 ```bash
 npm run check
+npm run test:package   # Fresh external npm archive install, ESM exports and TypeScript declarations
 npm run test:clients   # Node, Python, Go, Rust, and OpenSSL required
 npm run test:install   # Packed SDK, JS/TS examples, browser bundle and CLI
 ```

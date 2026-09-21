@@ -73,6 +73,7 @@
     "demo:server": "tsx examples/server.ts",
     "test:clients": "python3 scripts/test-clients.py",
     "test:install": "tsx scripts/test-install.ts",
+    "test:package": "tsx scripts/test-package.ts",
     "test:usagestat": "tsx scripts/test-usagestat.ts",
     "protocol": "tsx scripts/protocol.ts",
     "format": "prettier --write src tests examples protocol docs README.md package.json tsconfig*.json",
