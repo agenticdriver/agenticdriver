@@ -169,6 +169,12 @@ including the Usagestat quota helper and the limits of observed budgets.
 
 ## Secret references and diagnostics
 
+Custom hosts can attach [optional diagnostics](diagnostics.md) through
+`configuredDriver(config, { diagnostics })`. Structured records and the
+OpenTelemetry bridge exclude content by construction, bound exporter queues,
+and isolate exporter failure from run execution. Correlation headers require
+the separate `diagnosticHeaders: true` server option.
+
 Every credential reference uses exactly one mechanism:
 
 | Reference                                                          | Resolution                                                                        |

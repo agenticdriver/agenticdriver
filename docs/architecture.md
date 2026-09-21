@@ -1,5 +1,9 @@
 # Architecture
 
+Optional [operational diagnostics](diagnostics.md) observe host, run, queue,
+provider, context and tool lifecycles without exporting their content. Applications
+own exporters and OpenTelemetry configuration; Usagestat remains the usage backend.
+
 AgenticDriver separates the application, runtime, adapter, and transport.
 
 The application owns users, domain data, retrieval, workflow checkpoints,

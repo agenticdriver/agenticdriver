@@ -271,6 +271,10 @@ export type RunEvent = EventPayload & {
 };
 export type { EventPayload };
 export interface RunOptions {
+  /** Trusted host diagnostic correlation; never changes model selection or authorization. */
+  diagnostics?: { requestId?: string; traceParent?: string };
+  /** Durable queue timestamp for telemetry only; never a run deadline. */
+  diagnosticQueuedAt?: number;
   /** Trusted durable-job identity. Never accepted from run request JSON. */
   runId?: string;
   /** Trusted host admission ticket; never accepted in request JSON. */

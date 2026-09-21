@@ -1,4 +1,5 @@
 import { abortable, DriverError } from "./errors.js";
+import type { DiagnosticScope } from "./diagnostics.js";
 import type {
   EventPayload,
   ExecutionContext,
@@ -12,6 +13,7 @@ export async function* withProgress<T, E>(
   phase: "model" | "tool" | "context",
   abort: (error: DriverError) => void,
   event: (payload: EventPayload) => E,
+  diagnostic?: DiagnosticScope,
 ): AsyncGenerator<E, { value: T; streamed: boolean }> {
   const queue: EventPayload[] = [];
   let bytes = 0,
@@ -42,6 +44,7 @@ export async function* withProgress<T, E>(
   const reportProgress = () => {
     if (!active || context.signal.aborted) return;
     context.reportProgress();
+    diagnostic?.progress();
     // Reset the timer on every real update, but avoid flooding clients with reasoning notices.
     if (Date.now() - lastProgress >= 1000) {
       lastProgress = Date.now();
@@ -51,6 +54,7 @@ export async function* withProgress<T, E>(
   const emitText = (text: string) => {
     if (!text || !active || context.signal.aborted) return;
     context.reportProgress();
+    diagnostic?.progress();
     streamed = true;
     enqueue(
       { type: "text.delta", text },
@@ -65,12 +69,14 @@ export async function* withProgress<T, E>(
     context.signal,
   ).then(
     (value) => {
+      diagnostic?.end("completed");
       outcome = { ok: true, value };
       active = false;
       context.reportProgress();
       wake?.();
     },
     (error) => {
+      diagnostic?.end(context.signal.aborted ? "cancelled" : "failed");
       outcome = { ok: false, error };
       active = false;
       wake?.();
@@ -92,6 +98,7 @@ export async function* withProgress<T, E>(
         });
     }
   } finally {
+    diagnostic?.end("cancelled");
     active = false;
   }
 }

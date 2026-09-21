@@ -376,6 +376,7 @@ export function configuredDriver(
   config: HostConfig,
   configPath: string,
   options: {
+    diagnostics?: DriverOptions["diagnostics"];
     /** Statically imported, operator-approved implementations. No dynamic module/path loading. */
     extensions?: ReadonlyMap<string, ProviderExtension>;
     secrets?: SecretResolver;
@@ -476,6 +477,7 @@ export function configuredDriver(
       }).usageSink()
     : undefined;
   return new AgenticDriver({
+    diagnostics: options.diagnostics,
     providers,
     resources: config.resources,
     resourceAdmission: options.resourceAdmission,

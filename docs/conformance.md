@@ -4,6 +4,12 @@ Run `npm run check` and `npm run test:clients` to verify the protocol and all fo
 clients. The suite uses synthetic data and a local reference peer; it never
 loads an API key or starts a native agent.
 
+[Diagnostics](diagnostics.md) checks use the real in-memory OpenTelemetry SDK,
+verify parent/child spans and fixed metric dimensions, and exercise hung/throwing
+exporters, queue/span/byte bounds, content redaction, HTTP correlation,
+cancellation and replay. Installed-package checks compile and run the optional
+diagnostics example without installing an OpenTelemetry runtime dependency.
+
 The real host uses a versioned fixture extension through the
 [provider extension kit](provider-extensions.md), so every language exercises
 that adapter boundary. `npm run test:install` separately compiles an independent

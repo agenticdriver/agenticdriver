@@ -39,6 +39,14 @@
       "types": "./dist/provider-conformance.d.ts",
       "import": "./dist/provider-conformance.js"
     },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.js"
+    },
+    "./opentelemetry": {
+      "types": "./dist/opentelemetry.d.ts",
+      "import": "./dist/opentelemetry.js"
+    },
     "./usagestat": {
       "types": "./dist/usagestat.d.ts",
       "import": "./dist/usagestat.js"
@@ -93,6 +101,9 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/sdk-metrics": "2.11.0",
+    "@opentelemetry/sdk-trace-base": "2.11.0",
     "@types/node": "^22.0.0",
     "esbuild": "^0.28.2",
     "prettier": "^3.6.0",

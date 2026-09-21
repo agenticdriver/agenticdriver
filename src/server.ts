@@ -49,6 +49,8 @@ import {
 import { IngestRequestSchema } from "./ingestion-types.js";
 import type { RetrievalOperation } from "./retrieval.js";
 import { FairScheduler, type SchedulingOptions } from "./scheduling.js";
+import { performance } from "node:perf_hooks";
+import { diagnosticCorrelation, type HostDiagnostic } from "./diagnostics.js";
 
 export interface AccessToken {
   jobs?: JobOperation[];
@@ -65,6 +67,8 @@ export interface AccessToken {
   retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
 export interface ServerOptions {
+  /** Opt-in to opaque AgenticDriver-Request-Id UUID and W3C traceparent headers. No baggage. */
+  diagnosticHeaders?: boolean;
   /** Explicit store and current token policy; accepted work survives HTTP disconnects. */
   jobs?: JobWorkerOptions & {
     store: JobStore | (() => Promise<JobStore>);
@@ -80,6 +84,35 @@ export interface ServerOptions {
   /** Configure here or on the driver, never both. */
   scheduling?: SchedulingOptions;
 }
+
+const diagnosticOperations = new Map<string, HostDiagnostic["operation"]>([
+  ["/v1/runs", "run"],
+  ["/v1/providers", "discovery"],
+  ["/v1/protocol", "protocol"],
+  ...["ingest", "index", "search", "delete"].map(
+    (part): [string, HostDiagnostic["operation"]] => [
+      `/v1/retrieval/${part}`,
+      "retrieval",
+    ],
+  ),
+  ...["submit", "read", "cancel", "events"].map(
+    (part): [string, HostDiagnostic["operation"]] => [
+      `/v1/jobs/${part}`,
+      "job",
+    ],
+  ),
+  ...["create", "read", "delete"].map(
+    (part): [string, HostDiagnostic["operation"]] => [
+      `/v1/sessions/${part}`,
+      "session",
+    ],
+  ),
+  ["/v1/tool-executions/progress", "tool"],
+  ["/v1/tool-executions/results", "tool"],
+  ["/v1/approvals/decisions", "approval"],
+]);
+const diagnosticOperation = (path: string | undefined) =>
+  diagnosticOperations.get(path ?? "") ?? "other";
 
 /** An authenticated, scoped execution host. Bind loopback, or provide TLS for remote listening. */
 export async function serve(driver: AgenticDriver, options: ServerOptions) {
@@ -160,6 +193,20 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
   let jobStore: JobStore | undefined;
   let jobs: JobService | undefined;
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
+    const observedAt = Date.now(),
+      observedStart = performance.now();
+    let correlation = options.diagnosticHeaders
+      ? diagnosticCorrelation({
+          requestId:
+            typeof req.headers["agenticdriver-request-id"] === "string"
+              ? req.headers["agenticdriver-request-id"]
+              : undefined,
+          traceParent:
+            typeof req.headers.traceparent === "string"
+              ? req.headers.traceparent
+              : undefined,
+        })
+      : {};
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader(PROTOCOL_VERSION_HEADER, PROTOCOL_VERSION);
@@ -193,7 +240,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
           res.setHeader(
             "Access-Control-Allow-Headers",
-            `Authorization, Content-Type, Accept, ${PROTOCOL_VERSION_HEADER}, ${OPTIONAL_EVENTS_HEADER}`,
+            `Authorization, Content-Type, Accept, ${PROTOCOL_VERSION_HEADER}, ${OPTIONAL_EVENTS_HEADER}${options.diagnosticHeaders ? ", AgenticDriver-Request-Id, traceparent" : ""}`,
           );
           res.writeHead(204);
           res.end();
@@ -458,6 +505,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         cleanup();
       };
       const runOptions = {
+        diagnostics: (correlation =
+          driver.diagnostics?.correlation(request?.metadata, correlation) ??
+          correlation),
         admission: () => ticket.wait(),
         sessionOperations: principal.sessions,
         subject: principal.subject,
@@ -531,6 +581,19 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       json(res, statusFor(failure.code), { error: failure.toJSON() });
     } finally {
       release?.();
+      driver.diagnostics?.host(
+        diagnosticOperation(req.url),
+        observedAt,
+        Math.max(0, performance.now() - observedStart),
+        !res.writableEnded
+          ? "cancelled"
+          : res.statusCode >= 500
+            ? "failed"
+            : res.statusCode >= 400
+              ? "rejected"
+              : "completed",
+        correlation,
+      );
     }
   };
   const handle = (req: IncomingMessage, res: ServerResponse) => {

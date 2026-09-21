@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Diagnostics } from "./diagnostics.js";
 import { SessionManager, type SessionPrincipal } from "./sessions.js";
 import type {
   SessionCreate,
@@ -87,6 +88,7 @@ import type {
 } from "./types.js";
 
 export interface DriverOptions {
+  diagnostics?: Diagnostics;
   scheduling?: SchedulingOptions;
   resources?: ResourceLimits;
   resourceAdmission?: ResourceAdmission;
@@ -127,6 +129,7 @@ type SelectedTool =
     };
 
 export class AgenticDriver {
+  readonly diagnostics?: Diagnostics;
   /** Shared by embedded execution and any server attached to this driver. */
   readonly scheduler?: FairScheduler;
   private readonly resources: ResourcePolicy;
@@ -149,6 +152,7 @@ export class AgenticDriver {
     validateFormats: false,
   });
   constructor(private readonly options: DriverOptions) {
+    this.diagnostics = options.diagnostics;
     this.scheduler = options.scheduling
       ? new FairScheduler(options.scheduling)
       : undefined;
@@ -671,9 +675,32 @@ export class AgenticDriver {
         claim.record.events,
         options,
       );
-      for (const event of recoveryEvents(claim.record)) {
-        options.signal?.throwIfAborted();
-        yield event;
+      const diagnostic = this.diagnostics?.startRun(
+        {
+          provider: request.provider,
+          model: request.model,
+          metadata: request.metadata,
+          runId: claim.record.runId,
+        },
+        options.diagnostics,
+      );
+      let delivered = false;
+      try {
+        for (const event of recoveryEvents(claim.record)) {
+          options.signal?.throwIfAborted();
+          // run() closes the generator as soon as it receives a terminal event.
+          // Record delivery before yielding so that successful replay is not cancellation.
+          if (
+            ["run.completed", "run.failed", "run.cancelled"].includes(
+              event.type,
+            )
+          )
+            delivered = true;
+          yield event;
+        }
+        delivered = true;
+      } finally {
+        diagnostic?.finish(delivered ? "replayed" : "cancelled");
       }
       return;
     }
@@ -881,6 +908,16 @@ export class AgenticDriver {
     ]
       .filter(Boolean)
       .join("\n\n");
+    const diagnostic = this.diagnostics?.startRun(
+      {
+        runId,
+        provider: request.provider,
+        model: request.model,
+        metadata: request.metadata,
+        queuedAt: options.diagnosticQueuedAt,
+      },
+      options.diagnostics,
+    );
     try {
       signal.throwIfAborted();
       if (!options.admission && this.scheduler)
@@ -890,9 +927,13 @@ export class AgenticDriver {
         provider: request.provider,
         model: request.model,
       });
+      // Measure the admission wait after the consumer reads run.started;
+      // time spent paused at a stream yield is not scheduler latency.
+      const queueSpan = diagnostic?.stage("queue");
       if (options.admission) await abortable(options.admission(), signal);
       else if (admission) await admission.wait();
       signal.throwIfAborted();
+      queueSpan?.end("completed");
       idlePaused = false;
       reportProgress();
       if (request.retrieval) {
@@ -909,6 +950,7 @@ export class AgenticDriver {
           "context",
           (error) => controller.abort(error),
           event,
+          diagnostic?.stage("context"),
         );
         retrieval = searched.value;
         if (!retrieval.hits.length)
@@ -930,11 +972,15 @@ export class AgenticDriver {
           "Attached and retrieved context source IDs must be unique within a run.",
         );
       if (attachments.length) {
-        resolved = await resolveContext(
-          attachments,
-          this.contextOptions,
-          context,
-        );
+        const contextSpan = diagnostic?.stage("context");
+        resolved = await resolveContext(attachments, this.contextOptions, {
+          ...context,
+          reportProgress() {
+            contextSpan?.progress();
+            context.reportProgress();
+          },
+        });
+        contextSpan?.end("completed");
         if (retrieval) {
           const ids = new Set(retrieval.hits.map((hit) => hit.chunkId));
           for (const source of resolved.sources)
@@ -1024,6 +1070,7 @@ export class AgenticDriver {
           "model",
           (error) => controller.abort(error),
           event,
+          diagnostic?.stage("provider"),
         );
         signal.throwIfAborted();
         const stepUsage = meter.add(turn.usage);
@@ -1245,6 +1292,7 @@ export class AgenticDriver {
                   "tool",
                   (error) => controller.abort(error),
                   event,
+                  diagnostic?.stage("tool", call.name),
                 )).value;
               } finally {
                 execution.cancel();
@@ -1261,6 +1309,7 @@ export class AgenticDriver {
                 "tool",
                 (error) => controller.abort(error),
                 event,
+                diagnostic?.stage("tool", call.name),
               )).value;
             }
           } catch (error) {
@@ -1315,6 +1364,7 @@ export class AgenticDriver {
         error: failure.toJSON(),
       });
     } finally {
+      diagnostic?.finish(status);
       admission?.release();
       clearTimeout(timer);
       signal.removeEventListener("abort", releaseSession);

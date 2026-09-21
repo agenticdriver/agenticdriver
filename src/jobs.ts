@@ -409,6 +409,7 @@ export class JobService {
       if (!(await this.options.store.start(this.owner, record.info.id))) return;
       for await (const event of this.driver.stream(request, {
         runId: record.info.runId,
+        diagnosticQueuedAt: Date.parse(record.info.createdAt),
         subject: record.subject,
         signal: controller.signal,
         admission: async () => {},

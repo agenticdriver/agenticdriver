@@ -16,6 +16,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
 - A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent local endpoint example and synthetic compatibility checks.
+- Optional [operational diagnostics and OpenTelemetry](docs/diagnostics.md), with content redaction, bounded export and no additional usage backend.
 - Text adapters for installed Codex, Claude Code, and Gemini CLI sessions.
 - A bounded model/tool/result loop, tool argument validation, host and interactive application approvals,
   validated JSON output, optional inactivity timeouts, and cancellation.
