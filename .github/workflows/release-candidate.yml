@@ -1,0 +1,36 @@
+name: Release candidate artifacts
+on:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    name: Build and install exact release artifacts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.89.0"
+      - run: python -m unittest discover -s tests -p 'release_test.py' -v
+      - run: npm ci
+      - run: python scripts/release.py build --output "$RUNNER_TEMP/candidate"
+      - run: python scripts/release.py verify "$RUNNER_TEMP/candidate" --require-clean
+      - run: python scripts/test-release.py "$RUNNER_TEMP/candidate"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agenticdriver-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/candidate
+          if-no-files-found: error
+          retention-days: 14

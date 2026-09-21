@@ -3,6 +3,8 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  release-candidate:
+    uses: ./.github/workflows/release-candidate.yml
   documentation:
     name: Documentation site
     runs-on: ubuntu-24.04

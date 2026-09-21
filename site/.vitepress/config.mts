@@ -91,6 +91,7 @@ export default defineConfig({
           { text: "Protocol", link: "/protocol" },
           { text: "Compatibility", link: "/compatibility" },
           { text: "Migration notes", link: "/migrations" },
+          { text: "Release candidates", link: "/releases" },
         ],
       },
     ],

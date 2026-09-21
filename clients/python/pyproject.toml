@@ -12,6 +12,10 @@ license-files = ["LICENSE"]
 readme = "README.md"
 dependencies = ["typing_extensions>=4.12"]
 
+[project.urls]
+Source = "https://github.com/hashimkarim/agenticdriver"
+Issues = "https://github.com/hashimkarim/agenticdriver/issues"
+
 [project.optional-dependencies]
 async = ["httpx>=0.28,<1"]
 dev = ["httpx>=0.28,<1", "mypy>=1.18,<2", "build>=1.2"]

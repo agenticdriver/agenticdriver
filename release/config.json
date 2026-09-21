@@ -1,0 +1,11 @@
+{
+  "repository": "hashimkarim/agenticdriver",
+  "protocolVersion": "1.0",
+  "goVersion": "0.1.0",
+  "names": {
+    "npm": "agenticdriver",
+    "python": "agenticdriver",
+    "rust": "agenticdriver",
+    "go": "github.com/hashimkarim/agenticdriver/clients/go"
+  }
+}
