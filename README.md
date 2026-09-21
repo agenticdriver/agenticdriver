@@ -26,8 +26,8 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
 - [Account-scoped metering](docs/usage.md) with source, measurement coverage,
-  separate API-equivalent estimates and a usage hook/JSONL sink; a read-only Usagestat
-  client for account quotas, provider metadata, and existing icon references.
+  separate API-equivalent estimates and a thin authenticated Usagestat sink. The
+  native Usagestat dependency owns storage, retention and offline forwarding, plus account quotas, provider metadata, and existing icon references.
 
 ```mermaid
 flowchart LR
@@ -39,7 +39,8 @@ flowchart LR
     Runtime --> CLIs[User-owned Codex · Claude Code · Gemini CLI]
     Runtime --> Tools[Application tools]
     Runtime --> Usage[Per-run usage sink]
-    Usagestat[Usagestat quotas and metadata] --> Applications
+    Usage --> Usagestat[Usagestat storage, quotas and metadata]
+    Usagestat --> Applications
 ```
 
 ## Try all three examples

@@ -1,6 +1,6 @@
 # Usagestat integration
 
-AgenticDriver reuses the existing public read contracts from `../usagestat`.
+AgenticDriver uses Usagestat as an optional local or remote service dependency for usage storage, retention, forwarding, quotas and provider metadata.
 It does not fork its provider probes, credential discovery, or logo collection.
 The inspected Usagestat endpoints are:
 
@@ -11,15 +11,14 @@ The inspected Usagestat endpoints are:
 | `GET /v1/limits`    | `UsageStatClient.limits()`    | Machine-readable quota resources          |
 
 ```ts
-import { UsageStatClient, jsonlUsageSink } from "agenticdriver/usagestat";
+import { UsageStatClient } from "agenticdriver/usagestat";
 
 const usagestat = new UsageStatClient({ url: "http://127.0.0.1:6736" });
 const providers = await usagestat.providers();
 const snapshots = await usagestat.usage();
 const limits = await usagestat.limits();
 
-// Pass this to AgenticDriver's onUsage option; the parent directory must exist.
-const onUsage = jsonlUsageSink("./usage.jsonl");
+// For per-run capture, configure the authenticated sink described below.
 ```
 
 Every built-in adapter has a `usageStatId`, such as `codex`, `claude`, `gemini`,
@@ -80,12 +79,93 @@ The existing brand assets remain owned by Usagestat and their respective licenso
 
 ## Per-run usage
 
-Usagestat currently has no public event ingestion API. `onUsage` and the optional
-JSONL sink provide the integration boundary for adding one later. The SDK does
-not POST to an invented Usagestat endpoint.
+Usagestat now implements an optional native run-ingestion contract. Enable it with
+`usagestatd --run-usage-config /absolute/path/run-usage.json`; add `--no-poll` for
+an ingestion-only service. The backend configuration, account bindings and
+forwarding controls are documented in Usagestat's `docs/run-ingestion.md`. This
+requires the backend implementation containing AD-030; older installations
+without the route fail explicitly. No backend release has been published by this work.
 
 Records now carry `agenticdriver.usage.v2`, stable host and optional account
 identity, authenticated subject, timestamps, source, coverage, known subtotals,
 complete measurements, and trusted host labels. Request metadata is excluded.
 See [usage identity, accounting and retention](usage.md) for schema migration,
 deduplication, unknown measurements and API-equivalent estimates.
+
+```ts
+const metering = new UsageStatClient({
+  url: "http://127.0.0.1:6736",
+  token: async () => readBackendCredential(), // application-supplied secret lookup
+});
+await metering.ingestionProtocol(); // checks agenticdriver.usage.v2 support
+const driver = new AgenticDriver({
+  providers: [selectedProvider],
+  usage: {
+    hostId: "driver-installation-01",
+    accounts: { "openai-personal": "account-personal-01" },
+  },
+  onUsage: metering.usageSink(),
+  onTelemetryError: reportCaptureFailure,
+});
+```
+
+The native backend token must authorize this exact host, provider instance,
+account and authenticated application subject. Missing SDK account bindings fail
+before capture. `capture(record)` returns a versioned receipt after backend
+commit; resending that same record deduplicates. `run(identity, eventId)` retrieves
+its scoped record and delivery state for reconciliation. `retryForwarding(identity,
+eventId)` explicitly queues a retained permanent forwarding failure after its
+cause has been repaired. It never reruns the agent.
+
+The host CLI uses existing secret references:
+
+```json
+{
+  "usage": { "hostId": "driver-installation-01" },
+  "usagestat": {
+    "url": "http://127.0.0.1:6736",
+    "tokenRef": { "file": "usagestat-ingestion.key" },
+    "ingestionTimeoutMs": 1000
+  }
+}
+```
+
+Add these fields to the host configuration and give **every** provider instance
+its explicit `accountId`. SDK tokens and Usagestat ingestion tokens are separate
+credentials. `configuredDriver` reports an unacknowledged capture through its
+`onTelemetryError` option or a redacted stderr message. URLs require HTTPS except
+for loopback HTTP; redirects are disabled. The default 1-second capture timeout
+(bounds 100–1500 ms) covers telemetry I/O and secret lookup, not agent execution.
+The SDK still has no default run deadline or inactivity timeout.
+
+For durable offline forwarding, use **SDK → local Usagestat → remote Usagestat**.
+The local backend stores records and handles capacity, retries, retention and
+remote reconciliation. The SDK contains a thin sender, with no second usage
+backend or durable outbox. Direct remote capture also works, but an unavailable
+first hop is a capture failure; durability begins after its acknowledgement.
+Capture failures do not replace a successful run result, and idempotent run
+replay does not regenerate or re-emit telemetry. Applications needing recovery
+before capture acknowledgement must preserve the original report and resend it,
+not execute the request again. Backend receipt expiry is authoritative; use a
+record-level expiry when a cutoff must remain fixed across later retention-policy
+changes.
+
+The optional `jsonlUsageSink` remains a diagnostic append-only sink with no
+rotation, deletion, synchronization or offline-delivery guarantee. Prefer the
+native backend for durable usage collection. It does not add SDK records to
+Usagestat's daily-import/provider-probe totals, which could double-count usage.
+
+Validate the real dependency locally:
+
+```sh
+# In Usagestat:
+cargo test -p usagestat-core -p usagestat-daemon
+cargo build -p usagestat-daemon
+# In AgenticDriver:
+npm run test:usagestat -- /absolute/path/usagestat/target/debug/usagestatd
+```
+
+The SDK test launches the supplied native binary with isolated fixture credentials,
+private data and polling disabled. It verifies actual usage capture, schema/receipt
+compatibility, host secret references, scoped reconciliation, backend restart and
+failure without repeated generation. No live provider account is used.

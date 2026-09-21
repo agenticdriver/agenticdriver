@@ -294,3 +294,8 @@ an existing config, delete operation records, or change subjects to work around
 recovery errors. Roll back the package with the retained archive only when its
 configuration and stored-record versions are compatible. Forced termination can
 leave an accepted operation uncertain; reconcile its effects before replacement.
+
+For durable metering, configure the optional `usagestat` URL and `tokenRef`,
+a persistent `usage.hostId`, and an `accountId` on each provider. See
+[Usagestat integration](usagestat.md) for local/remote backend setup, retention,
+forwarding and capture-failure semantics.

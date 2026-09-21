@@ -26,7 +26,7 @@ import {
   singleLineSecret,
   type SecretResolver,
 } from "./secrets.js";
-import { jsonlUsageSink } from "./usagestat.js";
+import { UsageStatClient, jsonlUsageSink } from "./usagestat.js";
 import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
 import type { ServerOptions } from "./server.js";
@@ -111,6 +111,14 @@ export const HostConfigSchema = z
       .strict()
       .optional(),
     usageLog: z.string().min(1).optional(),
+    usagestat: z
+      .object({
+        url: z.string().url(),
+        tokenRef: SecretReferenceSchema,
+        ingestionTimeoutMs: z.number().int().min(100).max(1500).optional(),
+      })
+      .strict()
+      .optional(),
     limits: z
       .object({
         maxSteps: z.number().int().min(1).max(64).optional(),
@@ -149,6 +157,17 @@ export function validateHostConfig(input: unknown): HostConfig {
       "The host configuration does not match the version 1 schema. Check provider types, model IDs and secret references.",
     );
   const config = parsed.data;
+  if (config.usagestat) {
+    secureBaseUrl(config.usagestat.url);
+    if (
+      !config.usage?.hostId ||
+      config.providers.some((provider) => !provider.accountId)
+    )
+      throw new DriverError(
+        "USAGE_IDENTITY_REQUIRED",
+        "Usagestat ingestion requires a persistent usage.hostId and an accountId on every provider instance.",
+      );
+  }
   if (config.providers.some((p) => p.accountId) && !config.usage?.hostId)
     throw new DriverError(
       "USAGE_IDENTITY_REQUIRED",
@@ -233,6 +252,7 @@ export function configuredDriver(
     secrets?: SecretResolver;
     tools?: DriverOptions["tools"];
     approve?: DriverOptions["approve"];
+    onTelemetryError?: DriverOptions["onTelemetryError"];
   } = {},
 ): AgenticDriver {
   config = validateHostConfig(config);
@@ -281,6 +301,13 @@ export function configuredDriver(
     ? resolve(directory, config.usageLog)
     : undefined;
   const sink = usagePath ? jsonlUsageSink(usagePath) : undefined;
+  const backend = config.usagestat
+    ? new UsageStatClient({
+        url: config.usagestat.url,
+        token: () => singleLineSecret(secrets, config.usagestat!.tokenRef, 32),
+        ingestionTimeoutMs: config.usagestat.ingestionTimeoutMs,
+      }).usageSink()
+    : undefined;
   return new AgenticDriver({
     providers,
     usage: {
@@ -301,12 +328,36 @@ export function configuredDriver(
         )
       : undefined,
     onUsage:
-      usagePath && sink
+      sink || backend
         ? async (record) => {
-            await mkdir(dirname(usagePath), { recursive: true, mode: 0o700 });
-            await sink(record);
+            const writes = await Promise.allSettled([
+              ...(backend ? [backend(record)] : []),
+              ...(sink && usagePath
+                ? [
+                    (async () => {
+                      await mkdir(dirname(usagePath), {
+                        recursive: true,
+                        mode: 0o700,
+                      });
+                      await sink(record);
+                    })(),
+                  ]
+                : []),
+            ]);
+            if (writes.some((result) => result.status === "rejected"))
+              throw new DriverError(
+                "USAGE_CAPTURE_FAILED",
+                "A configured usage sink did not acknowledge capture. Reconcile the existing run; do not repeat it.",
+              );
           }
         : undefined,
+    onTelemetryError:
+      options.onTelemetryError ??
+      (() => {
+        process.stderr.write(
+          "agenticdriver: usage capture was not acknowledged; reconcile the existing run in Usagestat.\n",
+        );
+      }),
   });
 }
 

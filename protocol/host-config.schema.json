@@ -350,6 +350,66 @@
       "additionalProperties": false
     },
     "usageLog": { "type": "string", "minLength": 1 },
+    "usagestat": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "tokenRef": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "env": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                }
+              },
+              "required": ["env"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "file": { "type": "string", "minLength": 1, "maxLength": 4096 }
+              },
+              "required": ["file"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "keychain": {
+                  "type": "object",
+                  "properties": {
+                    "service": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "account": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": ["service", "account"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["keychain"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "ingestionTimeoutMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1500
+        }
+      },
+      "required": ["url", "tokenRef"],
+      "additionalProperties": false
+    },
     "limits": {
       "type": "object",
       "properties": {

@@ -8,9 +8,8 @@ quota, or an invoice amount from token counts.
 Usagestat is the usage backend dependency. Its existing Rust core and daemon own
 durable account history, quota observations, pricing/probes and provider metadata.
 The SDK's responsibility is producing normalized execution measurements and
-delivering them through a thin integration. The existing daily-report importer
-does not accept individual run events, so AD-030 extends ingestion in Usagestat
-and connects an optional SDK sink. It does not create a parallel usage backend
+delivering them through a thin integration. Native run ingestion accepts those events separately from the existing
+daily-report importer and connects through an optional SDK sink. It does not create a parallel usage backend
 inside AgenticDriver. Applications that do not enable metering can use the SDK
 without a running Usagestat service.
 
@@ -148,8 +147,7 @@ deleting idempotency/recovery barriers, which have a separate lifecycle.
 
 `onUsage` remains optional and bounded to protect run delivery from a stuck sink.
 It is not a guaranteed durable delivery queue. Record IDs and the v2 schema are
-the contract for the durable ingestion implementation tracked separately in
-AD-030. Reject unknown versions, preserve event IDs during retries, authenticate
+the contract implemented by the optional [Usagestat service dependency](usagestat.md). Reject unknown versions, preserve event IDs during retries, authenticate
 the source host, validate its allowed accounts/subjects at ingestion, and isolate
 read access by subject. A client-supplied JSON record is never sufficient proof
 of its claimed identity.
