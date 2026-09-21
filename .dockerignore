@@ -1,0 +1,11 @@
+**
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.build.json
+!LICENSE
+!src
+!src/**
+!deploy
+!deploy/remote-host.mjs
+!Dockerfile

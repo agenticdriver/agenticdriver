@@ -1,0 +1,47 @@
+services:
+  proxy:
+    image: ${AGENTICDRIVER_PROXY_IMAGE:-agenticdriver-proxy:local}
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "${AGENTICDRIVER_BIND_ADDRESS:-127.0.0.1}:${AGENTICDRIVER_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./runtime/tls:/run/tls:ro
+    tmpfs:
+      - /data:uid=1000,gid=1000,mode=0700
+      - /config:uid=1000,gid=1000,mode=0700
+      - /tmp:uid=1000,gid=1000,mode=0700
+    restart: unless-stopped
+    stop_grace_period: 30s
+  driver:
+    image: ${AGENTICDRIVER_IMAGE:-agenticdriver:local}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    init: true
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    network_mode: service:proxy
+    depends_on:
+      proxy:
+        condition: service_started
+        restart: true
+    volumes:
+      - ./runtime/config:/etc/agenticdriver:ro
+      - ./runtime/secrets:/run/secrets:ro
+      - driver-state:/var/lib/agenticdriver
+    tmpfs:
+      - /tmp:uid=1000,gid=1000,mode=0700
+    restart: unless-stopped
+    stop_grace_period: 30s
+volumes:
+  driver-state:

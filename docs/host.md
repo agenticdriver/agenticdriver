@@ -6,6 +6,11 @@ authenticated HTTP/HTTPS protocol; only the execution host needs Node.js.
 Optional [durable jobs](jobs.md) require Node 22.13+, explicit SQLite storage and
 retention, stable account bindings and separate token job grants.
 
+For a service behind verified TLS, use the [container deployment recipe](deployment.md)
+with application-owned Better Auth/AuthYard authorization. Programmatic hosts may
+omit `tokens` and supply `HostAuthentication` to `configuredServer`; the static
+CLI still requires at least one token and never starts without authentication.
+
 ## Install and run a mock workflow
 
 This checkout has not been published to npm. Build a local package and install

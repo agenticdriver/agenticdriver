@@ -1,0 +1,12 @@
+ARG AGENTICDRIVER_IMAGE=agenticdriver:ad014-local
+FROM ${AGENTICDRIVER_IMAGE}
+USER root
+WORKDIR /fixture
+COPY package.json package-lock.json ./
+COPY vendor ./vendor
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY deployment-fixture.mjs ./
+USER node
+HEALTHCHECK --interval=1s --timeout=5s --start-period=10s --retries=20 \
+  CMD ["node", "-e", "fetch('https://127.0.0.1:7451/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+CMD ["node", "deployment-fixture.mjs"]

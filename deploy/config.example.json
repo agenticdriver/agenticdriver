@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "listen": { "host": "127.0.0.1", "port": 7433 },
+  "providers": [
+    {
+      "kind": "mock",
+      "id": "demo",
+      "models": ["demo"],
+      "accountId": "synthetic-demo"
+    }
+  ],
+  "usage": { "hostId": "remote-demo-host" },
+  "operations": { "directory": "/var/lib/agenticdriver/operations" },
+  "usageLog": "/var/lib/agenticdriver/usage.jsonl",
+  "concurrency": { "total": 4, "perSubject": 2 }
+}

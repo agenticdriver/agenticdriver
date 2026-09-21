@@ -22,6 +22,7 @@ import {
   validateHostConfig,
 } from "../src/host.js";
 import { AgenticDriver } from "../src/driver.js";
+import { AgenticClient } from "../src/client.js";
 import { MemoryOperationStore } from "../src/operations.js";
 import { mockProvider } from "../src/providers/mock.js";
 import { serve } from "../src/server.js";
@@ -203,6 +204,51 @@ test("supplied secret stores resolve scoped host and client credentials without 
       secrets,
     ),
     { code: "INVALID_TLS" },
+  );
+});
+
+test("programmatic application auth uses provider configuration without a dummy static token", async () => {
+  const parsed = validateHostConfig({ ...config(), tokens: [] });
+  await assert.rejects(configuredServer(parsed, "/unused/config.json"), {
+    code: "AUTH_REQUIRED",
+  });
+  const authentication = {
+    authenticate: async (bearer: string) =>
+      bearer === token
+        ? { id: "app-grant", subject: "alice", providers: ["demo-host"] }
+        : undefined,
+  };
+  let reads = 0;
+  const options = await configuredServer(
+    parsed,
+    "/unused/config.json",
+    async () => {
+      reads++;
+      return "";
+    },
+    authentication,
+  );
+  const host = await serve(configuredDriver(parsed, "/unused/config.json"), {
+    ...options,
+    port: 0,
+  });
+  try {
+    assert.equal(
+      (await new AgenticClient({ url: host.url, token }).providers())[0]?.id,
+      "demo-host",
+    );
+    assert.equal(reads, 0);
+  } finally {
+    await host.close();
+  }
+  await assert.rejects(
+    configuredServer(
+      validateHostConfig(config()),
+      "/unused/config.json",
+      async () => token,
+      authentication,
+    ),
+    { code: "AUTH_REQUIRED" },
   );
 });
 

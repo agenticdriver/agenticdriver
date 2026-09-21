@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "issuer": "https://app.example/api/auth",
+  "resource": "https://driver.example",
+  "clientId": "REGISTERED_RESOURCE_SERVER_CLIENT_ID",
+  "clientSecretRef": { "file": "/run/secrets/oauth-introspection-secret" },
+  "scopes": {
+    "driver:demo": { "providers": ["demo"] }
+  },
+  "services": [
+    {
+      "id": "app-backend-grant",
+      "clientId": "REGISTERED_BACKEND_SERVICE_CLIENT_ID",
+      "subject": "service:application-backend",
+      "scopes": ["driver:demo"]
+    }
+  ]
+}

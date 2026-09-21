@@ -5,6 +5,8 @@ Leaving `idleTimeoutMs` out, or setting it to `0`, allows a run to continue unti
 it completes, fails, reaches a step/output limit, or is explicitly cancelled.
 Underlying providers and deployment infrastructure can still impose their own
 connection or account limits.
+The [self-hosted deployment](deployment.md#streaming-capacity-and-shutdown)
+documents proxy, admission, authentication and operator-shutdown boundaries.
 
 An application can opt into an inactivity timeout:
 

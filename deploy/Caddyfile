@@ -1,0 +1,25 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+	servers {
+		protocols h1 h2
+	}
+}
+
+:8443 {
+	tls /run/tls/server.crt /run/tls/server.key
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+	request_body {
+		max_size 2MB
+	}
+	reverse_proxy 127.0.0.1:7433 {
+		# SSE flushes automatically. Negative flush_interval disables disconnect cancellation.
+		# No response/stream deadline, buffering override, retry policy or compression.
+		header_up -Cookie
+	}
+}

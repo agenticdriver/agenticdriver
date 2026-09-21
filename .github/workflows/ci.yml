@@ -3,6 +3,27 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  deployment:
+    name: Linux containers and verified TLS
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.89.0"
+      - run: npm ci
+      - run: npm run test:deployment
   verify:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}

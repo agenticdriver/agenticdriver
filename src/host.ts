@@ -40,7 +40,7 @@ import { ContextMediaTypeSchema } from "./context-types.js";
 import { validateInputMediaTypes } from "./providers/http.js";
 import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
-import type { ServerOptions } from "./server.js";
+import type { HostAuthentication, ServerOptions } from "./server.js";
 import { SchedulingOptionsSchema, assertPolicyMaps } from "./scheduling.js";
 import { ResourceLimitsSchema } from "./resources.js";
 import {
@@ -165,8 +165,8 @@ export const HostConfigSchema = z
           })
           .strict(),
       )
-      .min(1)
-      .max(100),
+      .max(100)
+      .default([]),
     applicationTools: z
       .object({
         enabled: z.literal(true),
@@ -544,8 +544,14 @@ export async function configuredServer(
   config: HostConfig,
   configPath: string,
   secrets: SecretResolver = secretResolver(dirname(resolve(configPath))),
+  authentication?: HostAuthentication,
 ): Promise<ServerOptions & { tokens: NonNullable<ServerOptions["tokens"]> }> {
   config = validateHostConfig(config);
+  if (Boolean(config.tokens.length) === Boolean(authentication))
+    throw new DriverError(
+      "AUTH_REQUIRED",
+      "Configure static token references or supply application authentication, never both.",
+    );
   const tokens = await Promise.all(
     config.tokens.map(async (entry) => ({
       token: await singleLineSecret(secrets, entry.tokenRef, 32),
@@ -595,6 +601,7 @@ export async function configuredServer(
   return {
     ...config.listen,
     tokens,
+    authentication,
     tls,
     allowedOrigins: config.allowedOrigins,
     scheduling: config.concurrency,

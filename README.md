@@ -24,6 +24,8 @@ protocol fixtures; real paid/account-backed inference has not been certified.
   scopes, exact browser-origin allowlists, request limits, and concurrency limits.
 - An [installable host CLI](docs/host.md) with `init`, `serve`, `status`, `doctor`,
   and `run`, explicit account/model selection, and separate credential references.
+- A [self-hosted container recipe](docs/deployment.md) with a private execution port,
+  TLS proxy, Better Auth/AuthYard service authorization and persistent state.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
 - [JavaScript and TypeScript package guide](docs/javascript.md) with installed ESM examples, a browser entry, typed errors and cancellation.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
