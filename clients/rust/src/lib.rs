@@ -1,10 +1,15 @@
-//! Authenticated AgenticDriver v1 client. Runs locally over loopback or remotely over HTTPS.
-use reqwest::blocking::{Client as HttpClient, Response};
+#![doc = include_str!("../README.md")]
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::io::{BufReader, Read};
-use std::time::Duration;
+#[cfg(feature = "blocking")]
+pub mod blocking;
+#[cfg(feature = "blocking")]
+pub use blocking::AgenticClient;
+#[cfg(feature = "async")]
+mod async_client;
+#[cfg(feature = "async")]
+pub use async_client::{AsyncAgenticClient, EventStream};
 pub mod context;
 pub use context::{
     ArtifactRequest, ContextInput, ContextManifest, ContextSource, DraftArtifact, SourceLocation,
@@ -14,8 +19,12 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+mod events;
 pub mod retrieval;
+#[cfg(any(feature = "blocking", feature = "async"))]
+mod transport;
 mod validation;
+pub use events::{EventPayload, ProgressPhase, ToolCall};
 pub use retrieval::{
     RetrievalChunk, RetrievalDelete, RetrievalDeleteResult, RetrievalHit, RetrievalIndexRequest,
     RetrievalIndexResult, RetrievalRequest, RetrievalResult, RetrievalSearch, VectorIndex,
@@ -33,7 +42,7 @@ pub struct ProtocolInfo {
     pub features: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct DriverError {
     pub code: String,
     pub message: String,
@@ -233,354 +242,11 @@ pub struct Event {
     pub extra: BTreeMap<String, Value>,
 }
 
-pub struct AgenticClient {
-    base: reqwest::Url,
-    token: String,
-    http: HttpClient,
-}
-impl AgenticClient {
-    pub fn new(url: &str, token: impl Into<String>) -> Result<Self> {
-        Self::with_ca_pem(url, token, None)
-    }
-    /// Add a private CA without disabling certificate or hostname verification.
-    pub fn with_ca_pem(url: &str, token: impl Into<String>, ca: Option<&[u8]>) -> Result<Self> {
-        let mut base =
-            reqwest::Url::parse(url).map_err(|_| Error::Protocol("Invalid driver URL."))?;
-        let local = matches!(
-            base.host_str(),
-            Some("localhost" | "127.0.0.1" | "[::1]" | "::1")
-        );
-        if !base.username().is_empty()
-            || base.password().is_some()
-            || base.query().is_some()
-            || base.fragment().is_some()
-            || base.host_str().is_none()
-            || !(base.scheme() == "https" || (base.scheme() == "http" && local))
-        {
-            return Err(Error::Protocol(
-                "Use HTTPS, or HTTP on loopback, without URL credentials, query, or fragment.",
-            ));
-        }
-        if !base.path().ends_with('/') {
-            base.set_path(&format!("{}/", base.path()));
-        }
-        let token = token.into();
-        if token.is_empty() {
-            return Err(Error::Protocol("A driver bearer token is required."));
-        }
-        let mut builder = HttpClient::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .timeout(None)
-            .connect_timeout(Duration::from_secs(10));
-        if let Some(pem) = ca {
-            builder = builder.add_root_certificate(reqwest::Certificate::from_pem(pem)?);
-        }
-        Ok(Self {
-            base,
-            token,
-            http: builder.build()?,
-        })
-    }
-    fn request(&self, path: &str, body: Option<&Value>, stream: bool) -> Result<Response> {
-        let url = self
-            .base
-            .join(path)
-            .map_err(|_| Error::Protocol("Invalid endpoint."))?;
-        let mut request = if let Some(data) = body {
-            self.http.post(url).json(data)
-        } else {
-            self.http.get(url)
-        };
-        request = request
-            .bearer_auth(&self.token)
-            .header("AgenticDriver-Version", PROTOCOL_VERSION)
-            .header("AgenticDriver-Accept-Optional-Events", "true")
-            .header(
-                "Accept",
-                if stream {
-                    "text/event-stream"
-                } else {
-                    "application/json"
-                },
-            );
-        if body.is_none() {
-            request = request.timeout(Duration::from_secs(10));
-        }
-        let response = request.send()?;
-        if !response.status().is_success() {
-            #[derive(Deserialize)]
-            struct Envelope {
-                error: DriverError,
-            }
-            return match read_json::<Envelope>(response) {
-                Ok(payload) => Err(Error::Driver(payload.error)),
-                Err(_) => Err(Error::Protocol("The driver returned an HTTP error.")),
-            };
-        }
-        if let Some(version) = response.headers().get("AgenticDriver-Version") {
-            if response
-                .headers()
-                .get_all("AgenticDriver-Version")
-                .iter()
-                .count()
-                != 1
-                || version.to_str().ok() != Some(PROTOCOL_VERSION)
-            {
-                return Err(protocol_error(
-                    "UNSUPPORTED_PROTOCOL_VERSION",
-                    "The host selected an unsupported wire protocol version.",
-                ));
-            }
-        }
-        Ok(response)
-    }
-    pub fn ingest_context(&self, request: &IngestRequest) -> Result<IngestResult> {
-        let value: Value = read_json(self.request(
-            "v1/retrieval/ingest",
-            Some(&serde_json::to_value(request)?),
-            false,
-        )?)?;
-        let (id, revision) = request.document.identity();
-        if !ingestion::valid(&value["ingestion"])
-            || !retrieval::receipt(&value, &request.corpus, id, revision)
-        {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Invalid ingestion provenance or a mismatched receipt.",
-            ));
-        }
-        Ok(serde_json::from_value(value)?)
-    }
-    pub fn search_context(&self, request: &RetrievalSearch) -> Result<RetrievalResult> {
-        let value: Value = read_json(self.request(
-            "v1/retrieval/search",
-            Some(&serde_json::to_value(request)?),
-            false,
-        )?)?;
-        if !retrieval::valid(&value) {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Invalid retrieval evidence.",
-            ));
-        }
-        let result: RetrievalResult = serde_json::from_value(value)?;
-        if !retrieval::selection(Some(&result), Some(request)) {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Evidence does not match the requested scope.",
-            ));
-        }
-        Ok(result)
-    }
-    pub fn index_context(&self, request: &RetrievalIndexRequest) -> Result<RetrievalIndexResult> {
-        let value: Value = read_json(self.request(
-            "v1/retrieval/index",
-            Some(&serde_json::to_value(request)?),
-            false,
-        )?)?;
-        if !retrieval::receipt(
-            &value,
-            &request.corpus,
-            &request.source.id,
-            &request.source.revision,
-        ) {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Invalid indexing receipt.",
-            ));
-        }
-        Ok(serde_json::from_value(value)?)
-    }
-    pub fn delete_context(&self, request: &RetrievalDelete) -> Result<RetrievalDeleteResult> {
-        let result: RetrievalDeleteResult = read_json(self.request(
-            "v1/retrieval/delete",
-            Some(&serde_json::to_value(request)?),
-            false,
-        )?)?;
-        if &result.request != request {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Mismatched deletion receipt.",
-            ));
-        }
-        Ok(result)
-    }
-    pub fn protocol(&self) -> Result<ProtocolInfo> {
-        let info: ProtocolInfo = read_json(self.request("v1/protocol", None, false)?)?;
-        if info.protocol != "agenticdriver"
-            || info.version != PROTOCOL_VERSION
-            || !info
-                .supported_versions
-                .iter()
-                .any(|v| v == PROTOCOL_VERSION)
-        {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "The driver returned an invalid protocol descriptor.",
-            ));
-        }
-        Ok(info)
-    }
-    pub fn providers(&self) -> Result<Vec<Provider>> {
-        self.provider_catalog(false)
-    }
-    pub fn refresh_providers(&self) -> Result<Vec<Provider>> {
-        self.provider_catalog(true)
-    }
-    fn provider_catalog(&self, refresh: bool) -> Result<Vec<Provider>> {
-        #[derive(Deserialize)]
-        struct Catalog {
-            providers: Vec<Provider>,
-        }
-        let path = if refresh {
-            "v1/providers?refresh=true"
-        } else {
-            "v1/providers"
-        };
-        Ok(read_json::<Catalog>(self.request(path, None, false)?)?.providers)
-    }
-    pub fn run(&self, request: &RunRequest) -> Result<RunResult> {
-        let result: RunResult =
-            read_json(self.request("v1/runs", Some(&serde_json::to_value(request)?), false)?)?;
-        if !validation::result_valid(&result, request) {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "The driver returned an invalid run result.",
-            ));
-        }
-        Ok(result)
-    }
-    /// Return false from `visit` to close the response and cancel an unfinished run.
-    /// Use a blocking worker when calling this synchronous API from an async runtime.
-    pub fn stream(&self, request: &RunRequest, mut visit: impl FnMut(Event) -> bool) -> Result<()> {
-        let response = self.request("v1/runs", Some(&serde_json::to_value(request)?), true)?;
-        if !response
-            .headers()
-            .get("content-type")
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("")
-            .contains("text/event-stream")
-        {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Expected an SSE response.",
-            ));
-        }
-        let mut reader = validation::SseLines::new(BufReader::new(response));
-        let mut fields = Vec::new();
-        let mut sequence = 0;
-        let mut run_id = String::new();
-        let mut size = 0;
-        loop {
-            let Some(line) = reader.next_line()? else {
-                return Err(protocol_error(
-                    "INCOMPLETE_STREAM",
-                    "Connection closed before a terminal run event.",
-                ));
-            };
-            size += line.len();
-            if size > 2_000_000 {
-                return Err(protocol_error(
-                    "RESPONSE_TOO_LARGE",
-                    "An event exceeded 2 MB.",
-                ));
-            }
-            if let Some(data) = line.strip_prefix("data:") {
-                fields.push(data.strip_prefix(' ').unwrap_or(data).to_owned());
-            }
-            if line.is_empty() {
-                if !fields.is_empty() {
-                    let event: Event = serde_json::from_str(&fields.join("\n")).map_err(|_| {
-                        protocol_error(
-                            "INVALID_STREAM",
-                            "The event contained invalid JSON or an invalid payload.",
-                        )
-                    })?;
-                    if !validation::event_valid(&event, request, sequence == 0)
-                        || event.sequence != sequence + 1
-                        || (!run_id.is_empty() && run_id != event.run_id)
-                    {
-                        return Err(protocol_error(
-                            "INVALID_STREAM",
-                            "Invalid or out-of-order event.",
-                        ));
-                    }
-                    run_id.clone_from(&event.run_id);
-                    sequence = event.sequence;
-                    if !matches!(
-                        event.kind.as_str(),
-                        "run.started"
-                            | "step.started"
-                            | "text.delta"
-                            | "run.progress"
-                            | "tool.called"
-                            | "tool.completed"
-                            | "usage.reported"
-                            | "run.completed"
-                            | "run.failed"
-                            | "run.cancelled"
-                    ) {
-                        if !event.optional {
-                            return Err(protocol_error(
-                                "UNSUPPORTED_EVENT",
-                                "The host sent an unknown required event type.",
-                            ));
-                        }
-                        fields.clear();
-                        size = 0;
-                        continue;
-                    }
-                    let terminal = matches!(
-                        event.kind.as_str(),
-                        "run.completed" | "run.failed" | "run.cancelled"
-                    );
-                    let failure = if event.kind == "run.failed" || event.kind == "run.cancelled" {
-                        event.error.as_ref().map(|e| DriverError {
-                            code: e.code.clone(),
-                            message: e.message.clone(),
-                            retryable: e.retryable,
-                            outcome: e.outcome,
-                        })
-                    } else {
-                        None
-                    };
-                    if !visit(event) {
-                        return Ok(());
-                    }
-                    if let Some(error) = failure {
-                        return Err(Error::Driver(error));
-                    }
-                    if terminal {
-                        return Ok(());
-                    }
-                }
-                fields.clear();
-                size = 0;
-            }
-        }
-    }
-}
 fn protocol_error(code: &str, message: &str) -> Error {
     Error::Driver(DriverError {
         code: code.into(),
         message: message.into(),
         retryable: false,
         outcome: None,
-    })
-}
-fn read_json<T: serde::de::DeserializeOwned>(response: Response) -> Result<T> {
-    let mut data = Vec::new();
-    response.take(2_000_001).read_to_end(&mut data)?;
-    if data.len() > 2_000_000 {
-        return Err(protocol_error(
-            "RESPONSE_TOO_LARGE",
-            "Response exceeded 2 MB.",
-        ));
-    }
-    serde_json::from_slice(&data).map_err(|_| {
-        protocol_error(
-            "INVALID_RESPONSE",
-            "The driver returned invalid JSON or an invalid response shape.",
-        )
     })
 }

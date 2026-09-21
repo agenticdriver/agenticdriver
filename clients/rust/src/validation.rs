@@ -1,10 +1,15 @@
-use crate::{
-    protocol_error, Event, ModelCatalog, ProviderHealth, Result, RunRequest, RunResult, Usage,
-};
+#[cfg(feature = "blocking")]
+use crate::{protocol_error, Result};
+#[cfg(any(feature = "blocking", feature = "async"))]
+use crate::{Event, RunRequest, RunResult, Usage};
+use crate::{ModelCatalog, ProviderHealth};
 use serde::{Deserialize, Deserializer};
+#[cfg(any(feature = "blocking", feature = "async"))]
 use serde_json::Value;
+#[cfg(feature = "blocking")]
 use std::io::BufRead;
 
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) const MAX_BYTES: usize = 2_000_000;
 const MAX_INTEGER: u64 = 9_007_199_254_740_991;
 
@@ -62,6 +67,7 @@ pub(crate) fn optional_cost<'de, D: Deserializer<'de>>(
     }
     Ok(Some(value))
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn result_valid(result: &RunResult, request: &RunRequest) -> bool {
     crate::context::relationships_valid(result)
         && crate::retrieval::links(result)
@@ -72,15 +78,18 @@ pub(crate) fn result_valid(result: &RunResult, request: &RunRequest) -> bool {
         && result.steps > 0
         && matches!(result.finish_reason.as_str(), "stop" | "length")
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 fn text(value: Option<&Value>) -> bool {
     value.and_then(Value::as_str).is_some_and(|v| !v.is_empty())
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 fn count(value: Option<&Value>) -> bool {
     value
         .and_then(Value::as_u64)
         .is_some_and(|v| v > 0 && v <= MAX_INTEGER)
 }
 
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn event_valid(event: &Event, request: &RunRequest, first: bool) -> bool {
     if event.kind.is_empty()
         || event.run_id.is_empty()
@@ -189,11 +198,13 @@ pub(crate) fn timestamp_valid(value: &str) -> bool {
         && matches!((zone[1..3].parse::<u32>(), zone[4..6].parse::<u32>()), (Ok(h),Ok(m)) if h <= 23 && m <= 59)
 }
 
+#[cfg(feature = "blocking")]
 pub(crate) struct SseLines<R> {
     reader: R,
     skip_lf: bool,
     first: bool,
 }
+#[cfg(feature = "blocking")]
 impl<R: BufRead> SseLines<R> {
     pub(crate) fn new(reader: R) -> Self {
         Self {

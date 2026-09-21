@@ -286,6 +286,7 @@ pub(crate) fn optional_media<'de, D: Deserializer<'de>>(
         .map(Some)
         .map_err(serde::de::Error::custom)
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn relationships_valid(result: &crate::RunResult) -> bool {
     let sources = result.sources.as_deref().unwrap_or_default();
     let ids: std::collections::BTreeSet<_> =

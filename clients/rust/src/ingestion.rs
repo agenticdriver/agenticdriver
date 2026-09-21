@@ -32,6 +32,7 @@ pub enum IngestionDocument {
         messages: Vec<EmailMessage>,
     },
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 impl IngestionDocument {
     pub(crate) fn identity(&self) -> (&str, &str) {
         match self {

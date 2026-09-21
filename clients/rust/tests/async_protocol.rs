@@ -1,13 +1,13 @@
-#![cfg(feature = "blocking")]
-use agenticdriver::{AgenticClient, Error, RunRequest};
+#![cfg(feature = "async")]
+use agenticdriver::{AsyncAgenticClient, Error, RunRequest};
 use serde_json::Value;
 use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::thread;
 use std::time::Duration;
 
-#[test]
-fn shared_version_fixtures() {
+#[tokio::test]
+async fn shared_version_fixtures() {
     let fixture: Value =
         serde_json::from_str(include_str!("../../../protocol/fixtures/versioning.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
@@ -53,12 +53,22 @@ fn shared_version_fixtures() {
             response.push_str(&body);
             socket.write_all(response.as_bytes()).unwrap();
         });
-        let client = AgenticClient::new(&url, "fixture-token").unwrap();
+        let client = AsyncAgenticClient::new(&url, "fixture-token").unwrap();
         let mut types = Vec::new();
-        let result = client.stream(&RunRequest::new("mock", "demo", "Hello"), |event| {
-            types.push(event.kind);
-            true
-        });
+        let result = async {
+            let mut stream = client
+                .stream(&RunRequest::new("mock", "demo", "Hello"))
+                .await?;
+            while let Some(event) = stream.next().await {
+                let event = event?;
+                types.push(event.kind);
+                if let Some(error) = event.error {
+                    return Err(Error::Driver(error));
+                }
+            }
+            Ok(())
+        }
+        .await;
         server.join().unwrap();
         if let Some(expected) = case["expectedError"].as_str() {
             match result {

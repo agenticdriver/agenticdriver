@@ -127,6 +127,7 @@ const driver = await serve(
                       "python-async",
                       "go",
                       "rust",
+                      "rust-async",
                     ].flatMap((language) =>
                       ["markdown", "email", "pdf"].map((format) => [
                         `${language}-${format}`,
@@ -139,6 +140,7 @@ const driver = await serve(
                   "python-async-paper": "r1",
                   "go-paper": "r1",
                   "rust-paper": "r1",
+                  "rust-async-paper": "r1",
                 },
               }
             : null,

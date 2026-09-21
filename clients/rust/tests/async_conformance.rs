@@ -1,8 +1,8 @@
-#![cfg(feature = "blocking")]
-use agenticdriver::{AgenticClient, Error, RunRequest};
+#![cfg(feature = "async")]
+use agenticdriver::{AsyncAgenticClient, Error, RunRequest};
 use serde_json::Value;
 
-fn client(url: &str, token: &str, trust_ca: bool) -> AgenticClient {
+fn client(url: &str, token: &str, trust_ca: bool) -> AsyncAgenticClient {
     let ca = if trust_ca {
         std::env::var("AGENTICDRIVER_TEST_CA")
             .ok()
@@ -10,7 +10,7 @@ fn client(url: &str, token: &str, trust_ca: bool) -> AgenticClient {
     } else {
         None
     };
-    AgenticClient::with_ca_pem(url, token, ca.as_deref()).unwrap()
+    AsyncAgenticClient::with_ca_pem(url, token, ca.as_deref()).unwrap()
 }
 fn code(error: &Error) -> Option<&str> {
     if let Error::Driver(value) = error {
@@ -20,8 +20,8 @@ fn code(error: &Error) -> Option<&str> {
     }
 }
 
-#[test]
-fn reference_peer_conformance() {
+#[tokio::test]
+async fn reference_peer_conformance() {
     let Ok(base) = std::env::var("AGENTICDRIVER_TEST_REFERENCE_URL") else {
         return;
     };
@@ -37,8 +37,8 @@ fn reference_peer_conformance() {
             request.retrieval = Some(serde_json::from_value(retrieval.clone()).unwrap());
         }
         let result = match example["operation"].as_str() {
-            Some("providers") => peer.providers().map(|_| ()),
-            Some("protocol") => peer.protocol().map(|_| ()),
+            Some("providers") => peer.providers().await.map(|_| ()),
+            Some("protocol") => peer.protocol().await.map(|_| ()),
             Some("ingest") => peer
                 .ingest_context(&agenticdriver::IngestRequest {
                     corpus: "library".into(),
@@ -50,10 +50,9 @@ fn reference_peer_conformance() {
                     chunking: None,
                     idle_timeout_ms: None,
                 })
+                .await
                 .map(|_| ()),
-            _ => peer.stream(&request, |event| {
-                !(example["cancel"] == true && event.kind == "text.delta")
-            }),
+            _ => consume(&peer, &request, example["cancel"] == true).await,
         };
         if let Some(expected) = example["expectedError"].as_str() {
             if result.as_ref().err().and_then(code) != Some(expected) {
@@ -70,8 +69,8 @@ fn reference_peer_conformance() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
-#[test]
-fn real_host_conformance() {
+#[tokio::test]
+async fn real_host_conformance() {
     if std::env::var("AGENTICDRIVER_TEST_REFERENCE_URL").is_err() {
         return;
     }
@@ -79,47 +78,60 @@ fn real_host_conformance() {
     let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
     let request = RunRequest::new("mock", "demo", "Hello");
     assert_eq!(
-        code(&client(&url, "wrong-token", true).run(&request).unwrap_err()),
+        code(
+            &client(&url, "wrong-token", true)
+                .run(&request)
+                .await
+                .unwrap_err()
+        ),
         Some("UNAUTHORIZED")
     );
     let restricted = client(&url, &(token.clone() + "-restricted"), true);
-    assert!(restricted.providers().unwrap().is_empty());
+    assert!(restricted.providers().await.unwrap().is_empty());
     assert_eq!(
-        code(&restricted.run(&request).unwrap_err()),
+        code(&restricted.run(&request).await.unwrap_err()),
         Some("FORBIDDEN")
     );
     let peer = client(&url, &token, true);
     let estimated = peer
         .run(&RunRequest::new("mock", "demo", "conformance-cost"))
+        .await
         .unwrap();
     assert_eq!(estimated.usage.api_equivalent_cost_usd, Some(0.25));
     assert_eq!(estimated.usage.cost_usd, None);
     let mut forbidden = RunRequest::new("mock", "demo", "Hello");
     forbidden.tools = vec!["echo".into()];
-    assert_eq!(code(&peer.run(&forbidden).unwrap_err()), Some("FORBIDDEN"));
+    assert_eq!(
+        code(&peer.run(&forbidden).await.unwrap_err()),
+        Some("FORBIDDEN")
+    );
     for mode in ["quiet", "progress"] {
         let mut input = RunRequest::new("mock", "demo", format!("conformance-{}", mode));
         if mode == "progress" {
             input.idle_timeout_ms = Some(150);
         }
         assert_eq!(
-            peer.run(&input).unwrap().text,
+            peer.run(&input).await.unwrap().text,
             "AgenticDriver is connected."
         );
     }
     let mut stalled = RunRequest::new("mock", "demo", "conformance-stall");
     stalled.idle_timeout_ms = Some(30);
-    assert_eq!(code(&peer.run(&stalled).unwrap_err()), Some("IDLE_TIMEOUT"));
+    assert_eq!(
+        code(&peer.run(&stalled).await.unwrap_err()),
+        Some("IDLE_TIMEOUT")
+    );
     if url.starts_with("https:") {
-        assert!(client(&url, &token, false).providers().is_err());
+        assert!(client(&url, &token, false).providers().await.is_err());
         assert!(client(&url.replace("127.0.0.1", "localhost"), &token, true)
             .providers()
+            .await
             .is_err());
     }
 }
 
-#[test]
-fn retrieval_round_trip() {
+#[tokio::test]
+async fn retrieval_round_trip() {
     use agenticdriver::{
         ArtifactRequest, ContextSource, RetrievalChunk, RetrievalDelete, RetrievalIndexRequest,
         RetrievalSearch, SourceLocation,
@@ -133,12 +145,12 @@ fn retrieval_round_trip() {
         ingestion: None,
         corpus: "library".into(),
         source: ContextSource {
-            id: "rust-paper".into(),
+            id: "rust-async-paper".into(),
             revision: "r1".into(),
             ..Default::default()
         },
         chunks: vec![RetrievalChunk {
-            id: "rust-p1".into(),
+            id: "rust-async-p1".into(),
             text: "Solar batteries retain energy.".into(),
             location: Some(SourceLocation {
                 page: Some(2),
@@ -146,16 +158,19 @@ fn retrieval_round_trip() {
             }),
         }],
     };
-    assert_eq!(peer.index_context(&document).unwrap().status, "indexed");
+    assert_eq!(
+        peer.index_context(&document).await.unwrap().status,
+        "indexed"
+    );
     let search = RetrievalSearch {
         corpus: "library".into(),
-        source_ids: vec!["rust-paper".into()],
+        source_ids: vec!["rust-async-paper".into()],
         query: Some("solar energy".into()),
         ..Default::default()
     };
     assert_eq!(
-        peer.search_context(&search).unwrap().hits[0].chunk_id,
-        "rust-p1"
+        peer.search_context(&search).await.unwrap().hits[0].chunk_id,
+        "rust-async-p1"
     );
     let mut request = RunRequest::new("mock", "demo", "Question");
     request.retrieval = Some(search);
@@ -163,35 +178,37 @@ fn retrieval_round_trip() {
         name: "answer.md".into(),
         media_type: "text/markdown".into(),
     });
-    let result = peer.run(&request).unwrap();
-    assert_eq!(result.retrieval.unwrap().hits[0].source.id, "rust-paper");
+    let result = peer.run(&request).await.unwrap();
+    assert_eq!(
+        result.retrieval.unwrap().hits[0].source.id,
+        "rust-async-paper"
+    );
     assert_eq!(result.sources.unwrap()[0].origin, "retrieval");
-    assert_eq!(result.artifacts.unwrap()[0].source_ids, vec!["rust-p1"]);
-    let mut completed = false;
-    peer.stream(&request, |event| {
-        completed = event.kind == "run.completed";
-        true
-    })
-    .unwrap();
-    assert!(completed);
+    assert_eq!(
+        result.artifacts.unwrap()[0].source_ids,
+        vec!["rust-async-p1"]
+    );
+    consume(&peer, &request, false).await.unwrap();
     assert!(
         peer.delete_context(&RetrievalDelete {
             corpus: "library".into(),
-            source_id: "rust-paper".into(),
+            source_id: "rust-async-paper".into(),
             revision: "r1".into()
         })
+        .await
         .unwrap()
         .deleted
     );
     assert!(peer
         .search_context(request.retrieval.as_ref().unwrap())
+        .await
         .unwrap()
         .hits
         .is_empty());
 }
 
-#[test]
-fn ingestion_round_trips() {
+#[tokio::test]
+async fn ingestion_round_trips() {
     use agenticdriver::{
         ContextSource, EmailMessage, IngestRequest, IngestionDocument, RetrievalRequest,
     };
@@ -204,7 +221,7 @@ fn ingestion_round_trips() {
         let id = if format == "reference" {
             "ingestion-reference".into()
         } else {
-            format!("rust-{format}")
+            format!("rust-async-{format}")
         };
         let source = ContextSource {
             id: id.clone(),
@@ -242,7 +259,7 @@ fn ingestion_round_trips() {
             chunking: None,
             idle_timeout_ms: None,
         };
-        let receipt = peer.ingest_context(&request).unwrap();
+        let receipt = peer.ingest_context(&request).await.unwrap();
         assert_eq!(
             receipt.ingestion.format,
             if format == "reference" {
@@ -251,14 +268,17 @@ fn ingestion_round_trips() {
                 format
             }
         );
-        assert_eq!(peer.ingest_context(&request).unwrap().status, "unchanged");
+        assert_eq!(
+            peer.ingest_context(&request).await.unwrap().status,
+            "unchanged"
+        );
         let mut run = RunRequest::new("mock", "demo", "solar evidence");
         run.retrieval = Some(RetrievalRequest {
             corpus: "library".into(),
             source_ids: vec![id.clone()],
             ..Default::default()
         });
-        let result = peer.run(&run).unwrap();
+        let result = peer.run(&run).await.unwrap();
         let hit = &result.retrieval.as_ref().unwrap().hits[0];
         let manifest = hit.ingestion.as_ref().unwrap();
         assert_eq!(manifest.input_sha256, receipt.ingestion.input_sha256);
@@ -274,4 +294,24 @@ fn ingestion_round_trips() {
             assert_eq!(location.section.as_deref(), Some("Solar evidence"));
         }
     }
+}
+
+async fn consume(
+    peer: &AsyncAgenticClient,
+    request: &RunRequest,
+    cancel: bool,
+) -> agenticdriver::Result<()> {
+    let mut stream = peer.stream(request).await?;
+    while let Some(event) = stream.next().await {
+        let event = event?;
+        event.payload()?;
+        if cancel && event.kind == "text.delta" {
+            drop(stream);
+            return Ok(());
+        }
+        if let Some(error) = event.error {
+            return Err(Error::Driver(error));
+        }
+    }
+    Ok(())
 }

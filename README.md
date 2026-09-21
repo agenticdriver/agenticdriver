@@ -229,13 +229,13 @@ with HTTPS and JSON can call the protocol; four language packages are included.
 | TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                            |
 | Python 3.10+            | [Build/install a wheel](clients/python/README.md); add `[async]` for asyncio                   | Typed sync `AgenticClient` and native `AsyncAgenticClient`     |
 | Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
-| Rust                    | `agenticdriver = { path = "../agenticdriver/clients/rust" }` in Cargo.toml                     | `AgenticClient.run(&request)` / `.stream(&request, callback)`  |
+| Rust 1.89+              | [Crate features and installation](clients/rust/README.md) | Async `AsyncAgenticClient` and optional blocking `AgenticClient` |
 
 Python provides synchronous and native asyncio clients. Use `with client.stream`
 or `async with client.stream` to close responses on early exit; asyncio task
 cancellation also interrupts pending receives. Go supports context cancellation.
-Rust currently provides blocking calls; its stream callbacks return `false` to
-stop and close the response.
+Rust provides native async streams: dropping a stream or cancelling a pending
+read closes the response. The optional blocking API retains callback cancellation.
 
 ```python
 from agenticdriver import AgenticClient

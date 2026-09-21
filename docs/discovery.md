@@ -20,7 +20,7 @@ Clients can request a refresh:
 | TypeScript / JavaScript | `await client.providers({ refresh: true })` |
 | Python                  | `client.providers(refresh=True)`            |
 | Go                      | `client.RefreshProviders(ctx)`              |
-| Rust                    | `client.refresh_providers()`                |
+| Rust                    | `client.refresh_providers()` / `.await` for Rust async |
 | HTTP                    | `GET /v1/providers?refresh=true`            |
 
 The host advertises `provider-discovery` in `/v1/protocol`. Older hosts may omit

@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeSet;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrievalRequest {
     pub corpus: String,
@@ -174,6 +174,7 @@ pub(crate) fn optional_result<'de, D: Deserializer<'de>>(
         .map(Some)
         .map_err(serde::de::Error::custom)
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn selection(
     result: Option<&RetrievalResult>,
     request: Option<&RetrievalRequest>,
@@ -193,6 +194,7 @@ pub(crate) fn selection(
         _ => false,
     }
 }
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn links(result: &crate::RunResult) -> bool {
     let sources: Vec<_> = result
         .sources
@@ -222,6 +224,7 @@ pub(crate) fn links(result: &crate::RunResult) -> bool {
         })
 }
 
+#[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn receipt(value: &Value, corpus: &str, id: &str, revision: &str) -> bool {
     value["corpus"].as_str() == Some(corpus)
         && value["sourceId"].as_str() == Some(id)
