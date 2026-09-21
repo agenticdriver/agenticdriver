@@ -5,6 +5,8 @@ logic. All dependency references currently point at a sibling `agenticdriver`
 checkout. Build that checkout before installing or running a consumer. Package
 registry publication is a separate release step.
 
+All three applications can use the shared [provider identity, icon and quota helpers](catalog.md). The recipe keeps Usagestat probes, account quota bindings and raw filesystem paths on trusted servers, and exposes only reviewed image assets and scoped display data to each app.
+
 ## Brandstorm
 
 `../brandstorm/packages/provider-agenticdriver` implements Brandstorm's existing

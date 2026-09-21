@@ -71,7 +71,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         types: [],
         noEmit: true,
       },
-      files: ["examples/browser.ts", "browser-types.ts"],
+      files: ["examples/browser.ts", "browser-types.ts", "browser-catalog.ts"],
     }),
   );
   await writeFile(
@@ -95,6 +95,18 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     // @ts-expect-error driver clients cannot receive provider API keys
     new AgenticClient({url:options.url,token:options.token,apiKey:"forged"});
     void usage; void error;
+  `,
+  );
+  await writeFile(
+    join(app, "browser-catalog.ts"),
+    `
+    import {providerPresentation,quotaPresentation,type UsageStatProvider,type UsageStatQuotaIdentity} from "agenticdriver/catalog";
+    const metadata:UsageStatProvider={id:"codex",name:"Codex"};
+    const card=providerPresentation({id:"personal",name:"Codex",vendor:"openai",authMode:"cli-session",usageStatId:"codex",capabilities:{tools:false,textStreaming:true}},{metadata,account:{id:"account-one",label:"Personal"}});
+    const identity:UsageStatQuotaIdentity={hostId:"host",provider:"personal",accountId:"account-one",subject:"user"};
+    const quota=quotaPresentation(identity,undefined,{maxAgeMs:300000});
+    if(card.icon.kind!=="fallback" || card.accountLabel!=="Personal" || quota.state!=="unavailable") throw new Error("Bundled catalog contract failed");
+    console.log("Installed catalog browser bundle passed");
   `,
   );
   for (const config of ["server", "browser"]) {
@@ -125,17 +137,22 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   }
   const browser = await build({
     absWorkingDir: app,
-    entryPoints: ["examples/browser.ts"],
+    entryPoints: {
+      browser: "examples/browser.ts",
+      catalog: "browser-catalog.ts",
+    },
     bundle: true,
     platform: "browser",
     format: "esm",
     target: "es2023",
-    outfile: join(app, "www/browser.js"),
+    outdir: join(app, "www"),
     metafile: true,
     logLevel: "silent",
   });
   const safeModules = new Set([
     "client.js",
+    "catalog.js",
+    "usagestat-types.js",
     "context-types.js",
     "retrieval-types.js",
     "ingestion-types.js",
@@ -234,6 +251,11 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       { cwd: app, env: environment, timeout: 10000 },
     );
     assert.match(contract.stdout, /contract passed/);
+    const catalog = await run(process.execPath, [join(app, "www/catalog.js")], {
+      cwd: app,
+      timeout: 10000,
+    });
+    assert.match(catalog.stdout, /Installed catalog browser bundle passed/);
   } finally {
     assert.equal((await host.stop()).code, 0);
   }

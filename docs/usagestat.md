@@ -67,6 +67,8 @@ snapshot as current. Quotas and per-run token metering are different observation
 
 ## Provider icons
 
+Use the shared [provider catalog and asset guide](catalog.md) for browser-safe identity displays, account quota freshness and an allowlisted asset cache. It includes the same integration recipe for Brandstorm, LitAgent and AI Workspace.
+
 The client retains Usagestat's `icon.path`, `icon.colorPath`, `icon.url`, variant
 metadata, and brand color where the daemon supplies them. Filesystem paths refer
 to the **Usagestat host**, so a remote browser cannot use them directly. Applications

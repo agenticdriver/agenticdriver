@@ -35,6 +35,14 @@
       "types": "./dist/usagestat.d.ts",
       "import": "./dist/usagestat.js"
     },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
+    },
+    "./provider-assets": {
+      "types": "./dist/provider-assets.d.ts",
+      "import": "./dist/provider-assets.js"
+    },
     "./context": {
       "types": "./dist/context.d.ts",
       "import": "./dist/context.js"

@@ -25,6 +25,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
 - [JavaScript and TypeScript package guide](docs/javascript.md) with installed ESM examples, a browser entry, typed errors and cancellation.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
+- [Usagestat catalog helpers](docs/catalog.md) for provider/account labels, reviewed icons with notices, and explicit quota freshness/fallback displays.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
 - [Selected context and draft artifacts](docs/context.md): bounded text/Markdown,
   explicit image/PDF model support, authorized source references and provenance.
