@@ -32,6 +32,16 @@ strict: unknown request fields are rejected rather than silently ignored.
 New optional request fields must be supported by the target host; sending them
 to an older host fails validation, with no implicit downgrade.
 
+## Structured output schemas
+
+`outputSchema` accepts synchronous, self-contained JSON Schema draft-07 or
+2020-12. Omit `$schema` for draft-07, or declare
+`https://json-schema.org/draft/2020-12/schema` for 2020-12 (including Zod 4's
+default JSON Schema output). Each dialect is validated with its own rules;
+2020-12 constraints such as `prefixItems` are enforced. External `$ref` loading
+and asynchronous validators are unsupported and fail before model execution.
+The driver validates returned JSON before emitting a completed result.
+
 ## Required capabilities
 
 Provider discovery returns instance-specific boolean capabilities. Currently

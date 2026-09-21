@@ -13,6 +13,7 @@ import type {
   RetrievalResult,
 } from "./retrieval-types.js";
 import { Ajv, type ValidateFunction } from "ajv";
+import { Ajv2020 } from "ajv/dist/2020.js";
 import { abortable, DriverError, publicError } from "./errors.js";
 import { RunRequestSchema } from "./types.js";
 import { withProgress } from "./progress.js";
@@ -386,11 +387,24 @@ export class AgenticDriver {
 
   private outputValidator(schema: Record<string, unknown>): ValidateFunction {
     try {
-      return new Ajv({ strict: false, validateFormats: false }).compile(schema);
+      const options = { strict: false, validateFormats: false };
+      const dialect = schema.$schema;
+      const validator =
+        typeof dialect === "string" &&
+        dialect.replace(/#$/, "") ===
+          "https://json-schema.org/draft/2020-12/schema"
+          ? new Ajv2020(options)
+          : new Ajv(options);
+      const validate = validator.compile(schema);
+      // Validation is synchronous and self-contained. An async validator returns
+      // a truthy Promise even when its eventual validation would reject.
+      if ("$async" in validate && validate.$async === true)
+        throw new Error("Async output schemas are unsupported");
+      return validate;
     } catch {
       throw new DriverError(
         "INVALID_SCHEMA",
-        "The output schema must be a self-contained JSON Schema (draft-07).",
+        "The output schema must be a synchronous, self-contained JSON Schema (draft-07 or 2020-12).",
       );
     }
   }

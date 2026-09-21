@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { z } from "zod";
 import {
   setTimeout as delay,
   setImmediate as immediate,
@@ -345,6 +346,72 @@ test("validates structured output and rejects unknown request fields", async () 
     driver.run({ ...request, ...{ executable: "/bin/sh" } }),
     { code: "INVALID_REQUEST" },
   );
+});
+
+test("validates Zod 2020-12 output without dropping newer schema constraints", async () => {
+  let text = '{"names":["Lumen"],"tagline":null}';
+  const driver = new AgenticDriver({
+    providers: [mockProvider(() => ({ text }))],
+  });
+  const outputSchema = z.toJSONSchema(
+    z.object({
+      names: z.array(z.string()).min(1),
+      tagline: z.string().nullable(),
+    }),
+  );
+  assert.deepEqual((await driver.run({ ...request, outputSchema })).output, {
+    names: ["Lumen"],
+    tagline: null,
+  });
+  text = '{"names":[]}';
+  await assert.rejects(driver.run({ ...request, outputSchema }), {
+    code: "INVALID_OUTPUT",
+  });
+  const tuple = {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "array",
+    prefixItems: [{ type: "string" }],
+    items: false,
+    minItems: 1,
+  };
+  text = '["Lumen"]';
+  assert.deepEqual(
+    (await driver.run({ ...request, outputSchema: tuple })).output,
+    ["Lumen"],
+  );
+  text = "[123]";
+  await assert.rejects(driver.run({ ...request, outputSchema: tuple }), {
+    code: "INVALID_OUTPUT",
+  });
+  text = '["Lumen", "extra"]';
+  await assert.rejects(driver.run({ ...request, outputSchema: tuple }), {
+    code: "INVALID_OUTPUT",
+  });
+});
+
+test("rejects async and external output schemas before model execution", async () => {
+  let calls = 0;
+  const driver = new AgenticDriver({
+    providers: [
+      mockProvider(() => {
+        calls++;
+        return { text: "123" };
+      }),
+    ],
+  });
+  for (const dialect of [
+    "http://json-schema.org/draft-07/schema#",
+    "https://json-schema.org/draft/2020-12/schema",
+  ]) {
+    for (const outputSchema of [
+      { $schema: dialect, $async: true, type: "string" },
+      { $schema: dialect, $ref: "https://untrusted.invalid/schema" },
+    ])
+      await assert.rejects(driver.run({ ...request, outputSchema }), {
+        code: "INVALID_SCHEMA",
+      });
+  }
+  assert.equal(calls, 0);
 });
 
 test("unknown usage stays unknown and telemetry failure cannot invalidate a successful run", async () => {
