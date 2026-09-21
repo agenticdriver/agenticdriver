@@ -41,6 +41,14 @@ available quotas depend on the user's authentication method and account.
 [Headless mode](https://geminicli.com/docs/cli/headless/),
 [authentication](https://geminicli.com/docs/get-started/authentication/).
 
+Live checks on 2026-09-21 found that the selected personal Google sign-in was
+rejected as an unsupported client route on Gemini CLI 0.58.0 and the current
+stable 0.60.0. The SDK reports `CLI_AUTH_UNSUPPORTED`; it does not infer quota,
+subscription tier or successful model access from cached credentials. See the
+[recorded validation limits](validation/gemini-cli-2026-09-21.md). Google's
+[Antigravity migration guidance](https://antigravity.google/docs/cli/overview/#migrating-from-gemini-cli)
+describes a separate route; it is not an automatic fallback in this SDK.
+
 Grok is supported through the xAI API. A Grok subscription bridge is not
 implemented. xAI documents Chat Completions as supported but legacy; the adapter
 uses that established function-calling contract, and a native Responses adapter
@@ -58,13 +66,15 @@ an explicit environment allowlist, bounded stdout/stderr, process-group
 termination, and runtime feature checks. Ambient application API keys are not
 forwarded to a CLI. A host-owned account directory selects a separate account
 without copying its credentials.
+For Gemini, `accountDirectory` is the home directory containing `.gemini`, as
+used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
 
 - Codex ignores user configuration, disables tools/hooks/apps/MCP, selects the
   read-only sandbox, and uses an ephemeral session.
 - Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
-  disabled hooks/extensions/MCP/skills, an empty context configuration, and a
+  disabled hooks/extensions/MCP/skills/agents/auto-memory, an empty context configuration, and a
   supplemental deny-tools policy. Host administrators' policies still apply.
 
 These are CLI controls, not an operating-system isolation boundary. Run separate
@@ -79,6 +89,15 @@ Codex's `exec --json` progress is item-based, so its capability still advertises
 `textStreaming: false` for token streaming. Quiet native reasoning is observable
 only when the CLI emits an event. A provider that returns JSON instead of SSE
 remains usable, with progress visible only when that response completes.
+
+Gemini startup and streamed failures preserve fixed actionable codes:
+`CLI_AUTH_UNSUPPORTED` for the unsupported account route, `CLI_AUTH_REQUIRED`
+for recognized missing/expired authentication, `RATE_LIMITED` for recognized
+quota/rate failures and `UNSUPPORTED_MODEL` for an unavailable model. Unknown
+native failures remain `CLI_FAILED`. Native stderr is privately inspected only
+on failed exits, bounded to 64 KiB for classification, and is never copied into
+public error messages. CLI JSON result failures are classified before a nonzero
+exit can obscure them. These mappings do not add automatic retries.
 
 ## Provider state and usage
 

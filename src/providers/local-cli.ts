@@ -6,6 +6,7 @@ import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
+import { geminiCliFailure } from "./gemini-cli-errors.js";
 import type {
   ProviderAdapter,
   ProviderContext,
@@ -163,6 +164,12 @@ function localCli(
           signal: context.signal,
           input: prompt,
           onLine: stream.accept,
+          ...(vendor === "gemini-cli"
+            ? {
+                classifyExit: (code: number | null, stderr: string) =>
+                  geminiCliFailure(stderr, code),
+              }
+            : {}),
         });
         return stream.finish(output);
       } finally {
@@ -241,6 +248,12 @@ async function cliOperation(vendor: Vendor, model: string, cwd: string) {
         callCommand: "",
       },
       hooksConfig: { enabled: false },
+      experimental: {
+        enableAgents: false,
+        autoMemory: false,
+        modelSteering: false,
+      },
+      skills: { enabled: false },
       mcp: { allowed: [], serverCommand: "" },
       admin: {
         extensions: { enabled: false },
@@ -332,6 +345,11 @@ export function runProcess(
     onLine?: (line: string) => void;
     acceptedExitCodes?: number[];
     onExit?: (code: number | null) => void;
+    /** Trusted diagnostic classifier. Raw stderr is never included in public errors. */
+    classifyExit?: (
+      code: number | null,
+      stderr: string,
+    ) => DriverError | undefined;
   },
 ): Promise<string> {
   options.signal.throwIfAborted();
@@ -345,6 +363,8 @@ export function runProcess(
       windowsHide: true,
     });
     const chunks: Buffer[] = [];
+    const diagnostic: Buffer[] = [];
+    let diagnosticBytes = 0;
     const decoder = new StringDecoder("utf8");
     let pendingLine = "";
     const acceptText = (text: string, end = false) => {
@@ -402,9 +422,14 @@ export function runProcess(
         stop();
       }
     });
-    child.stderr.on("data", (chunk) =>
-      receive(chunk as Buffer, options.includeStderr ?? false),
-    );
+    child.stderr.on("data", (chunk: Buffer) => {
+      receive(chunk, options.includeStderr ?? false);
+      if (options.classifyExit && diagnosticBytes < 65_536) {
+        const part = chunk.subarray(0, 65_536 - diagnosticBytes);
+        diagnostic.push(part);
+        diagnosticBytes += part.length;
+      }
+    });
     child.stdin.on("error", () => {});
     child.once("error", () => {
       failure = new DriverError(
@@ -430,10 +455,14 @@ export function runProcess(
         !(options.acceptedExitCodes ?? [0]).includes(code)
       )
         reject(
-          new DriverError(
-            "CLI_FAILED",
-            "The CLI failed. Check its installed version, sign-in, and model access.",
-          ),
+          options.classifyExit?.(
+            code,
+            Buffer.concat(diagnostic).toString("utf8"),
+          ) ??
+            new DriverError(
+              "CLI_FAILED",
+              "The CLI failed. Check its installed version, sign-in, and model access.",
+            ),
         );
       else resolve(Buffer.concat(chunks).toString("utf8"));
     });
@@ -477,9 +506,14 @@ export function createCliStream(vendor: Vendor, context: ProviderContext) {
         );
       }
       if (["error", "turn.failed"].includes(String(event.type)))
-        throw new DriverError(
-          "CLI_FAILED",
-          "The CLI failed to complete the request.",
+        throw (
+          (vendor === "gemini-cli"
+            ? geminiCliFailure(event.error ?? event)
+            : undefined) ??
+          new DriverError(
+            "CLI_FAILED",
+            "The CLI failed to complete the request.",
+          )
         );
       if (vendor === "codex") {
         if (event.item) {
@@ -553,6 +587,17 @@ export function createCliStream(vendor: Vendor, context: ProviderContext) {
         }
         if (event.type === "result") finalResult = event;
       } else {
+        if (
+          event.type === "result" &&
+          (event.status !== "success" || event.error)
+        )
+          throw (
+            geminiCliFailure(event.error) ??
+            new DriverError(
+              "CLI_FAILED",
+              "Gemini CLI failed to complete the request.",
+            )
+          );
         if (["tool_use", "tool_result"].includes(String(event.type)))
           policyViolation();
         if (
