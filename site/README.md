@@ -20,9 +20,9 @@ The build checks Markdown links and writes static HTML/assets to
 index; it does not send searches to an external service.
 
 Links between docs stay on the site. Links to source, client READMEs and workflow
-files resolve to the current private GitHub repository's `sdk-roadmap` branch;
-readers need their own repository access. Update those source/edit links when a
-release branch or public repository is selected. Local preview is useful now;
+files resolve to the public GitHub repository's `sdk-roadmap` branch.
+Update those source/edit links when a different release branch is selected.
+Local preview is useful now;
 this is not a claim that a public package or website has been released.
 
 The intended domain is `agenticdriver.dev`. Public hosting, DNS changes, a

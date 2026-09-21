@@ -4,8 +4,8 @@ Start with a synthetic workflow, then select a live provider deliberately.
 AgenticDriver is a working **v0.1 SDK**, with protocol **1.0**. Registry packages
 are not published yet. The commands below install built archives or an explicit
 pushed Go revision; applications do not need a sibling SDK checkout at runtime.
-The source repository is currently private; obtaining these development artifacts
-requires authorized repository access. A public registry release is a separate step.
+The source repository is public. A registry release is a separate step; build the
+development archives from the reviewed source while publication is pending.
 
 ## 1. Obtain the packages
 
@@ -119,15 +119,13 @@ that a semantic-version release has been published:
 
 ```sh
 go mod init example.test/my-driver-client
-GOPRIVATE=github.com/hashimkarim/agenticdriver \
-  go get github.com/hashimkarim/agenticdriver/clients/go@d230806b270f1b9477444d2bd639c7ac2034fa73
+go get github.com/hashimkarim/agenticdriver/clients/go@36d36ad813194de785e34c06d705b2d90537000c
 go run .
 ```
 
-Configure your own GitHub access; the command's `GOPRIVATE` keeps this private
-revision out of public module proxies/checksum lookups. On Windows set that
-environment variable using your shell's syntax. Do not put a GitHub token in the module URL. CI
-also verifies a locally packed Go module archive without `replace` directives.
+This public revision installs through the ordinary Go module proxy and checksum
+database without GitHub credentials. CI also verifies a locally packed Go module
+archive without `replace` directives.
 Save the following as `main.go`. Ctrl+C cancels its context without imposing a
 run deadline.
 

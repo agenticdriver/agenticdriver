@@ -10,12 +10,12 @@ cancel accepted background work; call `CancelJob` explicitly. Reconnect using
 Until release tags are published, pin a reviewed commit on `sdk-roadmap`:
 
 ```sh
-GOPRIVATE=github.com/hashimkarim/agenticdriver go get github.com/hashimkarim/agenticdriver/clients/go@COMMIT_SHA
+go get github.com/hashimkarim/agenticdriver/clients/go@COMMIT_SHA
 ```
 
 Go resolves the commit to an immutable pseudoversion in your application's `go.mod`/`go.sum`. No sibling checkout, `replace` directive or workspace is required. Tags, when published, use the monorepo module prefix `clients/go/vX.Y.Z`; package release work is tracked separately. Inspect a commit before choosing it; the placeholders here do not mean “use latest automatically.”
 
-The repository is currently private, so installation requires repository access and an existing Git credential helper (for example, `gh auth setup-git` after signing in). `GOPRIVATE` keeps this module's lookup away from public proxies and checksum databases. If your application already uses private module patterns, append this repository to that list. The installation check below sets this scope for its temporary environment without changing your global Go configuration.
+The repository is public. Installation uses the public Go module proxy and checksum database without GitHub credentials or a `GOPRIVATE` setting. The installation check below uses a fresh module cache and does not change your global Go configuration.
 
 ```go
 package main

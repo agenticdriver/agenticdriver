@@ -23,11 +23,11 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-go-install-") as director
     app.mkdir()
     env = {k: v for k, v in os.environ.items() if not k.startswith("AGENTICDRIVER_")}
     env.update(GOWORK="off", GOFLAGS="-mod=mod", GOPATH=str(work / "gopath"), GOMODCACHE=str(work / "modules"))
-    # This repository may be private. Do not send its revision to a public
-    # module proxy or checksum database; use the caller's existing Git login.
-    private = "github.com/hashimkarim/agenticdriver"
-    for key in ("GOPRIVATE", "GONOPROXY", "GONOSUMDB"):
-        env[key] = ",".join(filter(None, (env.get(key, ""), private)))
+    # Public release checks must work without a Git login, direct fallback or
+    # ambient private-module exceptions. The local archive path stays offline.
+    env.update(GOENV="off", GOPROXY="https://proxy.golang.org", GOSUMDB="sum.golang.org",
+               GOPRIVATE="", GONOPROXY="none", GONOSUMDB="none",
+               GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
     if local_archive:
         # Build the same Go module archive layout without needing repository credentials
         # in CI or publishing an unfinished release. go get must install the archive.
@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-go-install-") as director
                 relative = path.relative_to(ROOT / "clients/go")
                 if path.is_file() and not any(part.startswith(".") for part in relative.parts):
                     archive.write(path, MODULE + "@" + version + "/" + relative.as_posix())
-        env.update(GOPROXY=proxy.as_uri(), GONOPROXY="none", GONOSUMDB=private)
+        env.update(GOPROXY=proxy.as_uri(), GONOSUMDB=MODULE)
     env["GIT_TERMINAL_PROMPT"] = "0"
     def run(*args, **kwargs):
         return subprocess.run(args, cwd=app, env=env, check=True, timeout=240, text=True, **kwargs)

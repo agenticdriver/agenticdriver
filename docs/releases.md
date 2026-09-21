@@ -9,20 +9,42 @@ and remaining live-provider limitations.
 
 Read-only checks on 2026-09-21 returned HTTP 404 for `agenticdriver` on npm,
 PyPI and crates.io. No public package was found; this does not reserve a name,
-establish ownership or verify publishing permission. The source repository
-remains private on the personal GitHub account.
+establish ownership or verify publishing permission. The source repository is
+public at `hashimkarim/agenticdriver`. The selected initial owner on all three
+registries is **`hashimkarim`**, with the package name **`agenticdriver`**.
+This selection is recorded in `release/config.json`; it does not establish a
+registry login or publishing permission.
 
-| Channel   | Candidate identity                                | Version source                  | Current state                                                 |
-| --------- | ------------------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
-| npm       | `agenticdriver`                                   | Root `package.json`             | Tarball built; registry owner/bootstrap not selected          |
-| PyPI      | `agenticdriver`                                   | `clients/python/pyproject.toml` | Wheel and sdist built; account/pending publisher not selected |
-| crates.io | `agenticdriver`                                   | `clients/rust/Cargo.toml`       | Crate built; owner/bootstrap not selected                     |
-| Go        | `github.com/hashimkarim/agenticdriver/clients/go` | `release/config.json`           | Private pushed revisions work; no version tag published       |
+| Channel   | Candidate identity                                | Version source                  | Current state                                                |
+| --------- | ------------------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| npm       | `agenticdriver`                                   | Root `package.json`             | `hashimkarim` CLI identity verified; first upload pending    |
+| PyPI      | `agenticdriver`                                   | `clients/python/pyproject.toml` | Wheel and sdist built; `hashimkarim` publisher setup pending |
+| crates.io | `agenticdriver`                                   | `clients/rust/Cargo.toml`       | Crate built; `hashimkarim` login/bootstrap pending           |
+| Go        | `github.com/hashimkarim/agenticdriver/clients/go` | `release/config.json`           | Public source available; no version tag published            |
 
 These channels match the SDK's language packages. Node also supplies the host
 CLI; Python and Rust are libraries, not `pipx`/`cargo install` apps. OS package
 managers, desktop stores, a public container registry and the docs domain are
 separate distribution choices. This work does not create those destinations.
+
+## Ownership migration
+
+Keep the unscoped npm name `agenticdriver`: owners can change, and organization
+teams can receive package access without changing the install name. Moving a
+personal-scoped name such as `@hashimkarim/agenticdriver` to a different scope
+would instead create a new package. [npm ownership](https://docs.npmjs.com/transferring-a-package-from-a-user-account-to-another-user-account/),
+[organization access](https://docs.npmjs.com/about-organization-scopes-and-packages/)
+
+PyPI supports transferring the existing project to an approved organization.
+On crates.io, add an `agenticdriver` GitHub team as an owner later and retain
+an individual owner to manage ownership; team owners can publish and yank,
+but cannot change owners. These operations retain the package names and versions.
+[PyPI transfer](https://docs.pypi.org/organization-accounts/actions/project-actions/),
+[Cargo owners](https://doc.rust-lang.org/cargo/reference/publishing.html#cargo-owner)
+
+GitHub ownership is separate. The Go import path contains `hashimkarim`, so a
+future repository transfer needs its own module-path migration review. Registry
+ownership changes do not change that import path or transfer the repository.
 
 ## Build and verify
 
@@ -64,18 +86,21 @@ repository permissions with no registry-upload step or publishing secrets.
 ## Prepare publication
 
 AD-042 remains open until registry installation and all three app migrations
-are verified. First select registry owners, exact names, a release version and
-public/private distribution. A public Python or Rust package exposes its packaged
-source even when GitHub stays private. Public Go proxy installation requires
-publicly reachable module source; authorized private Git access remains valid.
+are verified. The selected release target is 0.1.0 under `hashimkarim`, with public
+source and public packages. Authenticate the selected registry identities and
+configure their publishing destinations before uploading the tested candidate.
+Public Go installation uses the public module proxy and checksum database.
+The npm CLI authenticated as `hashimkarim` on 2026-09-21. PyPI and crates.io
+publishing identities still need verification; no credentials live in this repo.
 
 The current first-publication requirements differ:
 
 - npm supports trusted publishing on GitHub-hosted runners with Node 22.14+
   and npm 11.5.1+. Bind repository, workflow, environment and allowed publishing
   action. A selected owner must bootstrap the first package; do not upload a
-  placeholder to create settings. This private repository cannot produce npm's
-  automatic provenance. [npm guidance](https://docs.npmjs.com/trusted-publishers/)
+  placeholder to create settings. Automatic provenance also requires the public
+  source repository and a supported trusted-publishing workflow.
+  [npm guidance](https://docs.npmjs.com/trusted-publishers/)
 - PyPI supports a pending publisher for a new project. Bind the exact repository,
   workflow and environment, then use PyPA's action with job-scoped `id-token: write`.
   Pending publishers do not reserve names.
@@ -91,8 +116,9 @@ The current first-publication requirements differ:
 
 Use native registry authentication. Keep credentials out of source, artifacts
 and command arguments; preserve other package owners/tokens. Hosted CI could not
-start on 2026-09-21 because of an account billing/spending restriction. No billing,
-spending or visibility settings were changed.
+start while the repository was private on 2026-09-21 because of an account
+billing/spending restriction. The user subsequently authorized public visibility;
+fresh CI must establish the current result. No billing or spending settings changed.
 
 ## Release and recover
 

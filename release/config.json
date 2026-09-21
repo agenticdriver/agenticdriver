@@ -1,5 +1,11 @@
 {
   "repository": "hashimkarim/agenticdriver",
+  "githubVisibility": "public",
+  "initialOwners": {
+    "npm": "hashimkarim",
+    "python": "hashimkarim",
+    "rust": "hashimkarim"
+  },
   "protocolVersion": "1.0",
   "goVersion": "0.1.0",
   "names": {
