@@ -11,8 +11,9 @@ The runtime validates a request, selects a configured provider instance, applies
 host limits, and runs model/tool/result steps. JSON Schema validates tool input
 and optional output. All arguments in a tool batch are checked before execution;
 tool side effects execute serially. A tool requiring approval fails closed unless
-the host supplies a positive approval decision. There are no automatic retries,
-including after tool side effects.
+the host supplies a positive approval decision. Provider retries are disabled by
+default; explicit safe-rejection retries never replay model/tool execution after
+an uncertain outcome. See [idempotency and recovery](idempotency.md).
 
 An adapter owns authentication and vendor protocol translation. Each instance
 has its own stable ID and optional model allowlist. Capabilities describe actual
@@ -83,9 +84,10 @@ storage. Cancellation does not undo a completed external action.
 
 The host holds no durable job state and does not replay disconnected runs.
 Applications should add a durable queue around the SDK if they need resumable
-literature reviews or background inbox processing. Multimodal content, MCP
-bridges, distributed scheduling, and provider failover
-are future extensions, not advertised v0.1 capabilities.
+literature reviews or background inbox processing. [Selected context](context.md)
+supports bounded text/Markdown, opt-in images/PDFs and app-authorized references.
+MCP bridges, shared vector retrieval, distributed scheduling and provider
+failover remain tracked extensions.
 
 ## Usage
 

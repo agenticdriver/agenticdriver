@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  ArtifactRequestSchema,
+  ContextInputSchema,
+  type ContextAttachment,
+  type ContextManifest,
+  type DraftArtifact,
+  type ContextMediaType,
+} from "./context-types.js";
 
 export type Json =
   null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -19,6 +27,8 @@ export const RunRequestSchema = z
     provider: id,
     model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
     input: z.string().min(1).max(100_000),
+    attachments: z.array(ContextInputSchema).max(16).optional(),
+    outputArtifact: ArtifactRequestSchema.optional(),
     idempotencyKey: z
       .string()
       .regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/)
@@ -101,7 +111,11 @@ export interface Tool extends ToolDefinition {
   execute(input: JsonObject, context: ExecutionContext): Promise<Json> | Json;
 }
 export type ProviderMessage =
-  | { role: "user"; content: string }
+  | {
+      role: "user";
+      content: string;
+      attachments?: Exclude<ContextAttachment, { type: "text" }>[];
+    }
   | {
       role: "assistant";
       content: string;
@@ -178,6 +192,8 @@ export interface ProviderInfo {
   };
   /** A server-owned allowlist. Omit to accept any explicit model ID. */
   models?: string[];
+  /** Explicit model-specific media allowlists. Text context works with every text adapter. */
+  inputMediaTypes?: Record<string, ContextMediaType[]>;
   usageStatId?: string;
   /** Advisory discovery metadata. It never changes the allowlist or run selection. */
   health?: ProviderHealth;
@@ -203,6 +219,8 @@ export interface RunResult {
   usage: Usage;
   steps: number;
   finishReason: "stop" | "length";
+  sources?: ContextManifest[];
+  artifacts?: DraftArtifact[];
 }
 export interface ErrorInfo {
   code: string;

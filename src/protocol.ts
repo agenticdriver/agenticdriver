@@ -25,7 +25,7 @@ export interface ProtocolInfo {
 }
 
 export function protocolInfo(
-  options: { idempotency?: boolean } = {},
+  options: { idempotency?: boolean; contextReferences?: boolean } = {},
 ): ProtocolInfo {
   return {
     protocol: "agenticdriver",
@@ -39,6 +39,9 @@ export function protocolInfo(
       "required-capabilities",
       "optional-events",
       "provider-discovery",
+      "context-inputs",
+      "draft-artifacts",
+      ...(options.contextReferences ? ["context-references"] : []),
       ...(options.idempotency ? ["idempotency"] : []),
     ],
   };

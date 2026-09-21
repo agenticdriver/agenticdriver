@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "agenticdriver",
-  "title": "AgenticDriver SDK — Implementation Roadmap",
+  "title": "AgenticDriver SDK \u2014 Implementation Roadmap",
   "description": "Bring your own agents to applications: shared SDK, local and secure remote execution, four language clients, usage integration, and three application workstreams.",
   "visibility": "PRIVATE",
   "projectUrl": "https://github.com/orgs/agenticdriver/projects/1",
@@ -38,7 +38,8 @@
     "Use official provider authentication and supported integration routes. CLI sessions may use subscription or API billing; never assume every subscription is an API entitlement.",
     "Applications own domain data, accepted artifacts and business workflows. The SDK supplies execution primitives and optional host services.",
     "Keep provider credentials on the execution host. Requests select configured instances and explicitly permitted tools.",
-    "Use project drafts initially. Convert each draft into an issue in its Target repository when work is picked up, retaining its roadmap ID and dependencies."
+    "Use project drafts initially. Convert each draft into an issue in its Target repository when work is picked up, retaining its roadmap ID and dependencies.",
+    "Provide optional RAG and vector database capabilities in the SDK for application-authorized email threads, PDFs and Markdown; applications retain ownership and access control of source content."
   ],
   "baseline": [
     "A local v0.1 implementation exists: TypeScript runtime, HTTP/SSE host, API adapters, restricted text-only CLI adapters, and TypeScript, Python, Go and Rust clients.",
@@ -792,6 +793,56 @@
         "The decision cites official authentication and integration documentation and distinguishes availability from speculation.",
         "If a supported interface exists, define its adapter, capability and conformance work before advertising support.",
         "If none exists, document API-only support; do not scrape browser sessions, extract consumer tokens or imply subscription credits can fund API requests."
+      ]
+    },
+    {
+      "id": "AD-046",
+      "title": "Add scoped RAG, embedding and vector database interfaces",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-010"],
+      "current": "Applications manually assemble selected text; the SDK has no retrieval or vector storage contract.",
+      "scope": "Wire an optional retrieval service into local and remote driver runs with pluggable embedding and vector database adapters, selected collections/documents and bounded passage context.",
+      "acceptance": [
+        "All four language clients can request retrieval from an explicitly authorized corpus or selected document/thread set; tenant and source access are enforced before search and before exposing passages.",
+        "Embedding model, account, dimensions, similarity metric and index version are explicit; incompatible indexes fail clearly and changing a generation model does not silently change the embedding model.",
+        "At least one persistent vector database adapter and a deterministic test adapter support indexing, similarity search, filtering, deletion and cancellation through the driver.",
+        "Retrieved evidence carries stable source/chunk identifiers and citation locations; untrusted retrieved instructions cannot grant tools or widen corpus access."
+      ]
+    },
+    {
+      "id": "AD-047",
+      "title": "Index PDF, Markdown and email context with traceable revisions",
+      "component": "Tools and context",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-046"],
+      "current": "Selected PDF, Markdown and email context lacks shared indexing lifecycle support.",
+      "scope": "Provide reusable ingestion and chunking for application-supplied PDFs, Markdown and email messages/threads, with extraction adapters and application-owned source references.",
+      "acceptance": [
+        "PDF pages, Markdown sections and email message/thread provenance survive chunking and retrieval; scanned PDFs clearly require an explicitly configured OCR adapter.",
+        "Incremental reindexing deduplicates identical revisions, atomically replaces changed content and removes deleted or revoked sources from retrieval.",
+        "Parsing, embedding batches, document sizes and context assembly are bounded; malformed documents, empty extraction, cancellation and failed partial indexing have tested outcomes.",
+        "Embedding usage is attributed to its explicit provider/account and reported to Usagestat without mixing it with generation measurements."
+      ]
+    },
+    {
+      "id": "AD-048",
+      "title": "Exercise grounded questions in all three applications",
+      "component": "Applications",
+      "phase": "Beta",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-047", "AD-033", "AD-035", "AD-037"],
+      "current": "All three applications need grounded question answering over selected domain context.",
+      "scope": "Integrate and demonstrate selected-context RAG in Brandstorm, LitAgent and AI Workspace while retaining domain data and permissions in each application.",
+      "acceptance": [
+        "Brandstorm answers from chosen briefs/brand documents, LitAgent answers from selected PDF/Markdown evidence, and AI Workspace answers from chosen email threads with navigable citations.",
+        "Cross-tenant and unselected-source leakage, revocation/deletion, stale revisions, insufficient evidence and fabricated citation identifiers are covered by shared evaluation fixtures.",
+        "A reproducible local/remote example uses a persistent vector store and documents embedding/provider choices, ingestion, queries, updates and cleanup without requiring a particular generation vendor."
       ]
     }
   ]

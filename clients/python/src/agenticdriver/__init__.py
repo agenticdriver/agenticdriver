@@ -10,7 +10,9 @@ from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_ope
 from ._errors import DriverError
 from ._protocol import PROTOCOL_VERSION, EventDecoder, parse_json, sse_data, valid_catalog, valid_error, valid_protocol, valid_result
 
-__all__ = ["AgenticClient", "DriverError", "PROTOCOL_VERSION"]
+from .context import ArtifactRequest, ContextInput, ContextManifest, ContextReference, ContextSource, DraftArtifact, ImageAttachment, MediaType, PdfAttachment, SourceLocation, TextAttachment
+
+__all__ = ["AgenticClient", "DriverError", "PROTOCOL_VERSION", "ArtifactRequest", "ContextInput", "ContextManifest", "ContextReference", "ContextSource", "DraftArtifact", "ImageAttachment", "MediaType", "PdfAttachment", "SourceLocation", "TextAttachment"]
 
 class _NoRedirects(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):

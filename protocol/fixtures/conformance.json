@@ -909,6 +909,883 @@
         }
       ],
       "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-valid",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "context-null-sources",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": null,
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-null-artifacts",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": null
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-negative-bytes",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": -1,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-invalid-media",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": {},
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-invalid-digest",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "wrong",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-reversed-location",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "page": 3,
+                  "pageEnd": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-credential-uri",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                },
+                "uri": "https://user:secret@example.com"
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-unknown-artifact-source",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["unprovided"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-duplicate-source",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              },
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-invalid-artifact-name",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "draft",
+                "name": "../accepted.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "context-non-draft-artifact",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-one",
+                "revision": "v1",
+                "mediaType": "text/markdown",
+                "bytes": 10,
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "origin": "reference",
+                "location": {
+                  "documentId": "doc-one",
+                  "startLine": 1,
+                  "endLine": 2
+                }
+              }
+            ],
+            "artifacts": [
+              {
+                "id": "12345678-1234-4234-8234-123456789abc",
+                "status": "accepted",
+                "name": "review.md",
+                "mediaType": "text/markdown",
+                "content": "Hello 🌍",
+                "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "sourceIds": ["paper-one"]
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "media-catalog-valid",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Fixture",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": false
+            },
+            "inputMediaTypes": {
+              "demo": ["image/png", "application/pdf"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "media-catalog-null",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Fixture",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": false
+            },
+            "inputMediaTypes": null
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "media-catalog-wrong-type",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Fixture",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": false
+            },
+            "inputMediaTypes": {
+              "demo": [{}]
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "media-catalog-unsupported",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "mock",
+            "name": "Fixture",
+            "vendor": "mock",
+            "authMode": "none",
+            "capabilities": {
+              "tools": true,
+              "textStreaming": false
+            },
+            "inputMediaTypes": {
+              "demo": ["application/zip"]
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

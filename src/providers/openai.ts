@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { openaiMedia } from "./media.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
 import {
@@ -63,6 +64,16 @@ export function openai(options: ApiProviderOptions): ProviderAdapter {
           ];
         if (message.role === "assistant" && Array.isArray(message.native))
           return message.native;
+        if (message.role === "user" && message.attachments?.length)
+          return [
+            {
+              role: "user",
+              content: [
+                { type: "input_text", text: message.content },
+                ...openaiMedia(message.attachments),
+              ],
+            },
+          ];
         return [{ role: message.role, content: message.content }];
       });
       const result = parseWire(

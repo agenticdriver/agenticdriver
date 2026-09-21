@@ -8,6 +8,8 @@ import {
   setTimeout as delay,
 } from "node:timers/promises";
 import { AgenticDriver } from "../src/driver.js";
+import { MemoryContextStore } from "../src/context.js";
+import type { ProviderAdapter } from "../src/types.js";
 import { MemoryOperationStore } from "../src/operations.js";
 import { DriverError } from "../src/errors.js";
 import { mockProvider } from "../src/providers/mock.js";
@@ -49,35 +51,65 @@ const tls = process.env.AGENTICDRIVER_TLS_CERT
   : undefined;
 const metrics = { cancelled: 0, redirects: 0, unauthorized: 0 };
 const pending = new Set<ServerResponse>();
+const contextStore = new MemoryContextStore();
+contextStore.put({
+  attachment: {
+    type: "text",
+    source: {
+      id: "source-one",
+      revision: "r1",
+      location: { documentId: "doc-one", startLine: 1, endLine: 2 },
+    },
+    mediaType: "text/markdown",
+    text: "Selected document",
+  },
+  subjects: ["test-user"],
+  expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+});
+const withMedia = (adapter: ProviderAdapter): ProviderAdapter => ({
+  ...adapter,
+  info: {
+    ...adapter.info,
+    inputMediaTypes: { demo: ["image/png", "application/pdf"] },
+    capabilities: {
+      ...adapter.info.capabilities,
+      images: true,
+      documents: true,
+    },
+  },
+});
 const driver = await serve(
   new AgenticDriver({
     operations: new MemoryOperationStore(),
+    context: { resolve: contextStore.resolve },
     providers: [
-      mockProvider(async (request, context) => {
-        const input = request.messages.at(-1)?.content;
-        if (input === "conformance-cost")
-          return {
-            text: "AgenticDriver is connected.",
-            usage: { apiEquivalentCostUsd: 0.25 },
-          };
-        if (input === "conformance-uncertain")
-          throw new DriverError(
-            "IDLE_TIMEOUT",
-            "The fixture tool outcome is uncertain.",
-            false,
-            "uncertain",
-          );
-        if (input === "conformance-stall") return new Promise(() => {});
-        if (input === "conformance-progress") {
-          for (let n = 0; n < 16; n++) {
-            await delay(20, undefined, { signal: context.signal });
-            context.reportProgress();
+      withMedia(
+        mockProvider(async (request, context) => {
+          const input = request.messages.at(-1)?.content;
+          if (input === "conformance-cost")
+            return {
+              text: "AgenticDriver is connected.",
+              usage: { apiEquivalentCostUsd: 0.25 },
+            };
+          if (input === "conformance-uncertain")
+            throw new DriverError(
+              "IDLE_TIMEOUT",
+              "The fixture tool outcome is uncertain.",
+              false,
+              "uncertain",
+            );
+          if (input === "conformance-stall") return new Promise(() => {});
+          if (input === "conformance-progress") {
+            for (let n = 0; n < 16; n++) {
+              await delay(20, undefined, { signal: context.signal });
+              context.reportProgress();
+            }
           }
-        }
-        if (input === "conformance-quiet")
-          await delay(80, undefined, { signal: context.signal });
-        return { text: "AgenticDriver is connected." };
-      }),
+          if (input === "conformance-quiet")
+            await delay(80, undefined, { signal: context.signal });
+          return { text: "AgenticDriver is connected." };
+        }),
+      ),
     ],
     tools: [
       {

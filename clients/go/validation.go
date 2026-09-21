@@ -75,7 +75,7 @@ func (result *Result) UnmarshalJSON(data []byte) error {
 	type rawResult Result
 	var decoded rawResult
 	value, ok := object(data)
-	if !ok || json.Unmarshal(data, &decoded) != nil || !stringField(value, "runId", false) || !stringField(value, "provider", false) || !stringField(value, "model", false) || !stringField(value, "text", true) || !numberValue(value["steps"], true, true) || !usageValid(value["usage"]) || (decoded.FinishReason != "stop" && decoded.FinishReason != "length") {
+	if !ok || !contextResultValid(value) || json.Unmarshal(data, &decoded) != nil || !stringField(value, "runId", false) || !stringField(value, "provider", false) || !stringField(value, "model", false) || !stringField(value, "text", true) || !numberValue(value["steps"], true, true) || !usageValid(value["usage"]) || (decoded.FinishReason != "stop" && decoded.FinishReason != "length") {
 		return &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid run result."}
 	}
 	*result = Result(decoded)
@@ -93,6 +93,9 @@ func (provider *Provider) UnmarshalJSON(data []byte) error {
 	if raw, present := value["models"]; present {
 		var models []string
 		valid = valid && json.Unmarshal(raw, &models) == nil && models != nil
+	}
+	if raw, present := value["inputMediaTypes"]; present {
+		valid = valid && mediaCatalogValid(raw)
 	}
 	if raw, present := value["usageStatId"]; present {
 		_, ok := stringValue(raw)

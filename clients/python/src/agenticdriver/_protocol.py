@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 
 from ._errors import DriverError
+from ._context import valid_context_result, valid_media_catalog
 
 PROTOCOL_VERSION = "1.0"
 MAX_BYTES = 2_000_000
@@ -52,7 +53,7 @@ def valid_result(value, request, run_id=None):
             (run_id is None or value["runId"] == run_id) and
             value.get("provider") == request["provider"] and value.get("model") == request["model"] and
             text(value.get("text"), True) and count(value.get("steps"), True) and
-            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")))
+            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp))
 
 
 def valid_catalog(value):
@@ -67,6 +68,8 @@ def valid_catalog(value):
                 not all(type(v) is bool for v in capabilities.values())):
             return False
         if "models" in provider and (not isinstance(provider["models"], list) or not all(isinstance(v, str) for v in provider["models"])):
+            return False
+        if "inputMediaTypes" in provider and not valid_media_catalog(provider["inputMediaTypes"]):
             return False
         if "usageStatId" in provider and not isinstance(provider["usageStatId"], str):
             return False

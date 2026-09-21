@@ -131,7 +131,10 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         json(
           res,
           200,
-          protocolInfo({ idempotency: driver.supportsIdempotency }),
+          protocolInfo({
+            idempotency: driver.supportsIdempotency,
+            contextReferences: driver.supportsContextReferences,
+          }),
         );
         return;
       }

@@ -5,6 +5,10 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use std::io::{BufReader, Read};
 use std::time::Duration;
+pub mod context;
+pub use context::{
+    ArtifactRequest, ContextInput, ContextManifest, ContextSource, DraftArtifact, SourceLocation,
+};
 mod validation;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -76,6 +80,10 @@ pub struct RunRequest {
     pub input: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idempotency_key: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub attachments: Vec<ContextInput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_artifact: Option<ArtifactRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub retry: Option<RetryPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -144,6 +152,10 @@ pub struct Usage {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunResult {
+    #[serde(default, deserialize_with = "context::optional_sources")]
+    pub sources: Option<Vec<ContextManifest>>,
+    #[serde(default, deserialize_with = "context::optional_artifacts")]
+    pub artifacts: Option<Vec<DraftArtifact>>,
     pub run_id: String,
     pub provider: String,
     pub model: String,
@@ -162,6 +174,8 @@ pub struct Capabilities {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Provider {
+    #[serde(default, deserialize_with = "context::optional_media")]
+    pub input_media_types: Option<BTreeMap<String, Vec<String>>>,
     pub id: String,
     pub name: String,
     pub vendor: String,

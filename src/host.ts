@@ -27,6 +27,8 @@ import {
   type SecretResolver,
 } from "./secrets.js";
 import { UsageStatClient, jsonlUsageSink } from "./usagestat.js";
+import { ContextMediaTypeSchema } from "./context-types.js";
+import { validateInputMediaTypes } from "./providers/http.js";
 import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
 import type { ServerOptions } from "./server.js";
@@ -46,6 +48,9 @@ const api = z
     ...common,
     kind: z.enum(["openai", "anthropic", "gemini", "xai", "openai-compatible"]),
     apiKeyRef: SecretReferenceSchema,
+    inputMediaTypes: z
+      .record(model, z.array(ContextMediaTypeSchema).max(6))
+      .optional(),
     baseUrl: z.string().url().optional(),
   })
   .strict();
@@ -110,6 +115,13 @@ export const HostConfigSchema = z
       })
       .strict()
       .optional(),
+    context: z
+      .object({
+        maxBytes: z.number().int().min(1).max(33_554_432).optional(),
+        maxTextBytes: z.number().int().min(1).max(1_000_000).optional(),
+      })
+      .strict()
+      .optional(),
     usageLog: z.string().min(1).optional(),
     usagestat: z
       .object({
@@ -157,6 +169,13 @@ export function validateHostConfig(input: unknown): HostConfig {
       "The host configuration does not match the version 1 schema. Check provider types, model IDs and secret references.",
     );
   const config = parsed.data;
+  for (const provider of config.providers) {
+    if ("apiKeyRef" in provider)
+      validateInputMediaTypes(
+        provider,
+        !["xai", "openai-compatible"].includes(provider.kind),
+      );
+  }
   if (config.usagestat) {
     secureBaseUrl(config.usagestat.url);
     if (
@@ -253,6 +272,7 @@ export function configuredDriver(
     tools?: DriverOptions["tools"];
     approve?: DriverOptions["approve"];
     onTelemetryError?: DriverOptions["onTelemetryError"];
+    context?: DriverOptions["context"];
   } = {},
 ): AgenticDriver {
   config = validateHostConfig(config);
@@ -276,6 +296,7 @@ export function configuredDriver(
       const values = {
         ...shared,
         baseUrl: p.baseUrl,
+        inputMediaTypes: p.inputMediaTypes,
         apiKey: async () => {
           const value = await secrets(p.apiKeyRef);
           return value.trim()
@@ -318,6 +339,7 @@ export function configuredDriver(
         ),
       ),
     },
+    context: { ...options.context, ...config.context },
     tools: options.tools,
     approve: options.approve,
     limits: config.limits,

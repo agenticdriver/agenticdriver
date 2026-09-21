@@ -57,6 +57,17 @@ func TestProtocolRoundTrip(t *testing.T) {
 	if err != nil || result.Text != "AgenticDriver is connected." {
 		t.Fatalf("result: %v %v", result, err)
 	}
+	contextual := request
+	contextual.Attachments = []ContextInput{
+		{Type: "reference", ID: "source-one", Revision: "r1", MediaType: "text/markdown"},
+		{Type: "image", Source: &ContextSource{ID: "image-one", Revision: "r1"}, MediaType: "image/png", Data: "iVBORw0KGgo="},
+		{Type: "pdf", Source: &ContextSource{ID: "pdf-one", Revision: "r1"}, MediaType: "application/pdf", Data: "JVBERi0xLjQKJSVFT0YK"},
+	}
+	contextual.OutputArtifact = &ArtifactRequest{Name: "answer.md", MediaType: "text/markdown"}
+	withContext, err := client.Run(context.Background(), contextual)
+	if err != nil || len(withContext.Sources) != 3 || withContext.Sources[0].ID != "source-one" || withContext.Sources[0].Location.DocumentID != "doc-one" || len(withContext.Artifacts) != 1 || withContext.Artifacts[0].Status != "draft" || len(withContext.Artifacts[0].SourceIDs) != 3 || len(providers[0].InputMediaTypes["demo"]) != 2 {
+		t.Fatalf("context result: %v %v", withContext, err)
+	}
 	request.IdempotencyKey = "go-client"
 	request.Retry = &RetryPolicy{MaxAttempts: 1}
 	accepted, err := client.Run(context.Background(), request)

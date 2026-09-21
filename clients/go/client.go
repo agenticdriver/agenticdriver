@@ -35,6 +35,8 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
+	Attachments          []ContextInput    `json:"attachments,omitempty"`
+	OutputArtifact       *ArtifactRequest  `json:"outputArtifact,omitempty"`
 	Provider             string            `json:"provider"`
 	Model                string            `json:"model"`
 	Input                string            `json:"input"`
@@ -68,25 +70,28 @@ type Usage struct {
 	APIEquivalentCostUSD *float64 `json:"apiEquivalentCostUsd,omitempty"`
 }
 type Result struct {
-	RunID        string          `json:"runId"`
-	Provider     string          `json:"provider"`
-	Model        string          `json:"model"`
-	Text         string          `json:"text"`
-	Output       json.RawMessage `json:"output,omitempty"`
-	Usage        Usage           `json:"usage"`
-	Steps        int             `json:"steps"`
-	FinishReason string          `json:"finishReason"`
+	Sources      []ContextManifest `json:"sources,omitempty"`
+	Artifacts    []DraftArtifact   `json:"artifacts,omitempty"`
+	RunID        string            `json:"runId"`
+	Provider     string            `json:"provider"`
+	Model        string            `json:"model"`
+	Text         string            `json:"text"`
+	Output       json.RawMessage   `json:"output,omitempty"`
+	Usage        Usage             `json:"usage"`
+	Steps        int               `json:"steps"`
+	FinishReason string            `json:"finishReason"`
 }
 type Provider struct {
-	ID           string          `json:"id"`
-	Name         string          `json:"name"`
-	Vendor       string          `json:"vendor"`
-	AuthMode     string          `json:"authMode"`
-	Models       []string        `json:"models,omitempty"`
-	UsageStatID  string          `json:"usageStatId,omitempty"`
-	Health       *ProviderHealth `json:"health,omitempty"`
-	ModelCatalog *ModelCatalog   `json:"modelCatalog,omitempty"`
-	Capabilities struct {
+	InputMediaTypes map[string][]string `json:"inputMediaTypes,omitempty"`
+	ID              string              `json:"id"`
+	Name            string              `json:"name"`
+	Vendor          string              `json:"vendor"`
+	AuthMode        string              `json:"authMode"`
+	Models          []string            `json:"models,omitempty"`
+	UsageStatID     string              `json:"usageStatId,omitempty"`
+	Health          *ProviderHealth     `json:"health,omitempty"`
+	ModelCatalog    *ModelCatalog       `json:"modelCatalog,omitempty"`
+	Capabilities    struct {
 		Tools         bool `json:"tools"`
 		TextStreaming bool `json:"textStreaming"`
 	} `json:"capabilities"`

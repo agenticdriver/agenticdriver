@@ -108,6 +108,25 @@ try {
     ],
     { cwd: directory, timeout: 120_000, maxBuffer: 2_000_000 },
   );
+  // Verify the context export and a draft round trip from the installed artifact.
+  await writeFile(
+    join(app, "context-check.mjs"),
+    `
+    import assert from "node:assert/strict";
+    import {AgenticDriver} from "agenticdriver";
+    import {MemoryContextStore} from "agenticdriver/context";
+    import {mockProvider} from "agenticdriver/providers";
+    const store=new MemoryContextStore();
+    const attachment=store.put({attachment:{type:"text",source:{id:"installed-source",revision:"r1"},mediaType:"text/markdown",text:"Selected document"},subjects:["local"],expiresAt:new Date(Date.now()+60000).toISOString()});
+    const driver=new AgenticDriver({providers:[mockProvider()],context:{resolve:store.resolve}});
+    const result=await driver.run({provider:"mock",model:"demo",input:"Summarize",attachments:[attachment],outputArtifact:{name:"answer.md",mediaType:"text/markdown"}});
+    assert.equal(result.sources[0].id,"installed-source");assert.equal(result.artifacts[0].status,"draft");store.clear();
+  `,
+  );
+  await run(process.execPath, [join(app, "context-check.mjs")], {
+    cwd: app,
+    timeout: 10000,
+  });
   const bin = join(app, "node_modules", ".bin", "agenticdriver");
   const entry =
     process.platform === "win32"

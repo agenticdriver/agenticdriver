@@ -1,5 +1,12 @@
 import { z } from "zod";
 import {
+  ContextManifestSchema,
+  validContextResult,
+  DraftArtifactSchema,
+  ContextMediaTypeSchema,
+} from "./context-types.js";
+export type * from "./context-types.js";
+import {
   ModelCatalogSchema,
   ProviderHealthSchema,
   UsageSchema,
@@ -30,16 +37,20 @@ const errorSchema = z.object({
   }),
 });
 const usageSchema = UsageSchema;
-const resultSchema = z.object({
-  runId: z.string(),
-  provider: z.string(),
-  model: z.string(),
-  text: z.string(),
-  output: z.json().optional(),
-  usage: usageSchema,
-  steps: z.number().int().positive(),
-  finishReason: z.enum(["stop", "length"]),
-});
+const resultSchema = z
+  .object({
+    runId: z.string(),
+    provider: z.string(),
+    model: z.string(),
+    text: z.string(),
+    output: z.json().optional(),
+    usage: usageSchema,
+    steps: z.number().int().positive(),
+    finishReason: z.enum(["stop", "length"]),
+    sources: z.array(ContextManifestSchema).max(16).optional(),
+    artifacts: z.array(DraftArtifactSchema).max(1).optional(),
+  })
+  .refine(validContextResult);
 const eventSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("run.started"),
@@ -192,6 +203,9 @@ export class AgenticClient {
             vendor: z.string(),
             authMode: z.enum(["api-key", "cli-session", "none"]),
             models: z.array(z.string()).optional(),
+            inputMediaTypes: z
+              .record(z.string(), z.array(ContextMediaTypeSchema).max(6))
+              .optional(),
             usageStatId: z.string().optional(),
             health: ProviderHealthSchema.optional(),
             modelCatalog: ModelCatalogSchema.optional(),

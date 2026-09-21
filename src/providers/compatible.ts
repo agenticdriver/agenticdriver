@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chatMedia } from "./media.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
 import {
@@ -51,7 +52,7 @@ export function openaiCompatible(
   const vendor = options.vendor ?? "openai-compatible";
   return {
     usageSource: "provider-response",
-    info: apiInfo(vendor, "OpenAI-compatible API", options, vendor),
+    info: apiInfo(vendor, "OpenAI-compatible API", options, vendor, false),
     inspect: apiInspection(options, options.baseUrl, "bearer"),
     async complete(request, context) {
       const messages: unknown[] = request.instructions
@@ -66,6 +67,14 @@ export function openaiCompatible(
           });
         else if (message.role === "assistant" && message.native)
           messages.push(message.native);
+        else if (message.role === "user" && message.attachments?.length)
+          messages.push({
+            role: "user",
+            content: [
+              { type: "text", text: message.content },
+              ...chatMedia(message.attachments),
+            ],
+          });
         else messages.push({ role: message.role, content: message.content });
       }
       const result = parseWire(

@@ -49,6 +49,20 @@ class ClientConformance(unittest.TestCase):
                 elif failure:
                     raise failure
 
+    def test_context_and_draft_artifacts(self):
+        from agenticdriver import ContextReference, ContextInput, ArtifactRequest
+        reference: ContextReference = {"type":"reference","id":"source-one","revision":"r1","mediaType":"text/markdown"}
+        inputs: list[ContextInput] = [reference,
+            {"type":"image","source":{"id":"image-one","revision":"r1"},"mediaType":"image/png","data":"iVBORw0KGgo="},
+            {"type":"pdf","source":{"id":"pdf-one","revision":"r1"},"mediaType":"application/pdf","data":"JVBERi0xLjQKJSVFT0YK"}]
+        output: ArtifactRequest = {"name":"answer.md","mediaType":"text/markdown"}
+        result = self.client().run(provider="mock",model="demo",input="Summarize",attachments=inputs,outputArtifact=output)
+        self.assertEqual([source["id"] for source in result["sources"]], ["source-one","image-one","pdf-one"])
+        self.assertEqual(result["sources"][0]["location"]["documentId"],"doc-one")
+        self.assertEqual(result["artifacts"][0]["status"],"draft")
+        self.assertEqual(result["artifacts"][0]["sourceIds"],["source-one","image-one","pdf-one"])
+        self.assertEqual(self.client().providers()[0]["inputMediaTypes"]["demo"],["image/png","application/pdf"])
+
     def test_real_host_scope_progress_and_tls(self):
         refreshed = self.client().providers(refresh=True)[0]
         self.assertEqual(refreshed["health"]["code"], "DISCOVERY_UNSUPPORTED")

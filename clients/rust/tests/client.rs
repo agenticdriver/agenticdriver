@@ -1,4 +1,7 @@
-use agenticdriver::{AgenticClient, Error, ErrorOutcome, RetryPolicy, RunRequest};
+use agenticdriver::{
+    AgenticClient, ArtifactRequest, ContextInput, ContextSource, Error, ErrorOutcome, RetryPolicy,
+    RunRequest,
+};
 
 #[test]
 fn rejects_insecure_urls() {
@@ -37,6 +40,63 @@ fn protocol_round_trip() {
     assert_eq!(
         client.run(&request).unwrap().text,
         "AgenticDriver is connected."
+    );
+    assert_eq!(
+        client.providers().unwrap()[0]
+            .input_media_types
+            .as_ref()
+            .unwrap()["demo"],
+        vec!["image/png", "application/pdf"]
+    );
+    let mut contextual = RunRequest::new("mock", "demo", "Summarize");
+    contextual.attachments = vec![
+        ContextInput::Reference {
+            id: "source-one".into(),
+            revision: "r1".into(),
+            media_type: "text/markdown".into(),
+        },
+        ContextInput::Image {
+            source: ContextSource {
+                id: "image-one".into(),
+                revision: "r1".into(),
+                ..Default::default()
+            },
+            media_type: "image/png".into(),
+            data: "iVBORw0KGgo=".into(),
+        },
+        ContextInput::Pdf {
+            source: ContextSource {
+                id: "pdf-one".into(),
+                revision: "r1".into(),
+                ..Default::default()
+            },
+            media_type: "application/pdf".into(),
+            data: "JVBERi0xLjQKJSVFT0YK".into(),
+        },
+    ];
+    contextual.output_artifact = Some(ArtifactRequest {
+        name: "answer.md".into(),
+        media_type: "text/markdown".into(),
+    });
+    let with_context = client.run(&contextual).unwrap();
+    let sources = with_context.sources.unwrap();
+    let artifacts = with_context.artifacts.unwrap();
+    assert_eq!(sources.len(), 3);
+    assert_eq!(sources[0].source.id, "source-one");
+    assert_eq!(
+        sources[0]
+            .source
+            .location
+            .as_ref()
+            .unwrap()
+            .document_id
+            .as_deref(),
+        Some("doc-one")
+    );
+    assert_eq!(artifacts[0].status, "draft");
+    assert_eq!(
+        artifacts[0].source_ids,
+        vec!["source-one", "image-one", "pdf-one"]
     );
     let mut terminal = false;
     request.idempotency_key = Some("rust-client".into());

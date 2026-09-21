@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { geminiMedia } from "./media.js";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
@@ -86,6 +87,8 @@ export function gemini(options: ApiProviderOptions): ProviderAdapter {
             : message.role === "assistant" && Array.isArray(message.native)
               ? message.native
               : [{ text: message.content }];
+        if (message.role === "user")
+          parts.push(...geminiMedia(message.attachments));
         if (contents.at(-1)?.role === role)
           contents.at(-1)!.parts.push(...parts);
         else contents.push({ role, parts });

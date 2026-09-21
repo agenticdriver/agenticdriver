@@ -247,6 +247,302 @@
             "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
           },
           "input": { "type": "string", "minLength": 1, "maxLength": 100000 },
+          "attachments": {
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "const": "text" },
+                        "source": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "revision": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "title": { "type": "string", "maxLength": 256 },
+                            "uri": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                            },
+                            "location": {
+                              "type": "object",
+                              "properties": {
+                                "documentId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "page": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "pageEnd": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "startLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "endLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "section": {
+                                  "type": "string",
+                                  "maxLength": 256
+                                },
+                                "threadId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "messageId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["id", "revision"],
+                          "additionalProperties": false
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "enum": ["text/plain", "text/markdown"]
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000000
+                        }
+                      },
+                      "required": ["type", "source", "mediaType", "text"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "const": "image" },
+                        "source": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "revision": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "title": { "type": "string", "maxLength": 256 },
+                            "uri": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                            },
+                            "location": {
+                              "type": "object",
+                              "properties": {
+                                "documentId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "page": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "pageEnd": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "startLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "endLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "section": {
+                                  "type": "string",
+                                  "maxLength": 256
+                                },
+                                "threadId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "messageId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["id", "revision"],
+                          "additionalProperties": false
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "enum": ["image/png", "image/jpeg", "image/webp"]
+                        },
+                        "data": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 44739244
+                        }
+                      },
+                      "required": ["type", "source", "mediaType", "data"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "const": "pdf" },
+                        "source": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "revision": {
+                              "type": "string",
+                              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                            },
+                            "title": { "type": "string", "maxLength": 256 },
+                            "uri": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                            },
+                            "location": {
+                              "type": "object",
+                              "properties": {
+                                "documentId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "page": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "pageEnd": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "startLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "endLine": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 1000000
+                                },
+                                "section": {
+                                  "type": "string",
+                                  "maxLength": 256
+                                },
+                                "threadId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "messageId": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["id", "revision"],
+                          "additionalProperties": false
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "const": "application/pdf"
+                        },
+                        "data": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 44739244
+                        }
+                      },
+                      "required": ["type", "source", "mediaType", "data"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "const": "reference" },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "enum": [
+                        "text/plain",
+                        "text/markdown",
+                        "image/png",
+                        "image/jpeg",
+                        "image/webp",
+                        "application/pdf"
+                      ]
+                    }
+                  },
+                  "required": ["type", "id", "revision", "mediaType"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "outputArtifact": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[^/\\\\\\u0000-\\u001f]+$"
+              },
+              "mediaType": {
+                "type": "string",
+                "enum": ["text/plain", "text/markdown", "application/json"]
+              }
+            },
+            "required": ["name", "mediaType"],
+            "additionalProperties": false
+          },
           "idempotencyKey": {
             "type": "string",
             "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
@@ -324,6 +620,135 @@
         "required": ["provider", "model", "input"],
         "additionalProperties": false
       },
+      "ContextManifest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "title": { "type": "string", "maxLength": 256 },
+          "uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^(https|app):\\/\\/[^\\s]+$"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "documentId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "page": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+              "pageEnd": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "startLine": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "endLine": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "section": { "type": "string", "maxLength": 256 },
+              "threadId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "messageId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "text/plain",
+              "text/markdown",
+              "image/png",
+              "image/jpeg",
+              "image/webp",
+              "application/pdf"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 33554432
+          },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "origin": { "type": "string", "enum": ["inline", "reference"] },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "mediaType",
+          "bytes",
+          "sha256",
+          "origin"
+        ],
+        "additionalProperties": false
+      },
+      "DraftArtifact": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^/\\\\\\u0000-\\u001f]+$"
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": ["text/plain", "text/markdown", "application/json"]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": { "type": "string", "const": "draft" },
+          "content": { "type": "string", "maxLength": 262144 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "sourceIds": {
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "mediaType",
+          "id",
+          "status",
+          "content",
+          "sha256",
+          "sourceIds"
+        ],
+        "additionalProperties": false
+      },
       "ProtocolInfo": {
         "type": "object",
         "required": ["protocol", "version", "supportedVersions", "features"],
@@ -386,6 +811,16 @@
           "model": { "type": "string" },
           "text": { "type": "string" },
           "output": {},
+          "sources": {
+            "type": "array",
+            "maxItems": 16,
+            "items": { "$ref": "#/components/schemas/ContextManifest" }
+          },
+          "artifacts": {
+            "type": "array",
+            "maxItems": 1,
+            "items": { "$ref": "#/components/schemas/DraftArtifact" }
+          },
           "usage": { "$ref": "#/components/schemas/Usage" },
           "steps": { "type": "integer", "minimum": 1 },
           "finishReason": { "enum": ["stop", "length"] }
@@ -420,6 +855,25 @@
           "authMode": { "enum": ["api-key", "cli-session", "none"] },
           "models": { "type": "array", "items": { "type": "string" } },
           "usageStatId": { "type": "string" },
+          "inputMediaTypes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "string",
+                "enum": [
+                  "text/plain",
+                  "text/markdown",
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp",
+                  "application/pdf"
+                ]
+              }
+            }
+          },
           "health": { "$ref": "#/components/schemas/ProviderHealth" },
           "modelCatalog": { "$ref": "#/components/schemas/ModelCatalog" },
           "capabilities": {

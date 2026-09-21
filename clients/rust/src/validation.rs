@@ -63,7 +63,8 @@ pub(crate) fn optional_cost<'de, D: Deserializer<'de>>(
     Ok(Some(value))
 }
 pub(crate) fn result_valid(result: &RunResult, request: &RunRequest) -> bool {
-    !result.run_id.is_empty()
+    crate::context::relationships_valid(result)
+        && !result.run_id.is_empty()
         && result.provider == request.provider
         && result.model == request.model
         && result.steps > 0
@@ -125,7 +126,7 @@ pub(crate) fn event_valid(event: &Event, request: &RunRequest, first: bool) -> b
 }
 
 // RFC 3339 calendar validation without adding a date/time dependency to the client.
-fn timestamp_valid(value: &str) -> bool {
+pub(crate) fn timestamp_valid(value: &str) -> bool {
     if !value.is_ascii() || value.len() < 20 {
         return false;
     }

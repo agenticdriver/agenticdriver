@@ -34,3 +34,43 @@ const types = [];
 for await (const event of client.stream(request)) types.push(event.type);
 assert.equal(types.at(-1), "run.completed");
 console.log("TypeScript client: catalog, run, stream passed");
+
+assert.deepEqual((await client.providers())[0]!.inputMediaTypes?.demo, [
+  "image/png",
+  "application/pdf",
+]);
+const contextual = await client.run({
+  ...request,
+  attachments: [
+    {
+      type: "reference",
+      id: "source-one",
+      revision: "r1",
+      mediaType: "text/markdown",
+    },
+    {
+      type: "image",
+      source: { id: "image-one", revision: "r1" },
+      mediaType: "image/png",
+      data: "iVBORw0KGgo=",
+    },
+    {
+      type: "pdf",
+      source: { id: "pdf-one", revision: "r1" },
+      mediaType: "application/pdf",
+      data: "JVBERi0xLjQKJSVFT0YK",
+    },
+  ],
+  outputArtifact: { name: "answer.md", mediaType: "text/markdown" },
+});
+assert.deepEqual(
+  contextual.sources?.map((source) => source.id),
+  ["source-one", "image-one", "pdf-one"],
+);
+assert.equal(contextual.sources![0]!.location!.documentId, "doc-one");
+assert.equal(contextual.artifacts![0]!.status, "draft");
+assert.deepEqual(contextual.artifacts![0]!.sourceIds, [
+  "source-one",
+  "image-one",
+  "pdf-one",
+]);

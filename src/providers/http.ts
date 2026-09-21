@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  ContextMediaTypeSchema,
+  type ContextMediaType,
+} from "../context-types.js";
 import { DriverError } from "../errors.js";
 import { readLimited, secureBaseUrl } from "../security.js";
 import { readSse } from "../client.js";
@@ -16,6 +20,8 @@ export interface ApiProviderOptions {
   name?: string;
   baseUrl?: string;
   models?: string[];
+  /** Explicit per-model opt-in. Undeclared models remain text-only. */
+  inputMediaTypes?: Record<string, ContextMediaType[]>;
   fetch?: typeof globalThis.fetch;
 }
 export function apiInfo(
@@ -23,16 +29,52 @@ export function apiInfo(
   name: string,
   options: ApiProviderOptions,
   usageStatId: string,
+  supportsPdf = true,
 ): ProviderInfo {
+  const inputMediaTypes = validateInputMediaTypes(options, supportsPdf);
+  const modalities = Object.values(inputMediaTypes ?? {}).flat();
   return {
     id: options.id ?? vendor,
     name: options.name ?? name,
     vendor,
     authMode: "api-key",
-    capabilities: { tools: true, textStreaming: true, safeRetries: true },
+    capabilities: {
+      tools: true,
+      textStreaming: true,
+      safeRetries: true,
+      ...(modalities.some((type) => type.startsWith("image/"))
+        ? { images: true }
+        : {}),
+      ...(modalities.includes("application/pdf") ? { documents: true } : {}),
+    },
+    ...(inputMediaTypes ? { inputMediaTypes } : {}),
     models: options.models,
     usageStatId,
   };
+}
+export function validateInputMediaTypes(
+  options: Pick<ApiProviderOptions, "models" | "inputMediaTypes">,
+  supportsPdf = true,
+) {
+  if (options.inputMediaTypes === undefined) return undefined;
+  const parsed = z
+    .record(z.string().min(1).max(200), z.array(ContextMediaTypeSchema).max(6))
+    .safeParse(options.inputMediaTypes);
+  if (
+    !parsed.success ||
+    Object.keys(parsed.data).length > 1000 ||
+    Object.entries(parsed.data).some(
+      ([model, media]) =>
+        (options.models !== undefined && !options.models.includes(model)) ||
+        new Set(media).size !== media.length ||
+        (!supportsPdf && media.includes("application/pdf")),
+    )
+  )
+    throw new DriverError(
+      "INVALID_CONTEXT_POLICY",
+      "Input media types must identify configured models and formats supported by this adapter.",
+    );
+  return parsed.data;
 }
 export function streamTransport(
   options: ApiProviderOptions,

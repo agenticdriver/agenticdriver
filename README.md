@@ -25,6 +25,8 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
+- [Selected context and draft artifacts](docs/context.md): bounded text/Markdown,
+  explicit image/PDF model support, authorized source references and provenance.
 - [Account-scoped metering](docs/usage.md) with source, measurement coverage,
   separate API-equivalent estimates and a thin authenticated Usagestat sink. The
   native Usagestat dependency owns storage, retention and offline forwarding, plus account quotas, provider metadata, and existing icon references.
@@ -85,7 +87,6 @@ const driver = new AgenticDriver({
     openai({ id: "company-api", apiKey: process.env.OPENAI_API_KEY! }),
     codex({ id: "my-codex" }),
   ],
-  onUsage: (record) => usageDatabase.insert(record),
 });
 
 const result = await driver.run({
@@ -97,8 +98,7 @@ const result = await driver.run({
 console.log(result.text);
 ```
 
-`usageDatabase` represents your application's storage. Omit `onUsage` if you do
-not need metering. Multiple instances can use the same vendor with separate
+Use the optional [Usagestat service dependency](docs/usagestat.md) to capture execution usage in your existing backend. Multiple instances can use the same vendor with separate
 keys or explicitly configured CLI account directories.
 
 ## Application tools
@@ -267,8 +267,9 @@ wire formats, signed conversation state, scopes, cancellation, incomplete stream
 usage, and subprocess handling. No live LLM account is needed.
 
 The current implementation is stateless between runs: pass `history` explicitly.
-It does not yet include durable jobs, reconnect/replay, a browser pairing flow,
-an outbound device relay, MCP tool bridging, or multimodal attachments. Remote
+Optional idempotency records can reconcile accepted operations without rerunning
+effects. Durable jobs, live stream resumption, browser pairing, an outbound
+device relay and MCP tool bridging remain roadmap work. Remote
 applications must be able to reach the execution host through HTTPS or an
 operator-managed tunnel. Native CLI tooling and subscription access differ by
 provider; see the documented [support matrix](docs/providers.md).

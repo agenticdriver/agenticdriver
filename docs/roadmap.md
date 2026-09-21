@@ -1,6 +1,6 @@
 # AgenticDriver SDK implementation roadmap
 
-The live [organization project](https://github.com/orgs/agenticdriver/projects/1) contains all 45 work items. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
+The live [organization project](https://github.com/orgs/agenticdriver/projects/1) contains all 48 work items. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
 
 ## Decisions
 
@@ -984,3 +984,39 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 - [ ] If none exists, document API-only support; do not scrape browser sessions, extract consumer tokens or imply subscription credits can fund API requests.
 
 **Depends on:** None.
+
+## Retrieval added to the SDK scope
+
+Provide optional RAG and vector database capabilities in the SDK for application-authorized email threads, PDFs and Markdown; applications retain ownership and access control of source content.
+
+### AD-046 — Add scoped RAG, embedding and vector database interfaces
+
+**Scope:** Wire an optional retrieval service into local and remote driver runs with pluggable embedding and vector database adapters, selected collections/documents and bounded passage context.
+
+**Depends on:** AD-010
+
+- [ ] All four language clients can request retrieval from an explicitly authorized corpus or selected document/thread set; tenant and source access are enforced before search and before exposing passages.
+- [ ] Embedding model, account, dimensions, similarity metric and index version are explicit; incompatible indexes fail clearly and changing a generation model does not silently change the embedding model.
+- [ ] At least one persistent vector database adapter and a deterministic test adapter support indexing, similarity search, filtering, deletion and cancellation through the driver.
+- [ ] Retrieved evidence carries stable source/chunk identifiers and citation locations; untrusted retrieved instructions cannot grant tools or widen corpus access.
+
+### AD-047 — Index PDF, Markdown and email context with traceable revisions
+
+**Scope:** Provide reusable ingestion and chunking for application-supplied PDFs, Markdown and email messages/threads, with extraction adapters and application-owned source references.
+
+**Depends on:** AD-046
+
+- [ ] PDF pages, Markdown sections and email message/thread provenance survive chunking and retrieval; scanned PDFs clearly require an explicitly configured OCR adapter.
+- [ ] Incremental reindexing deduplicates identical revisions, atomically replaces changed content and removes deleted or revoked sources from retrieval.
+- [ ] Parsing, embedding batches, document sizes and context assembly are bounded; malformed documents, empty extraction, cancellation and failed partial indexing have tested outcomes.
+- [ ] Embedding usage is attributed to its explicit provider/account and reported to Usagestat without mixing it with generation measurements.
+
+### AD-048 — Exercise grounded questions in all three applications
+
+**Scope:** Integrate and demonstrate selected-context RAG in Brandstorm, LitAgent and AI Workspace while retaining domain data and permissions in each application.
+
+**Depends on:** AD-047, AD-033, AD-035, AD-037
+
+- [ ] Brandstorm answers from chosen briefs/brand documents, LitAgent answers from selected PDF/Markdown evidence, and AI Workspace answers from chosen email threads with navigable citations.
+- [ ] Cross-tenant and unselected-source leakage, revocation/deletion, stale revisions, insufficient evidence and fabricated citation identifiers are covered by shared evaluation fixtures.
+- [ ] A reproducible local/remote example uses a persistent vector store and documents embedding/provider choices, ingestion, queries, updates and cleanup without requiring a particular generation vendor.

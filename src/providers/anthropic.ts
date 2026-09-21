@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { anthropicMedia } from "./media.js";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import type { ProviderAdapter } from "../types.js";
@@ -65,6 +66,8 @@ export function anthropic(options: ApiProviderOptions): ProviderAdapter {
             : message.role === "assistant" && Array.isArray(message.native)
               ? message.native
               : [{ type: "text", text: message.content }];
+        if (message.role === "user")
+          content.push(...anthropicMedia(message.attachments));
         if (messages.at(-1)?.role === role)
           messages.at(-1)!.content.push(...content);
         else messages.push({ role, content });

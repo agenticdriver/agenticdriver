@@ -2,6 +2,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
+import {
+  ContextManifestSchema,
+  DraftArtifactSchema,
+  ContextMediaTypeSchema,
+} from "../src/context-types.js";
 import { UsageRecordSchema } from "../src/usage.js";
 import {
   RunRequestSchema,
@@ -30,6 +35,12 @@ const schemas = {
     io: "input",
   }),
   RunRequest: requestSchema,
+  ContextManifest: z.toJSONSchema(ContextManifestSchema, {
+    target: "draft-2020-12",
+  }),
+  DraftArtifact: z.toJSONSchema(DraftArtifactSchema, {
+    target: "draft-2020-12",
+  }),
   ProtocolInfo: {
     type: "object",
     required: ["protocol", "version", "supportedVersions", "features"],
@@ -75,6 +86,8 @@ const schemas = {
       model: string,
       text: string,
       output: {},
+      sources: { type: "array", maxItems: 16, items: ref("ContextManifest") },
+      artifacts: { type: "array", maxItems: 1, items: ref("DraftArtifact") },
       usage: ref("Usage"),
       steps: { type: "integer", minimum: 1 },
       finishReason: { enum: ["stop", "length"] },
@@ -111,6 +124,14 @@ const schemas = {
       authMode: { enum: ["api-key", "cli-session", "none"] },
       models: { type: "array", items: string },
       usageStatId: string,
+      inputMediaTypes: {
+        type: "object",
+        additionalProperties: {
+          type: "array",
+          maxItems: 6,
+          items: z.toJSONSchema(ContextMediaTypeSchema),
+        },
+      },
       health: ref("ProviderHealth"),
       modelCatalog: ref("ModelCatalog"),
       capabilities: {
