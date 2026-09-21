@@ -43,6 +43,7 @@ class RunRequest(_RunRequest, total=False):
     outputArtifact: ArtifactRequest
     idempotencyKey: str
     retry: RetryPolicy
+    applicationTools: list["ApplicationToolDefinition"]
     approvals: "ApprovalPolicy"
     tools: list[str]
     requiredCapabilities: list[str]
@@ -131,6 +132,44 @@ class ToolCall(TypedDict):
     arguments: dict[str, Json]
 
 
+class _ApplicationToolDefinition(TypedDict):
+    name: str
+    description: str
+    inputSchema: dict[str, Any]
+
+
+class ApplicationToolDefinition(_ApplicationToolDefinition, total=False):
+    outputSchema: dict[str, Any]
+    requiresApproval: bool
+
+
+class ToolExecutionIdentity(TypedDict):
+    executionId: str
+    runId: str
+    callId: str
+
+
+class ToolExecutionRequest(TypedDict):
+    executionId: str
+    runId: str
+    call: ToolCall
+
+
+class ToolExecutionSuccess(ToolExecutionIdentity):
+    output: Json
+
+
+class ToolExecutionFailure(ToolExecutionIdentity):
+    error: Literal["APPLICATION_TOOL_FAILED"]
+
+
+ToolExecutionResult = Union[ToolExecutionSuccess, ToolExecutionFailure]
+
+
+class ToolExecutionReceipt(ToolExecutionIdentity):
+    status: Literal["progress", "accepted"]
+
+
 class _ApprovalPolicy(TypedDict):
     mode: Literal["interactive"]
     idlePolicy: Literal["pause", "continue"]
@@ -198,6 +237,11 @@ class RunProgress(_Event):
     phase: Literal["model", "tool", "context"]
 
 
+class ToolExecutionRequested(_Event):
+    type: Literal["tool.execution.requested"]
+    execution: ToolExecutionRequest
+
+
 class ApprovalRequested(_Event):
     type: Literal["approval.requested"]
     approval: ApprovalRequest
@@ -245,6 +289,7 @@ RunEvent = Union[
     StepStarted,
     TextDelta,
     RunProgress,
+    ToolExecutionRequested,
     ApprovalRequested,
     ApprovalResolved,
     ToolCalled,
@@ -269,6 +314,14 @@ __all__ = [
     "ProviderInfo",
     "ProtocolInfo",
     "ToolCall",
+    "ApplicationToolDefinition",
+    "ToolExecutionIdentity",
+    "ToolExecutionRequest",
+    "ToolExecutionSuccess",
+    "ToolExecutionFailure",
+    "ToolExecutionResult",
+    "ToolExecutionReceipt",
+    "ToolExecutionRequested",
     "ApprovalPolicy",
     "ApprovalRequest",
     "ApprovalDecision",

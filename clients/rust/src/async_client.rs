@@ -203,6 +203,40 @@ impl AsyncAgenticClient {
             .await?
             .providers)
     }
+    pub async fn report_tool_progress(
+        &self,
+        identity: &crate::ToolExecutionIdentity,
+    ) -> Result<crate::ToolExecutionReceipt> {
+        let value: Value = read_json(
+            self.request(
+                "v1/tool-executions/progress",
+                Some(&serde_json::to_value(identity)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::application_tools::receipt(value, identity, crate::ToolExecutionStatus::Progress)
+    }
+    pub async fn complete_tool(
+        &self,
+        result: &crate::ToolExecutionResult,
+    ) -> Result<crate::ToolExecutionReceipt> {
+        let value: Value = read_json(
+            self.request(
+                "v1/tool-executions/results",
+                Some(&serde_json::to_value(result)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::application_tools::receipt(
+            value,
+            result.identity(),
+            crate::ToolExecutionStatus::Accepted,
+        )
+    }
     pub async fn decide_approval(
         &self,
         decision: &crate::ApprovalDecision,
@@ -219,6 +253,12 @@ impl AsyncAgenticClient {
         crate::approvals::receipt(value, decision)
     }
     pub async fn run(&self, request: &RunRequest) -> Result<RunResult> {
+        if !request.application_tools.is_empty() {
+            return Err(protocol_error(
+                "TOOL_STREAM_REQUIRED",
+                "Use stream to execute application-owned tools.",
+            ));
+        }
         if request.approvals.is_some() {
             return Err(protocol_error(
                 "APPROVAL_STREAM_REQUIRED",
@@ -248,6 +288,10 @@ impl AsyncAgenticClient {
         let mut selection = RunRequest::new(&request.provider, &request.model, "");
         selection.retrieval.clone_from(&request.retrieval);
         selection.approvals.clone_from(&request.approvals);
+        selection
+            .application_tools
+            .clone_from(&request.application_tools);
+        selection.tools.clone_from(&request.tools);
         Ok(EventStream {
             state: Some(StreamState {
                 response,

@@ -124,3 +124,19 @@ interactive mode because it cannot deliver review requests. There is no default
 approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
 Decisions are single-use and are never retried automatically. A receipt does not
 confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
+
+## Functions in your application
+
+Pass typed `ApplicationToolDefinition` dictionaries in `applicationTools`, and
+select the same names in `tools`. Use `stream()` and dispatch only a
+`tool.execution.requested` event to your local function. From `event["execution"]`,
+copy `executionId`, `runId` and `call["id"]` (as `callId`) into an identity.
+`report_tool_progress(identity)` reports real work;
+`complete_tool({**identity, "output": output})` submits the JSON result once.
+Await both methods on `AsyncAgenticClient`. For callback failures, use
+`"error": "APPLICATION_TOOL_FAILED"` instead of output; do not transmit exceptions.
+
+The host must enable application tools and grant the named functions. Review is
+required by default. Closing the stream invalidates pending tickets; cancellation
+of work inside your own function is cooperative. There is no default inactivity
+deadline or automatic retry. See the [full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).

@@ -5694,6 +5694,1397 @@
         "decidedAt": "later"
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-valid",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "executor-run-mismatch",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "other",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-empty-id",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-long-id",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-invalid-name",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "bad/name",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "bad/name",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-unknown-tool",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "undeclared",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "undeclared",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-invalid-arguments",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": []
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": []
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-empty-call-id",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-duplicate-id",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "other-call",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 6,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-duplicate-call",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "other-execution",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 6,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-duplicate-exact",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 6,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-unselected",
+      "applicationTools": [
+        {
+          "name": "lookup",
+          "description": "Fixture app function",
+          "inputSchema": {
+            "type": "object"
+          },
+          "outputSchema": {
+            "type": "object"
+          }
+        }
+      ],
+      "tools": [],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "executor-unnegotiated",
+      "tools": ["lookup"],
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "tool.called",
+          "call": {
+            "id": "call-one",
+            "name": "lookup",
+            "arguments": {
+              "query": "solar"
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "tool.execution.requested",
+          "execution": {
+            "executionId": "execution-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "lookup",
+              "arguments": {
+                "query": "solar"
+              }
+            }
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "optional": true
+        },
+        {
+          "type": "tool.completed",
+          "callId": "call-one",
+          "output": {
+            "passages": ["Evidence"]
+          },
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 5,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "UNSUPPORTED_EVENT"
+    },
+    {
+      "id": "executor-tool-result-valid",
+      "operation": "tool-result",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "accepted"
+      }
+    },
+    {
+      "id": "executor-tool-result-runId",
+      "operation": "tool-result",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "other",
+        "callId": "call-one",
+        "status": "accepted"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-result-executionId",
+      "operation": "tool-result",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "other",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "accepted"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-result-callId",
+      "operation": "tool-result",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "other",
+        "status": "accepted"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-result-status",
+      "operation": "tool-result",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "incorrect"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-progress-valid",
+      "operation": "tool-progress",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "progress"
+      }
+    },
+    {
+      "id": "executor-tool-progress-runId",
+      "operation": "tool-progress",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "other",
+        "callId": "call-one",
+        "status": "progress"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-progress-executionId",
+      "operation": "tool-progress",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "other",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "progress"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-progress-callId",
+      "operation": "tool-progress",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "other",
+        "status": "progress"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "executor-tool-progress-status",
+      "operation": "tool-progress",
+      "toolResult": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "output": {
+          "passages": ["Evidence"]
+        }
+      },
+      "toolIdentity": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one"
+      },
+      "json": {
+        "executionId": "execution-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "status": "incorrect"
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

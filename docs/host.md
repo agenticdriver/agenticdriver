@@ -306,3 +306,10 @@ Embedders still register tools and can provide a private `onApprovalAudit` sink.
 Hosts may forbid inactivity pausing with `allowIdlePause: false`; there is no
 default approval expiry. See [interactive approvals](approvals.md) for the
 request, decision and cancellation contract.
+
+Application-owned functions can execute in any language client without installing
+code on the host. Enable `applicationTools: { "enabled": true }` and grant each
+permitted name through the token's `applicationTools` array. Host and token review
+requirements default to enabled. Progress/results use the same host process as
+the originating stream; these requests can resolve waiting runs at full run
+capacity. See [application-owned functions](application-tools.md).

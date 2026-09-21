@@ -5,6 +5,11 @@ import type {
   ApprovalPolicy,
   ApprovalDecision,
 } from "../src/approval-types.js";
+import type {
+  ApplicationToolDefinition,
+  ToolExecutionIdentity,
+  ToolExecutionResult,
+} from "../src/tool-types.js";
 import type { RetrievalRequest } from "../src/retrieval-types.js";
 import { DriverError } from "../src/errors.js";
 
@@ -24,6 +29,10 @@ const fixtures = JSON.parse(
     cancel?: boolean;
     operation?: string;
     retrieval?: RetrievalRequest;
+    applicationTools?: ApplicationToolDefinition[];
+    tools?: string[];
+    toolIdentity?: ToolExecutionIdentity;
+    toolResult?: ToolExecutionResult;
     approvals?: ApprovalPolicy;
     decision?: ApprovalDecision;
   }[];
@@ -39,6 +48,10 @@ for (const example of fixtures.cases) {
   try {
     if (example.operation === "providers") await client.providers();
     else if (example.operation === "protocol") await client.protocol();
+    else if (example.operation === "tool-result")
+      await client.completeTool(example.toolResult!);
+    else if (example.operation === "tool-progress")
+      await client.reportToolProgress(example.toolIdentity!);
     else if (example.operation === "approval")
       await client.decideApproval(example.decision!);
     else if (example.operation === "ingest")
@@ -57,6 +70,8 @@ for (const example of fixtures.cases) {
       for await (const event of client.stream({
         ...request,
         approvals: example.approvals,
+        applicationTools: example.applicationTools,
+        tools: example.tools,
         ...(example.retrieval ? { retrieval: example.retrieval } : {}),
       })) {
         if (example.cancel && event.type === "text.delta") {
@@ -188,3 +203,78 @@ assert.deepEqual(failures, [], "TypeScript conformance failures");
 console.log(
   `TypeScript: ${fixtures.cases.length} wire cases, scoped auth, idle progress and TLS checks passed`,
 );
+
+// These functions exist only in the application process, not the execution host.
+for (const requiresApproval of [false, true]) {
+  let executed = 0,
+    approved = false,
+    completed = false;
+  const applicationLookup = (input: Record<string, unknown>) => {
+    executed++;
+    return { passages: [`Evidence for ${input.query}`] };
+  };
+  for await (const event of client.stream({
+    ...request,
+    input: "conformance-application-tool",
+    tools: ["application_lookup"],
+    applicationTools: [
+      {
+        name: "application_lookup",
+        description: "Find application-owned evidence",
+        inputSchema: {
+          type: "object",
+          properties: { query: { type: "string" } },
+          required: ["query"],
+        },
+        outputSchema: {
+          type: "object",
+          required: ["passages"],
+          properties: {
+            passages: { type: "array", items: { type: "string" } },
+          },
+        },
+        requiresApproval,
+      },
+    ],
+    ...(requiresApproval
+      ? { approvals: { mode: "interactive", idlePolicy: "pause" } as const }
+      : {}),
+  })) {
+    if (event.type === "approval.requested") {
+      const { approvalId, runId, call } = event.approval;
+      await client.decideApproval({
+        approvalId,
+        runId,
+        call,
+        decision: "approve",
+      });
+      approved = true;
+    }
+    if (event.type === "tool.execution.requested") {
+      assert.equal(approved, requiresApproval);
+      const execution = event.execution;
+      const identity = {
+        executionId: execution.executionId,
+        runId: execution.runId,
+        callId: execution.call.id,
+      };
+      const output = applicationLookup(execution.call.arguments);
+      assert.equal(
+        (await client.reportToolProgress(identity)).status,
+        "progress",
+      );
+      assert.equal(
+        (await client.completeTool({ ...identity, output })).status,
+        "accepted",
+      );
+      await assert.rejects(client.completeTool({ ...identity, output }), {
+        code: "TOOL_EXECUTION_NOT_FOUND",
+      });
+    }
+    if (event.type === "run.failed" || event.type === "run.cancelled")
+      assert.fail(event.error.code);
+    if (event.type === "run.completed") completed = true;
+  }
+  assert.equal(executed, 1);
+  assert.equal(completed, true);
+}

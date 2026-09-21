@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  ApplicationToolDefinitionSchema,
+  type ToolExecutionRequest,
+} from "./tool-types.js";
+export type * from "./tool-types.js";
+import {
   ApprovalPolicySchema,
   type ApprovalRequest,
   type ApprovalResolution,
@@ -58,6 +63,11 @@ export const RunRequestSchema = z
       .max(100)
       .optional(),
     approvals: ApprovalPolicySchema.optional(),
+    applicationTools: z
+      .array(ApplicationToolDefinitionSchema)
+      .min(1)
+      .max(32)
+      .optional(),
     tools: z
       .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
       .max(32)
@@ -247,6 +257,7 @@ type EventPayload =
   | { type: "step.started"; step: number }
   | { type: "text.delta"; text: string }
   | { type: "run.progress"; phase: "model" | "tool" | "context" }
+  | { type: "tool.execution.requested"; execution: ToolExecutionRequest }
   | { type: "approval.requested"; approval: ApprovalRequest }
   | { type: "approval.resolved"; resolution: ApprovalResolution }
   | { type: "tool.called"; call: ToolCall }
@@ -261,6 +272,8 @@ export type RunEvent = EventPayload & {
 };
 export type { EventPayload };
 export interface RunOptions {
+  /** Trusted host/token additions to application tool approval policy; never accepted in request JSON. */
+  applicationToolApprovals?: readonly string[];
   signal?: AbortSignal;
   subject?: string;
 }

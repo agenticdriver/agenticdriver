@@ -8,6 +8,12 @@ import {
 import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
 import type { ApprovalDecision } from "./approval-types.js";
+import {
+  ApplicationToolGrantSchema,
+  type ApplicationToolGrant,
+  type ToolExecutionIdentity,
+  type ToolExecutionResult,
+} from "./tool-types.js";
 import { DriverError, publicError } from "./errors.js";
 import { isLoopback } from "./security.js";
 import {
@@ -35,6 +41,7 @@ export interface AccessToken {
   tools?: string[];
   /** Separate permission to decide approvals; invoking tools does not grant it. */
   approveTools?: string[];
+  applicationTools?: ApplicationToolGrant[];
   /** Explicit corpus allowlists for each operation. Omitted permissions deny retrieval access. */
   retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
@@ -66,7 +73,16 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     if (hashes.has(digest.toString("hex")))
       throw new Error("Duplicate access token.");
     hashes.add(digest.toString("hex"));
+    const applicationTools = ApplicationToolGrantSchema.array()
+      .max(32)
+      .parse(entry.applicationTools ?? []);
+    if (
+      new Set(applicationTools.map((tool) => tool.name)).size !==
+      applicationTools.length
+    )
+      throw new Error("Application tool token grants must have unique names.");
     return {
+      applicationTools,
       digest,
       subject: entry.subject,
       providers: [...entry.providers],
@@ -154,6 +170,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            applicationTools: driver.supportsApplicationTools,
             interactiveApprovals: driver.supportsInteractiveApprovals,
             idempotency: driver.supportsIdempotency,
             contextReferences: driver.supportsContextReferences,
@@ -177,6 +194,12 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         return;
       }
       const approvalDecision = req.url === "/v1/approvals/decisions";
+      const toolOperation =
+        req.url === "/v1/tool-executions/progress"
+          ? "progress"
+          : req.url === "/v1/tool-executions/results"
+            ? "results"
+            : undefined;
       const retrievalOperation = (
         {
           "/v1/retrieval/search": "search",
@@ -186,7 +209,10 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         } as Record<string, RetrievalOperation | "ingest">
       )[req.url ?? ""];
       if (
-        (req.url !== "/v1/runs" && !retrievalOperation && !approvalDecision) ||
+        (req.url !== "/v1/runs" &&
+          !retrievalOperation &&
+          !approvalDecision &&
+          !toolOperation) ||
         req.method !== "POST"
       ) {
         json(res, 404, {
@@ -210,6 +236,21 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "Compressed requests are not supported.",
         );
       const body = await readRequest(req);
+      if (toolOperation) {
+        const executor = {
+          subject: principal.subject,
+          providers: principal.providers,
+          applicationTools: principal.applicationTools.map(
+            (grant) => grant.name,
+          ),
+        };
+        const receipt =
+          toolOperation === "progress"
+            ? driver.reportToolProgress(body as ToolExecutionIdentity, executor)
+            : driver.completeTool(body as ToolExecutionResult, executor);
+        json(res, 200, receipt);
+        return;
+      }
       if (approvalDecision) {
         // A waiting run occupies a slot. Its decision must not compete for that slot.
         // Validate the original body inside the driver, including exact argument preservation.
@@ -250,7 +291,15 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       if (
         (request &&
           (!principal.providers.includes(request.provider) ||
-            request.tools?.some((name) => !principal.tools.includes(name)) ||
+            request.tools?.some((name) =>
+              request.applicationTools?.some(
+                (definition) => definition.name === name,
+              )
+                ? !principal.applicationTools.some(
+                    (grant) => grant.name === name,
+                  )
+                : !principal.tools.includes(name),
+            ) ||
             (request.retrieval &&
               !principal.retrieval.search.includes(
                 request.retrieval.corpus,
@@ -293,6 +342,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       const runOptions = {
         subject: principal.subject,
         signal: controller.signal,
+        applicationToolApprovals: principal.applicationTools
+          .filter((grant) => grant.requiresApproval !== false)
+          .map((grant) => grant.name),
       };
       if (retrievalOperation) {
         const result =
@@ -406,8 +458,16 @@ function json(res: ServerResponse, status: number, value: unknown) {
 }
 function statusFor(code: string) {
   if (code === "UNAUTHORIZED") return 401;
-  if (code === "APPROVAL_NOT_FOUND") return 404;
-  if (code === "APPROVAL_MISMATCH") return 409;
+  if (["APPROVAL_NOT_FOUND", "TOOL_EXECUTION_NOT_FOUND"].includes(code))
+    return 404;
+  if (
+    [
+      "APPROVAL_MISMATCH",
+      "TOOL_EXECUTION_MISMATCH",
+      "TOOL_DEFINITION_CONFLICT",
+    ].includes(code)
+  )
+    return 409;
   if (
     [
       "FORBIDDEN",
@@ -440,10 +500,24 @@ function statusFor(code: string) {
     ].includes(code)
   )
     return 503;
-  if (["BUSY", "RATE_LIMITED", "APPROVAL_CAPACITY"].includes(code)) return 429;
+  if (
+    [
+      "BUSY",
+      "RATE_LIMITED",
+      "APPROVAL_CAPACITY",
+      "TOOL_EXECUTOR_CAPACITY",
+    ].includes(code)
+  )
+    return 429;
   if (code === "IDLE_TIMEOUT" || code === "TIMEOUT") return 504;
   if (
     [
+      "INVALID_TOOL_EXECUTION",
+      "INVALID_TOOL_OUTPUT",
+      "TOOL_OUTPUT_LIMIT",
+      "TOOL_DEFINITION_LIMIT",
+      "APPLICATION_TOOLS_UNAVAILABLE",
+      "TOOL_STREAM_REQUIRED",
       "INVALID_APPROVAL",
       "APPROVAL_UNAVAILABLE",
       "APPROVAL_POLICY",

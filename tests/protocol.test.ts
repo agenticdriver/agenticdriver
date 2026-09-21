@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { Ajv2020 } from "ajv/dist/2020.js";
 import { AgenticClient } from "../src/client.js";
 import { AgenticDriver } from "../src/driver.js";
 import { mockProvider } from "../src/providers/mock.js";
@@ -204,4 +205,56 @@ test("optional extensions still obey envelope sequencing and run identity", asyn
       { code: "INVALID_STREAM" },
     );
   }
+});
+
+test("generated OpenAPI components resolve recursive JSON tool and approval schemas", async () => {
+  const document = JSON.parse(
+    await readFile(
+      new URL("../protocol/openapi.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const ajv = new Ajv2020({ strict: false, validateFormats: false });
+  ajv.addSchema(document, "openapi");
+  const validate = ajv.compile({
+    $ref: "openapi#/components/schemas/ToolExecutionResult",
+  });
+  const identity = { executionId: "execution", runId: "run", callId: "call" };
+  for (const output of [
+    null,
+    1,
+    "text",
+    [true, { nested: [1, null] }],
+    { passages: ["evidence"] },
+  ])
+    assert.equal(
+      validate({ ...identity, output }),
+      true,
+      ajv.errorsText(validate.errors),
+    );
+  assert.equal(
+    validate({ ...identity, error: "APPLICATION_TOOL_FAILED" }),
+    true,
+  );
+  for (const result of [
+    identity,
+    { ...identity, output: null, subject: "forged" },
+    { ...identity, output: null, error: "APPLICATION_TOOL_FAILED" },
+    { ...identity, error: "private details" },
+  ])
+    assert.equal(validate(result), false);
+  for (const name of [
+    "ToolExecutionRequest",
+    "ToolExecutionReceipt",
+    "ApplicationToolDefinition",
+    "ApplicationToolGrant",
+    "ApprovalRequest",
+    "ApprovalDecision",
+    "ApprovalResolution",
+    "RunEvent",
+    "RunRequest",
+  ])
+    assert.doesNotThrow(() =>
+      ajv.compile({ $ref: `openapi#/components/schemas/${name}` }),
+    );
 });

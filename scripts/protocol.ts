@@ -39,6 +39,14 @@ import {
   ApprovalDecisionSchema,
   ApprovalResolutionSchema,
 } from "../src/approval-types.js";
+import {
+  ApplicationToolDefinitionSchema,
+  ApplicationToolGrantSchema,
+  ToolExecutionIdentitySchema,
+  ToolExecutionRequestSchema,
+  ToolExecutionResultSchema,
+  ToolExecutionReceiptSchema,
+} from "../src/tool-types.js";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const string = { type: "string" },
@@ -46,6 +54,19 @@ const string = { type: "string" },
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
+  ...Object.fromEntries(
+    Object.entries({
+      ApplicationToolDefinition: ApplicationToolDefinitionSchema,
+      ApplicationToolGrant: ApplicationToolGrantSchema,
+      ToolExecutionIdentity: ToolExecutionIdentitySchema,
+      ToolExecutionRequest: ToolExecutionRequestSchema,
+      ToolExecutionResult: ToolExecutionResultSchema,
+      ToolExecutionReceipt: ToolExecutionReceiptSchema,
+    }).map(([name, schema]) => [
+      name,
+      z.toJSONSchema(schema, { target: "draft-2020-12", io: "input" }),
+    ]),
+  ),
   ApprovalPolicy: z.toJSONSchema(ApprovalPolicySchema, {
     target: "draft-2020-12",
   }),
@@ -226,6 +247,13 @@ const schemas = {
     oneOf: [
       {
         properties: {
+          type: { const: "tool.execution.requested" },
+          execution: ref("ToolExecutionRequest"),
+        },
+        required: ["execution"],
+      },
+      {
+        properties: {
           type: { const: "approval.requested" },
           approval: ref("ApprovalRequest"),
         },
@@ -325,6 +353,27 @@ const schemas = {
     ],
   },
 };
+// Zod emits document-root JSON Pointers. Components are embedded schemas, so
+// their recursive references must resolve from the containing OpenAPI document.
+for (const [name, schema] of Object.entries(schemas)) {
+  const relocate = (value: unknown): void => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach(relocate);
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (
+      typeof record.$ref === "string" &&
+      (record.$ref === "#" ||
+        (record.$ref.startsWith("#/") &&
+          !record.$ref.startsWith("#/components/")))
+    )
+      record.$ref = `#/components/schemas/${name}${record.$ref.slice(1)}`;
+    Object.values(record).forEach(relocate);
+  };
+  relocate(schema);
+}
 const errorResponse = {
   description: "Authentication, validation, capacity, or execution failure",
   content: { "application/json": { schema: ref("Error") } },
@@ -348,6 +397,35 @@ const document = {
   ],
   security: [{ bearerAuth: [] }],
   paths: {
+    ...Object.fromEntries(
+      [
+        ["progress", "reportToolProgress", "ToolExecutionIdentity"],
+        ["results", "completeTool", "ToolExecutionResult"],
+      ].map(([path, operationId, input]) => [
+        `/v1/tool-executions/${path}`,
+        {
+          post: {
+            operationId,
+            parameters,
+            description:
+              "Requires the originating subject, provider and applicationTools grant. Progress reports real work; a result consumes one pending execution. No automatic retries. Disconnect, cancellation or a lost result receipt requires reconciliation with the originating run before replacing an operation.",
+            requestBody: {
+              required: true,
+              content: { "application/json": { schema: ref(input!) } },
+            },
+            responses: {
+              "200": {
+                description: "The matching progress or result was accepted",
+                content: {
+                  "application/json": { schema: ref("ToolExecutionReceipt") },
+                },
+              },
+              default: errorResponse,
+            },
+          },
+        },
+      ]),
+    ),
     ...Object.fromEntries(
       [
         ["search", "RetrievalSearch", "RetrievalResult"],

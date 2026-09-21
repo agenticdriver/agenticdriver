@@ -127,3 +127,19 @@ interactive mode because it cannot deliver review requests. There is no default
 approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
 Decisions are single-use and are never retried automatically. A receipt does not
 confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
+
+## Functions in your application
+
+Set `RunRequest.application_tools` to `Vec<ApplicationToolDefinition>` and select
+the same names in `tools`. Match `EventPayload::ToolExecutionRequested { execution }`
+to invoke your application's function. Use
+`client.report_tool_progress(&execution.identity())` after real work and
+`client.complete_tool(&execution.success(output))` to return a `serde_json::Value`
+once. Await both on the async client. `execution.failure()` sends the fixed public
+failure code without leaking private exception details.
+
+Host opt-in and named token grants are required; review defaults to required.
+Dropping/cancelling the stream invalidates tickets. The application must also
+cancel its own work cooperatively; effects cannot be undone by a disconnect.
+There is no default inactivity deadline or automatic retry. See the
+[full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).

@@ -19,6 +19,11 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+pub mod application_tools;
+pub use application_tools::{
+    ApplicationToolDefinition, ApplicationToolFailure, ToolExecutionIdentity, ToolExecutionReceipt,
+    ToolExecutionRequest, ToolExecutionResult, ToolExecutionStatus,
+};
 pub mod approvals;
 pub use approvals::{
     ApprovalAction, ApprovalDecision, ApprovalIdlePolicy, ApprovalMode, ApprovalOutcome,
@@ -99,6 +104,8 @@ impl From<std::io::Error> for Error {
 #[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RunRequest {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub application_tools: Vec<ApplicationToolDefinition>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub approvals: Option<ApprovalPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]

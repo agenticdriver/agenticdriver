@@ -11,7 +11,7 @@ from ._context import valid_context_result, valid_media_catalog
 PROTOCOL_VERSION = "1.0"
 MAX_BYTES = 2_000_000
 MAX_INTEGER = 9_007_199_254_740_991
-EVENT_TYPES = {"approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled"}
+EVENT_TYPES = {"tool.execution.requested", "approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled"}
 
 
 def parse_json(data, code="INVALID_RESPONSE"):
@@ -113,7 +113,7 @@ def valid_approval(value, run_id=None, policy=None):
             ("expiresAt" not in value or valid_timestamp(value["expiresAt"]))):
         return False
     call = value.get("call")
-    return (isinstance(call, dict) and text(call.get("id")) and len(call["id"]) <= 256 and
+    return (isinstance(call, dict) and text(call.get("id")) and len(call["id"].encode("utf-16-le", errors="surrogatepass")) <= 512 and
             isinstance(call.get("name"), str) and re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_]{0,63}", call["name"]) is not None and
             isinstance(call.get("arguments"), dict))
 
@@ -129,9 +129,28 @@ def valid_resolution(value, run_id=None, decision=None):
     return valid
 
 
+def valid_tool_execution(value, request, run_id):
+    if not (isinstance(value, dict) and all(text(value.get(k)) and len(value[k].encode("utf-16-le", errors="surrogatepass")) <= 512 for k in ["executionId", "runId"]) and value["runId"] == run_id):
+        return False
+    call = value.get("call")
+    if not isinstance(call, dict):
+        return False
+    valid = (text(call.get("id")) and len(call["id"].encode("utf-16-le", errors="surrogatepass")) <= 512 and
+             isinstance(call.get("name"), str) and re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_]{0,63}", call["name"]) is not None and
+             isinstance(call.get("arguments"), dict))
+    if valid and request.get("applicationTools"):
+        valid = call["name"] in request.get("tools", []) and any(d.get("name") == call["name"] for d in request["applicationTools"])
+    return valid
+
+
+def valid_tool_receipt(value, identity, status):
+    return (isinstance(value, dict) and all(text(value.get(k)) and len(value[k].encode("utf-16-le", errors="surrogatepass")) <= 512 and value[k] == identity[k] for k in ["executionId", "runId", "callId"]) and value.get("status") == status)
+
+
 class EventDecoder:
     def __init__(self, request):
         self.request, self.sequence, self.run_id = request, 0, None
+        self.executions, self.execution_calls = set(), set()
 
     def accept(self, event):
         valid = (isinstance(event, dict) and text(event.get("type")) and text(event.get("runId")) and
@@ -149,7 +168,16 @@ class EventDecoder:
             return None
         if kind.startswith("approval.") and not self.request.get("approvals"):
             raise DriverError("UNSUPPORTED_EVENT", "Interactive approvals were not selected for this run.")
-        if kind == "approval.requested":
+        if kind == "tool.execution.requested" and not self.request.get("applicationTools"):
+            raise DriverError("UNSUPPORTED_EVENT", "Application executors were not selected for this run.")
+        if kind == "tool.execution.requested":
+            valid = valid_tool_execution(event.get("execution"), self.request, self.run_id)
+            if valid:
+                execution = event["execution"]
+                valid = execution["executionId"] not in self.executions and execution["call"]["id"] not in self.execution_calls and len(self.executions) < 2048
+                self.executions.add(execution["executionId"])
+                self.execution_calls.add(execution["call"]["id"])
+        elif kind == "approval.requested":
             valid = valid_approval(event.get("approval"), self.run_id, self.request.get("approvals"))
         elif kind == "approval.resolved":
             valid = valid_resolution(event.get("resolution"), self.run_id)

@@ -4,6 +4,8 @@ use crate::{validation, RunRequest};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
+#[cfg(any(feature = "blocking", feature = "async"))]
+use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -24,6 +26,9 @@ pub struct ToolCall {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum EventPayload<'a> {
+    ToolExecutionRequested {
+        execution: crate::ToolExecutionRequest,
+    },
     RunStarted {
         provider: &'a str,
         model: &'a str,
@@ -102,6 +107,10 @@ impl Event {
             "run.progress" => EventPayload::Progress {
                 phase: serde_json::from_value(value("phase")?.clone()).map_err(|_| invalid())?,
             },
+            "tool.execution.requested" => EventPayload::ToolExecutionRequested {
+                execution: serde_json::from_value(value("execution")?.clone())
+                    .map_err(|_| invalid())?,
+            },
             "approval.requested" => EventPayload::ApprovalRequested {
                 approval: serde_json::from_value(value("approval")?.clone())
                     .map_err(|_| invalid())?,
@@ -139,6 +148,8 @@ impl Event {
 #[cfg(any(feature = "blocking", feature = "async"))]
 #[derive(Default)]
 pub(crate) struct EventDecoder {
+    executions: BTreeSet<String>,
+    execution_calls: BTreeSet<String>,
     fields: Vec<String>,
     size: usize,
     sequence: u64,
@@ -184,6 +195,27 @@ impl EventDecoder {
         }
         self.sequence = event.sequence;
         self.run_id.clone_from(&event.run_id);
+        if event.kind == "tool.execution.requested" {
+            if request.application_tools.is_empty() {
+                return Err(protocol_error(
+                    "UNSUPPORTED_EVENT",
+                    "Application executors were not selected for this run.",
+                ));
+            }
+            let execution: crate::ToolExecutionRequest =
+                serde_json::from_value(event.extra["execution"].clone()).map_err(|_| {
+                    protocol_error("INVALID_STREAM", "Invalid application invocation.")
+                })?;
+            if self.executions.len() >= 2048
+                || !self.executions.insert(execution.execution_id)
+                || !self.execution_calls.insert(execution.call.id)
+            {
+                return Err(protocol_error(
+                    "INVALID_STREAM",
+                    "An application tool invocation was repeated or exceeded the run bound.",
+                ));
+            }
+        }
         if matches!(
             event.kind.as_str(),
             "approval.requested" | "approval.resolved"
@@ -195,11 +227,19 @@ impl EventDecoder {
             ));
         }
         match event.kind.as_str() {
-            "approval.requested" | "approval.resolved" | "run.started" | "step.started"
-            | "text.delta" | "run.progress" | "tool.called" | "tool.completed"
-            | "usage.reported" | "run.completed" | "run.failed" | "run.cancelled" => {
-                Ok(Some(event))
-            }
+            "tool.execution.requested"
+            | "approval.requested"
+            | "approval.resolved"
+            | "run.started"
+            | "step.started"
+            | "text.delta"
+            | "run.progress"
+            | "tool.called"
+            | "tool.completed"
+            | "usage.reported"
+            | "run.completed"
+            | "run.failed"
+            | "run.cancelled" => Ok(Some(event)),
             _ if event.optional => Ok(None),
             _ => Err(protocol_error(
                 "UNSUPPORTED_EVENT",

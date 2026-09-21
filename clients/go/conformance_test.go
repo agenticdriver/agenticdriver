@@ -93,6 +93,73 @@ func TestInteractiveApprovals(t *testing.T) {
 	}
 }
 
+func TestApplicationOwnedFunction(t *testing.T) {
+	base := os.Getenv("AGENTICDRIVER_TEST_URL")
+	if base == "" {
+		t.Skip("requires reference host")
+	}
+	client := conformanceClient(t, base, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	for _, review := range []bool{false, true} {
+		calls := 0
+		lookup := func(arguments map[string]json.RawMessage) json.RawMessage {
+			calls++
+			var query string
+			if err := json.Unmarshal(arguments["query"], &query); err != nil {
+				t.Fatal(err)
+			}
+			result, _ := json.Marshal(map[string]any{"passages": []string{"Evidence for " + query}})
+			return result
+		}
+		definition := ApplicationToolDefinition{Name: "application_lookup", Description: "Find application-owned evidence", RequiresApproval: review,
+			InputSchema:  map[string]any{"type": "object", "required": []string{"query"}, "properties": map[string]any{"query": map[string]any{"type": "string"}}},
+			OutputSchema: map[string]any{"type": "object", "required": []string{"passages"}, "properties": map[string]any{"passages": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}}}}
+		request := Request{Provider: "mock", Model: "demo", Input: "conformance-application-tool", Tools: []string{"application_lookup"}, ApplicationTools: []ApplicationToolDefinition{definition}}
+		if review {
+			request.Approvals = &ApprovalPolicy{Mode: "interactive", IdlePolicy: "pause"}
+		}
+		approved, completed := false, false
+		err := client.Stream(context.Background(), request, func(event Event) error {
+			if event.Type == "approval.requested" {
+				approval := event.Approval
+				_, err := client.DecideApproval(context.Background(), ApprovalDecision{ApprovalID: approval.ApprovalID, RunID: approval.RunID, Call: approval.Call, Decision: "approve"})
+				if err != nil {
+					return err
+				}
+				approved = true
+			}
+			if event.Type == "tool.execution.requested" {
+				if approved != review {
+					t.Fatal("execution occurred before required review")
+				}
+				identity := event.Execution.Identity()
+				output := lookup(event.Execution.Call.Arguments)
+				if _, err := client.ReportToolProgress(context.Background(), identity); err != nil {
+					return err
+				}
+				value := ToolExecutionResult{ToolExecutionIdentity: identity, Output: output}
+				if _, err := client.CompleteTool(context.Background(), value); err != nil {
+					return err
+				}
+				_, stale := client.CompleteTool(context.Background(), value)
+				var failure *Error
+				if !errors.As(stale, &failure) || failure.Code != "TOOL_EXECUTION_NOT_FOUND" {
+					t.Fatalf("stale result: %v", stale)
+				}
+			}
+			if event.Type == "run.completed" {
+				completed = true
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !completed || calls != 1 {
+			t.Fatalf("completed=%t calls=%d", completed, calls)
+		}
+	}
+}
+
 func TestReferencePeerConformance(t *testing.T) {
 	base := os.Getenv("AGENTICDRIVER_TEST_REFERENCE_URL")
 	if base == "" {
@@ -101,14 +168,18 @@ func TestReferencePeerConformance(t *testing.T) {
 	token := os.Getenv("AGENTICDRIVER_TEST_TOKEN")
 	var fixture struct {
 		Cases []struct {
-			ID                   string            `json:"id"`
-			Approvals            *ApprovalPolicy   `json:"approvals"`
-			Decision             ApprovalDecision  `json:"decision"`
-			Retrieval            *RetrievalRequest `json:"retrieval"`
-			Operation            string            `json:"operation"`
-			ExpectedError        string            `json:"expectedError"`
-			ExpectTransportError bool              `json:"expectTransportError"`
-			Cancel               bool              `json:"cancel"`
+			ID                   string                      `json:"id"`
+			ApplicationTools     []ApplicationToolDefinition `json:"applicationTools"`
+			Tools                []string                    `json:"tools"`
+			ToolIdentity         ToolExecutionIdentity       `json:"toolIdentity"`
+			ToolResult           ToolExecutionResult         `json:"toolResult"`
+			Approvals            *ApprovalPolicy             `json:"approvals"`
+			Decision             ApprovalDecision            `json:"decision"`
+			Retrieval            *RetrievalRequest           `json:"retrieval"`
+			Operation            string                      `json:"operation"`
+			ExpectedError        string                      `json:"expectedError"`
+			ExpectTransportError bool                        `json:"expectTransportError"`
+			Cancel               bool                        `json:"cancel"`
 		}
 	}
 	raw, err := os.ReadFile("../../protocol/fixtures/conformance.json")
@@ -126,6 +197,10 @@ func TestReferencePeerConformance(t *testing.T) {
 				_, err = client.Providers(context.Background())
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
+			} else if example.Operation == "tool-result" {
+				_, err = client.CompleteTool(context.Background(), example.ToolResult)
+			} else if example.Operation == "tool-progress" {
+				_, err = client.ReportToolProgress(context.Background(), example.ToolIdentity)
 			} else if example.Operation == "approval" {
 				_, err = client.DecideApproval(context.Background(), example.Decision)
 			} else if example.Operation == "ingest" {
@@ -133,7 +208,7 @@ func TestReferencePeerConformance(t *testing.T) {
 			} else {
 				stop := errors.New("intentional stream close")
 				completed, cancelled := false, false
-				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval, Approvals: example.Approvals}, func(event Event) error {
+				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval, Approvals: example.Approvals, ApplicationTools: example.ApplicationTools, Tools: example.Tools}, func(event Event) error {
 					if example.Cancel && event.Type == "text.delta" {
 						cancelled = true
 						return stop

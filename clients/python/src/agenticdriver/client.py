@@ -19,6 +19,7 @@ from ._protocol import (
     valid_protocol,
     valid_result,
     valid_resolution,
+    valid_tool_receipt,
 )
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 from ._transport import (
@@ -38,6 +39,7 @@ from .retrieval import (
     RetrievalDeleteResult,
 )
 from .ingestion import IngestRequest, IngestResult
+from .models import ToolExecutionIdentity, ToolExecutionResult, ToolExecutionReceipt
 
 
 class _NoRedirects(HTTPRedirectHandler):
@@ -189,6 +191,20 @@ class AgenticClient:
             raise DriverError("RESPONSE_TOO_LARGE", "The response exceeded 2 MB.")
         return parse_json(data)
 
+    def report_tool_progress(self, message: ToolExecutionIdentity) -> ToolExecutionReceipt:
+        with self._request("v1/tool-executions/progress", message) as response:
+            result = self._json(response)
+            if not valid_tool_receipt(result, message, "progress"):
+                raise DriverError("INVALID_RESPONSE", "The tool receipt does not match its submission; reconcile the originating run.")
+            return cast(ToolExecutionReceipt, result)
+
+    def complete_tool(self, message: ToolExecutionResult) -> ToolExecutionReceipt:
+        with self._request("v1/tool-executions/results", message) as response:
+            result = self._json(response)
+            if not valid_tool_receipt(result, message, "accepted"):
+                raise DriverError("INVALID_RESPONSE", "The tool receipt does not match its submission; reconcile the originating run.")
+            return cast(ToolExecutionReceipt, result)
+
     def decide_approval(self, decision: ApprovalDecision) -> ApprovalResolution:
         with self._request("v1/approvals/decisions", decision) as response:
             result = self._json(response)
@@ -266,6 +282,8 @@ class AgenticClient:
             return cast(ProtocolInfo, info)
 
     def run(self, **request: Unpack[RunRequest]) -> RunResult:
+        if request.get("applicationTools"):
+            raise DriverError("TOOL_STREAM_REQUIRED", "Use stream() to execute application-owned tools.")
         if request.get("approvals"):
             raise DriverError("APPROVAL_STREAM_REQUIRED", "Use stream() to receive and decide interactive approvals.")
         with self._request("v1/runs", request) as response:

@@ -97,6 +97,7 @@ const driver = await serve(
   new AgenticDriver({
     operations: new MemoryOperationStore(),
     approvals: { interactive: true },
+    applicationTools: { enabled: true, requireApproval: false },
     context: { resolve: contextStore.resolve },
     ingestion: {
       pdf: {
@@ -151,6 +152,17 @@ const driver = await serve(
       withMedia(
         mockProvider(async (request, context) => {
           const input = request.messages.at(-1)?.content;
+          if (input === "conformance-application-tool")
+            return {
+              text: "Use the app function",
+              toolCalls: [
+                {
+                  id: "application-call",
+                  name: "application_lookup",
+                  arguments: { query: "solar" },
+                },
+              ],
+            };
           if (input === "conformance-approval")
             return {
               text: "Review this action",
@@ -212,7 +224,10 @@ const driver = await serve(
         subject: "test-user",
         providers: ["mock"],
         tools: ["approved_echo"],
-        approveTools: ["approved_echo"],
+        approveTools: ["approved_echo", "application_lookup"],
+        applicationTools: [
+          { name: "application_lookup", requiresApproval: false },
+        ],
         retrieval: {
           search: ["library"],
           index: ["library"],
@@ -255,7 +270,7 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       return;
     }
     const id =
-      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions)$/.exec(
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results))$/.exec(
         req.url ?? "",
       )?.[1];
     const example = fixture.cases.find((c) => c.id === id);

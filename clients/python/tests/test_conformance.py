@@ -22,12 +22,16 @@ class ClientConformance(unittest.TestCase):
                         client.providers()
                     elif case.get("operation") == "protocol":
                         client.protocol()
+                    elif case.get("operation") == "tool-result":
+                        client.complete_tool(case["toolResult"])
+                    elif case.get("operation") == "tool-progress":
+                        client.report_tool_progress(case["toolIdentity"])
                     elif case.get("operation") == "approval":
                         client.decide_approval(case["decision"])
                     elif case.get("operation") == "ingest":
                         client.ingest_context({"corpus": "library", "document": {"type": "reference", "id": "paper", "revision": "r1", "mediaType": "text/markdown"}})
                     else:
-                        stream = client.stream(provider="mock", model="demo", input="Hello", **({"approvals": case["approvals"]} if "approvals" in case else {}), **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
+                        stream = client.stream(provider="mock", model="demo", input="Hello", **({k: case[k] for k in ["applicationTools", "tools"] if k in case}),  **({"approvals": case["approvals"]} if "approvals" in case else {}), **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
                         completed = cancelled = False
                         try:
                             for event in stream:
@@ -170,3 +174,36 @@ class ClientConformance(unittest.TestCase):
                 self.assertEqual(any(e["type"] == "tool.completed" for e in events), action == "approve")
                 resolution = next(e["resolution"] for e in events if e["type"] == "approval.resolved")
                 self.assertEqual(resolution["outcome"], {"approve": "approved", "deny": "denied", "cancel": "cancelled", "expire": "expired"}[action])
+
+    def test_application_owned_function(self):
+        with self.client() as client:
+            for review in (False, True):
+                calls = []
+                def lookup(arguments):
+                    calls.append(arguments)
+                    return {"passages": ["Evidence for " + arguments["query"]]}
+                definition = {"name": "application_lookup", "description": "Find application-owned evidence", "inputSchema": {"type": "object", "required": ["query"], "properties": {"query": {"type": "string"}}}, "outputSchema": {"type": "object", "required": ["passages"], "properties": {"passages": {"type": "array", "items": {"type": "string"}}}}, "requiresApproval": review}
+                extra = {"approvals": {"mode": "interactive", "idlePolicy": "pause"}} if review else {}
+                approved = completed = False
+                with client.stream(provider="mock", model="demo", input="conformance-application-tool", tools=["application_lookup"], applicationTools=[definition], **extra) as stream:
+                    for event in stream:
+                        if event["type"] == "approval.requested":
+                            approval = event["approval"]
+                            client.decide_approval({"approvalId": approval["approvalId"], "runId": approval["runId"], "call": approval["call"], "decision": "approve"})
+                            approved = True
+                        if event["type"] == "tool.execution.requested":
+                            self.assertEqual(approved, review)
+                            execution = event["execution"]
+                            identity = {"executionId": execution["executionId"], "runId": execution["runId"], "callId": execution["call"]["id"]}
+                            output = lookup(execution["call"]["arguments"])
+                            receipt = client.report_tool_progress(identity)
+                            self.assertEqual(receipt["status"], "progress")
+                            receipt = client.complete_tool({**identity, "output": output})
+                            self.assertEqual(receipt["status"], "accepted")
+                            with self.assertRaises(DriverError) as stale:
+                                client.complete_tool({**identity, "output": output})
+                            self.assertEqual(stale.exception.code, "TOOL_EXECUTION_NOT_FOUND")
+                        if event["type"] in ("run.failed", "run.cancelled"): self.fail(event["error"]["code"])
+                        if event["type"] == "run.completed": completed = True
+                self.assertEqual(len(calls), 1)
+                self.assertTrue(completed)

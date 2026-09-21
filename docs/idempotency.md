@@ -147,3 +147,9 @@ Provider documentation describes [OpenAI rate-limit failures](https://developers
 and [Anthropic retry hints](https://platform.claude.com/docs/en/api/rate-limits).
 Other provider/endpoint failures are not inferred to be safe merely because an
 error has `retryable: true`.
+
+Application tool execution requests are excluded from recovery replay, just like
+interactive approval requests. Stored events can retain the audit history, but
+a replay never instructs a client to execute an already-dispatched function again.
+After an uncertain tool outcome, reconcile application state before submitting a
+replacement operation. See [application-owned functions](application-tools.md).

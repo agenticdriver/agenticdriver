@@ -87,3 +87,20 @@ interactive mode because it cannot deliver review requests. There is no default
 approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
 Decisions are single-use and are never retried automatically. A receipt does not
 confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
+
+## Functions in your application
+
+Set `Request.ApplicationTools` to your `[]ApplicationToolDefinition` and select
+the same names in `Tools`. In `Stream`, dispatch only `tool.execution.requested`:
+`event.Execution` contains the call arguments and `Identity()` for replies.
+Use `ReportToolProgress(ctx, identity)` after real work and
+`CompleteTool(ctx, ToolExecutionResult{ToolExecutionIdentity: identity, Output: jsonBytes})`
+to submit the JSON result once. Output is `json.RawMessage`; encode a JSON null
+as `json.RawMessage("null")`. On callback failure set only
+`Error: "APPLICATION_TOOL_FAILED"`, without private exception text.
+
+Host opt-in and named token grants are required; review defaults to required.
+Pass the stream's context to your application function so cancellation propagates
+through its I/O. Cancelled runs invalidate pending tickets but cannot undo effects.
+No default inactivity deadline or automatic retries apply. See the
+[full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).

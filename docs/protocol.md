@@ -160,3 +160,21 @@ grants, and identify the exact run and tool arguments. See
 returns `APPROVAL_CAPACITY` (429), and failed audit recording returns
 `APPROVAL_AUDIT_FAILED` (503). Run failures retain `APPROVAL_DENIED` or
 `APPROVAL_EXPIRED`; cancellation retains `CANCELLED` or `IDLE_TIMEOUT`.
+
+## Application tools extension
+
+Hosts advertising `application-tools` accept `applicationTools` definitions on
+streaming runs. Opted-in runs emit the required `tool.execution.requested` event
+after argument validation and any required approval. Applications submit progress
+to `POST /v1/tool-executions/progress` and one result to
+`POST /v1/tool-executions/results`. Both require the originating subject, provider
+and a separate `applicationTools` token grant. Bodies cannot supply authorization.
+See [application-owned functions](application-tools.md) for binding APIs, limits,
+process affinity and cancellation/reconciliation responsibilities.
+
+`APPLICATION_TOOLS_UNAVAILABLE`, `TOOL_STREAM_REQUIRED`, `INVALID_TOOL_EXECUTION`,
+`INVALID_TOOL_OUTPUT`, `TOOL_DEFINITION_LIMIT` and `TOOL_OUTPUT_LIMIT` reject
+unsupported or malformed usage (HTTP 400). `TOOL_DEFINITION_CONFLICT` and
+`TOOL_EXECUTION_MISMATCH` report conflicts (409); `TOOL_EXECUTION_NOT_FOUND` covers
+unknown, consumed, cancelled or other-subject tickets (404).
+`TOOL_EXECUTOR_CAPACITY` reports pending capacity exhaustion (429).

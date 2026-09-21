@@ -1,5 +1,14 @@
 import { z } from "zod";
 import {
+  ToolExecutionRequestSchema,
+  ToolExecutionReceiptSchema,
+  matchesToolReceipt,
+  type ToolExecutionIdentity,
+  type ToolExecutionResult,
+  type ToolExecutionReceipt,
+} from "./tool-types.js";
+export type * from "./tool-types.js";
+import {
   ApprovalRequestSchema,
   ApprovalResolutionSchema,
   matchesApprovalDecision,
@@ -105,6 +114,10 @@ const resultSchema = z
   .refine(validRetrievalLinks);
 const eventSchema = z.discriminatedUnion("type", [
   z.object({
+    type: z.literal("tool.execution.requested"),
+    execution: ToolExecutionRequestSchema,
+  }),
+  z.object({
     type: z.literal("approval.requested"),
     approval: ApprovalRequestSchema,
   }),
@@ -184,7 +197,9 @@ export class AgenticClient {
       | RetrievalIndexRequest
       | RetrievalDelete
       | IngestRequest
-      | ApprovalDecision,
+      | ApprovalDecision
+      | ToolExecutionIdentity
+      | ToolExecutionResult,
     signal?: AbortSignal,
     stream = false,
   ): Promise<Response> {
@@ -393,6 +408,45 @@ export class AgenticClient {
       );
     return result.data.providers;
   }
+  async reportToolProgress(
+    identity: ToolExecutionIdentity,
+    options: ClientRequestOptions = {},
+  ): Promise<ToolExecutionReceipt> {
+    return this.toolRequest("progress", identity, options);
+  }
+  async completeTool(
+    result: ToolExecutionResult,
+    options: ClientRequestOptions = {},
+  ): Promise<ToolExecutionReceipt> {
+    return this.toolRequest("results", result, options);
+  }
+  private async toolRequest(
+    operation: "progress" | "results",
+    input: ToolExecutionIdentity | ToolExecutionResult,
+    options: ClientRequestOptions,
+  ): Promise<ToolExecutionReceipt> {
+    const response = await this.request(
+      `v1/tool-executions/${operation}`,
+      input,
+      options.signal,
+    );
+    const parsed = ToolExecutionReceiptSchema.safeParse(
+      await readResponseJson(response),
+    );
+    if (
+      !parsed.success ||
+      !matchesToolReceipt(
+        parsed.data,
+        input,
+        operation === "progress" ? "progress" : "accepted",
+      )
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The tool execution receipt does not match its submission; reconcile the originating run.",
+      );
+    return parsed.data;
+  }
   async decideApproval(
     decision: ApprovalDecision,
     options: ClientRequestOptions = {},
@@ -416,6 +470,11 @@ export class AgenticClient {
     request: RunRequest,
     options: ClientRequestOptions = {},
   ): Promise<RunResult> {
+    if (request.applicationTools)
+      throw new DriverError(
+        "TOOL_STREAM_REQUIRED",
+        "Use stream() to execute application-owned tools.",
+      );
     if (request.approvals)
       throw new DriverError(
         "APPROVAL_STREAM_REQUIRED",
@@ -471,6 +530,8 @@ export class AgenticClient {
           "Expected an SSE response from the driver.",
         );
       }
+      const executions = new Set<string>(),
+        executionCalls = new Set<string>();
       let sequence = 0,
         runId: string | undefined;
       for await (const data of readSse(response.body)) {
@@ -511,6 +572,14 @@ export class AgenticClient {
             "UNSUPPORTED_EVENT",
             "Interactive approvals were not selected for this run.",
           );
+        if (
+          envelope.data.type === "tool.execution.requested" &&
+          !request.applicationTools
+        )
+          throw new DriverError(
+            "UNSUPPORTED_EVENT",
+            "Application executors were not selected for this run.",
+          );
         const payload = eventSchema.safeParse(raw);
         if (!payload.success)
           throw new DriverError(
@@ -519,6 +588,12 @@ export class AgenticClient {
           );
         const event: RunEvent = { ...envelope.data, ...payload.data };
         if (
+          (event.type === "tool.execution.requested" &&
+            (event.execution.runId !== runId ||
+              !request.tools?.includes(event.execution.call.name) ||
+              !request.applicationTools?.some(
+                (definition) => definition.name === event.execution.call.name,
+              ))) ||
           (event.type === "approval.requested" &&
             (event.approval.runId !== runId ||
               event.approval.idlePolicy !== request.approvals?.idlePolicy)) ||
@@ -542,6 +617,20 @@ export class AgenticClient {
             "INVALID_STREAM",
             "The event result does not belong to the requested run.",
           );
+        if (event.type === "tool.execution.requested") {
+          const { executionId, call } = event.execution;
+          if (
+            executions.has(executionId) ||
+            executionCalls.has(call.id) ||
+            executions.size >= 2048
+          )
+            throw new DriverError(
+              "INVALID_STREAM",
+              "An application tool invocation was repeated or exceeded the run bound.",
+            );
+          executions.add(executionId);
+          executionCalls.add(call.id);
+        }
         yield event;
         if (
           ["run.completed", "run.failed", "run.cancelled"].includes(event.type)

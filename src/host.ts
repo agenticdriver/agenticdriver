@@ -1,4 +1,5 @@
 import { constants } from "node:fs";
+import { ApplicationToolGrantSchema } from "./tool-types.js";
 import { mkdir, open, readFile } from "node:fs/promises";
 import { createSecureContext } from "node:tls";
 import { homedir } from "node:os";
@@ -121,6 +122,10 @@ export const HostConfigSchema = z
               .strict()
               .optional(),
             providers: z.array(instance).max(32),
+            applicationTools: z
+              .array(ApplicationToolGrantSchema)
+              .max(32)
+              .optional(),
             approveTools: z
               .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
               .max(32)
@@ -134,6 +139,14 @@ export const HostConfigSchema = z
       )
       .min(1)
       .max(100),
+    applicationTools: z
+      .object({
+        enabled: z.literal(true),
+        requireApproval: z.boolean().optional(),
+        maxPending: z.number().int().positive().optional(),
+      })
+      .strict()
+      .optional(),
     approvals: z
       .object({
         interactive: z.literal(true),
@@ -382,6 +395,7 @@ export function configuredDriver(
     ingestion: options.ingestion,
     tools: options.tools,
     approve: options.approve,
+    applicationTools: config.applicationTools,
     approvals: config.approvals
       ? { ...config.approvals, onAudit: options.onApprovalAudit }
       : undefined,
@@ -439,6 +453,7 @@ export async function configuredServer(
       providers: entry.providers,
       tools: entry.tools,
       approveTools: entry.approveTools,
+      applicationTools: entry.applicationTools,
       retrieval: entry.retrieval,
     })),
   );

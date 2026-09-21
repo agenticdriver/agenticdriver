@@ -287,7 +287,9 @@ export function recoveryEvents(record: OperationRecord): RunEvent[] {
   // Historical approvals are audit records, never new permission requests.
   const events = structuredClone(record.events).filter(
     (event) =>
-      event.type !== "approval.requested" && event.type !== "approval.resolved",
+      event.type !== "approval.requested" &&
+      event.type !== "approval.resolved" &&
+      event.type !== "tool.execution.requested",
   );
   if (events[0]?.type !== "run.started")
     events.unshift({

@@ -33,6 +33,12 @@ fn reference_peer_conformance() {
         let id = example["id"].as_str().unwrap();
         let peer = client(&format!("{}/fixtures/{}", base, id), &token, true);
         let mut request = RunRequest::new("mock", "demo", "Hello");
+        if let Some(definitions) = example.get("applicationTools") {
+            request.application_tools = serde_json::from_value(definitions.clone()).unwrap();
+        }
+        if let Some(tools) = example.get("tools") {
+            request.tools = serde_json::from_value(tools.clone()).unwrap();
+        }
         if let Some(approvals) = example.get("approvals") {
             request.approvals = Some(serde_json::from_value(approvals.clone()).unwrap());
         }
@@ -42,6 +48,14 @@ fn reference_peer_conformance() {
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().map(|_| ()),
             Some("protocol") => peer.protocol().map(|_| ()),
+            Some("tool-result") => peer
+                .complete_tool(&serde_json::from_value(example["toolResult"].clone()).unwrap())
+                .map(|_| ()),
+            Some("tool-progress") => peer
+                .report_tool_progress(
+                    &serde_json::from_value(example["toolIdentity"].clone()).unwrap(),
+                )
+                .map(|_| ()),
             Some("approval") => peer
                 .decide_approval(&serde_json::from_value(example["decision"].clone()).unwrap())
                 .map(|_| ()),
@@ -363,5 +377,82 @@ fn interactive_approvals() {
                 _ => "run.failed",
             }
         );
+    }
+}
+
+#[test]
+fn application_owned_function() {
+    use agenticdriver::{
+        ApplicationToolDefinition, ApprovalAction, ApprovalIdlePolicy, ApprovalPolicy,
+        EventPayload, ToolExecutionStatus,
+    };
+    use serde_json::json;
+    let Ok(url) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let peer = client(
+        &url,
+        &std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap(),
+        true,
+    );
+    for review in [false, true] {
+        let mut calls = 0;
+        let mut lookup = |call: &agenticdriver::ToolCall| {
+            calls += 1;
+            json!({"passages": [format!("Evidence for {}", call.arguments["query"].as_str().unwrap())]})
+        };
+        let mut request = RunRequest::new("mock", "demo", "conformance-application-tool");
+        request.tools = vec!["application_lookup".into()];
+        request.application_tools = vec![ApplicationToolDefinition {
+            name: "application_lookup".into(),
+            description: "Find application-owned evidence".into(),
+            input_schema: json!({"type":"object","required":["query"],"properties":{"query":{"type":"string"}}}),
+            output_schema: Some(
+                json!({"type":"object","required":["passages"],"properties":{"passages":{"type":"array","items":{"type":"string"}}}}),
+            ),
+            requires_approval: Some(review),
+        }];
+        if review {
+            request.approvals = Some(ApprovalPolicy::interactive(ApprovalIdlePolicy::Pause));
+        }
+        let mut approved = false;
+        let mut completed = false;
+        peer.stream(&request, |event| {
+            match event.payload().unwrap() {
+                EventPayload::ApprovalRequested { approval } => {
+                    peer.decide_approval(&approval.decision(ApprovalAction::Approve))
+                        .unwrap();
+                    approved = true;
+                }
+                EventPayload::ToolExecutionRequested { execution } => {
+                    assert_eq!(approved, review);
+                    let output = lookup(&execution.call);
+                    assert_eq!(
+                        peer.report_tool_progress(&execution.identity())
+                            .unwrap()
+                            .status,
+                        ToolExecutionStatus::Progress
+                    );
+                    let value = execution.success(output);
+                    assert_eq!(
+                        peer.complete_tool(&value).unwrap().status,
+                        ToolExecutionStatus::Accepted
+                    );
+                    assert_eq!(
+                        code(&peer.complete_tool(&value).unwrap_err()),
+                        Some("TOOL_EXECUTION_NOT_FOUND")
+                    );
+                }
+                EventPayload::RunCompleted { .. } => completed = true,
+                EventPayload::RunFailed { error } | EventPayload::RunCancelled { error } => {
+                    panic!("unexpected failure: {:?}", error)
+                }
+                _ => {}
+            }
+            true
+        })
+        .unwrap();
+        assert!(completed);
+        assert_eq!(calls, 1);
     }
 }

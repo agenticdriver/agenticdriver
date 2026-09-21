@@ -101,6 +101,9 @@ pub(crate) fn event_valid(event: &Event, request: &RunRequest, first: bool) -> b
         return false;
     }
     match event.kind.as_str() {
+        "tool.execution.requested" => event.extra.get("execution").is_some_and(|value| {
+            crate::application_tools::execution_valid(value, request, &event.run_id)
+        }),
         "approval.requested" => event
             .extra
             .get("approval")

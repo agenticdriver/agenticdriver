@@ -84,6 +84,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     export const decide = (): Promise<import("agenticdriver/client").ApprovalResolution> => client.decideApproval(approval,{signal:new AbortController().signal});
     // @ts-expect-error approval identities are authenticated, never supplied in decision bodies
     client.decideApproval({...approval,subject:"forged"});
+    const execution: import("agenticdriver/client").ToolExecutionIdentity = {executionId:"execution",runId:"run",callId:"call"};
+    const tool: import("agenticdriver/client").ApplicationToolDefinition = {name:"lookup",description:"Search evidence",inputSchema:{type:"object"}};
+    export const progress = (): Promise<import("agenticdriver/client").ToolExecutionReceipt> => client.reportToolProgress(execution);
+    export const complete = (): Promise<import("agenticdriver/client").ToolExecutionReceipt> => client.completeTool({...execution,output:{passages:[]}});
+    // @ts-expect-error executor identities cannot be supplied in result bodies
+    client.completeTool({...execution,output:null,subject:"forged"});
+    // @ts-expect-error application exception details cannot be transmitted as failures
+    client.completeTool({...execution,error:"private exception"});
+    void tool;
     const operation: ClientRequestOptions = {signal:new AbortController().signal};
     const discovery: ProviderListOptions = {...operation,refresh:true};
     const request: RunRequest = {provider:"account",model:"model",input:"Question"};
@@ -156,6 +165,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   const safeModules = new Set([
     "client.js",
     "approval-types.js",
+    "tool-types.js",
     "catalog.js",
     "usagestat-types.js",
     "context-types.js",

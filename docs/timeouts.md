@@ -69,3 +69,9 @@ human review and resumes a full interval once the decision settles; set
 `approvals.allowIdlePause: false` on the host to require continued accounting.
 There is no default review deadline. An application can independently select
 `approvals.expiresAfterMs` for each review. See [interactive approvals](approvals.md).
+
+For functions running in an application process, use `reportToolProgress` (or the
+language equivalent) after real milestones. There is no separate default tool
+execution deadline. Closing the run invalidates pending execution tickets;
+the application must pass its cancellation signal/context to its own callbacks.
+A lost connection cannot undo their effects. See [application-owned functions](application-tools.md).

@@ -148,6 +148,8 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 		return false
 	}
 	switch event.Type {
+	case "tool.execution.requested":
+		return executionValid(value["execution"], event, request)
 	case "approval.requested":
 		return approvalValid(value["approval"]) && event.Approval != nil && event.Approval.RunID == event.RunID && (request.Approvals == nil || event.Approval.IdlePolicy == request.Approvals.IdlePolicy)
 	case "approval.resolved":

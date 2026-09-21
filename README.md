@@ -108,6 +108,11 @@ keys or explicitly configured CLI account directories.
 
 ## Application tools
 
+Functions can also stay in your TypeScript, Python, Go or Rust application while
+a local or remote host drives the model loop. The [application tool bridge](docs/application-tools.md)
+provides scoped invocation tickets, schema validation, approvals, progress and
+result submission. Run `npx tsx examples/application-tools.ts` for a mock example.
+
 API adapters can execute registered application tools. A request must select each
 tool by name. The runtime validates all arguments in a batch before executing any
 tool, runs them serially, and passes results back to the model. Side-effecting

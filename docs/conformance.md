@@ -51,3 +51,14 @@ per-instance trust stores reject the certificate when the test CA is omitted.
 The harness verifies behavior in the environment where it runs. It does not
 certify vendor accounts, operating systems outside the CI matrix, or package
 publication; those have separate roadmap items.
+
+## Application function bridge
+
+Each binding executes its own lookup function against the real host over HTTP
+and verified HTTPS, with both automatic read-only execution and interactive
+approval. The tests assert one invocation, accepted progress/results, the returned
+output, a successful terminal event and rejection of a stale result. Shared peer
+fixtures also reject malformed/unselected invocations, duplicate execution or call
+IDs, unnegotiated events and receipts with altered identities or status. Core tests
+cover scopes, host/token review requirements, input/output schemas, cancellation,
+explicit idle expiry, pending capacity and replay without redispatch.

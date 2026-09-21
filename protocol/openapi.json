@@ -7,6 +7,106 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/v1/tool-executions/progress": {
+      "post": {
+        "operationId": "reportToolProgress",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires the originating subject, provider and applicationTools grant. Progress reports real work; a result consumes one pending execution. No automatic retries. Disconnect, cancellation or a lost result receipt requires reconciliation with the originating run before replacing an operation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ToolExecutionIdentity" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The matching progress or result was accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolExecutionReceipt"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tool-executions/results": {
+      "post": {
+        "operationId": "completeTool",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires the originating subject, provider and applicationTools grant. Progress reports real work; a result consumes one pending execution. No automatic retries. Disconnect, cancellation or a lost result receipt requires reconciliation with the originating run before replacing an operation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ToolExecutionResult" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The matching progress or result was accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolExecutionReceipt"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/retrieval/search": {
       "post": {
         "operationId": "searchContext",
@@ -438,6 +538,179 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "ApplicationToolDefinition": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "inputSchema": {
+            "type": "object",
+            "propertyNames": { "type": "string" },
+            "additionalProperties": {}
+          },
+          "outputSchema": {
+            "type": "object",
+            "propertyNames": { "type": "string" },
+            "additionalProperties": {}
+          },
+          "requiresApproval": { "type": "boolean" }
+        },
+        "required": ["name", "description", "inputSchema"],
+        "additionalProperties": false
+      },
+      "ApplicationToolGrant": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+          },
+          "requiresApproval": { "type": "boolean" }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "ToolExecutionIdentity": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "executionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "callId": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["executionId", "runId", "callId"],
+        "additionalProperties": false
+      },
+      "ToolExecutionRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "executionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "call": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+              },
+              "arguments": {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ToolExecutionRequest/$defs/__schema0"
+                }
+              }
+            },
+            "required": ["id", "name", "arguments"]
+          }
+        },
+        "required": ["executionId", "runId", "call"],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ToolExecutionRequest/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ToolExecutionRequest/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ToolExecutionResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "callId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "output": {
+                "$ref": "#/components/schemas/ToolExecutionResult/$defs/__schema0"
+              }
+            },
+            "required": ["executionId", "runId", "callId", "output"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "executionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "callId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "error": { "type": "string", "const": "APPLICATION_TOOL_FAILED" }
+            },
+            "required": ["executionId", "runId", "callId", "error"],
+            "additionalProperties": false
+          }
+        ],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ToolExecutionResult/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ToolExecutionResult/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ToolExecutionReceipt": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "executionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "callId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "status": { "type": "string", "enum": ["progress", "accepted"] }
+        },
+        "required": ["executionId", "runId", "callId", "status"]
+      },
       "ApprovalPolicy": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -470,7 +743,9 @@
               "arguments": {
                 "type": "object",
                 "propertyNames": { "type": "string" },
-                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ApprovalRequest/$defs/__schema0"
+                }
               }
             },
             "required": ["id", "name", "arguments"]
@@ -501,11 +776,18 @@
               { "type": "number" },
               { "type": "boolean" },
               { "type": "null" },
-              { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ApprovalRequest/$defs/__schema0"
+                }
+              },
               {
                 "type": "object",
                 "propertyNames": { "type": "string" },
-                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ApprovalRequest/$defs/__schema0"
+                }
               }
             ]
           }
@@ -528,7 +810,9 @@
               "arguments": {
                 "type": "object",
                 "propertyNames": { "type": "string" },
-                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ApprovalDecision/$defs/__schema0"
+                }
               }
             },
             "required": ["id", "name", "arguments"],
@@ -548,11 +832,18 @@
               { "type": "number" },
               { "type": "boolean" },
               { "type": "null" },
-              { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ApprovalDecision/$defs/__schema0"
+                }
+              },
               {
                 "type": "object",
                 "propertyNames": { "type": "string" },
-                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ApprovalDecision/$defs/__schema0"
+                }
               }
             ]
           }
@@ -2296,6 +2587,38 @@
             "required": ["mode", "idlePolicy"],
             "additionalProperties": false
           },
+          "applicationTools": {
+            "minItems": 1,
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 10000
+                },
+                "inputSchema": {
+                  "type": "object",
+                  "propertyNames": { "type": "string" },
+                  "additionalProperties": {}
+                },
+                "outputSchema": {
+                  "type": "object",
+                  "propertyNames": { "type": "string" },
+                  "additionalProperties": {}
+                },
+                "requiresApproval": { "type": "boolean" }
+              },
+              "required": ["name", "description", "inputSchema"],
+              "additionalProperties": false
+            }
+          },
           "tools": {
             "maxItems": 32,
             "type": "array",
@@ -2628,6 +2951,15 @@
         "oneOf": [
           {
             "properties": {
+              "type": { "const": "tool.execution.requested" },
+              "execution": {
+                "$ref": "#/components/schemas/ToolExecutionRequest"
+              }
+            },
+            "required": ["execution"]
+          },
+          {
+            "properties": {
               "type": { "const": "approval.requested" },
               "approval": { "$ref": "#/components/schemas/ApprovalRequest" }
             },
@@ -2729,6 +3061,7 @@
                     "run.progress",
                     "approval.requested",
                     "approval.resolved",
+                    "tool.execution.requested",
                     "tool.called",
                     "tool.completed",
                     "usage.reported",

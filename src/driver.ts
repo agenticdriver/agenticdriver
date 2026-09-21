@@ -1,5 +1,17 @@
 import { randomUUID } from "node:crypto";
 import {
+  ApplicationToolManager,
+  ApplicationToolError,
+  type ApplicationToolOptions,
+  type ToolExecutorPrincipal,
+} from "./application-tools.js";
+import type {
+  ApplicationToolDefinition,
+  ToolExecutionIdentity,
+  ToolExecutionResult,
+  ToolExecutionReceipt,
+} from "./tool-types.js";
+import {
   ApprovalManager,
   type ApprovalOptions,
   type ApprovalPrincipal,
@@ -68,6 +80,7 @@ export interface DriverOptions {
   retrieval?: RetrievalService;
   ingestion?: IngestionOptions;
   approvals?: ApprovalOptions;
+  applicationTools?: ApplicationToolOptions;
   approve?: (
     call: ToolCall,
     context: ExecutionContext,
@@ -84,9 +97,19 @@ export interface DriverOptions {
   };
 }
 
+type SelectedTool =
+  | { tool: Tool; validate: ValidateFunction; application?: false }
+  | {
+      tool: ApplicationToolDefinition & { requiresApproval: boolean };
+      validate: ValidateFunction;
+      validateOutput?: ValidateFunction;
+      application: true;
+    };
+
 export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
   private readonly approvals: ApprovalManager;
+  private readonly applicationTools: ApplicationToolManager;
   private readonly usagePolicy: UsagePolicy;
   private readonly contextOptions: ReturnType<typeof contextPolicy>;
   private readonly ingestionOptions: ReturnType<typeof ingestionPolicy>;
@@ -103,6 +126,9 @@ export class AgenticDriver {
   });
   constructor(private readonly options: DriverOptions) {
     this.approvals = new ApprovalManager(options.approvals);
+    this.applicationTools = new ApplicationToolManager(
+      options.applicationTools,
+    );
     this.discovery = new ProviderDiscovery(options.discovery);
     this.usagePolicy = new UsagePolicy(options.usage, options.providers);
     this.contextOptions = contextPolicy(options.context);
@@ -138,6 +164,22 @@ export class AgenticDriver {
 
   listProviders() {
     return structuredClone([...this.providers.values()].map((p) => p.info));
+  }
+
+  get supportsApplicationTools(): boolean {
+    return this.applicationTools.enabled;
+  }
+  reportToolProgress(
+    identity: ToolExecutionIdentity,
+    principal: ToolExecutorPrincipal = {},
+  ): ToolExecutionReceipt {
+    return this.applicationTools.progress(identity, principal);
+  }
+  completeTool(
+    result: ToolExecutionResult,
+    principal: ToolExecutorPrincipal = {},
+  ): ToolExecutionReceipt {
+    return this.applicationTools.complete(result, principal);
   }
 
   get supportsInteractiveApprovals(): boolean {
@@ -399,15 +441,63 @@ export class AgenticDriver {
       );
     if (new Set(request.tools).size !== (request.tools?.length ?? 0))
       throw new DriverError("INVALID_REQUEST", "Tool names must be unique.");
-    for (const name of request.tools ?? [])
-      if (!this.tools.has(name))
-        throw new DriverError(
-          "UNKNOWN_TOOL",
-          "A requested tool is not registered on this host.",
-        );
+    this.selectedTools(request);
     this.approvals.validate(request.approvals);
     if (request.outputSchema) this.outputValidator(request.outputSchema);
     return request;
+  }
+
+  private selectedTools(
+    request: RunRequest,
+    options: RunOptions = {},
+  ): SelectedTool[] {
+    const application = new Map<string, SelectedTool>();
+    if (request.applicationTools && !this.applicationTools.enabled)
+      throw new DriverError(
+        "APPLICATION_TOOLS_UNAVAILABLE",
+        "This host has not enabled application executors.",
+      );
+    for (const definition of request.applicationTools ?? []) {
+      if (this.tools.has(definition.name) || application.has(definition.name))
+        throw new DriverError(
+          "TOOL_DEFINITION_CONFLICT",
+          "Application tool names must be unique and cannot replace registered host tools.",
+        );
+      if (!request.tools?.includes(definition.name))
+        throw new DriverError(
+          "INVALID_REQUEST",
+          "Every supplied application tool must be explicitly selected in this run's allowlist.",
+        );
+      if (Buffer.byteLength(JSON.stringify(definition)) > 128_000)
+        throw new DriverError(
+          "TOOL_DEFINITION_LIMIT",
+          "An application tool definition must not exceed 128,000 UTF-8 JSON bytes.",
+        );
+      application.set(definition.name, {
+        application: true,
+        tool: {
+          ...definition,
+          requiresApproval:
+            this.applicationTools.requireApproval ||
+            definition.requiresApproval === true ||
+            options.applicationToolApprovals?.includes(definition.name) ===
+              true,
+        },
+        validate: this.outputValidator(definition.inputSchema),
+        ...(definition.outputSchema
+          ? { validateOutput: this.outputValidator(definition.outputSchema) }
+          : {}),
+      });
+    }
+    return (request.tools ?? []).map((name) => {
+      const entry = this.tools.get(name) ?? application.get(name);
+      if (!entry)
+        throw new DriverError(
+          "UNKNOWN_TOOL",
+          "A requested tool has no registered host implementation or application definition.",
+        );
+      return entry;
+    });
   }
 
   private outputValidator(schema: Record<string, unknown>): ValidateFunction {
@@ -429,12 +519,17 @@ export class AgenticDriver {
     } catch {
       throw new DriverError(
         "INVALID_SCHEMA",
-        "The output schema must be a synchronous, self-contained JSON Schema (draft-07 or 2020-12).",
+        "The schema must be a synchronous, self-contained JSON Schema (draft-07 or 2020-12).",
       );
     }
   }
 
   async run(input: RunRequest, options: RunOptions = {}): Promise<RunResult> {
+    if (input.applicationTools)
+      throw new DriverError(
+        "TOOL_STREAM_REQUIRED",
+        "Use stream() to execute application-owned tools.",
+      );
     if (input.approvals)
       throw new DriverError(
         "APPROVAL_STREAM_REQUIRED",
@@ -608,6 +703,7 @@ export class AgenticDriver {
     runId: string,
   ): AsyncGenerator<RunEvent> {
     const provider = this.providers.get(request.provider)!;
+    const selectedTools = this.selectedTools(request, options);
     const startedAt = Date.now();
     const controller = new AbortController();
     const idleLimits = [
@@ -664,9 +760,6 @@ export class AgenticDriver {
       ...(request.history ?? []),
       { role: "user", content: request.input },
     ];
-    const selectedTools = (request.tools ?? []).map((name) =>
-      this.tools.get(name)!,
-    );
     const maxSteps = Math.min(
       request.maxSteps ?? 8,
       this.options.limits?.maxSteps ?? 64,
@@ -899,7 +992,10 @@ export class AgenticDriver {
         });
         for (const call of calls) {
           signal.throwIfAborted();
-          const { tool } = this.tools.get(call.name)!;
+          const entry = selectedTools.find(
+            ({ tool }) => tool.name === call.name,
+          )!;
+          const { tool } = entry;
           yield event({ type: "tool.called", call: structuredClone(call) });
           signal.throwIfAborted();
           if (tool.requiresApproval) {
@@ -982,18 +1078,54 @@ export class AgenticDriver {
           }
           signal.throwIfAborted();
           let output: Json;
-          toolOutcomePending = true;
           try {
-            output = (yield* withProgress(
-              (toolContext) =>
-                tool.execute(structuredClone(call.arguments), toolContext),
-              context,
-              "tool",
-              (error) => controller.abort(error),
-              event,
-            )).value;
+            if (entry.application) {
+              const execution = this.applicationTools.request(
+                call,
+                request.provider,
+                context,
+                entry.validateOutput
+                  ? (value) => Boolean(entry.validateOutput!(value))
+                  : undefined,
+              );
+              try {
+                // Delivery may start an external action; a lost acknowledgement is uncertain.
+                toolOutcomePending = true;
+                yield event({
+                  type: "tool.execution.requested",
+                  execution: execution.execution,
+                });
+                output = (yield* withProgress(
+                  (toolContext) => execution.wait(toolContext.reportProgress),
+                  context,
+                  "tool",
+                  (error) => controller.abort(error),
+                  event,
+                )).value;
+              } finally {
+                execution.cancel();
+              }
+            } else {
+              toolOutcomePending = true;
+              output = (yield* withProgress(
+                (toolContext) =>
+                  entry.tool.execute(
+                    structuredClone(call.arguments),
+                    toolContext,
+                  ),
+                context,
+                "tool",
+                (error) => controller.abort(error),
+                event,
+              )).value;
+            }
           } catch (error) {
-            if (signal.aborted) throw error;
+            if (
+              signal.aborted ||
+              (entry.application &&
+                (!toolOutcomePending || error instanceof ApplicationToolError))
+            )
+              throw error;
             throw new DriverError("TOOL_FAILED", "An application tool failed.");
           }
           const encoded = JSON.stringify(output);

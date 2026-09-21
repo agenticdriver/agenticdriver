@@ -35,24 +35,25 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
-	Approvals            *ApprovalPolicy   `json:"approvals,omitempty"`
-	Retrieval            *RetrievalRequest `json:"retrieval,omitempty"`
-	Attachments          []ContextInput    `json:"attachments,omitempty"`
-	OutputArtifact       *ArtifactRequest  `json:"outputArtifact,omitempty"`
-	Provider             string            `json:"provider"`
-	Model                string            `json:"model"`
-	Input                string            `json:"input"`
-	IdempotencyKey       string            `json:"idempotencyKey,omitempty"`
-	Retry                *RetryPolicy      `json:"retry,omitempty"`
-	Instructions         string            `json:"instructions,omitempty"`
-	History              []Message         `json:"history,omitempty"`
-	Tools                []string          `json:"tools,omitempty"`
-	RequiredCapabilities []string          `json:"requiredCapabilities,omitempty"`
-	MaxSteps             int               `json:"maxSteps,omitempty"`
-	MaxOutputTokens      int               `json:"maxOutputTokens,omitempty"`
-	IdleTimeoutMs        int               `json:"idleTimeoutMs,omitempty"`
-	OutputSchema         map[string]any    `json:"outputSchema,omitempty"`
-	Metadata             map[string]string `json:"metadata,omitempty"`
+	ApplicationTools     []ApplicationToolDefinition `json:"applicationTools,omitempty"`
+	Approvals            *ApprovalPolicy             `json:"approvals,omitempty"`
+	Retrieval            *RetrievalRequest           `json:"retrieval,omitempty"`
+	Attachments          []ContextInput              `json:"attachments,omitempty"`
+	OutputArtifact       *ArtifactRequest            `json:"outputArtifact,omitempty"`
+	Provider             string                      `json:"provider"`
+	Model                string                      `json:"model"`
+	Input                string                      `json:"input"`
+	IdempotencyKey       string                      `json:"idempotencyKey,omitempty"`
+	Retry                *RetryPolicy                `json:"retry,omitempty"`
+	Instructions         string                      `json:"instructions,omitempty"`
+	History              []Message                   `json:"history,omitempty"`
+	Tools                []string                    `json:"tools,omitempty"`
+	RequiredCapabilities []string                    `json:"requiredCapabilities,omitempty"`
+	MaxSteps             int                         `json:"maxSteps,omitempty"`
+	MaxOutputTokens      int                         `json:"maxOutputTokens,omitempty"`
+	IdleTimeoutMs        int                         `json:"idleTimeoutMs,omitempty"`
+	OutputSchema         map[string]any              `json:"outputSchema,omitempty"`
+	Metadata             map[string]string           `json:"metadata,omitempty"`
 }
 type RetryPolicy struct {
 	MaxAttempts int  `json:"maxAttempts"`
@@ -111,25 +112,26 @@ type ModelCatalog struct {
 	Complete bool     `json:"complete"`
 }
 type Event struct {
-	Approval   *ApprovalRequest    `json:"approval,omitempty"`
-	Resolution *ApprovalResolution `json:"resolution,omitempty"`
-	Provider   string              `json:"provider,omitempty"`
-	Model      string              `json:"model,omitempty"`
-	Step       int                 `json:"step,omitempty"`
-	Phase      string              `json:"phase,omitempty"`
-	Call       *ToolCall           `json:"call,omitempty"`
-	CallID     string              `json:"callId,omitempty"`
-	Output     json.RawMessage     `json:"output,omitempty"`
-	Usage      *Usage              `json:"usage,omitempty"`
-	Type       string              `json:"type"`
-	RunID      string              `json:"runId"`
-	Sequence   int                 `json:"sequence"`
-	Timestamp  string              `json:"timestamp"`
-	Optional   bool                `json:"optional,omitempty"`
-	Text       string              `json:"text,omitempty"`
-	Result     *Result             `json:"result,omitempty"`
-	Error      *Error              `json:"error,omitempty"`
-	Raw        json.RawMessage     `json:"-"`
+	Execution  *ToolExecutionRequest `json:"execution,omitempty"`
+	Approval   *ApprovalRequest      `json:"approval,omitempty"`
+	Resolution *ApprovalResolution   `json:"resolution,omitempty"`
+	Provider   string                `json:"provider,omitempty"`
+	Model      string                `json:"model,omitempty"`
+	Step       int                   `json:"step,omitempty"`
+	Phase      string                `json:"phase,omitempty"`
+	Call       *ToolCall             `json:"call,omitempty"`
+	CallID     string                `json:"callId,omitempty"`
+	Output     json.RawMessage       `json:"output,omitempty"`
+	Usage      *Usage                `json:"usage,omitempty"`
+	Type       string                `json:"type"`
+	RunID      string                `json:"runId"`
+	Sequence   int                   `json:"sequence"`
+	Timestamp  string                `json:"timestamp"`
+	Optional   bool                  `json:"optional,omitempty"`
+	Text       string                `json:"text,omitempty"`
+	Result     *Result               `json:"result,omitempty"`
+	Error      *Error                `json:"error,omitempty"`
+	Raw        json.RawMessage       `json:"-"`
 }
 type ToolCall struct {
 	ID        string                     `json:"id"`
@@ -271,6 +273,9 @@ func (c *Client) Protocol(ctx context.Context) (ProtocolInfo, error) {
 	return info, nil
 }
 func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
+	if len(request.ApplicationTools) > 0 {
+		return Result{}, &Error{Code: "TOOL_STREAM_REQUIRED", Message: "Use Stream to execute application-owned tools."}
+	}
 	if request.Approvals != nil {
 		return Result{}, &Error{Code: "APPROVAL_STREAM_REQUIRED", Message: "Use Stream to receive and decide interactive approvals."}
 	}
@@ -307,6 +312,7 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 	scanner.Buffer(make([]byte, 4096), maxWireBytes+2)
 	scanner.Split(splitSSELines())
 	fields := []string{}
+	executions, executionCalls := map[string]bool{}, map[string]bool{}
 	sequence, size := 0, 0
 	runID := ""
 	firstLine := true
@@ -345,6 +351,15 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 			if strings.HasPrefix(event.Type, "approval.") && request.Approvals == nil {
 				return &Error{Code: "UNSUPPORTED_EVENT", Message: "Interactive approvals were not selected for this run."}
 			}
+			if event.Type == "tool.execution.requested" {
+				if len(request.ApplicationTools) == 0 {
+					return &Error{Code: "UNSUPPORTED_EVENT", Message: "Application executors were not selected for this run."}
+				}
+				if executions[event.Execution.ExecutionID] || executionCalls[event.Execution.Call.ID] || len(executions) >= 2048 {
+					return &Error{Code: "INVALID_STREAM", Message: "An application tool invocation was repeated or exceeded the run bound."}
+				}
+				executions[event.Execution.ExecutionID], executionCalls[event.Execution.Call.ID] = true, true
+			}
 			event.Raw = data
 			if err := visit(event); err != nil {
 				return err
@@ -370,7 +385,7 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 
 func knownEvent(kind string) bool {
 	switch kind {
-	case "approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled":
+	case "tool.execution.requested", "approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled":
 		return true
 	default:
 		return false

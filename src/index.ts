@@ -41,3 +41,9 @@ export type {
   ApprovalAuditRecord,
   ApprovalPrincipal,
 } from "./approvals.js";
+
+export * from "./tool-types.js";
+export type {
+  ApplicationToolOptions,
+  ToolExecutorPrincipal,
+} from "./application-tools.js";
