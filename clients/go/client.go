@@ -110,6 +110,14 @@ type ModelCatalog struct {
 	Complete bool     `json:"complete"`
 }
 type Event struct {
+	Provider  string          `json:"provider,omitempty"`
+	Model     string          `json:"model,omitempty"`
+	Step      int             `json:"step,omitempty"`
+	Phase     string          `json:"phase,omitempty"`
+	Call      *ToolCall       `json:"call,omitempty"`
+	CallID    string          `json:"callId,omitempty"`
+	Output    json.RawMessage `json:"output,omitempty"`
+	Usage     *Usage          `json:"usage,omitempty"`
 	Type      string          `json:"type"`
 	RunID     string          `json:"runId"`
 	Sequence  int             `json:"sequence"`
@@ -119,6 +127,11 @@ type Event struct {
 	Result    *Result         `json:"result,omitempty"`
 	Error     *Error          `json:"error,omitempty"`
 	Raw       json.RawMessage `json:"-"`
+}
+type ToolCall struct {
+	ID        string                     `json:"id"`
+	Name      string                     `json:"name"`
+	Arguments map[string]json.RawMessage `json:"arguments"`
 }
 type Client struct {
 	base  string
@@ -271,6 +284,9 @@ func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
 
 // Stream closes the HTTP response when context is cancelled or the callback returns an error.
 func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) error) error {
+	if visit == nil {
+		return &Error{Code: "INVALID_CALLBACK", Message: "Stream requires an event callback."}
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	res, err := c.request(ctx, "v1/runs", request, true)

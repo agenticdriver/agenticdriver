@@ -181,10 +181,14 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 func splitSSELines() func([]byte, bool) (int, []byte, error) {
 	skipLF := false
 	return func(data []byte, eof bool) (int, []byte, error) {
+		prefix := 0
 		if skipLF && len(data) != 0 {
 			skipLF = false
 			if data[0] == '\n' {
-				return 1, nil, nil
+				// Continue scanning buffered data in this call. A nil token at EOF
+				// makes bufio.Scanner stop even if advance leaves more bytes.
+				prefix = 1
+				data = data[1:]
 			}
 		}
 		if end := bytes.IndexAny(data, "\r\n"); end >= 0 {
@@ -192,15 +196,15 @@ func splitSSELines() func([]byte, bool) (int, []byte, error) {
 				return 0, nil, &Error{Code: "RESPONSE_TOO_LARGE", Message: "An event exceeded 2 MB."}
 			}
 			skipLF = data[end] == '\r'
-			return end + 1, data[:end], nil
+			return prefix + end + 1, data[:end], nil
 		}
 		if len(data) > maxWireBytes {
 			return 0, nil, &Error{Code: "RESPONSE_TOO_LARGE", Message: "An event exceeded 2 MB."}
 		}
 		if eof && len(data) > 0 {
-			return len(data), data, nil
+			return prefix + len(data), data, nil
 		}
-		return 0, nil, nil
+		return prefix, nil, nil
 	}
 }
 

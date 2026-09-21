@@ -29,7 +29,7 @@ def check_clients(url, token, ca, env):
         assert error.code == "UNAUTHORIZED"
     print(f"Python client passed ({url.split(':')[0]})", flush=True)
     env = {**env, "PYTHONPATH": str(ROOT / "clients/python/src")}
-    commands = [([sys.executable, "-m", "unittest", "discover", "-s", "clients/python/tests"], ROOT), (["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
+    commands = [([sys.executable, "-m", "unittest", "discover", "-s", "clients/python/tests"], ROOT), (["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-race", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
     failures = []
     for command, directory in commands:
         result = subprocess.run(command, cwd=directory, env=env, timeout=180)
