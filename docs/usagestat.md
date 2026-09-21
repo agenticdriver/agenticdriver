@@ -168,4 +168,4 @@ npm run test:usagestat -- /absolute/path/usagestat/target/debug/usagestatd
 The SDK test launches the supplied native binary with isolated fixture credentials,
 private data and polling disabled. It verifies actual usage capture, schema/receipt
 compatibility, host secret references, scoped reconciliation, backend restart and
-failure without repeated generation. No live provider account is used.
+failure without repeated generation, and separately attributed indexing/query embedding records. No live provider account is used.

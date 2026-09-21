@@ -1,4 +1,10 @@
 import { randomUUID } from "node:crypto";
+import {
+  ingestDocument,
+  ingestionPolicy,
+  type IngestionOptions,
+} from "./ingestion.js";
+import { IngestRequestSchema, type IngestRequest } from "./ingestion-types.js";
 import { RetrievalService, retrievalAttachments } from "./retrieval.js";
 import type {
   RetrievalSearch,
@@ -48,6 +54,7 @@ export interface DriverOptions {
   tools?: Tool[];
   context?: ContextOptions;
   retrieval?: RetrievalService;
+  ingestion?: IngestionOptions;
   approve?: (
     call: ToolCall,
     context: ExecutionContext,
@@ -68,6 +75,7 @@ export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
   private readonly usagePolicy: UsagePolicy;
   private readonly contextOptions: ReturnType<typeof contextPolicy>;
+  private readonly ingestionOptions: ReturnType<typeof ingestionPolicy>;
   private readonly activeOperations = new Set<string>();
   private readonly providers = new Map<string, ProviderAdapter>();
   private readonly tools = new Map<
@@ -83,6 +91,7 @@ export class AgenticDriver {
     this.discovery = new ProviderDiscovery(options.discovery);
     this.usagePolicy = new UsagePolicy(options.usage, options.providers);
     this.contextOptions = contextPolicy(options.context);
+    this.ingestionOptions = ingestionPolicy(options.ingestion);
     for (const provider of options.providers) {
       if (this.providers.has(provider.info.id))
         throw new Error(`Duplicate provider instance: ${provider.info.id}`);
@@ -147,6 +156,74 @@ export class AgenticDriver {
       return await work(this.retrievalService(), context);
     } catch (error) {
       throw publicError(error, context.signal);
+    }
+  }
+  get supportsPdfIngestion(): boolean {
+    return this.supportsRetrieval && this.ingestionOptions.pdf !== undefined;
+  }
+  async ingestContext(
+    request: IngestRequest,
+    options: RunOptions & { reportProgress?: () => void } = {},
+  ) {
+    const parsed = IngestRequestSchema.safeParse(request);
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_INGESTION",
+        "The ingestion request does not match the supported document schema.",
+      );
+    request = parsed.data;
+    const controller = new AbortController();
+    const values = [
+      request.idleTimeoutMs,
+      this.options.limits?.idleTimeoutMs,
+    ].filter((n): n is number => n !== undefined && n > 0);
+    const idle = values.length ? Math.min(...values) : 0;
+    if (idle && (!Number.isSafeInteger(idle) || idle > 2_147_483_647))
+      throw new DriverError(
+        "INVALID_INGESTION",
+        "Invalid ingestion inactivity timeout.",
+      );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const progress = () => {
+      if (controller.signal.aborted) return;
+      options.reportProgress?.();
+      if (idle) {
+        clearTimeout(timer);
+        timer = setTimeout(
+          () =>
+            controller.abort(
+              new DriverError(
+                "IDLE_TIMEOUT",
+                "Document ingestion stopped because no extraction, embedding or index progress arrived within the configured inactivity timeout.",
+                true,
+              ),
+            ),
+          idle,
+        );
+      }
+    };
+    progress();
+    try {
+      return await this.retrieve(
+        (service, context) =>
+          ingestDocument(
+            request,
+            service,
+            this.ingestionOptions,
+            this.contextOptions,
+            context,
+          ),
+        {
+          ...options,
+          signal: options.signal
+            ? AbortSignal.any([options.signal, controller.signal])
+            : controller.signal,
+          reportProgress: progress,
+        },
+      );
+    } finally {
+      clearTimeout(timer);
+      controller.abort();
     }
   }
   searchContext(

@@ -7,6 +7,8 @@ import {
 } from "./context-types.js";
 export type * from "./context-types.js";
 export type * from "./retrieval-types.js";
+export type * from "./ingestion-types.js";
+import { IngestResultSchema, type IngestRequest } from "./ingestion-types.js";
 import {
   RetrievalResultSchema,
   RetrievalIndexResultSchema,
@@ -127,7 +129,11 @@ export class AgenticClient {
   private async request(
     path: string,
     body?:
-      RunRequest | RetrievalSearch | RetrievalIndexRequest | RetrievalDelete,
+      | RunRequest
+      | RetrievalSearch
+      | RetrievalIndexRequest
+      | RetrievalDelete
+      | IngestRequest,
     signal?: AbortSignal,
     stream = false,
   ): Promise<Response> {
@@ -176,7 +182,8 @@ export class AgenticClient {
   }
   private async retrievalRequest<T extends z.ZodType>(
     path: string,
-    body: RetrievalSearch | RetrievalIndexRequest | RetrievalDelete,
+    body:
+      RetrievalSearch | RetrievalIndexRequest | RetrievalDelete | IngestRequest,
     schema: T,
     signal?: AbortSignal,
   ): Promise<z.infer<T>> {
@@ -188,6 +195,31 @@ export class AgenticClient {
         "The driver returned invalid retrieval metadata.",
       );
     return parsed.data;
+  }
+  async ingestContext(
+    request: IngestRequest,
+    options: { signal?: AbortSignal } = {},
+  ) {
+    const result = await this.retrievalRequest(
+      "v1/retrieval/ingest",
+      request,
+      IngestResultSchema,
+      options.signal,
+    );
+    const source =
+      request.document.type === "reference"
+        ? request.document
+        : request.document.source;
+    if (
+      result.corpus !== request.corpus ||
+      result.sourceId !== source.id ||
+      result.revision !== source.revision
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The ingestion receipt does not match the requested source.",
+      );
+    return result;
   }
   async searchContext(
     request: RetrievalSearch,

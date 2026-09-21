@@ -38,6 +38,18 @@ fn reference_peer_conformance() {
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().map(|_| ()),
             Some("protocol") => peer.protocol().map(|_| ()),
+            Some("ingest") => peer
+                .ingest_context(&agenticdriver::IngestRequest {
+                    corpus: "library".into(),
+                    document: agenticdriver::IngestionDocument::Reference {
+                        id: "paper".into(),
+                        revision: "r1".into(),
+                        media_type: "text/markdown".into(),
+                    },
+                    chunking: None,
+                    idle_timeout_ms: None,
+                })
+                .map(|_| ()),
             _ => peer.stream(&request, |event| {
                 !(example["cancel"] == true && event.kind == "text.delta")
             }),
@@ -117,6 +129,7 @@ fn retrieval_round_trip() {
     let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
     let peer = client(&base, &token, true);
     let document = RetrievalIndexRequest {
+        ingestion: None,
         corpus: "library".into(),
         source: ContextSource {
             id: "rust-paper".into(),
@@ -174,4 +187,90 @@ fn retrieval_round_trip() {
         .unwrap()
         .hits
         .is_empty());
+}
+
+#[test]
+fn ingestion_round_trips() {
+    use agenticdriver::{
+        ContextSource, EmailMessage, IngestRequest, IngestionDocument, RetrievalRequest,
+    };
+    let Ok(base) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
+    let peer = client(&base, &token, true);
+    for format in ["markdown", "email", "pdf", "reference"] {
+        let id = if format == "reference" {
+            "ingestion-reference".into()
+        } else {
+            format!("rust-{format}")
+        };
+        let source = ContextSource {
+            id: id.clone(),
+            revision: "r1".into(),
+            ..Default::default()
+        };
+        let document = match format {
+            "email" => IngestionDocument::Email {
+                source,
+                thread_id: "thread-one".into(),
+                messages: vec![EmailMessage {
+                    id: "message-one".into(),
+                    text: "Solar evidence.".into(),
+                }],
+            },
+            "pdf" => IngestionDocument::Pdf {
+                source,
+                media_type: "application/pdf".into(),
+                data: "JVBERi0xLjQKJSVFT0YK".into(),
+            },
+            "reference" => IngestionDocument::Reference {
+                id: id.clone(),
+                revision: "r1".into(),
+                media_type: "text/markdown".into(),
+            },
+            _ => IngestionDocument::Text {
+                source,
+                media_type: "text/markdown".into(),
+                text: "# Solar evidence\nEnergy from sunlight.".into(),
+            },
+        };
+        let request = IngestRequest {
+            corpus: "library".into(),
+            document,
+            chunking: None,
+            idle_timeout_ms: None,
+        };
+        let receipt = peer.ingest_context(&request).unwrap();
+        assert_eq!(
+            receipt.ingestion.format,
+            if format == "reference" {
+                "markdown"
+            } else {
+                format
+            }
+        );
+        assert_eq!(peer.ingest_context(&request).unwrap().status, "unchanged");
+        let mut run = RunRequest::new("mock", "demo", "solar evidence");
+        run.retrieval = Some(RetrievalRequest {
+            corpus: "library".into(),
+            source_ids: vec![id.clone()],
+            ..Default::default()
+        });
+        let result = peer.run(&run).unwrap();
+        let hit = &result.retrieval.as_ref().unwrap().hits[0];
+        let manifest = hit.ingestion.as_ref().unwrap();
+        assert_eq!(manifest.input_sha256, receipt.ingestion.input_sha256);
+        let location = hit.source.location.as_ref().unwrap();
+        assert_eq!(location.document_id.as_ref(), Some(&id));
+        if format == "pdf" {
+            assert_eq!(manifest.pages.as_ref().unwrap().total, 2);
+        }
+        if format == "email" {
+            assert_eq!(location.message_id.as_deref(), Some("message-one"));
+        }
+        if format == "markdown" {
+            assert_eq!(location.section.as_deref(), Some("Solar evidence"));
+        }
+    }
 }

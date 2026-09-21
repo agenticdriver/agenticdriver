@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import {
+  EmbeddingUsage,
+  type EmbeddingUsageOptions,
+} from "./embedding-usage.js";
 import { z } from "zod";
 import { abortable, DriverError } from "./errors.js";
 import { validateEmbeddingInput, type EmbeddingAdapter } from "./embeddings.js";
@@ -29,7 +33,7 @@ import {
   type VectorScope,
   type VectorStore,
 } from "./vector-store.js";
-import type { ContextAttachment } from "./context-types.js";
+import type { ContextAttachment, ContextSource } from "./context-types.js";
 import type { ExecutionContext } from "./types.js";
 
 export type RetrievalOperation = "search" | "index" | "delete";
@@ -63,10 +67,38 @@ const authorizationSchema = z
   .strict();
 type Corpus = Omit<RetrievalCorpus, "version"> & { index: VectorIndex };
 
+export interface RetrievalOptions {
+  usage?: EmbeddingUsageOptions;
+  /** Host-owned per-provider-call input limits; not execution deadlines. */
+  embeddingBatch?: { maxTexts?: number; maxBytes?: number };
+}
+
 /** Optional, app-authorized retrieval. The service never discovers documents, identities or models implicitly. */
 export class RetrievalService {
   private readonly corpora = new Map<string, Corpus>();
-  constructor(corpora: RetrievalCorpus[]) {
+  private readonly metering: EmbeddingUsage;
+  private readonly batch: { maxTexts: number; maxBytes: number };
+  constructor(corpora: RetrievalCorpus[], options: RetrievalOptions = {}) {
+    this.batch = {
+      maxTexts: options.embeddingBatch?.maxTexts ?? 32,
+      maxBytes: options.embeddingBatch?.maxBytes ?? 65_536,
+    };
+    if (
+      !Number.isSafeInteger(this.batch.maxTexts) ||
+      this.batch.maxTexts < 1 ||
+      this.batch.maxTexts > 256 ||
+      !Number.isSafeInteger(this.batch.maxBytes) ||
+      this.batch.maxBytes < 1 ||
+      this.batch.maxBytes > 1_048_576
+    )
+      throw new DriverError(
+        "INVALID_RETRIEVAL_POLICY",
+        "Embedding batches require positive integer limits, at most 256 inputs and 1 MiB text.",
+      );
+    this.metering = new EmbeddingUsage(
+      corpora.map((corpus) => corpus.embedding),
+      options.usage,
+    );
     if (corpora.length > 1000)
       throw new Error("At most 1000 retrieval corpora may be configured.");
     for (const corpus of corpora) {
@@ -163,6 +195,16 @@ export class RetrievalService {
       context.signal,
     );
   }
+  /** Authorize before potentially expensive extraction or reference resolution. Indexing rechecks this grant. */
+  async authorizeIndex(
+    corpusId: string,
+    source: Pick<ContextSource, "id" | "revision">,
+    context: ExecutionContext,
+  ): Promise<void> {
+    const corpus = this.corpus(corpusId);
+    const scope = await this.scope(corpus, "index", [source.id], context);
+    if (!matches(scope, source.id, source.revision)) unavailable();
+  }
   async index(
     input: RetrievalIndexRequest,
     context: ExecutionContext,
@@ -170,6 +212,23 @@ export class RetrievalService {
     const request = parse(RetrievalIndexRequestSchema, input),
       corpus = this.corpus(request.corpus);
     validateEmbeddingInput(request.chunks.map((chunk) => chunk.text));
+    if (
+      request.ingestion &&
+      (request.ingestion.chunks !== request.chunks.length ||
+        request.chunks.some(
+          (chunk) =>
+            Buffer.byteLength(chunk.text) > request.ingestion!.chunker.maxBytes,
+        ) ||
+        request.ingestion.indexedTextBytes !==
+          request.chunks.reduce(
+            (sum, chunk) => sum + Buffer.byteLength(chunk.text),
+            0,
+          ))
+    )
+      throw new DriverError(
+        "INVALID_RETRIEVAL",
+        "The ingestion manifest must describe the indexed chunks exactly.",
+      );
     if (
       !validSource(request.source) ||
       request.chunks.some(
@@ -198,7 +257,13 @@ export class RetrievalService {
       unavailable();
     await this.ready(corpus, context);
     const digest = createHash("sha256")
-      .update(canonical({ source: request.source, chunks: request.chunks }))
+      .update(
+        canonical({
+          source: request.source,
+          chunks: request.chunks,
+          ...(request.ingestion ? { ingestion: request.ingestion } : {}),
+        }),
+      )
       .digest("hex");
     const old = (
       await abortable(corpus.store.documents(scope, context), context.signal)
@@ -210,27 +275,60 @@ export class RetrievalService {
       documentSha256: digest,
       chunks: request.chunks.length,
       status: "indexed",
+      ...(request.ingestion ? { ingestion: request.ingestion } : {}),
     };
     if (old?.revision === request.source.revision) {
       if (old.digest !== digest) revisionConflict();
       await this.checkedScope(corpus, "index", scope, context);
       return { ...result, status: "unchanged" };
     }
-    const embedded = await abortable(
-      corpus.embedding.embed(
-        request.chunks.map((chunk) => chunk.text),
+    const batches: string[][] = [];
+    let current: string[] = [],
+      bytes = 0;
+    for (const chunk of request.chunks) {
+      const size = Buffer.byteLength(chunk.text);
+      if (size > this.batch.maxBytes)
+        throw new DriverError(
+          "INVALID_RETRIEVAL",
+          "A chunk exceeds the host's embedding batch byte limit.",
+        );
+      if (
+        current.length &&
+        (current.length >= this.batch.maxTexts ||
+          bytes + size > this.batch.maxBytes)
+      ) {
+        batches.push(current);
+        current = [];
+        bytes = 0;
+      }
+      current.push(chunk.text);
+      bytes += size;
+    }
+    if (current.length) batches.push(current);
+    const vectors: number[][] = [];
+    for (const texts of batches) {
+      await this.checkedScope(corpus, "index", scope, context);
+      const embedded = await this.metering.embed(
+        corpus.embedding,
+        texts,
+        "index",
         context,
-      ),
-      context.signal,
-    );
-    if (
-      !Array.isArray(embedded.vectors) ||
-      embedded.vectors.length !== request.chunks.length
-    )
-      throw new DriverError(
-        "INVALID_EMBEDDING",
-        "The embedding batch must contain one vector per chunk.",
       );
+      if (
+        !Array.isArray(embedded.vectors) ||
+        embedded.vectors.length !== texts.length
+      )
+        throw new DriverError(
+          "INVALID_EMBEDDING",
+          "The embedding batch must contain one vector per chunk.",
+        );
+      vectors.push(
+        ...embedded.vectors.map((vector) =>
+          normalizedVector(vector, corpus.index.dimensions),
+        ),
+      );
+      context.reportProgress();
+    }
     const chunks: StoredChunk[] = request.chunks.map((chunk, i) => ({
       chunkId: chunk.id,
       text: chunk.text,
@@ -243,7 +341,8 @@ export class RetrievalService {
         },
       },
       documentSha256: digest,
-      vector: normalizedVector(embedded.vectors[i]!, corpus.index.dimensions),
+      ...(request.ingestion ? { ingestion: request.ingestion } : {}),
+      vector: vectors[i]!,
     }));
     await this.checkedScope(corpus, "index", scope, context);
     context.signal.throwIfAborted();
@@ -286,9 +385,16 @@ export class RetrievalService {
         hits: [],
         truncated: false,
       };
-    const embedded = await abortable(
-      corpus.embedding.embed([request.query], context),
-      context.signal,
+    if (Buffer.byteLength(request.query) > this.batch.maxBytes)
+      throw new DriverError(
+        "INVALID_RETRIEVAL",
+        "The query exceeds the host's embedding batch byte limit.",
+      );
+    const embedded = await this.metering.embed(
+      corpus.embedding,
+      [request.query],
+      "query",
+      context,
     );
     if (!Array.isArray(embedded.vectors) || embedded.vectors.length !== 1)
       throw new DriverError(
@@ -474,3 +580,5 @@ export type {
   EmbeddingResult,
   OpenAIEmbeddingOptions,
 } from "./embeddings.js";
+
+export type { EmbeddingUsageOptions } from "./embedding-usage.js";

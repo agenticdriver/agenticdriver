@@ -151,3 +151,46 @@ the contract implemented by the optional [Usagestat service dependency](usagesta
 the source host, validate its allowed accounts/subjects at ingestion, and isolate
 read access by subject. A client-supplied JSON record is never sufficient proof
 of its claimed identity.
+
+## Embedding usage
+
+Retrieval uses the same v2 usage envelope and optional Usagestat sink. Configure
+metering explicitly on the retrieval service, independently of generation:
+
+```ts
+const retrieval = new RetrievalService(corpora, {
+  embeddingBatch: { maxTexts: 32, maxBytes: 65_536 },
+  usage: {
+    hostId: "driver-installation-01", // same persistent installation ID as generation
+    labels: { app: "literature-review" },
+    onUsage: metering.usageSink(),
+    onTelemetryError: reportCaptureFailure,
+  },
+});
+```
+
+Each embedding batch and query produces its own record UUID with
+`metadata.operation: "embedding"`, `metadata.purpose: "index" | "query"`, and a
+`metadata.parentRunId` when called within a UUID-identified operation. Grouping
+metadata does not change the event's deduplication identity. The account comes
+from the embedding adapter's explicit `providerId`/`accountId` binding. Configure
+that binding and its allowed subjects in Usagestat separately from the generation
+account. Reusing a provider instance ID for conflicting embedding account
+identities is rejected. Optional metering labels are limited to 29 to leave room
+for the three operation labels.
+
+An embedding call is one metered step. OpenAI-compatible reported prompt tokens
+are input tokens with source `provider-response`; unreported measurements remain
+unknown. The deterministic adapter is marked `synthetic`. Failed/cancelled calls
+can still consume resources and have unknown final usage. Successful batches
+remain recorded even if a later batch fails and the index replacement rolls
+back. Reindexing identical content emits no duplicate embedding usage; ingestion
+preparation itself is not a model invocation. Generation usage contains only its
+own model steps.
+
+Records contain no passages, queries, PDF bytes or mail content. A sink failure
+is reported through the telemetry error hook and never repeats an embedding or
+changes the index result. The callback is bounded to two seconds as telemetry
+I/O, not an execution deadline. The SDK has no embedding usage database or
+outbox; native Usagestat owns storage, retention, scoped reconciliation and
+offline forwarding. Durability begins when that backend acknowledges capture.

@@ -29,6 +29,7 @@ export function protocolInfo(
     idempotency?: boolean;
     contextReferences?: boolean;
     retrieval?: boolean;
+    pdfIngestion?: boolean;
   } = {},
 ): ProtocolInfo {
   return {
@@ -46,7 +47,10 @@ export function protocolInfo(
       "context-inputs",
       "draft-artifacts",
       ...(options.contextReferences ? ["context-references"] : []),
-      ...(options.retrieval ? ["scoped-retrieval", "retrieval-indexing"] : []),
+      ...(options.retrieval
+        ? ["scoped-retrieval", "retrieval-indexing", "document-ingestion"]
+        : []),
+      ...(options.pdfIngestion ? ["pdf-ingestion"] : []),
       ...(options.idempotency ? ["idempotency"] : []),
     ],
   };

@@ -65,6 +65,8 @@ func TestReferencePeerConformance(t *testing.T) {
 				_, err = client.Providers(context.Background())
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
+			} else if example.Operation == "ingest" {
+				_, err = client.IngestContext(context.Background(), IngestRequest{Corpus: "library", Document: IngestionDocument{Type: "reference", ID: "paper", Revision: "r1", MediaType: "text/markdown"}})
 			} else {
 				stop := errors.New("intentional stream close")
 				completed, cancelled := false, false
@@ -194,5 +196,59 @@ func TestRetrieval(t *testing.T) {
 	evidence, err = client.SearchContext(ctx, search)
 	if err != nil || len(evidence.Hits) != 0 {
 		t.Fatalf("deleted search: %v %v", evidence, err)
+	}
+}
+
+func TestIngestionRoundTrips(t *testing.T) {
+	base, token := os.Getenv("AGENTICDRIVER_TEST_URL"), os.Getenv("AGENTICDRIVER_TEST_TOKEN")
+	if base == "" {
+		t.Skip("requires real host")
+	}
+	client := conformanceClient(t, base, token, true)
+	ctx := context.Background()
+	for _, format := range []string{"markdown", "email", "pdf", "reference"} {
+		t.Run(format, func(t *testing.T) {
+			source := ContextSource{ID: "go-" + format, Revision: "r1"}
+			document := IngestionDocument{Type: "text", Source: &source, MediaType: "text/markdown", Text: "# Solar evidence\nEnergy from sunlight."}
+			switch format {
+			case "email":
+				document = IngestionDocument{Type: "email", Source: &source, ThreadID: "thread-one", Messages: []EmailMessage{{ID: "message-one", Text: "Solar evidence."}}}
+			case "pdf":
+				document = IngestionDocument{Type: "pdf", Source: &source, MediaType: "application/pdf", Data: "JVBERi0xLjQKJSVFT0YK"}
+			case "reference":
+				source.ID = "ingestion-reference"
+				document = IngestionDocument{Type: "reference", ID: source.ID, Revision: source.Revision, MediaType: "text/markdown"}
+			}
+			request := IngestRequest{Corpus: "library", Document: document}
+			receipt, err := client.IngestContext(ctx, request)
+			expected := format
+			if expected == "reference" {
+				expected = "markdown"
+			}
+			if err != nil || receipt.Ingestion == nil || receipt.Ingestion.Format != expected {
+				t.Fatalf("ingest: %v %v", receipt, err)
+			}
+			repeated, err := client.IngestContext(ctx, request)
+			if err != nil || repeated.Status != "unchanged" {
+				t.Fatalf("dedup: %v %v", repeated, err)
+			}
+			result, err := client.Run(ctx, Request{Provider: "mock", Model: "demo", Input: "solar evidence", Retrieval: &RetrievalRequest{Corpus: "library", SourceIDs: []string{source.ID}}})
+			if err != nil || result.Retrieval == nil || len(result.Retrieval.Hits) == 0 {
+				t.Fatalf("run: %v %v", result, err)
+			}
+			hit := result.Retrieval.Hits[0]
+			if hit.Ingestion == nil || hit.Ingestion.InputSHA256 != receipt.Ingestion.InputSHA256 || hit.Source.Location.DocumentID != source.ID {
+				t.Fatalf("lost provenance: %v", hit)
+			}
+			if format == "pdf" && hit.Ingestion.Pages.Total != 2 {
+				t.Fatal("lost pages")
+			}
+			if format == "email" && hit.Source.Location.MessageID != "message-one" {
+				t.Fatal("lost email message")
+			}
+			if format == "markdown" && hit.Source.Location.Section != "Solar evidence" {
+				t.Fatal("lost Markdown section")
+			}
+		})
 	}
 }

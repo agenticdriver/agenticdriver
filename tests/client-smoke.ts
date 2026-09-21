@@ -117,3 +117,61 @@ assert.equal(
   true,
 );
 assert.deepEqual((await client.searchContext(search)).hits, []);
+
+for (const format of ["markdown", "email", "pdf", "reference"] as const) {
+  const source = {
+    id: format === "reference" ? "ingestion-reference" : `typescript-${format}`,
+    revision: "r1",
+  };
+  const document =
+    format === "markdown"
+      ? {
+          type: "text" as const,
+          source,
+          mediaType: "text/markdown" as const,
+          text: "# Solar evidence\nEnergy from sunlight.",
+        }
+      : format === "email"
+        ? {
+            type: "email" as const,
+            source,
+            threadId: "thread-one",
+            messages: [{ id: "message-one", text: "Solar evidence." }],
+          }
+        : format === "pdf"
+          ? {
+              type: "pdf" as const,
+              source,
+              mediaType: "application/pdf" as const,
+              data: "JVBERi0xLjQKJSVFT0YK",
+            }
+          : {
+              type: "reference" as const,
+              ...source,
+              mediaType: "text/markdown" as const,
+            };
+  const input = { corpus: "library", document };
+  const ingested = await client.ingestContext(input);
+  assert.equal(
+    ingested.ingestion.format,
+    format === "reference" ? "markdown" : format,
+  );
+  assert.equal((await client.ingestContext(input)).status, "unchanged");
+  const retrieval = {
+    corpus: "library",
+    sourceIds: [source.id],
+    query: "solar evidence",
+  };
+  const result = await client.run({ ...request, retrieval });
+  const hit = result.retrieval!.hits[0]!;
+  assert.equal(hit.ingestion!.inputSha256, ingested.ingestion.inputSha256);
+  assert.equal(hit.source.location!.documentId, source.id);
+  if (format === "pdf") assert.equal(hit.ingestion!.pages!.total, 2);
+  if (format === "email")
+    assert.equal(hit.source.location!.messageId, "message-one");
+  if (format === "markdown")
+    assert.equal(hit.source.location!.section, "Solar evidence");
+}
+console.log(
+  "TypeScript ingestion: Markdown, email, PDF fixture and authorized reference round trips passed",
+);

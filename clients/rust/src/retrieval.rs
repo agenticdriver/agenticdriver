@@ -42,6 +42,8 @@ pub struct RetrievalChunk {
 }
 #[derive(Debug, Serialize)]
 pub struct RetrievalIndexRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ingestion: Option<crate::IngestionManifest>,
     pub corpus: String,
     pub source: ContextSource,
     pub chunks: Vec<RetrievalChunk>,
@@ -49,6 +51,8 @@ pub struct RetrievalIndexRequest {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrievalHit {
+    #[serde(default, deserialize_with = "crate::ingestion::optional")]
+    pub ingestion: Option<crate::IngestionManifest>,
     pub chunk_id: String,
     pub source: ContextSource,
     pub text: String,
@@ -65,6 +69,8 @@ pub struct RetrievalResult {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrievalIndexResult {
+    #[serde(default, deserialize_with = "crate::ingestion::optional")]
+    pub ingestion: Option<crate::IngestionManifest>,
     pub corpus: String,
     pub source_id: String,
     pub revision: String,
@@ -134,6 +140,12 @@ pub(crate) fn valid(value: &Value) -> bool {
                 .get("score")
                 .and_then(Value::as_f64)
                 .is_some_and(|n| n.is_finite() && (-1.0..=1.0).contains(&n))
+        {
+            return false;
+        }
+        if hit
+            .get("ingestion")
+            .is_some_and(|v| !crate::ingestion::valid(v))
         {
             return false;
         }
@@ -208,4 +220,16 @@ pub(crate) fn links(result: &crate::RunResult) -> bool {
                     && source.bytes as usize == hit.text.len()
             })
         })
+}
+
+pub(crate) fn receipt(value: &Value, corpus: &str, id: &str, revision: &str) -> bool {
+    value["corpus"].as_str() == Some(corpus)
+        && value["sourceId"].as_str() == Some(id)
+        && value["revision"].as_str() == Some(revision)
+        && crate::context::digest(value.get("documentSha256"))
+        && value["chunks"].as_u64().is_some_and(|n| n > 0 && n <= 256)
+        && matches!(value["status"].as_str(), Some("indexed" | "unchanged"))
+        && value
+            .get("ingestion")
+            .is_none_or(|v| crate::ingestion::valid(v) && v["chunks"] == value["chunks"])
 }

@@ -7,7 +7,7 @@ import {
   type EmbeddingIdentity,
 } from "./retrieval-types.js";
 import { normalizedVector } from "./vector-store.js";
-import type { ExecutionContext, Usage } from "./types.js";
+import type { ExecutionContext, Usage, UsageSource } from "./types.js";
 
 export interface EmbeddingResult {
   vectors: number[][];
@@ -15,6 +15,7 @@ export interface EmbeddingResult {
 }
 export interface EmbeddingAdapter {
   readonly info: EmbeddingIdentity;
+  readonly usageSource?: UsageSource;
   embed(
     texts: readonly string[],
     context: ExecutionContext,
@@ -31,6 +32,7 @@ export interface OpenAIEmbeddingOptions {
 
 /** OpenAI-compatible POST /embeddings, float encoding. Identity/model/dimensions never fall back. */
 export class OpenAIEmbeddingAdapter implements EmbeddingAdapter {
+  readonly usageSource = "provider-response" as const;
   readonly info: EmbeddingIdentity;
   private readonly base: URL;
   constructor(private readonly options: OpenAIEmbeddingOptions) {
@@ -175,6 +177,7 @@ export class OpenAIEmbeddingAdapter implements EmbeddingAdapter {
 
 /** Reproducible lexical-hash fixture for tests and demos; not a semantic embedding model. */
 export class DeterministicEmbeddingAdapter implements EmbeddingAdapter {
+  readonly usageSource = "synthetic" as const;
   readonly info: EmbeddingIdentity;
   constructor(dimensions: number) {
     this.info = Object.freeze(

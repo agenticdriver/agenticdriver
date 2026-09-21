@@ -186,7 +186,10 @@ export class UsagePolicy {
       source: UsageRecord["source"];
     }
   >();
-  constructor(input: UsageOptions | undefined, providers: ProviderAdapter[]) {
+  constructor(
+    input: UsageOptions | undefined,
+    providers: readonly Pick<ProviderAdapter, "info" | "usageSource">[],
+  ) {
     const parsed = UsageOptionsSchema.safeParse(input ?? {});
     if (!parsed.success)
       throw new DriverError(

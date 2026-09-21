@@ -34,16 +34,18 @@ type RetrievalChunk struct {
 	Location *SourceLocation `json:"location,omitempty"`
 }
 type RetrievalIndexRequest struct {
-	Corpus string           `json:"corpus"`
-	Source ContextSource    `json:"source"`
-	Chunks []RetrievalChunk `json:"chunks"`
+	Ingestion *IngestionManifest `json:"ingestion,omitempty"`
+	Corpus    string             `json:"corpus"`
+	Source    ContextSource      `json:"source"`
+	Chunks    []RetrievalChunk   `json:"chunks"`
 }
 type RetrievalHit struct {
-	ChunkID        string        `json:"chunkId"`
-	Source         ContextSource `json:"source"`
-	Text           string        `json:"text"`
-	Score          float64       `json:"score"`
-	DocumentSHA256 string        `json:"documentSha256"`
+	Ingestion      *IngestionManifest `json:"ingestion,omitempty"`
+	ChunkID        string             `json:"chunkId"`
+	Source         ContextSource      `json:"source"`
+	Text           string             `json:"text"`
+	Score          float64            `json:"score"`
+	DocumentSHA256 string             `json:"documentSha256"`
 }
 type RetrievalResult struct {
 	Corpus    string         `json:"corpus"`
@@ -52,12 +54,13 @@ type RetrievalResult struct {
 	Truncated bool           `json:"truncated"`
 }
 type RetrievalIndexResult struct {
-	Corpus         string `json:"corpus"`
-	SourceID       string `json:"sourceId"`
-	Revision       string `json:"revision"`
-	DocumentSHA256 string `json:"documentSha256"`
-	Chunks         int    `json:"chunks"`
-	Status         string `json:"status"`
+	Ingestion      *IngestionManifest `json:"ingestion,omitempty"`
+	Corpus         string             `json:"corpus"`
+	SourceID       string             `json:"sourceId"`
+	Revision       string             `json:"revision"`
+	DocumentSHA256 string             `json:"documentSha256"`
+	Chunks         int                `json:"chunks"`
+	Status         string             `json:"status"`
 }
 type RetrievalDelete struct {
 	Corpus   string `json:"corpus"`
@@ -100,6 +103,9 @@ func retrievalValid(data []byte) bool {
 	for _, raw := range hits {
 		hit, ok := object(raw)
 		if !ok || !matches(hit["chunkId"], sourceIDPattern) || !matches(hit["documentSha256"], digestPattern) || !boundedText(hit["text"], 16384, false) {
+			return false
+		}
+		if manifest, present := hit["ingestion"]; present && !ingestionValid(manifest) {
 			return false
 		}
 		id, _ := stringValue(hit["chunkId"])
@@ -222,10 +228,16 @@ func (c *Client) IndexContext(ctx context.Context, request RetrievalIndexRequest
 	if err = decode(response, &raw); err != nil {
 		return nil, err
 	}
+	return indexReceipt(raw, request.Corpus, request.Source)
+}
+func indexReceipt(raw wireObject, corpus string, source ContextSource) (*RetrievalIndexResult, error) {
+	if manifest, present := raw["ingestion"]; present && !ingestionValid(manifest) {
+		return nil, invalidRetrieval()
+	}
 	var result RetrievalIndexResult
 	data, _ := json.Marshal(raw)
-	if json.Unmarshal(data, &result) != nil || result.Corpus != request.Corpus || result.SourceID != request.Source.ID || result.Revision != request.Source.Revision ||
-		!matches(raw["documentSha256"], digestPattern) || !numberValue(raw["chunks"], true, true) || result.Chunks > 256 || (result.Status != "indexed" && result.Status != "unchanged") {
+	if json.Unmarshal(data, &result) != nil || result.Corpus != corpus || result.SourceID != source.ID || result.Revision != source.Revision ||
+		!matches(raw["documentSha256"], digestPattern) || !numberValue(raw["chunks"], true, true) || result.Chunks > 256 || (result.Ingestion != nil && result.Ingestion.Chunks != result.Chunks) || (result.Status != "indexed" && result.Status != "unchanged") {
 		return nil, invalidRetrieval()
 	}
 	return &result, nil

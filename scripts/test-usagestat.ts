@@ -11,6 +11,11 @@ import { AgenticDriver } from "../src/driver.js";
 import { configuredDriver, validateHostConfig } from "../src/host.js";
 import { MemoryOperationStore } from "../src/operations.js";
 import { mockProvider } from "../src/providers/mock.js";
+import {
+  RetrievalService,
+  MemoryVectorStore,
+  DeterministicEmbeddingAdapter,
+} from "../src/retrieval.js";
 import { UsageStatClient } from "../src/usagestat.js";
 import type { UsageRecord } from "../src/types.js";
 
@@ -86,6 +91,12 @@ try {
         {
           token: { file: "backend.key" },
           bindings: [
+            {
+              hostId: "sdk-host",
+              provider: "fixture-embedding",
+              accountId: "embedding-account",
+              subjects: ["sdk-app"],
+            },
             {
               hostId: "sdk-host",
               provider: "mock",
@@ -201,8 +212,101 @@ try {
     (await backend.run(identity, captured[1]!.eventId)).delivery,
     "local",
   );
+  // The same backend stores separately attributed embedding batches and generation.
+  const embeddingRecords: UsageRecord[] = [],
+    embeddingErrors: unknown[] = [];
+  const fixtureEmbedding = new DeterministicEmbeddingAdapter(32),
+    usageSink = backend.usageSink();
+  const retrieval = new RetrievalService(
+    [
+      {
+        id: "library",
+        version: "v1",
+        store: new MemoryVectorStore(),
+        embedding: {
+          info: { ...fixtureEmbedding.info, accountId: "embedding-account" },
+          usageSource: "synthetic",
+          async embed(texts, context) {
+            return {
+              ...(await fixtureEmbedding.embed(texts, context)),
+              usage: { inputTokens: 12 },
+            };
+          },
+        },
+        authorize: (_, context) =>
+          context.subject === "sdk-app"
+            ? { namespace: "workspace", sources: { paper: "r1" } }
+            : null,
+      },
+    ],
+    {
+      usage: {
+        hostId: "sdk-host",
+        onUsage: async (record) => {
+          embeddingRecords.push(record);
+          await usageSink(record);
+        },
+        onTelemetryError: (error) => embeddingErrors.push(error),
+      },
+    },
+  );
+  const groundedDriver = new AgenticDriver({
+    retrieval,
+    providers: [
+      mockProvider(() => ({
+        text: "Grounded answer",
+        usage: { inputTokens: 5, outputTokens: 2 },
+      })),
+    ],
+    usage: { hostId: "sdk-host", accounts: { mock: "sdk-account" } },
+    onUsage: usageSink,
+    onTelemetryError: (error) => embeddingErrors.push(error),
+  });
+  await groundedDriver.indexContext(
+    {
+      corpus: "library",
+      source: { id: "paper", revision: "r1" },
+      chunks: [{ id: "p1", text: "private selected passage" }],
+    },
+    { subject: "sdk-app" },
+  );
+  const grounded = await groundedDriver.run(
+    {
+      provider: "mock",
+      model: "demo",
+      input: "question",
+      retrieval: { corpus: "library", sourceIds: ["paper"] },
+    },
+    { subject: "sdk-app" },
+  );
+  assert.equal(embeddingErrors.length, 0);
+  assert.equal(embeddingRecords.length, 2);
+  for (const record of embeddingRecords) {
+    const stored = await backend.run(
+      {
+        hostId: "sdk-host",
+        provider: "fixture-embedding",
+        accountId: "embedding-account",
+        subject: "sdk-app",
+      },
+      record.eventId,
+    );
+    assert.equal(stored.record.metadata.operation, "embedding");
+    assert.equal(stored.record.usage.inputTokens, 12);
+    assert.equal(stored.record.source, "synthetic");
+    assert.notEqual(stored.record.runId, grounded.runId);
+    assert.equal(
+      JSON.stringify(stored).includes("private selected passage"),
+      false,
+    );
+  }
+  assert.equal(embeddingRecords[1]!.metadata.parentRunId, grounded.runId);
+  assert.equal(
+    (await backend.run(identity, grounded.runId)).record.usage.inputTokens,
+    5,
+  );
   console.log(
-    "Native Usagestat SDK integration passed: explicit accounts, version compatibility, secret references, capture, reconciliation, restart and no generation retry.",
+    "Native Usagestat SDK integration passed: explicit accounts, version compatibility, secret references, capture, reconciliation, restart, separately attributed embeddings and no generation retry.",
   );
 } finally {
   await stop();

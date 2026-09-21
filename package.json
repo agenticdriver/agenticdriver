@@ -42,6 +42,10 @@
     "./retrieval": {
       "types": "./dist/retrieval.d.ts",
       "import": "./dist/retrieval.js"
+    },
+    "./ingestion": {
+      "types": "./dist/ingestion.d.ts",
+      "import": "./dist/ingestion.js"
     }
   },
   "files": [

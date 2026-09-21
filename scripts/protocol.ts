@@ -9,6 +9,11 @@ import {
 } from "../src/context-types.js";
 import { UsageRecordSchema } from "../src/usage.js";
 import {
+  IngestRequestSchema,
+  IngestResultSchema,
+  IngestionManifestSchema,
+} from "../src/ingestion-types.js";
+import {
   RetrievalSearchSchema,
   RetrievalIndexRequestSchema,
   RetrievalDeleteSchema,
@@ -34,6 +39,13 @@ const string = { type: "string" },
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
+  IngestRequest: z.toJSONSchema(IngestRequestSchema, {
+    target: "draft-2020-12",
+  }),
+  IngestResult: z.toJSONSchema(IngestResultSchema, { target: "draft-2020-12" }),
+  IngestionManifest: z.toJSONSchema(IngestionManifestSchema, {
+    target: "draft-2020-12",
+  }),
   RetrievalSearch: z.toJSONSchema(RetrievalSearchSchema, {
     target: "draft-2020-12",
   }),
@@ -305,6 +317,7 @@ const document = {
       [
         ["search", "RetrievalSearch", "RetrievalResult"],
         ["index", "RetrievalIndexRequest", "RetrievalIndexResult"],
+        ["ingest", "IngestRequest", "IngestResult"],
         ["delete", "RetrievalDelete", "RetrievalDeleteResult"],
       ].map(([operation, input, output]) => [
         `/v1/retrieval/${operation}`,

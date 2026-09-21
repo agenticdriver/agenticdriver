@@ -23,6 +23,7 @@ import {
   RetrievalIndexRequestSchema,
   RetrievalDeleteSchema,
 } from "./retrieval-types.js";
+import { IngestRequestSchema } from "./ingestion-types.js";
 import type { RetrievalOperation } from "./retrieval.js";
 
 export interface AccessToken {
@@ -152,6 +153,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             idempotency: driver.supportsIdempotency,
             contextReferences: driver.supportsContextReferences,
             retrieval: driver.supportsRetrieval,
+            pdfIngestion: driver.supportsPdfIngestion,
           }),
         );
         return;
@@ -174,7 +176,8 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "/v1/retrieval/search": "search",
           "/v1/retrieval/index": "index",
           "/v1/retrieval/delete": "delete",
-        } as Record<string, RetrievalOperation>
+          "/v1/retrieval/ingest": "ingest",
+        } as Record<string, RetrievalOperation | "ingest">
       )[req.url ?? ""];
       if (
         (req.url !== "/v1/runs" && !retrievalOperation) ||
@@ -202,11 +205,13 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         );
       const body = await readRequest(req);
       const retrievalSchema =
-        retrievalOperation === "search"
-          ? RetrievalSearchSchema
-          : retrievalOperation === "index"
-            ? RetrievalIndexRequestSchema
-            : RetrievalDeleteSchema;
+        retrievalOperation === "ingest"
+          ? IngestRequestSchema
+          : retrievalOperation === "search"
+            ? RetrievalSearchSchema
+            : retrievalOperation === "index"
+              ? RetrievalIndexRequestSchema
+              : RetrievalDeleteSchema;
       const parsedRetrieval = retrievalOperation
         ? retrievalSchema.safeParse(body)
         : undefined;
@@ -234,9 +239,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
                 request.retrieval.corpus,
               )))) ||
         (retrievalOperation &&
-          !principal.retrieval[retrievalOperation].includes(
-            retrievalRequest!.corpus,
-          ))
+          !principal.retrieval[
+            retrievalOperation === "ingest" ? "index" : retrievalOperation
+          ].includes(retrievalRequest!.corpus))
       )
         throw new DriverError(
           "FORBIDDEN",
@@ -274,20 +279,25 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       };
       if (retrievalOperation) {
         const result =
-          retrievalOperation === "search"
-            ? await driver.searchContext(
-                RetrievalSearchSchema.parse(retrievalRequest),
+          retrievalOperation === "ingest"
+            ? await driver.ingestContext(
+                IngestRequestSchema.parse(retrievalRequest),
                 runOptions,
               )
-            : retrievalOperation === "index"
-              ? await driver.indexContext(
-                  RetrievalIndexRequestSchema.parse(retrievalRequest),
+            : retrievalOperation === "search"
+              ? await driver.searchContext(
+                  RetrievalSearchSchema.parse(retrievalRequest),
                   runOptions,
                 )
-              : await driver.deleteContext(
-                  RetrievalDeleteSchema.parse(retrievalRequest),
-                  runOptions,
-                );
+              : retrievalOperation === "index"
+                ? await driver.indexContext(
+                    RetrievalIndexRequestSchema.parse(retrievalRequest),
+                    runOptions,
+                  )
+                : await driver.deleteContext(
+                    RetrievalDeleteSchema.parse(retrievalRequest),
+                    runOptions,
+                  );
         json(res, 200, result);
         return;
       }
@@ -417,6 +427,15 @@ function statusFor(code: string) {
       "UNSUPPORTED_CAPABILITY",
       "UNSUPPORTED_PROTOCOL_VERSION",
       "INVALID_RETRIEVAL",
+      "INVALID_INGESTION",
+      "INVALID_DOCUMENT",
+      "DOCUMENT_LIMIT",
+      "EMPTY_DOCUMENT",
+      "EMPTY_EXTRACTION",
+      "OCR_REQUIRED",
+      "PDF_EXTRACTOR_REQUIRED",
+      "PDF_ENCRYPTED",
+      "PDF_PERMISSIONS",
       "RETRIEVAL_UNAVAILABLE",
       "NO_RETRIEVAL_EVIDENCE",
     ].includes(code)

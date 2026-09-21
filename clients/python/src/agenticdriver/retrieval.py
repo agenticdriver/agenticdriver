@@ -1,6 +1,10 @@
 """Scoped retrieval over app-authorized sources; vector data stays on the host."""
 from typing import Literal, TypedDict
 from .context import ContextSource, SourceLocation
+from .ingestion import IngestionManifest
+
+class _IngestionOptional(TypedDict, total=False):
+    ingestion: IngestionManifest
 
 class _Corpus(TypedDict):
     corpus: str
@@ -32,11 +36,11 @@ class _Chunk(TypedDict):
 class RetrievalChunk(_Chunk, total=False):
     location: SourceLocation
 
-class RetrievalIndexRequest(_Corpus):
+class RetrievalIndexRequest(_Corpus, _IngestionOptional):
     source: ContextSource
     chunks: list[RetrievalChunk]
 
-class RetrievalHit(TypedDict):
+class RetrievalHit(_IngestionOptional):
     chunkId: str
     source: ContextSource
     text: str
@@ -48,7 +52,7 @@ class RetrievalResult(_Corpus):
     hits: list[RetrievalHit]
     truncated: bool
 
-class RetrievalIndexResult(_Corpus):
+class RetrievalIndexResult(_Corpus, _IngestionOptional):
     sourceId: str
     revision: str
     documentSha256: str

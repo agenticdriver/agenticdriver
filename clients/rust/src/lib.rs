@@ -9,6 +9,11 @@ pub mod context;
 pub use context::{
     ArtifactRequest, ContextInput, ContextManifest, ContextSource, DraftArtifact, SourceLocation,
 };
+pub mod ingestion;
+pub use ingestion::{
+    ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
+    IngestionDocument, IngestionManifest,
+};
 pub mod retrieval;
 mod validation;
 pub use retrieval::{
@@ -329,6 +334,23 @@ impl AgenticClient {
         }
         Ok(response)
     }
+    pub fn ingest_context(&self, request: &IngestRequest) -> Result<IngestResult> {
+        let value: Value = read_json(self.request(
+            "v1/retrieval/ingest",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        let (id, revision) = request.document.identity();
+        if !ingestion::valid(&value["ingestion"])
+            || !retrieval::receipt(&value, &request.corpus, id, revision)
+        {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Invalid ingestion provenance or a mismatched receipt.",
+            ));
+        }
+        Ok(serde_json::from_value(value)?)
+    }
     pub fn search_context(&self, request: &RetrievalSearch) -> Result<RetrievalResult> {
         let value: Value = read_json(self.request(
             "v1/retrieval/search",
@@ -356,26 +378,18 @@ impl AgenticClient {
             Some(&serde_json::to_value(request)?),
             false,
         )?)?;
-        if !context::digest(value.get("documentSha256")) {
+        if !retrieval::receipt(
+            &value,
+            &request.corpus,
+            &request.source.id,
+            &request.source.revision,
+        ) {
             return Err(protocol_error(
                 "INVALID_RESPONSE",
                 "Invalid indexing receipt.",
             ));
         }
-        let result: RetrievalIndexResult = serde_json::from_value(value)?;
-        if result.corpus != request.corpus
-            || result.source_id != request.source.id
-            || result.revision != request.source.revision
-            || result.chunks == 0
-            || result.chunks > 256
-            || !matches!(result.status.as_str(), "indexed" | "unchanged")
-        {
-            return Err(protocol_error(
-                "INVALID_RESPONSE",
-                "Invalid indexing receipt.",
-            ));
-        }
-        Ok(result)
+        Ok(serde_json::from_value(value)?)
     }
     pub fn delete_context(&self, request: &RetrievalDelete) -> Result<RetrievalDeleteResult> {
         let result: RetrievalDeleteResult = read_json(self.request(

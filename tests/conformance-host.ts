@@ -71,6 +71,16 @@ contextStore.put({
   subjects: ["test-user"],
   expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
 });
+contextStore.put({
+  attachment: {
+    type: "text",
+    source: { id: "ingestion-reference", revision: "r1" },
+    mediaType: "text/markdown",
+    text: "# Selected reference\nSolar evidence from an app-owned reference.",
+  },
+  subjects: ["test-user"],
+  expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+});
 const withMedia = (adapter: ProviderAdapter): ProviderAdapter => ({
   ...adapter,
   info: {
@@ -87,6 +97,17 @@ const driver = await serve(
   new AgenticDriver({
     operations: new MemoryOperationStore(),
     context: { resolve: contextStore.resolve },
+    ingestion: {
+      pdf: {
+        extract: async () => ({
+          pages: [
+            { page: 1, text: "Solar evidence on page one." },
+            { page: 2, text: "Battery evidence on page two." },
+          ],
+          extractor: { id: "pdf-fixture", version: "1" },
+        }),
+      },
+    },
     retrieval: new RetrievalService([
       {
         id: "library",
@@ -98,6 +119,15 @@ const driver = await serve(
             ? {
                 namespace: "test-user",
                 sources: {
+                  "ingestion-reference": "r1",
+                  ...Object.fromEntries(
+                    ["typescript", "python", "go", "rust"].flatMap((language) =>
+                      ["markdown", "email", "pdf"].map((format) => [
+                        `${language}-${format}`,
+                        "r1",
+                      ]),
+                    ),
+                  ),
                   "typescript-paper": "r1",
                   "python-paper": "r1",
                   "go-paper": "r1",
@@ -194,9 +224,10 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       res.end(JSON.stringify(metrics));
       return;
     }
-    const id = /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol)$/.exec(
-      req.url ?? "",
-    )?.[1];
+    const id =
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest)$/.exec(
+        req.url ?? "",
+      )?.[1];
     const example = fixture.cases.find((c) => c.id === id);
     if (!example) {
       res.writeHead(404);

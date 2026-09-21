@@ -18,6 +18,9 @@ from .retrieval import RetrievalRequest, RetrievalSearch, VectorIndex, Retrieval
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 __all__ += ["RetrievalRequest", "RetrievalSearch", "VectorIndex", "RetrievalChunk", "RetrievalIndexRequest", "RetrievalHit", "RetrievalResult", "RetrievalIndexResult", "RetrievalDelete", "RetrievalDeleteResult"]
 
+from .ingestion import IngestRequest, IngestResult, IngestionDocument, IngestionManifest, EmailDocument, EmailMessage, ChunkingOptions, ExtractionIdentity
+__all__ += ["IngestRequest", "IngestResult", "IngestionDocument", "IngestionManifest", "EmailDocument", "EmailMessage", "ChunkingOptions", "ExtractionIdentity"]
+
 class _NoRedirects(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -68,6 +71,15 @@ class AgenticClient:
         if len(data) > 2_000_000:
             raise DriverError("RESPONSE_TOO_LARGE", "The response exceeded 2 MB.")
         return parse_json(data)
+
+    def ingest_context(self, request: IngestRequest) -> IngestResult:
+        with self._request("v1/retrieval/ingest", request) as response:
+            result = self._json(response)
+            document = request["document"]
+            source = document if document["type"] == "reference" else document["source"]
+            if not valid_index_result(result, {"corpus": request["corpus"], "source": source}) or "ingestion" not in result:
+                raise DriverError("INVALID_RESPONSE", "The driver returned invalid ingestion provenance or a mismatched receipt.")
+            return result
 
     def search_context(self, request: RetrievalSearch) -> RetrievalResult:
         with self._request("v1/retrieval/search", request) as response:

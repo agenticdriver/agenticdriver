@@ -118,3 +118,18 @@ There is **no default total run deadline and no default inactivity timeout**.
 An application may set `idleTimeoutMs`; real model/tool work resets that policy,
 while network pings do not. Negotiation/discovery connection bounds do not become
 run deadlines. See [inactivity and cancellation](timeouts.md).
+
+## Ingestion and retrieval extensions
+
+Hosts advertising `scoped-retrieval` support `POST /v1/retrieval/search` and the
+`retrieval` run option. `retrieval-indexing` adds explicit source index/delete
+operations. `document-ingestion` adds `POST /v1/retrieval/ingest` using the token's
+index grant; `pdf-ingestion` requires a configured PDF extractor. All operations
+also require application corpus/source authorization. See [retrieval](retrieval.md)
+and [ingestion](ingestion.md) for request shapes, provenance, bounds and errors.
+
+Runs can emit `run.progress` with phase `context` while resolving sources or
+performing retrieval. This is real work progress, subject to the same explicit
+inactivity policy as model/tool work. Retrieval/ingestion mutation receipts
+identify the exact corpus, source and revision. Unknown outcomes require
+application reconciliation, with no automatic account, model or billing fallback.

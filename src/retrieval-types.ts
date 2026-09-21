@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IngestionManifestSchema } from "./ingestion-metadata.js";
 import {
   ContextSourceSchema,
   validContextResult,
@@ -57,6 +58,7 @@ export const RetrievalChunkSchema = z
 export const RetrievalIndexRequestSchema = z
   .object({
     corpus: RetrievalIdSchema,
+    ingestion: IngestionManifestSchema.optional(),
     source: ContextSourceSchema,
     chunks: z
       .array(RetrievalChunkSchema)
@@ -78,6 +80,7 @@ export type RetrievalDelete = z.infer<typeof RetrievalDeleteSchema>;
 export const RetrievalHitSchema = z
   .object({
     chunkId: RetrievalIdSchema,
+    ingestion: IngestionManifestSchema.optional(),
     source: ContextSourceSchema,
     text: z.string().min(1).max(16_384),
     /** Exact cosine similarity, not a confidence or entailment measurement. */
@@ -104,13 +107,17 @@ export type RetrievalResult = z.infer<typeof RetrievalResultSchema>;
 export const RetrievalIndexResultSchema = z
   .object({
     corpus: RetrievalIdSchema,
+    ingestion: IngestionManifestSchema.optional(),
     sourceId: RetrievalIdSchema,
     revision: RetrievalIdSchema,
     documentSha256: sha256,
     chunks: z.number().int().min(1).max(256),
     status: z.enum(["indexed", "unchanged"]),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => !value.ingestion || value.ingestion.chunks === value.chunks,
+  );
 export type RetrievalIndexResult = z.infer<typeof RetrievalIndexResultSchema>;
 export const RetrievalDeleteResultSchema = RetrievalDeleteSchema.extend({
   deleted: z.boolean(),

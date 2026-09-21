@@ -1,3 +1,4 @@
+from ._ingestion import valid_ingestion
 import math
 import re
 from ._context import _id, _digest, _string, _source
@@ -15,6 +16,8 @@ def valid_retrieval(value, request=None):
     ids, size = set(), 0
     for hit in hits:
         if not isinstance(hit, dict) or not _id(hit.get("chunkId")) or hit["chunkId"] in ids or not _digest(hit.get("documentSha256")) or not _string(hit.get("text"), 16384, False):
+            return False
+        if "ingestion" in hit and not valid_ingestion(hit["ingestion"]):
             return False
         source, score = hit.get("source"), hit.get("score")
         if (not isinstance(source, dict) or not _source({**source, "mediaType": "text/plain", "bytes": 1, "sha256": "0"*64, "origin": "inline"}, lambda _: False) or
@@ -43,7 +46,8 @@ def valid_retrieval_links(value, request):
 def valid_index_result(value, request):
     return (isinstance(value, dict) and value.get("corpus") == request["corpus"] and value.get("sourceId") == request["source"]["id"] and
             value.get("revision") == request["source"]["revision"] and _digest(value.get("documentSha256")) and
-            type(value.get("chunks")) is int and 1 <= value["chunks"] <= 256 and value.get("status") in ("indexed", "unchanged"))
+            type(value.get("chunks")) is int and 1 <= value["chunks"] <= 256 and value.get("status") in ("indexed", "unchanged") and
+            ("ingestion" not in value or (valid_ingestion(value["ingestion"]) and value["ingestion"]["chunks"] == value["chunks"])))
 
 def valid_delete_result(value, request):
     return isinstance(value, dict) and all(value.get(k) == request[k] for k in ("corpus", "sourceId", "revision")) and type(value.get("deleted")) is bool

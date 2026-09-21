@@ -33,6 +33,16 @@ for (const example of fixtures.cases) {
   try {
     if (example.operation === "providers") await client.providers();
     else if (example.operation === "protocol") await client.protocol();
+    else if (example.operation === "ingest")
+      await client.ingestContext({
+        corpus: "library",
+        document: {
+          type: "reference",
+          id: "paper",
+          revision: "r1",
+          mediaType: "text/markdown",
+        },
+      });
     else {
       let completed = false,
         cancelled = false;

@@ -3123,6 +3123,1558 @@
           }
         }
       ]
+    },
+    {
+      "id": "ingestion-pdf-coverage",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ingestion-bad-hash",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "bad",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-too-many-pages",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 1001,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-duplicate-empty-page",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1, 1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-out-of-range-ocr",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [3],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-missing-ocr-identity",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [2],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-oversized-chunk-policy",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 16385
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-impossible-byte-count",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 31,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-null-extractor",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": null,
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-wrong-format-coverage",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "markdown",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-all-empty-messages",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "email",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "messages": {
+                      "total": 2,
+                      "empty": 2
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-receipt",
+      "operation": "ingest",
+      "json": {
+        "corpus": "library",
+        "sourceId": "paper",
+        "revision": "r1",
+        "documentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "chunks": 1,
+        "status": "indexed",
+        "ingestion": {
+          "format": "pdf",
+          "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputBytes": 200,
+          "extractor": {
+            "id": "pdf-fixture",
+            "version": "1"
+          },
+          "chunker": {
+            "id": "source-lines-v1",
+            "maxBytes": 2048
+          },
+          "extractedTextBytes": 30,
+          "indexedTextBytes": 30,
+          "chunks": 1,
+          "pages": {
+            "total": 2,
+            "ocr": [],
+            "empty": [1]
+          }
+        }
+      }
+    },
+    {
+      "id": "ingestion-receipt-missing-manifest",
+      "operation": "ingest",
+      "json": {
+        "corpus": "library",
+        "sourceId": "paper",
+        "revision": "r1",
+        "documentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "chunks": 1,
+        "status": "indexed"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ingestion-receipt-mismatched-source",
+      "operation": "ingest",
+      "json": {
+        "corpus": "library",
+        "sourceId": "other",
+        "revision": "r1",
+        "documentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "chunks": 1,
+        "status": "indexed",
+        "ingestion": {
+          "format": "pdf",
+          "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputBytes": 200,
+          "extractor": {
+            "id": "pdf-fixture",
+            "version": "1"
+          },
+          "chunker": {
+            "id": "source-lines-v1",
+            "maxBytes": 2048
+          },
+          "extractedTextBytes": 30,
+          "indexedTextBytes": 30,
+          "chunks": 1,
+          "pages": {
+            "total": 2,
+            "ocr": [],
+            "empty": [1]
+          }
+        }
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ingestion-receipt-inconsistent-chunks",
+      "operation": "ingest",
+      "json": {
+        "corpus": "library",
+        "sourceId": "paper",
+        "revision": "r1",
+        "documentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "chunks": 2,
+        "status": "indexed",
+        "ingestion": {
+          "format": "pdf",
+          "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputBytes": 200,
+          "extractor": {
+            "id": "pdf-fixture",
+            "version": "1"
+          },
+          "chunker": {
+            "id": "source-lines-v1",
+            "maxBytes": 2048
+          },
+          "extractedTextBytes": 30,
+          "indexedTextBytes": 30,
+          "chunks": 1,
+          "pages": {
+            "total": 2,
+            "ocr": [],
+            "empty": [1]
+          }
+        }
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "ingestion-all-empty-pages",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 2,
+                      "ocr": [],
+                      "empty": [1, 2]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "ingestion-fewer-chunks-than-pages",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                  "ingestion": {
+                    "format": "pdf",
+                    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "inputBytes": 200,
+                    "extractor": {
+                      "id": "pdf-fixture",
+                      "version": "1"
+                    },
+                    "chunker": {
+                      "id": "source-lines-v1",
+                      "maxBytes": 2048
+                    },
+                    "extractedTextBytes": 30,
+                    "indexedTextBytes": 30,
+                    "chunks": 1,
+                    "pages": {
+                      "total": 3,
+                      "ocr": [],
+                      "empty": [1]
+                    }
+                  }
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
     }
   ]
 }

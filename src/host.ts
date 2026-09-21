@@ -297,6 +297,7 @@ export function configuredDriver(
     onTelemetryError?: DriverOptions["onTelemetryError"];
     context?: DriverOptions["context"];
     retrieval?: DriverOptions["retrieval"];
+    ingestion?: DriverOptions["ingestion"];
   } = {},
 ): AgenticDriver {
   config = validateHostConfig(config);
@@ -365,6 +366,7 @@ export function configuredDriver(
     },
     context: { ...options.context, ...config.context },
     retrieval: options.retrieval,
+    ingestion: options.ingestion,
     tools: options.tools,
     approve: options.approve,
     limits: config.limits,

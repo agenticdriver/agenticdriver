@@ -22,6 +22,8 @@ class ClientConformance(unittest.TestCase):
                         client.providers()
                     elif case.get("operation") == "protocol":
                         client.protocol()
+                    elif case.get("operation") == "ingest":
+                        client.ingest_context({"corpus": "library", "document": {"type": "reference", "id": "paper", "revision": "r1", "mediaType": "text/markdown"}})
                     else:
                         stream = client.stream(provider="mock", model="demo", input="Hello", **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
                         completed = cancelled = False
@@ -119,3 +121,27 @@ class ClientConformance(unittest.TestCase):
         self.assertEqual(result["artifacts"][0]["sourceIds"], ["python-p1"])
         self.assertTrue(client.delete_context({"corpus": "library", "sourceId": "python-paper", "revision": "r1"})["deleted"])
         self.assertEqual(client.search_context(query)["hits"], [])
+
+    def test_ingestion(self):
+        from agenticdriver import IngestRequest
+        client = self.client()
+        for kind in ("markdown", "email", "pdf", "reference"):
+            with self.subTest(kind=kind):
+                source = {"id": "ingestion-reference" if kind == "reference" else "python-" + kind, "revision": "r1"}
+                documents = {
+                    "markdown": {"type": "text", "source": source, "mediaType": "text/markdown", "text": "# Solar evidence\nEnergy from sunlight."},
+                    "email": {"type": "email", "source": source, "threadId": "thread-one", "messages": [{"id": "message-one", "text": "Solar evidence."}]},
+                    "pdf": {"type": "pdf", "source": source, "mediaType": "application/pdf", "data": "JVBERi0xLjQKJSVFT0YK"},
+                    "reference": {"type": "reference", **source, "mediaType": "text/markdown"},
+                }
+                request: IngestRequest = {"corpus": "library", "document": documents[kind]}
+                ingested = client.ingest_context(request)
+                self.assertEqual(ingested["ingestion"]["format"], "markdown" if kind == "reference" else kind)
+                self.assertEqual(client.ingest_context(request)["status"], "unchanged")
+                result = client.run(provider="mock", model="demo", input="solar evidence", retrieval={"corpus": "library", "sourceIds": [source["id"]]})
+                hit = result["retrieval"]["hits"][0]
+                self.assertEqual(hit["ingestion"]["inputSha256"], ingested["ingestion"]["inputSha256"])
+                self.assertEqual(hit["source"]["location"]["documentId"], source["id"])
+                if kind == "pdf": self.assertEqual(hit["ingestion"]["pages"]["total"], 2)
+                if kind == "email": self.assertEqual(hit["source"]["location"]["messageId"], "message-one")
+                if kind == "markdown": self.assertEqual(hit["source"]["location"]["section"], "Solar evidence")

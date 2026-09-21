@@ -134,14 +134,20 @@ try {
     import {AgenticDriver} from "agenticdriver";
     import {fileURLToPath} from "node:url";
     import {RetrievalService,SqliteVectorStore,DeterministicEmbeddingAdapter} from "agenticdriver/retrieval";
+    import {PopplerPdfExtractor, IngestRequestSchema} from "agenticdriver/ingestion";
     import {mockProvider} from "agenticdriver/providers";
     const store=await SqliteVectorStore.open(fileURLToPath(new URL("./private-state/vectors.db",import.meta.url)));
     const retrieval=new RetrievalService([{id:"library",version:"v1",store,embedding:new DeterministicEmbeddingAdapter(32),
-      authorize:()=>({namespace:"local",sources:{paper:"r1"}})}]);
+      authorize:()=>({namespace:"local",sources:{paper:"r1",document:"r1"}})}]);
     const driver=new AgenticDriver({providers:[mockProvider()],retrieval});
     await driver.indexContext({corpus:"library",source:{id:"paper",revision:"r1"},chunks:[{id:"p1",text:"Solar batteries retain energy."}]});
     const result=await driver.run({provider:"mock",model:"demo",input:"solar energy",retrieval:{corpus:"library",sourceIds:["paper"]}});
-    assert.equal(result.retrieval.hits[0].chunkId,"p1");assert.equal(result.sources[0].origin,"retrieval");await store.close();
+    assert.equal(result.retrieval.hits[0].chunkId,"p1");assert.equal(result.sources[0].origin,"retrieval");
+    const receipt=await driver.ingestContext(IngestRequestSchema.parse({corpus:"library",document:{type:"text",source:{id:"document",revision:"r1"},mediaType:"text/markdown",text:"# Evidence\\nSolar batteries retain energy."}}));
+    assert.equal(receipt.ingestion.format,"markdown");assert.equal(typeof new PopplerPdfExtractor().extract,"function");
+    const found=await driver.searchContext({corpus:"library",sourceIds:["document"],query:"solar"});
+    assert.equal(found.hits[0].ingestion.inputSha256,receipt.ingestion.inputSha256);assert.equal(found.hits[0].source.location.section,"Evidence");
+    await store.close();
   `,
   );
   await run(process.execPath, [join(app, "retrieval-check.mjs")], {
