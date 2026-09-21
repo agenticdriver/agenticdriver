@@ -4,6 +4,13 @@ Run `npm run check` and `npm run test:clients` to verify the protocol and all fo
 clients. The suite uses synthetic data and a local reference peer; it never
 loads an API key or starts a native agent.
 
+Scheduling tests check tenant rotation, account alias isolation, bounded queues,
+cancellation, shutdown and control requests under saturation. Fake-clock checks
+keep queued work pending for 30 days without starting a configured inactivity
+timer. Resource tests cover unknown/partial usage, observed caps before tools,
+authority failures and the existing Usagestat quota API. These fixtures do not
+certify live provider costs, quota freshness or an external reservation service.
+
 `protocol/fixtures/versioning.json` supplies seven shared compatibility cases.
 `protocol/fixtures/conformance.json` supplies transport and payload cases that
 every client executes against identical responses from

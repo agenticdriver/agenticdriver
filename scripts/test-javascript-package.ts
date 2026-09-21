@@ -57,7 +57,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         types: ["node"],
         outDir: "compiled-server",
       },
-      files: ["examples/server.mts"],
+      files: ["examples/server.mts", "examples/scheduling.mts"],
     }),
   );
   await writeFile(
@@ -243,6 +243,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       { cwd: app, timeout: 10000 },
     );
     assert.match(server.stdout, /Installed TypeScript server is connected/);
+    const scheduling = await run(
+      process.execPath,
+      [join(app, "compiled-server/scheduling.mjs")],
+      { cwd: app, timeout: 10000 },
+    );
+    assert.match(
+      scheduling.stdout,
+      /Installed scheduling and resource policies passed/,
+    );
     await writeFile(
       join(app, "contract-check.mjs"),
       `

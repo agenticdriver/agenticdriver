@@ -64,6 +64,12 @@ configurations can add `usage.hostId` and each provider's `accountId`. Keep host
 IDs unique when cloning installations. `driver.usageIdentity(provider, subject)`
 returns the trusted host-side identity to use in a quota lookup.
 
+Optional [resource policies](scheduling.md) use that same trusted identity for
+subject/account admission. `UsageStatClient.quotaAdmission()` reads existing
+scoped quota snapshots with explicit unit, freshness and unknown-value policies.
+Per-run observed token/cost guards do not replace Usagestat storage or reserve
+account-wide spend.
+
 ## Measurements and coverage
 
 Every measurement is optional. Absent means unknown. Explicit zero means the

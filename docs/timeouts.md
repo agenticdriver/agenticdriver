@@ -20,7 +20,7 @@ const result = await driver.run({
 This run may take hours if it keeps making progress. The timeout resets when the
 provider emits visible text, reasoning or function-call updates, or when an
 application tool reports actual progress or completes. The timer starts when
-the run starts, so it also covers a stalled provider before its first output.
+execution is admitted, so it also covers a stalled provider before its first output.
 An expiry produces `IDLE_TIMEOUT` in a terminal `run.cancelled` event; `run()`
 throws that typed error. Cancellation also interrupts upstream requests and CLI
 processes. The SDK never retries potentially completed side effects automatically.
@@ -77,3 +77,8 @@ the application must pass its cancellation signal/context to its own callbacks.
 A lost connection cannot undo their effects. See [application-owned functions](application-tools.md).
 
 Session retention measures idle storage age between turns. An active conversation turn suspends retention, including during tool/review waits. It does not impose a run deadline. See [sessions](sessions.md).
+
+An accepted run may wait in an explicitly enabled capacity queue. Queue and
+resource-authority waits do not start or consume its inactivity interval. Neither
+has a default execution deadline; cancellation still works. Transport keepalives
+are not work progress. See [scheduling](scheduling.md).

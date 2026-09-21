@@ -49,6 +49,16 @@ import { withProgress } from "./progress.js";
 import { ProviderDiscovery, type DiscoveryOptions } from "./discovery.js";
 import { UsageAccumulator, UsagePolicy, type UsageOptions } from "./usage.js";
 import {
+  FairScheduler,
+  type AdmissionTicket,
+  type SchedulingOptions,
+} from "./scheduling.js";
+import {
+  ResourcePolicy,
+  type ResourceLimits,
+  type ResourceAdmission,
+} from "./resources.js";
+import {
   contextPolicy,
   resolveContext,
   validateInlineContext,
@@ -77,6 +87,9 @@ import type {
 } from "./types.js";
 
 export interface DriverOptions {
+  scheduling?: SchedulingOptions;
+  resources?: ResourceLimits;
+  resourceAdmission?: ResourceAdmission;
   sessions?: SessionOptions;
   providers: ProviderAdapter[];
   discovery?: DiscoveryOptions;
@@ -114,6 +127,9 @@ type SelectedTool =
     };
 
 export class AgenticDriver {
+  /** Shared by embedded execution and any server attached to this driver. */
+  readonly scheduler?: FairScheduler;
+  private readonly resources: ResourcePolicy;
   private readonly sessions: SessionManager;
   private readonly discovery: ProviderDiscovery;
   private readonly approvals: ApprovalManager;
@@ -133,6 +149,13 @@ export class AgenticDriver {
     validateFormats: false,
   });
   constructor(private readonly options: DriverOptions) {
+    this.scheduler = options.scheduling
+      ? new FairScheduler(options.scheduling)
+      : undefined;
+    this.resources = new ResourcePolicy(
+      options.resources,
+      options.resourceAdmission,
+    );
     this.approvals = new ApprovalManager(options.approvals);
     this.applicationTools = new ApplicationToolManager(
       options.applicationTools,
@@ -742,6 +765,11 @@ export class AgenticDriver {
   ): AsyncGenerator<RunEvent> {
     const provider = this.providers.get(request.provider)!;
     const selectedTools = this.selectedTools(request, options);
+    const resourceIdentity = this.usageIdentity(
+      request.provider,
+      options.subject ?? "local",
+    );
+    const budgets = this.resources.select(resourceIdentity);
     const session = this.sessions.begin(request, {
       subject: options.subject,
       sessions: options.sessionOperations,
@@ -754,7 +782,9 @@ export class AgenticDriver {
     ].filter((value): value is number => value !== undefined && value > 0);
     const idleTimeoutMs = idleLimits.length ? Math.min(...idleLimits) : 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let idlePaused = false;
+    // Queue waiting is not model/tool inactivity, including when a caller
+    // explicitly configured an inactivity timeout.
+    let idlePaused = true;
     const reportProgress = () => {
       if (
         !idleTimeoutMs ||
@@ -776,7 +806,6 @@ export class AgenticDriver {
         idleTimeoutMs,
       );
     };
-    reportProgress();
     const signal = AbortSignal.any([
       controller.signal,
       ...(options.signal ? [options.signal] : []),
@@ -795,6 +824,7 @@ export class AgenticDriver {
     };
     let sequence = 0;
     const meter = new UsageAccumulator();
+    let admission: AdmissionTicket | undefined;
     let status: UsageRecord["status"] = "cancelled";
     let toolOutcomePending = false;
     let resolved: Awaited<ReturnType<typeof resolveContext>> | undefined;
@@ -833,11 +863,18 @@ export class AgenticDriver {
       .join("\n\n");
     try {
       signal.throwIfAborted();
+      if (!options.admission && this.scheduler)
+        admission = this.scheduler.submit(resourceIdentity, signal);
       yield event({
         type: "run.started",
         provider: request.provider,
         model: request.model,
       });
+      if (options.admission) await abortable(options.admission(), signal);
+      else if (admission) await admission.wait();
+      signal.throwIfAborted();
+      idlePaused = false;
+      reportProgress();
       if (request.retrieval) {
         const searched = yield* withProgress(
           (progress) =>
@@ -906,6 +943,21 @@ export class AgenticDriver {
       );
       for (let step = 1; step <= maxSteps; step++) {
         signal.throwIfAborted();
+        this.resources.check(budgets, meter, true);
+        // An authority decision is admission, not model or tool activity.
+        idlePaused = true;
+        clearTimeout(timer);
+        await this.resources.authorize({
+          identity: { ...resourceIdentity },
+          runId,
+          model: request.model,
+          step,
+          usage: meter.snapshot(),
+          signal,
+        });
+        idlePaused = false;
+        reportProgress();
+        signal.throwIfAborted();
         session?.check(messages);
         if (retrieval)
           await this.retrievalService().revalidate(
@@ -915,6 +967,11 @@ export class AgenticDriver {
           );
         yield event({ type: "step.started", step });
         signal.throwIfAborted();
+        const stepOutputLimit = this.resources.outputLimit(
+          budgets,
+          meter,
+          maxOutputTokens,
+        );
         const { value: turn, streamed } = yield* withProgress(
           (providerContext) => {
             session?.started();
@@ -929,7 +986,7 @@ export class AgenticDriver {
                   description: tool.description,
                   inputSchema: tool.inputSchema,
                 })),
-                maxOutputTokens,
+                maxOutputTokens: stepOutputLimit,
                 retry: request.retry
                   ? {
                       ...request.retry,
@@ -956,6 +1013,7 @@ export class AgenticDriver {
           yield event({ type: "text.delta", text: turn.text });
         // Provider adapters and event consumers must not mutate an approved action.
         const calls = structuredClone(turn.toolCalls ?? []);
+        this.resources.check(budgets, meter, calls.length > 0);
         if (!calls.length) {
           let output: Json | undefined;
           if (validateOutput) {
@@ -1214,6 +1272,14 @@ export class AgenticDriver {
     } catch (error) {
       status = signal.aborted ? "cancelled" : "failed";
       const cause = publicError(error, signal);
+      // Admission/cancellation can settle after a durable claim but before its
+      // first event. Record a complete rejection, not an uncertain operation.
+      if (!sequence)
+        yield event({
+          type: "run.started",
+          provider: request.provider,
+          model: request.model,
+        });
       const failure = toolOutcomePending
         ? new DriverError(
             ["IDLE_TIMEOUT", "CANCELLED"].includes(cause.code)
@@ -1229,6 +1295,7 @@ export class AgenticDriver {
         error: failure.toJSON(),
       });
     } finally {
+      admission?.release();
       clearTimeout(timer);
       signal.removeEventListener("abort", releaseSession);
       controller.abort();

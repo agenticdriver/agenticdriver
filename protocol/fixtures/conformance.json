@@ -8590,6 +8590,162 @@
         "Deleted": true
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "admission-queue-full",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "QUEUE_FULL",
+            "message": "Host admission policy rejected this work.",
+            "retryable": true
+          }
+        }
+      ],
+      "expectedError": "QUEUE_FULL"
+    },
+    {
+      "id": "admission-admission-identity-required",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "ADMISSION_IDENTITY_REQUIRED",
+            "message": "Host admission policy rejected this work.",
+            "retryable": false
+          }
+        }
+      ],
+      "expectedError": "ADMISSION_IDENTITY_REQUIRED"
+    },
+    {
+      "id": "admission-resource-limit",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "RESOURCE_LIMIT",
+            "message": "Host admission policy rejected this work.",
+            "retryable": false
+          }
+        }
+      ],
+      "expectedError": "RESOURCE_LIMIT"
+    },
+    {
+      "id": "admission-resource-usage-unknown",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "RESOURCE_USAGE_UNKNOWN",
+            "message": "Host admission policy rejected this work.",
+            "retryable": false
+          }
+        }
+      ],
+      "expectedError": "RESOURCE_USAGE_UNKNOWN"
+    },
+    {
+      "id": "admission-resource-admission-denied",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "RESOURCE_ADMISSION_DENIED",
+            "message": "Host admission policy rejected this work.",
+            "retryable": false
+          }
+        }
+      ],
+      "expectedError": "RESOURCE_ADMISSION_DENIED"
+    },
+    {
+      "id": "admission-resource-policy-unavailable",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.failed",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "error": {
+            "code": "RESOURCE_POLICY_UNAVAILABLE",
+            "message": "Host admission policy rejected this work.",
+            "retryable": false
+          }
+        }
+      ],
+      "expectedError": "RESOURCE_POLICY_UNAVAILABLE"
     }
   ]
 }

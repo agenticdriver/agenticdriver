@@ -161,6 +161,10 @@ derives `context.subject` from the bearer token, never from request metadata.
 Tool implementations remain responsible for resource ownership and respecting
 the abort signal; arbitrary in-process JavaScript cannot be forcibly sandboxed.
 
+Hosts can add [fair scheduling and resource policies](docs/scheduling.md) per
+subject and account, with opt-in bounded queues and explicit handling of unknown
+usage. Quota admission reuses Usagestat; durable accounting remains in that backend.
+
 CLI adapters currently expose text generation only. Supply selected passages,
 briefs, or emails as context for those adapters. Unsupported tools fail explicitly.
 

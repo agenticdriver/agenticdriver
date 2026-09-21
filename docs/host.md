@@ -157,6 +157,10 @@ a positive host policy applies. Real model/tool progress resets an enabled idle
 timer. `run --idle-timeout-ms` is an application choice. Retries are opt-in through
 `run --max-attempts`; see [retry and idempotency semantics](idempotency.md).
 `concurrency.total` and `concurrency.perSubject` set simultaneous run limits.
+Optional `perAccount`, `subjects`, `accounts` and a bounded `queue` add fair
+admission; `resources` configures observed per-run token/cost limits with explicit
+unknown-usage behavior. See [scheduling and resource policies](scheduling.md),
+including the Usagestat quota helper and the limits of observed budgets.
 
 ## Secret references and diagnostics
 

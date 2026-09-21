@@ -38,6 +38,7 @@ import {
 } from "./retrieval-types.js";
 import { IngestRequestSchema } from "./ingestion-types.js";
 import type { RetrievalOperation } from "./retrieval.js";
+import { FairScheduler, type SchedulingOptions } from "./scheduling.js";
 
 export interface AccessToken {
   sessions?: SessionOperation[];
@@ -60,6 +61,8 @@ export interface ServerOptions {
   allowedOrigins?: string[];
   maxConcurrentRuns?: number;
   maxConcurrentRunsPerSubject?: number;
+  /** Configure here or on the driver, never both. */
+  scheduling?: SchedulingOptions;
 }
 
 /** An authenticated, scoped execution host. Bind loopback, or provide TLS for remote listening. */
@@ -74,8 +77,10 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     throw new Error("Configure at least one access token.");
   const hashes = new Set<string>();
   const tokens = options.tokens.map((entry) => {
-    if (entry.token.length < 32 || !entry.subject)
-      throw new Error("Tokens require at least 32 characters and a subject.");
+    if (entry.token.length < 32 || !entry.subject || entry.subject.length > 128)
+      throw new Error(
+        "Tokens require at least 32 characters and a subject of 1 to 128 characters.",
+      );
     const digest = createHash("sha256").update(entry.token).digest();
     if (hashes.has(digest.toString("hex")))
       throw new Error("Duplicate access token.");
@@ -108,19 +113,29 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       ) as Record<RetrievalOperation, string[]>,
     };
   });
-  const active = new Set<AbortController>(),
-    subjectRuns = new Map<string, number>();
+  const active = new Set<AbortController>();
   const requests = new Set<Promise<void>>();
   let closing = false;
   let closed: Promise<void> | undefined;
-  const maxConcurrent = options.maxConcurrentRuns ?? 32,
-    maxPerSubject = options.maxConcurrentRunsPerSubject ?? 4;
+  const hasLegacyLimits =
+    options.maxConcurrentRuns !== undefined ||
+    options.maxConcurrentRunsPerSubject !== undefined;
   if (
-    ![maxConcurrent, maxPerSubject].every(
-      (n) => Number.isSafeInteger(n) && n > 0,
-    )
+    (driver.scheduler && (options.scheduling || hasLegacyLimits)) ||
+    (options.scheduling && hasLegacyLimits)
   )
-    throw new Error("Concurrency limits must be positive integers.");
+    throw new DriverError(
+      "INVALID_SCHEDULING",
+      "Configure scheduling once: on the driver, on the server, or through legacy server concurrency limits.",
+    );
+  const scheduler =
+    driver.scheduler ??
+    new FairScheduler(
+      options.scheduling ?? {
+        total: options.maxConcurrentRuns,
+        perSubject: options.maxConcurrentRunsPerSubject,
+      },
+    );
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -348,33 +363,29 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "FORBIDDEN",
           "This token cannot access the requested provider, tools or retrieval operation.",
         );
-      if (
-        active.size >= maxConcurrent ||
-        (subjectRuns.get(principal.subject) ?? 0) >= maxPerSubject
-      )
-        throw new DriverError(
-          "BUSY",
-          "The execution host has reached its concurrency limit.",
-          true,
-        );
       const controller = new AbortController();
       active.add(controller);
-      subjectRuns.set(
-        principal.subject,
-        (subjectRuns.get(principal.subject) ?? 0) + 1,
-      );
       const disconnect = () => {
         if (!res.writableEnded) controller.abort();
       };
       res.once("close", disconnect);
       release = () => {
         active.delete(controller);
-        const n = (subjectRuns.get(principal.subject) ?? 1) - 1;
-        if (n) subjectRuns.set(principal.subject, n);
-        else subjectRuns.delete(principal.subject);
         res.off("close", disconnect);
       };
+      const ticket = scheduler.submit(
+        request
+          ? driver.usageIdentity(request.provider, principal.subject)
+          : { subject: principal.subject },
+        controller.signal,
+      );
+      const cleanup = release;
+      release = () => {
+        ticket.release();
+        cleanup();
+      };
       const runOptions = {
+        admission: () => ticket.wait(),
         sessionOperations: principal.sessions,
         subject: principal.subject,
         signal: controller.signal,
@@ -383,6 +394,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           .map((grant) => grant.name),
       };
       if (retrievalOperation) {
+        await ticket.wait();
         const result =
           retrievalOperation === "ingest"
             ? await driver.ingestContext(
@@ -558,12 +570,14 @@ function statusFor(code: string) {
       "OPERATION_STORE_FULL",
       "OPERATION_RECORD_LIMIT",
       "HOST_SHUTTING_DOWN",
+      "RESOURCE_POLICY_UNAVAILABLE",
     ].includes(code)
   )
     return 503;
   if (
     [
       "BUSY",
+      "QUEUE_FULL",
       "RATE_LIMITED",
       "APPROVAL_CAPACITY",
       "TOOL_EXECUTOR_CAPACITY",
@@ -571,6 +585,15 @@ function statusFor(code: string) {
   )
     return 429;
   if (code === "IDLE_TIMEOUT" || code === "TIMEOUT") return 504;
+  if (
+    [
+      "RESOURCE_LIMIT",
+      "RESOURCE_USAGE_UNKNOWN",
+      "RESOURCE_ADMISSION_DENIED",
+    ].includes(code)
+  )
+    return 403;
+  if (code === "ADMISSION_IDENTITY_REQUIRED") return 503;
   if (
     [
       "INVALID_TOOL_EXECUTION",

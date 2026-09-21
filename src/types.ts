@@ -271,6 +271,8 @@ export type RunEvent = EventPayload & {
 };
 export type { EventPayload };
 export interface RunOptions {
+  /** Trusted host admission ticket; never accepted in request JSON. */
+  admission?: () => Promise<void>;
   /** Trusted permissions from host authentication, never accepted in request JSON. */
   sessionOperations?: readonly SessionOperation[];
   /** Trusted host/token additions to application tool approval policy; never accepted in request JSON. */

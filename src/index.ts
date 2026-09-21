@@ -1,5 +1,19 @@
 export { AgenticDriver } from "./driver.js";
 export type { DriverOptions } from "./driver.js";
+export { FairScheduler, SchedulingOptionsSchema } from "./scheduling.js";
+export type {
+  SchedulingOptions,
+  SchedulingIdentity,
+  AdmissionTicket,
+} from "./scheduling.js";
+export { ResourceLimitsSchema, ObservedBudgetSchema } from "./resources.js";
+export type {
+  ResourceLimits,
+  ObservedBudget,
+  ResourceAdmission,
+  ResourceAdmissionContext,
+  ResourceIdentity,
+} from "./resources.js";
 export type { DiscoveryOptions } from "./discovery.js";
 export {
   UsageRecordSchema,

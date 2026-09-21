@@ -37,6 +37,8 @@ import { validateInputMediaTypes } from "./providers/http.js";
 import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
 import type { ServerOptions } from "./server.js";
+import { SchedulingOptionsSchema, assertPolicyMaps } from "./scheduling.js";
+import { ResourceLimitsSchema } from "./resources.js";
 export { SecretReferenceSchema, secretResolver } from "./secrets.js";
 export type { SecretReference, SecretResolver } from "./secrets.js";
 
@@ -194,13 +196,8 @@ export const HostConfigSchema = z
       })
       .strict()
       .optional(),
-    concurrency: z
-      .object({
-        total: z.number().int().positive().optional(),
-        perSubject: z.number().int().positive().optional(),
-      })
-      .strict()
-      .optional(),
+    concurrency: SchedulingOptionsSchema.optional(),
+    resources: ResourceLimitsSchema.optional(),
   })
   .strict();
 export type HostConfig = z.infer<typeof HostConfigSchema>;
@@ -216,6 +213,16 @@ export function defaultConfigPath(): string {
   return join(base, "agenticdriver", "config.json");
 }
 export function validateHostConfig(input: unknown): HostConfig {
+  if (input && typeof input === "object") {
+    assertPolicyMaps(
+      (input as Record<string, unknown>).concurrency,
+      "INVALID_CONFIG",
+    );
+    assertPolicyMaps(
+      (input as Record<string, unknown>).resources,
+      "INVALID_CONFIG",
+    );
+  }
   const parsed = HostConfigSchema.safeParse(input);
   if (!parsed.success)
     throw new DriverError(
@@ -246,6 +253,28 @@ export function validateHostConfig(input: unknown): HostConfig {
       "USAGE_IDENTITY_REQUIRED",
       "Account bindings require a persistent usage.hostId in the host configuration.",
     );
+  const accountPolicy =
+    config.concurrency?.perAccount !== undefined ||
+    Object.keys(config.concurrency?.accounts ?? {}).length > 0 ||
+    Object.keys(config.resources?.accounts ?? {}).length > 0;
+  if (
+    accountPolicy &&
+    (!config.usage?.hostId ||
+      config.providers.some((provider) => !provider.accountId))
+  )
+    throw new DriverError(
+      "ADMISSION_IDENTITY_REQUIRED",
+      "Account admission policies require a persistent usage.hostId and account bindings on all provider instances.",
+    );
+  for (const id of [
+    ...Object.keys(config.concurrency?.accounts ?? {}),
+    ...Object.keys(config.resources?.accounts ?? {}),
+  ])
+    if (!config.providers.some((provider) => provider.accountId === id))
+      throw new DriverError(
+        "INVALID_CONFIG",
+        "An account policy references an account that is not configured.",
+      );
   if (
     new Set(config.providers.map((p) => p.id)).size !==
       config.providers.length ||
@@ -327,6 +356,7 @@ export function configuredDriver(
     approve?: DriverOptions["approve"];
     onApprovalAudit?: NonNullable<DriverOptions["approvals"]>["onAudit"];
     onTelemetryError?: DriverOptions["onTelemetryError"];
+    resourceAdmission?: DriverOptions["resourceAdmission"];
     context?: DriverOptions["context"];
     retrieval?: DriverOptions["retrieval"];
     ingestion?: DriverOptions["ingestion"];
@@ -388,6 +418,8 @@ export function configuredDriver(
     : undefined;
   return new AgenticDriver({
     providers,
+    resources: config.resources,
+    resourceAdmission: options.resourceAdmission,
     usage: {
       ...config.usage,
       accounts: Object.fromEntries(
@@ -503,8 +535,7 @@ export async function configuredServer(
     tokens,
     tls,
     allowedOrigins: config.allowedOrigins,
-    maxConcurrentRuns: config.concurrency?.total,
-    maxConcurrentRunsPerSubject: config.concurrency?.perSubject,
+    scheduling: config.concurrency,
   };
 }
 export async function configuredClient(
