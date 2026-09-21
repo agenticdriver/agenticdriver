@@ -77,3 +77,13 @@ npm run test:clients                   # from repository root
 # Fetch a pushed client into a separate module, without relative replacements:
 python3 scripts/test-go-install.py COMMIT_SHA
 ```
+
+## Interactive approvals
+
+Set `Request.Approvals` to `&ApprovalPolicy{Mode: "interactive", IdlePolicy: "pause"}` and consume `Stream`. `Event.Approval` contains the reviewed call; submit `DecideApproval(ctx, ApprovalDecision{ApprovalID: approval.ApprovalID, RunID: approval.RunID, Call: approval.Call, Decision: "approve"})` using the same authenticated subject with a separate approval grant. Decisions may also be `deny` or `cancel`; inspect `Event.Resolution` and the terminal run outcome.
+
+The host must enable this feature and grant `approveTools`. `run` rejects
+interactive mode because it cannot deliver review requests. There is no default
+approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
+Decisions are single-use and are never retried automatically. A receipt does not
+confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).

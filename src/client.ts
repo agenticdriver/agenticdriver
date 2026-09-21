@@ -1,5 +1,13 @@
 import { z } from "zod";
 import {
+  ApprovalRequestSchema,
+  ApprovalResolutionSchema,
+  matchesApprovalDecision,
+  type ApprovalDecision,
+  type ApprovalResolution,
+} from "./approval-types.js";
+export type * from "./approval-types.js";
+import {
   ContextManifestSchema,
   validContextResult,
   DraftArtifactSchema,
@@ -28,7 +36,7 @@ import {
   ProviderHealthSchema,
   UsageSchema,
 } from "./types.js";
-import { DriverError } from "./errors.js";
+import { cancelOnClose, DriverError } from "./errors.js";
 export { DriverError } from "./errors.js";
 export { PROTOCOL_VERSION } from "./protocol.js";
 export type { ProtocolInfo } from "./protocol.js";
@@ -96,6 +104,14 @@ const resultSchema = z
   .refine(validContextResult)
   .refine(validRetrievalLinks);
 const eventSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("approval.requested"),
+    approval: ApprovalRequestSchema,
+  }),
+  z.object({
+    type: z.literal("approval.resolved"),
+    resolution: ApprovalResolutionSchema,
+  }),
   z.object({
     type: z.literal("run.started"),
     provider: z.string(),
@@ -167,7 +183,8 @@ export class AgenticClient {
       | RetrievalSearch
       | RetrievalIndexRequest
       | RetrievalDelete
-      | IngestRequest,
+      | IngestRequest
+      | ApprovalDecision,
     signal?: AbortSignal,
     stream = false,
   ): Promise<Response> {
@@ -376,10 +393,34 @@ export class AgenticClient {
       );
     return result.data.providers;
   }
+  async decideApproval(
+    decision: ApprovalDecision,
+    options: ClientRequestOptions = {},
+  ): Promise<ApprovalResolution> {
+    const response = await this.request(
+      "v1/approvals/decisions",
+      decision,
+      options.signal,
+    );
+    const parsed = ApprovalResolutionSchema.safeParse(
+      await readResponseJson(response),
+    );
+    if (!parsed.success || !matchesApprovalDecision(parsed.data, decision))
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The approval receipt does not match the submitted decision. Observe the run stream to reconcile its outcome.",
+      );
+    return parsed.data;
+  }
   async run(
     request: RunRequest,
     options: ClientRequestOptions = {},
   ): Promise<RunResult> {
+    if (request.approvals)
+      throw new DriverError(
+        "APPROVAL_STREAM_REQUIRED",
+        "Use stream() to receive and decide interactive approvals.",
+      );
     for await (const event of this.stream(request, options)) {
       if (event.type === "run.completed") return event.result;
       if (event.type === "run.failed" || event.type === "run.cancelled")
@@ -395,7 +436,22 @@ export class AgenticClient {
       "The run ended without a result.",
     );
   }
-  async *stream(
+  stream(
+    request: RunRequest,
+    options: ClientRequestOptions = {},
+  ): AsyncGenerator<RunEvent> {
+    const controller = new AbortController();
+    return cancelOnClose(
+      this.streamInternal(request, {
+        signal: options.signal
+          ? AbortSignal.any([options.signal, controller.signal])
+          : controller.signal,
+      }),
+      controller,
+    );
+  }
+
+  private async *streamInternal(
     request: RunRequest,
     options: ClientRequestOptions = {},
   ): AsyncGenerator<RunEvent> {
@@ -450,6 +506,11 @@ export class AgenticClient {
             "The host sent an unknown required event type.",
           );
         }
+        if (envelope.data.type.startsWith("approval.") && !request.approvals)
+          throw new DriverError(
+            "UNSUPPORTED_EVENT",
+            "Interactive approvals were not selected for this run.",
+          );
         const payload = eventSchema.safeParse(raw);
         if (!payload.success)
           throw new DriverError(
@@ -458,6 +519,11 @@ export class AgenticClient {
           );
         const event: RunEvent = { ...envelope.data, ...payload.data };
         if (
+          (event.type === "approval.requested" &&
+            (event.approval.runId !== runId ||
+              event.approval.idlePolicy !== request.approvals?.idlePolicy)) ||
+          (event.type === "approval.resolved" &&
+            event.resolution.runId !== runId) ||
           (event.type === "run.started" &&
             (event.provider !== request.provider ||
               event.model !== request.model)) ||

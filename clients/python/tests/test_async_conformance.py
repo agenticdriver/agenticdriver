@@ -38,6 +38,8 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                             await client.providers()
                         elif case.get("operation") == "protocol":
                             await client.protocol()
+                        elif case.get("operation") == "approval":
+                            await client.decide_approval(case["decision"])
                         elif case.get("operation") == "ingest":
                             await client.ingest_context(
                                 {
@@ -55,6 +57,7 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                                 provider="mock",
                                 model="demo",
                                 input="Hello",
+                                **({"approvals": case["approvals"]} if "approvals" in case else {}),
                                 **(
                                     {"retrieval": case["retrieval"]}
                                     if "retrieval" in case
@@ -310,3 +313,26 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
             ticker.cancel()
             with self.assertRaises(asyncio.CancelledError):
                 await ticker
+
+    async def test_interactive_approvals(self):
+        async with self.client() as client:
+            for action in ("approve", "deny", "cancel", "expire"):
+                events = []
+                policy = {"mode": "interactive", "idlePolicy": "pause"}
+                if action == "expire": policy["expiresAfterMs"] = 20
+                async with client.stream(provider="mock", model="demo", input="conformance-approval", tools=["approved_echo"], approvals=policy) as stream:
+                    async for event in stream:
+                        events.append(event)
+                        if event["type"] == "approval.requested" and action != "expire":
+                            approval = event["approval"]
+                            decision = {k: approval[k] for k in ("approvalId", "runId", "call")}
+                            decision["decision"] = action
+                            receipt = await client.decide_approval(decision)
+                            self.assertEqual(receipt["callId"], approval["call"]["id"])
+                            with self.assertRaises(DriverError) as stale:
+                                await client.decide_approval(decision)
+                            self.assertEqual(stale.exception.code, "APPROVAL_NOT_FOUND")
+                self.assertEqual(events[-1]["type"], "run.completed" if action == "approve" else "run.cancelled" if action == "cancel" else "run.failed")
+                self.assertEqual(any(e["type"] == "tool.completed" for e in events), action == "approve")
+                resolution = next(e["resolution"] for e in events if e["type"] == "approval.resolved")
+                self.assertEqual(resolution["outcome"], {"approve": "approved", "deny": "denied", "cancel": "cancelled", "expire": "expired"}[action])

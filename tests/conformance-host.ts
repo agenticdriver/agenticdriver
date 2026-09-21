@@ -96,6 +96,7 @@ const withMedia = (adapter: ProviderAdapter): ProviderAdapter => ({
 const driver = await serve(
   new AgenticDriver({
     operations: new MemoryOperationStore(),
+    approvals: { interactive: true },
     context: { resolve: contextStore.resolve },
     ingestion: {
       pdf: {
@@ -150,6 +151,17 @@ const driver = await serve(
       withMedia(
         mockProvider(async (request, context) => {
           const input = request.messages.at(-1)?.content;
+          if (input === "conformance-approval")
+            return {
+              text: "Review this action",
+              toolCalls: [
+                {
+                  id: "approval-call",
+                  name: "approved_echo",
+                  arguments: { text: "Review 🌍", nested: { ids: [1, 2] } },
+                },
+              ],
+            };
           if (input === "conformance-cost")
             return {
               text: "AgenticDriver is connected.",
@@ -177,6 +189,13 @@ const driver = await serve(
     ],
     tools: [
       {
+        name: "approved_echo",
+        description: "An approval-gated fixture",
+        requiresApproval: true,
+        inputSchema: { type: "object" },
+        execute: (input) => input,
+      },
+      {
         name: "echo",
         description: "Test tool",
         inputSchema: { type: "object" },
@@ -192,6 +211,8 @@ const driver = await serve(
         token,
         subject: "test-user",
         providers: ["mock"],
+        tools: ["approved_echo"],
+        approveTools: ["approved_echo"],
         retrieval: {
           search: ["library"],
           index: ["library"],
@@ -234,7 +255,7 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       return;
     }
     const id =
-      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest)$/.exec(
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions)$/.exec(
         req.url ?? "",
       )?.[1];
     const example = fixture.cases.find((c) => c.id === id);

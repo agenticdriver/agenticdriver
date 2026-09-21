@@ -121,6 +121,10 @@ export const HostConfigSchema = z
               .strict()
               .optional(),
             providers: z.array(instance).max(32),
+            approveTools: z
+              .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
+              .max(32)
+              .optional(),
             tools: z
               .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
               .max(32)
@@ -130,6 +134,14 @@ export const HostConfigSchema = z
       )
       .min(1)
       .max(100),
+    approvals: z
+      .object({
+        interactive: z.literal(true),
+        allowIdlePause: z.boolean().optional(),
+        maxPending: z.number().int().positive().optional(),
+      })
+      .strict()
+      .optional(),
     allowedOrigins: z.array(z.string().url()).max(100).optional(),
     operations: z
       .object({
@@ -294,6 +306,7 @@ export function configuredDriver(
     secrets?: SecretResolver;
     tools?: DriverOptions["tools"];
     approve?: DriverOptions["approve"];
+    onApprovalAudit?: NonNullable<DriverOptions["approvals"]>["onAudit"];
     onTelemetryError?: DriverOptions["onTelemetryError"];
     context?: DriverOptions["context"];
     retrieval?: DriverOptions["retrieval"];
@@ -369,6 +382,9 @@ export function configuredDriver(
     ingestion: options.ingestion,
     tools: options.tools,
     approve: options.approve,
+    approvals: config.approvals
+      ? { ...config.approvals, onAudit: options.onApprovalAudit }
+      : undefined,
     limits: config.limits,
     operations: config.operations
       ? new FileOperationStore(
@@ -422,6 +438,7 @@ export async function configuredServer(
       subject: entry.subject,
       providers: entry.providers,
       tools: entry.tools,
+      approveTools: entry.approveTools,
       retrieval: entry.retrieval,
     })),
   );

@@ -21,6 +21,7 @@ from ._protocol import (
     valid_error,
     valid_protocol,
     valid_result,
+    valid_resolution,
 )
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 from ._transport import (
@@ -30,7 +31,7 @@ from ._transport import (
     headers,
     validate_timeout,
 )
-from .models import ProviderInfo, ProtocolInfo, RunEvent, RunRequest, RunResult
+from .models import ProviderInfo, ProtocolInfo, RunEvent, RunRequest, RunResult, ApprovalDecision, ApprovalResolution
 from .retrieval import (
     RetrievalSearch,
     RetrievalResult,
@@ -209,6 +210,13 @@ class AsyncAgenticClient:
     async def _json(self, response: "httpx.Response") -> Any:
         return parse_json(await self._bytes(response))
 
+    async def decide_approval(self, decision: ApprovalDecision) -> ApprovalResolution:
+        async with self._request("v1/approvals/decisions", decision) as response:
+            result = await self._json(response)
+            if not valid_resolution(result, decision=decision):
+                raise DriverError("INVALID_RESPONSE", "The approval receipt does not match the decision; reconcile using the run stream.")
+            return cast(ApprovalResolution, result)
+
     async def ingest_context(self, request: IngestRequest) -> IngestResult:
         async with self._request("v1/retrieval/ingest", request) as response:
             result = await self._json(response)
@@ -281,6 +289,8 @@ class AsyncAgenticClient:
             return cast(ProtocolInfo, info)
 
     async def run(self, **request: Unpack[RunRequest]) -> RunResult:
+        if request.get("approvals"):
+            raise DriverError("APPROVAL_STREAM_REQUIRED", "Use stream() to receive and decide interactive approvals.")
         async with self._request("v1/runs", request) as response:
             result = await self._json(response)
             if not valid_result(result, request):

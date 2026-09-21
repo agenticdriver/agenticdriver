@@ -62,3 +62,21 @@ export function abortable<T>(
     );
   });
 }
+
+/** Async-generator return/throw normally queue behind a pending read. Abort that read first. */
+export function cancelOnClose<T>(
+  events: AsyncGenerator<T>,
+  controller: AbortController,
+): AsyncGenerator<T> {
+  const close = events.return.bind(events),
+    fail = events.throw.bind(events);
+  events.return = (value) => {
+    controller.abort();
+    return close(value);
+  };
+  events.throw = (error) => {
+    controller.abort();
+    return fail(error);
+  };
+  return events;
+}

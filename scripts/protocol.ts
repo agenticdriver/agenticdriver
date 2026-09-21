@@ -33,12 +33,33 @@ import {
   RUN_EVENT_TYPES,
 } from "../src/protocol.js";
 
+import {
+  ApprovalPolicySchema,
+  ApprovalRequestSchema,
+  ApprovalDecisionSchema,
+  ApprovalResolutionSchema,
+} from "../src/approval-types.js";
+
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const string = { type: "string" },
   count = { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER };
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
+  ApprovalPolicy: z.toJSONSchema(ApprovalPolicySchema, {
+    target: "draft-2020-12",
+  }),
+  ApprovalRequest: z.toJSONSchema(ApprovalRequestSchema, {
+    target: "draft-2020-12",
+    io: "input",
+  }),
+  ApprovalDecision: z.toJSONSchema(ApprovalDecisionSchema, {
+    target: "draft-2020-12",
+  }),
+  ApprovalResolution: z.toJSONSchema(ApprovalResolutionSchema, {
+    target: "draft-2020-12",
+    io: "input",
+  }),
   IngestRequest: z.toJSONSchema(IngestRequestSchema, {
     target: "draft-2020-12",
   }),
@@ -203,6 +224,20 @@ const schemas = {
       },
     },
     oneOf: [
+      {
+        properties: {
+          type: { const: "approval.requested" },
+          approval: ref("ApprovalRequest"),
+        },
+        required: ["approval"],
+      },
+      {
+        properties: {
+          type: { const: "approval.resolved" },
+          resolution: ref("ApprovalResolution"),
+        },
+        required: ["resolution"],
+      },
       {
         properties: {
           type: { const: "run.started" },
@@ -394,6 +429,27 @@ const document = {
           "200": {
             description: "Supported protocol versions and host features",
             content: { "application/json": { schema: ref("ProtocolInfo") } },
+          },
+          default: errorResponse,
+        },
+      },
+    },
+    "/v1/approvals/decisions": {
+      post: {
+        operationId: "decideApproval",
+        parameters,
+        description:
+          "Consume one pending interactive approval. Bound to the authenticated subject, provider and separate approveTools grant, run and exact call. No automatic retries; the receipt acknowledges a decision, not tool execution. Observe the originating stream to reconcile a lost receipt.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("ApprovalDecision") } },
+        },
+        responses: {
+          "200": {
+            description: "The decision was accepted once",
+            content: {
+              "application/json": { schema: ref("ApprovalResolution") },
+            },
           },
           default: errorResponse,
         },

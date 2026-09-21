@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { AgenticClient } from "../src/client.js";
+import type {
+  ApprovalPolicy,
+  ApprovalDecision,
+} from "../src/approval-types.js";
 import type { RetrievalRequest } from "../src/retrieval-types.js";
 import { DriverError } from "../src/errors.js";
 
@@ -20,6 +24,8 @@ const fixtures = JSON.parse(
     cancel?: boolean;
     operation?: string;
     retrieval?: RetrievalRequest;
+    approvals?: ApprovalPolicy;
+    decision?: ApprovalDecision;
   }[];
 };
 const request = { provider: "mock", model: "demo", input: "Hello" };
@@ -33,6 +39,8 @@ for (const example of fixtures.cases) {
   try {
     if (example.operation === "providers") await client.providers();
     else if (example.operation === "protocol") await client.protocol();
+    else if (example.operation === "approval")
+      await client.decideApproval(example.decision!);
     else if (example.operation === "ingest")
       await client.ingestContext({
         corpus: "library",
@@ -48,6 +56,7 @@ for (const example of fixtures.cases) {
         cancelled = false;
       for await (const event of client.stream({
         ...request,
+        approvals: example.approvals,
         ...(example.retrieval ? { retrieval: example.retrieval } : {}),
       })) {
         if (example.cancel && event.type === "text.delta") {
@@ -88,6 +97,50 @@ for (const example of fixtures.cases) {
 }
 
 const client = new AgenticClient({ url, token });
+for (const action of ["approve", "deny", "cancel", "expire"] as const) {
+  const events = [];
+  for await (const event of client.stream({
+    ...request,
+    input: "conformance-approval",
+    tools: ["approved_echo"],
+    approvals: {
+      mode: "interactive",
+      idlePolicy: "pause",
+      ...(action === "expire" ? { expiresAfterMs: 20 } : {}),
+    },
+  })) {
+    events.push(event);
+    if (event.type === "approval.requested" && action !== "expire") {
+      const { approvalId, runId, call } = event.approval;
+      const decision = { approvalId, runId, call, decision: action };
+      assert.equal((await client.decideApproval(decision)).callId, call.id);
+      await assert.rejects(client.decideApproval(decision), {
+        code: "APPROVAL_NOT_FOUND",
+      });
+    }
+  }
+  assert.equal(
+    events.at(-1)?.type,
+    action === "approve"
+      ? "run.completed"
+      : action === "cancel"
+        ? "run.cancelled"
+        : "run.failed",
+  );
+  assert.equal(
+    events.some((e) => e.type === "tool.completed"),
+    action === "approve",
+  );
+  assert.equal(
+    events.find((e) => e.type === "approval.resolved")?.resolution.outcome,
+    {
+      approve: "approved",
+      deny: "denied",
+      cancel: "cancelled",
+      expire: "expired",
+    }[action],
+  );
+}
 const estimated = await client.run({ ...request, input: "conformance-cost" });
 assert.equal(estimated.usage.apiEquivalentCostUsd, 0.25);
 assert.equal(estimated.usage.costUsd, undefined);

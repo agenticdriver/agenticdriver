@@ -19,6 +19,11 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+pub mod approvals;
+pub use approvals::{
+    ApprovalAction, ApprovalDecision, ApprovalIdlePolicy, ApprovalMode, ApprovalOutcome,
+    ApprovalPolicy, ApprovalRequest, ApprovalResolution,
+};
 mod events;
 pub mod retrieval;
 #[cfg(any(feature = "blocking", feature = "async"))]
@@ -94,6 +99,8 @@ impl From<std::io::Error> for Error {
 #[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RunRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub approvals: Option<ApprovalPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub retrieval: Option<RetrievalRequest>,
     pub provider: String,

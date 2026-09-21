@@ -114,3 +114,13 @@ exports, then exercises both styles against local HTTP and certificate-verified
 HTTPS hosts. It runs shared protocol fixtures, scoped RAG/ingestion, cancellation,
 host inactivity, and TLS rejection checks. `npm run test:clients` includes these
 same installed-wheel checks with TypeScript, Go and Rust conformance.
+
+## Interactive approvals
+
+Select `approvals={"mode": "interactive", "idlePolicy": "pause"}` in `stream()`. On an `approval.requested` event, review `event["approval"]["call"]` and submit `decide_approval({"approvalId": approval["approvalId"], "runId": approval["runId"], "call": approval["call"], "decision": "approve"})`; await this on `AsyncAgenticClient`. Decisions may also be `deny` or `cancel`. Typed policies, requests, decisions and resolutions are exported from `agenticdriver`.
+
+The host must enable this feature and grant `approveTools`. `run` rejects
+interactive mode because it cannot deliver review requests. There is no default
+approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
+Decisions are single-use and are never retried automatically. A receipt does not
+confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).

@@ -284,7 +284,11 @@ export class FileOperationStore implements OperationStore {
 
 /** Replays recorded outcomes, not model/tool execution. Wire sequences are compact and contiguous. */
 export function recoveryEvents(record: OperationRecord): RunEvent[] {
-  const events = structuredClone(record.events);
+  // Historical approvals are audit records, never new permission requests.
+  const events = structuredClone(record.events).filter(
+    (event) =>
+      event.type !== "approval.requested" && event.type !== "approval.resolved",
+  );
   if (events[0]?.type !== "run.started")
     events.unshift({
       type: "run.started",

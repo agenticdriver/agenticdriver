@@ -43,6 +43,7 @@ class RunRequest(_RunRequest, total=False):
     outputArtifact: ArtifactRequest
     idempotencyKey: str
     retry: RetryPolicy
+    approvals: "ApprovalPolicy"
     tools: list[str]
     requiredCapabilities: list[str]
     maxSteps: int
@@ -130,6 +131,42 @@ class ToolCall(TypedDict):
     arguments: dict[str, Json]
 
 
+class _ApprovalPolicy(TypedDict):
+    mode: Literal["interactive"]
+    idlePolicy: Literal["pause", "continue"]
+
+
+class ApprovalPolicy(_ApprovalPolicy, total=False):
+    expiresAfterMs: int
+
+
+class _ApprovalRequest(TypedDict):
+    approvalId: str
+    runId: str
+    call: ToolCall
+    requestedAt: str
+    idlePolicy: Literal["pause", "continue"]
+
+
+class ApprovalRequest(_ApprovalRequest, total=False):
+    expiresAt: str
+
+
+class ApprovalDecision(TypedDict):
+    approvalId: str
+    runId: str
+    call: ToolCall
+    decision: Literal["approve", "deny", "cancel"]
+
+
+class ApprovalResolution(TypedDict):
+    approvalId: str
+    runId: str
+    callId: str
+    outcome: Literal["approved", "denied", "cancelled", "expired"]
+    decidedAt: str
+
+
 class _EventOptional(TypedDict, total=False):
     optional: bool
 
@@ -159,6 +196,16 @@ class TextDelta(_Event):
 class RunProgress(_Event):
     type: Literal["run.progress"]
     phase: Literal["model", "tool", "context"]
+
+
+class ApprovalRequested(_Event):
+    type: Literal["approval.requested"]
+    approval: ApprovalRequest
+
+
+class ApprovalResolved(_Event):
+    type: Literal["approval.resolved"]
+    resolution: ApprovalResolution
 
 
 class ToolCalled(_Event):
@@ -198,6 +245,8 @@ RunEvent = Union[
     StepStarted,
     TextDelta,
     RunProgress,
+    ApprovalRequested,
+    ApprovalResolved,
     ToolCalled,
     ToolCompleted,
     UsageReported,
@@ -220,6 +269,12 @@ __all__ = [
     "ProviderInfo",
     "ProtocolInfo",
     "ToolCall",
+    "ApprovalPolicy",
+    "ApprovalRequest",
+    "ApprovalDecision",
+    "ApprovalResolution",
+    "ApprovalRequested",
+    "ApprovalResolved",
     "RunEvent",
     "RunStarted",
     "StepStarted",

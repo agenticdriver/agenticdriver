@@ -148,6 +148,10 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 		return false
 	}
 	switch event.Type {
+	case "approval.requested":
+		return approvalValid(value["approval"]) && event.Approval != nil && event.Approval.RunID == event.RunID && (request.Approvals == nil || event.Approval.IdlePolicy == request.Approvals.IdlePolicy)
+	case "approval.resolved":
+		return resolutionValid(value["resolution"]) && event.Resolution != nil && event.Resolution.RunID == event.RunID
 	case "run.started":
 		provider, pOK := stringValue(value["provider"])
 		model, mOK := stringValue(value["model"])

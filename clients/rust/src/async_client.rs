@@ -203,7 +203,28 @@ impl AsyncAgenticClient {
             .await?
             .providers)
     }
+    pub async fn decide_approval(
+        &self,
+        decision: &crate::ApprovalDecision,
+    ) -> Result<crate::ApprovalResolution> {
+        let value: Value = read_json(
+            self.request(
+                "v1/approvals/decisions",
+                Some(&serde_json::to_value(decision)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::approvals::receipt(value, decision)
+    }
     pub async fn run(&self, request: &RunRequest) -> Result<RunResult> {
+        if request.approvals.is_some() {
+            return Err(protocol_error(
+                "APPROVAL_STREAM_REQUIRED",
+                "Use stream to receive and decide interactive approvals.",
+            ));
+        }
         let result: RunResult = read_json(
             self.request("v1/runs", Some(&serde_json::to_value(request)?), false)
                 .await?,
@@ -226,6 +247,7 @@ impl AsyncAgenticClient {
         // Retain only fields needed to verify the host's selection, not the prompt/attachments.
         let mut selection = RunRequest::new(&request.provider, &request.model, "");
         selection.retrieval.clone_from(&request.retrieval);
+        selection.approvals.clone_from(&request.approvals);
         Ok(EventStream {
             state: Some(StreamState {
                 response,

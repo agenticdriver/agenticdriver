@@ -369,6 +369,14 @@
               "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
             }
           },
+          "approveTools": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+            }
+          },
           "tools": {
             "default": [],
             "maxItems": 32,
@@ -382,6 +390,20 @@
         "required": ["id", "subject", "tokenRef", "providers"],
         "additionalProperties": false
       }
+    },
+    "approvals": {
+      "type": "object",
+      "properties": {
+        "interactive": { "type": "boolean", "const": true },
+        "allowIdlePause": { "type": "boolean" },
+        "maxPending": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["interactive"],
+      "additionalProperties": false
     },
     "allowedOrigins": {
       "maxItems": 100,

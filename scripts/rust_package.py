@@ -12,7 +12,7 @@ MSRV = "1.89.0"
 
 
 def prepare_rust(directory: Path) -> tuple[Path, dict[str, str]]:
-    target = ROOT / "clients/rust/target"
+    target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "clients/rust/target")).resolve()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
     command = ["cargo", f"+{MSRV}"]
     subprocess.run(

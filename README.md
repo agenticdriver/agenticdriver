@@ -16,7 +16,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
 - Text adapters for installed Codex, Claude Code, and Gemini CLI sessions.
-- A bounded model/tool/result loop, tool argument validation, host approvals,
+- A bounded model/tool/result loop, tool argument validation, host and interactive application approvals,
   validated JSON output, optional inactivity timeouts, and cancellation.
 - A Node.js execution host with HTTPS, bearer authentication, provider/tool
   scopes, exact browser-origin allowlists, request limits, and concurrency limits.
@@ -111,7 +111,9 @@ keys or explicitly configured CLI account directories.
 API adapters can execute registered application tools. A request must select each
 tool by name. The runtime validates all arguments in a batch before executing any
 tool, runs them serially, and passes results back to the model. Side-effecting
-tools should set `requiresApproval: true` and use a host approval handler.
+tools should set `requiresApproval: true` and use a host approval handler or
+explicitly enabled [interactive application approvals](docs/approvals.md). All
+four clients can review a proposed call and submit a scoped, single-use decision.
 
 ```ts
 const driver = new AgenticDriver({
@@ -224,12 +226,12 @@ See [inactivity and cancellation](docs/timeouts.md) for examples and host policy
 All clients use the same [OpenAPI contract](protocol/openapi.json). Any language
 with HTTPS and JSON can call the protocol; four language packages are included.
 
-| Language                | Local installation                                                                             | Interface                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                            |
-| Python 3.10+            | [Build/install a wheel](clients/python/README.md); add `[async]` for asyncio                   | Typed sync `AgenticClient` and native `AsyncAgenticClient`     |
-| Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
-| Rust 1.89+              | [Crate features and installation](clients/rust/README.md) | Async `AsyncAgenticClient` and optional blocking `AgenticClient` |
+| Language                | Local installation                                                                             | Interface                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                              |
+| Python 3.10+            | [Build/install a wheel](clients/python/README.md); add `[async]` for asyncio                   | Typed sync `AgenticClient` and native `AsyncAgenticClient`       |
+| Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)`   |
+| Rust 1.89+              | [Crate features and installation](clients/rust/README.md)                                      | Async `AsyncAgenticClient` and optional blocking `AgenticClient` |
 
 Python provides synchronous and native asyncio clients. Use `with client.stream`
 or `async with client.stream` to close responses on early exit; asyncio task

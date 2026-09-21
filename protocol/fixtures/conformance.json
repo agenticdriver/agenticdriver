@@ -4675,6 +4675,1025 @@
         }
       ],
       "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-valid",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause",
+            "futureField": "ignored"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "approval-request-run-mismatch",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "other",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-resolution-run-mismatch",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "other",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-idle-policy",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "continue"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-call-arguments",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": []
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-tool-name",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "unsafe/name",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-null-expiry",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause",
+            "expiresAt": null
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-expiry",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause",
+            "expiresAt": "tomorrow"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-outcome",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "allow",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-invalid-decided-at",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "later"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-empty-approval-id",
+      "approvals": {
+        "mode": "interactive",
+        "idlePolicy": "pause"
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "approval-unnegotiated",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "approval.requested",
+          "approval": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "call": {
+              "id": "call-one",
+              "name": "approved_echo",
+              "arguments": {
+                "text": "Review 🌍",
+                "nested": {
+                  "ids": [1, 2]
+                }
+              }
+            },
+            "requestedAt": "2026-09-20T12:00:00.000Z",
+            "idlePolicy": "pause"
+          },
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "optional": true
+        },
+        {
+          "type": "approval.resolved",
+          "resolution": {
+            "approvalId": "approval-one",
+            "runId": "compat-run",
+            "callId": "call-one",
+            "outcome": "approved",
+            "decidedAt": "2026-09-20T12:00:01.000Z"
+          },
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ],
+      "expectedError": "UNSUPPORTED_EVENT"
+    },
+    {
+      "id": "approval-receipt-valid",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "outcome": "approved",
+        "decidedAt": "2026-09-20T12:00:01.000Z"
+      }
+    },
+    {
+      "id": "approval-receipt-runId",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "approval-one",
+        "runId": "other",
+        "callId": "call-one",
+        "outcome": "approved",
+        "decidedAt": "2026-09-20T12:00:01.000Z"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "approval-receipt-approvalId",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "other",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "outcome": "approved",
+        "decidedAt": "2026-09-20T12:00:01.000Z"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "approval-receipt-callId",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "callId": "other",
+        "outcome": "approved",
+        "decidedAt": "2026-09-20T12:00:01.000Z"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "approval-receipt-outcome",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "outcome": "denied",
+        "decidedAt": "2026-09-20T12:00:01.000Z"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "approval-receipt-decidedAt",
+      "operation": "approval",
+      "decision": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "call": {
+          "id": "call-one",
+          "name": "approved_echo",
+          "arguments": {
+            "text": "Review 🌍",
+            "nested": {
+              "ids": [1, 2]
+            }
+          }
+        },
+        "decision": "approve"
+      },
+      "json": {
+        "approvalId": "approval-one",
+        "runId": "compat-run",
+        "callId": "call-one",
+        "outcome": "approved",
+        "decidedAt": "later"
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

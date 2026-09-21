@@ -80,6 +80,10 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     import {AgenticClient, DriverError, type ClientOptions, type ClientRequestOptions, type ProviderListOptions, type RunRequest, type RunResult, type RunEvent, type IngestRequest, type IngestResult, type RetrievalSearch, type RetrievalResult, type ContextSource, type ProtocolInfo, type Usage, type ErrorInfo} from "agenticdriver/client";
     const options: ClientOptions = {url:"https://driver.example",token:"app-token"};
     const client = new AgenticClient(options);
+    const approval: import("agenticdriver/client").ApprovalDecision = {approvalId:"approval",runId:"run",call:{id:"call",name:"write",arguments:{revision:"r1"}},decision:"approve"};
+    export const decide = (): Promise<import("agenticdriver/client").ApprovalResolution> => client.decideApproval(approval,{signal:new AbortController().signal});
+    // @ts-expect-error approval identities are authenticated, never supplied in decision bodies
+    client.decideApproval({...approval,subject:"forged"});
     const operation: ClientRequestOptions = {signal:new AbortController().signal};
     const discovery: ProviderListOptions = {...operation,refresh:true};
     const request: RunRequest = {provider:"account",model:"model",input:"Question"};
@@ -151,6 +155,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   });
   const safeModules = new Set([
     "client.js",
+    "approval-types.js",
     "catalog.js",
     "usagestat-types.js",
     "context-types.js",

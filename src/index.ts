@@ -34,3 +34,10 @@ export type {
   ContextResolver,
   ContextLease,
 } from "./context.js";
+
+export * from "./approval-types.js";
+export type {
+  ApprovalOptions,
+  ApprovalAuditRecord,
+  ApprovalPrincipal,
+} from "./approvals.js";

@@ -34,6 +34,65 @@ func conformanceClient(t *testing.T, base, token string, trustCA bool) *Client {
 	return client
 }
 
+func TestInteractiveApprovals(t *testing.T) {
+	base := os.Getenv("AGENTICDRIVER_TEST_URL")
+	if base == "" {
+		t.Skip("requires reference host")
+	}
+	client := conformanceClient(t, base, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	for _, action := range []string{"approve", "deny", "cancel", "expire"} {
+		t.Run(action, func(t *testing.T) {
+			policy := &ApprovalPolicy{Mode: "interactive", IdlePolicy: "pause"}
+			if action == "expire" {
+				expiry := 20
+				policy.ExpiresAfterMs = &expiry
+			}
+			var resolution *ApprovalResolution
+			completed := false
+			err := client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "conformance-approval", Tools: []string{"approved_echo"}, Approvals: policy}, func(event Event) error {
+				if event.Type == "approval.requested" && action != "expire" {
+					approval := event.Approval
+					decision := ApprovalDecision{ApprovalID: approval.ApprovalID, RunID: approval.RunID, Call: approval.Call, Decision: action}
+					receipt, err := client.DecideApproval(context.Background(), decision)
+					if err != nil {
+						return err
+					}
+					if receipt.CallID != approval.Call.ID {
+						t.Fatal("mismatched receipt")
+					}
+					_, stale := client.DecideApproval(context.Background(), decision)
+					var failure *Error
+					if !errors.As(stale, &failure) || failure.Code != "APPROVAL_NOT_FOUND" {
+						t.Fatalf("stale decision: %v", stale)
+					}
+				}
+				if event.Type == "approval.resolved" {
+					resolution = event.Resolution
+				}
+				if event.Type == "tool.completed" {
+					completed = true
+				}
+				return nil
+			})
+			expected := map[string]string{"approve": "", "deny": "APPROVAL_DENIED", "cancel": "CANCELLED", "expire": "APPROVAL_EXPIRED"}[action]
+			var failure *Error
+			if expected == "" {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else if !errors.As(err, &failure) || failure.Code != expected {
+				t.Fatalf("expected %s, got %v", expected, err)
+			}
+			if completed != (action == "approve") {
+				t.Fatal("unexpected tool completion")
+			}
+			if resolution == nil || resolution.Outcome != map[string]string{"approve": "approved", "deny": "denied", "cancel": "cancelled", "expire": "expired"}[action] {
+				t.Fatalf("unexpected resolution: %+v", resolution)
+			}
+		})
+	}
+}
+
 func TestReferencePeerConformance(t *testing.T) {
 	base := os.Getenv("AGENTICDRIVER_TEST_REFERENCE_URL")
 	if base == "" {
@@ -43,6 +102,8 @@ func TestReferencePeerConformance(t *testing.T) {
 	var fixture struct {
 		Cases []struct {
 			ID                   string            `json:"id"`
+			Approvals            *ApprovalPolicy   `json:"approvals"`
+			Decision             ApprovalDecision  `json:"decision"`
 			Retrieval            *RetrievalRequest `json:"retrieval"`
 			Operation            string            `json:"operation"`
 			ExpectedError        string            `json:"expectedError"`
@@ -65,12 +126,14 @@ func TestReferencePeerConformance(t *testing.T) {
 				_, err = client.Providers(context.Background())
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
+			} else if example.Operation == "approval" {
+				_, err = client.DecideApproval(context.Background(), example.Decision)
 			} else if example.Operation == "ingest" {
 				_, err = client.IngestContext(context.Background(), IngestRequest{Corpus: "library", Document: IngestionDocument{Type: "reference", ID: "paper", Revision: "r1", MediaType: "text/markdown"}})
 			} else {
 				stop := errors.New("intentional stream close")
 				completed, cancelled := false, false
-				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval}, func(event Event) error {
+				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval, Approvals: example.Approvals}, func(event Event) error {
 					if example.Cancel && event.Type == "text.delta" {
 						cancelled = true
 						return stop

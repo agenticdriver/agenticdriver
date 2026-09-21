@@ -101,6 +101,14 @@ pub(crate) fn event_valid(event: &Event, request: &RunRequest, first: bool) -> b
         return false;
     }
     match event.kind.as_str() {
+        "approval.requested" => event
+            .extra
+            .get("approval")
+            .is_some_and(|v| crate::approvals::approval_valid(v, request, &event.run_id)),
+        "approval.resolved" => event.extra.get("resolution").is_some_and(|v| {
+            crate::approvals::resolution_valid(v)
+                && v.get("runId").and_then(Value::as_str) == Some(&event.run_id)
+        }),
         "run.started" => {
             event.extra.get("provider").and_then(Value::as_str) == Some(&request.provider)
                 && event.extra.get("model").and_then(Value::as_str) == Some(&request.model)

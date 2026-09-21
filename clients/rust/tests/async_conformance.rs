@@ -33,12 +33,19 @@ async fn reference_peer_conformance() {
         let id = example["id"].as_str().unwrap();
         let peer = client(&format!("{}/fixtures/{}", base, id), &token, true);
         let mut request = RunRequest::new("mock", "demo", "Hello");
+        if let Some(approvals) = example.get("approvals") {
+            request.approvals = Some(serde_json::from_value(approvals.clone()).unwrap());
+        }
         if let Some(retrieval) = example.get("retrieval") {
             request.retrieval = Some(serde_json::from_value(retrieval.clone()).unwrap());
         }
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().await.map(|_| ()),
             Some("protocol") => peer.protocol().await.map(|_| ()),
+            Some("approval") => peer
+                .decide_approval(&serde_json::from_value(example["decision"].clone()).unwrap())
+                .await
+                .map(|_| ()),
             Some("ingest") => peer
                 .ingest_context(&agenticdriver::IngestRequest {
                     corpus: "library".into(),
@@ -314,4 +321,79 @@ async fn consume(
         }
     }
     Ok(())
+}
+
+#[tokio::test]
+async fn interactive_approvals() {
+    use agenticdriver::{
+        ApprovalAction, ApprovalIdlePolicy, ApprovalOutcome, ApprovalPolicy, EventPayload,
+    };
+    let Ok(url) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let peer = client(
+        &url,
+        &std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap(),
+        true,
+    );
+    for action in [
+        Some(ApprovalAction::Approve),
+        Some(ApprovalAction::Deny),
+        Some(ApprovalAction::Cancel),
+        None,
+    ] {
+        let mut request = RunRequest::new("mock", "demo", "conformance-approval");
+        request.tools = vec!["approved_echo".into()];
+        let mut policy = ApprovalPolicy::interactive(ApprovalIdlePolicy::Pause);
+        if action.is_none() {
+            policy.expires_after_ms = Some(20);
+        }
+        request.approvals = Some(policy);
+        let mut resolved = None;
+        let mut completed = false;
+        let mut terminal = String::new();
+        let mut stream = peer.stream(&request).await.unwrap();
+        while let Some(event) = stream.next().await {
+            let event = event.unwrap();
+            match event.payload().unwrap() {
+                EventPayload::ApprovalRequested { approval } => {
+                    if let Some(action) = action {
+                        let decision = approval.decision(action);
+                        let receipt = peer.decide_approval(&decision).await.unwrap();
+                        assert_eq!(receipt.call_id, approval.call.id);
+                        assert_eq!(
+                            code(&peer.decide_approval(&decision).await.unwrap_err()),
+                            Some("APPROVAL_NOT_FOUND")
+                        );
+                    }
+                }
+                EventPayload::ApprovalResolved { resolution } => {
+                    resolved = Some(resolution.outcome)
+                }
+                EventPayload::ToolCompleted { .. } => completed = true,
+                _ => {}
+            }
+            if event.is_terminal() {
+                terminal = event.kind.clone();
+            }
+        }
+        assert_eq!(completed, action == Some(ApprovalAction::Approve));
+        assert_eq!(
+            resolved,
+            Some(match action {
+                Some(ApprovalAction::Approve) => ApprovalOutcome::Approved,
+                Some(ApprovalAction::Deny) => ApprovalOutcome::Denied,
+                Some(ApprovalAction::Cancel) => ApprovalOutcome::Cancelled,
+                None => ApprovalOutcome::Expired,
+            })
+        );
+        assert_eq!(
+            terminal,
+            match action {
+                Some(ApprovalAction::Approve) => "run.completed",
+                Some(ApprovalAction::Cancel) => "run.cancelled",
+                _ => "run.failed",
+            }
+        );
+    }
 }

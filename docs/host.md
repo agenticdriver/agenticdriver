@@ -299,3 +299,10 @@ For durable metering, configure the optional `usagestat` URL and `tokenRef`,
 a persistent `usage.hostId`, and an `accountId` on each provider. See
 [Usagestat integration](usagestat.md) for local/remote backend setup, retention,
 forwarding and capture-failure semantics.
+
+Interactive approvals are opt-in: configure `approvals: { "interactive": true }`
+and a token's `approveTools` list separately from its invocation `tools` grant.
+Embedders still register tools and can provide a private `onApprovalAudit` sink.
+Hosts may forbid inactivity pausing with `allowIdlePause: false`; there is no
+default approval expiry. See [interactive approvals](approvals.md) for the
+request, decision and cancellation contract.

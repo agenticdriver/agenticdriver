@@ -314,6 +314,54 @@
         }
       }
     },
+    "/v1/approvals/decisions": {
+      "post": {
+        "operationId": "decideApproval",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Consume one pending interactive approval. Bound to the authenticated subject, provider and separate approveTools grant, run and exact call. No automatic retries; the receipt acknowledges a decision, not tool execution. Observe the originating stream to reconcile a lost receipt.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ApprovalDecision" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The decision was accepted once",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApprovalResolution" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/runs": {
       "post": {
         "operationId": "run",
@@ -390,6 +438,145 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "ApprovalPolicy": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "mode": { "type": "string", "const": "interactive" },
+          "idlePolicy": { "type": "string", "enum": ["pause", "continue"] },
+          "expiresAfterMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": ["mode", "idlePolicy"],
+        "additionalProperties": false
+      },
+      "ApprovalRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "approvalId": { "type": "string", "minLength": 1 },
+          "runId": { "type": "string", "minLength": 1 },
+          "call": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+              },
+              "arguments": {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+              }
+            },
+            "required": ["id", "name", "arguments"]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "idlePolicy": { "type": "string", "enum": ["pause", "continue"] }
+        },
+        "required": [
+          "approvalId",
+          "runId",
+          "call",
+          "requestedAt",
+          "idlePolicy"
+        ],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+              }
+            ]
+          }
+        }
+      },
+      "ApprovalDecision": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "approvalId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "runId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "call": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+              },
+              "arguments": {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+              }
+            },
+            "required": ["id", "name", "arguments"],
+            "additionalProperties": false
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["approve", "deny", "cancel"]
+          }
+        },
+        "required": ["approvalId", "runId", "call", "decision"],
+        "additionalProperties": false,
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": { "$ref": "#/$defs/__schema0" }
+              }
+            ]
+          }
+        }
+      },
+      "ApprovalResolution": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "approvalId": { "type": "string", "minLength": 1 },
+          "runId": { "type": "string", "minLength": 1 },
+          "callId": { "type": "string", "minLength": 1 },
+          "outcome": {
+            "type": "string",
+            "enum": ["approved", "denied", "cancelled", "expired"]
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          }
+        },
+        "required": ["approvalId", "runId", "callId", "outcome", "decidedAt"]
+      },
       "IngestRequest": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -2095,6 +2282,20 @@
               "additionalProperties": false
             }
           },
+          "approvals": {
+            "type": "object",
+            "properties": {
+              "mode": { "type": "string", "const": "interactive" },
+              "idlePolicy": { "type": "string", "enum": ["pause", "continue"] },
+              "expiresAfterMs": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647
+              }
+            },
+            "required": ["mode", "idlePolicy"],
+            "additionalProperties": false
+          },
           "tools": {
             "maxItems": 32,
             "type": "array",
@@ -2427,6 +2628,22 @@
         "oneOf": [
           {
             "properties": {
+              "type": { "const": "approval.requested" },
+              "approval": { "$ref": "#/components/schemas/ApprovalRequest" }
+            },
+            "required": ["approval"]
+          },
+          {
+            "properties": {
+              "type": { "const": "approval.resolved" },
+              "resolution": {
+                "$ref": "#/components/schemas/ApprovalResolution"
+              }
+            },
+            "required": ["resolution"]
+          },
+          {
+            "properties": {
               "type": { "const": "run.started" },
               "provider": { "type": "string" },
               "model": { "type": "string" }
@@ -2510,6 +2727,8 @@
                     "step.started",
                     "text.delta",
                     "run.progress",
+                    "approval.requested",
+                    "approval.resolved",
                     "tool.called",
                     "tool.completed",
                     "usage.reported",

@@ -143,3 +143,20 @@ performing retrieval. This is real work progress, subject to the same explicit
 inactivity policy as model/tool work. Retrieval/ingestion mutation receipts
 identify the exact corpus, source and revision. Unknown outcomes require
 application reconciliation, with no automatic account, model or billing fallback.
+
+## Interactive approvals extension
+
+Hosts advertising `interactive-approvals` accept the explicit streaming
+`approvals` run option and `POST /v1/approvals/decisions`. Only these opted-in
+runs emit the required `approval.requested` and `approval.resolved` events.
+Decisions require the originating subject plus provider and `approveTools`
+grants, and identify the exact run and tool arguments. See
+[interactive approvals](approvals.md) for lifecycle, audit, expiry and idle policy.
+
+`APPROVAL_UNAVAILABLE`, `APPROVAL_POLICY`, `APPROVAL_STREAM_REQUIRED` and
+`INVALID_APPROVAL` reject unsupported or malformed usage (HTTP 400).
+`APPROVAL_NOT_FOUND` covers unknown, other-subject or consumed approvals (404);
+`APPROVAL_MISMATCH` rejects altered bindings (409). Pending-capacity exhaustion
+returns `APPROVAL_CAPACITY` (429), and failed audit recording returns
+`APPROVAL_AUDIT_FAILED` (503). Run failures retain `APPROVAL_DENIED` or
+`APPROVAL_EXPIRED`; cancellation retains `CANCELLED` or `IDLE_TIMEOUT`.

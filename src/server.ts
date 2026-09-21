@@ -7,6 +7,7 @@ import {
 } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
+import type { ApprovalDecision } from "./approval-types.js";
 import { DriverError, publicError } from "./errors.js";
 import { isLoopback } from "./security.js";
 import {
@@ -32,6 +33,8 @@ export interface AccessToken {
   subject: string;
   providers: string[];
   tools?: string[];
+  /** Separate permission to decide approvals; invoking tools does not grant it. */
+  approveTools?: string[];
   /** Explicit corpus allowlists for each operation. Omitted permissions deny retrieval access. */
   retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
@@ -68,6 +71,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       subject: entry.subject,
       providers: [...entry.providers],
       tools: [...(entry.tools ?? [])],
+      approveTools: [...(entry.approveTools ?? [])],
       retrieval: Object.fromEntries(
         ["search", "index", "delete"].map((operation) => [
           operation,
@@ -150,6 +154,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            interactiveApprovals: driver.supportsInteractiveApprovals,
             idempotency: driver.supportsIdempotency,
             contextReferences: driver.supportsContextReferences,
             retrieval: driver.supportsRetrieval,
@@ -171,6 +176,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         });
         return;
       }
+      const approvalDecision = req.url === "/v1/approvals/decisions";
       const retrievalOperation = (
         {
           "/v1/retrieval/search": "search",
@@ -180,7 +186,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         } as Record<string, RetrievalOperation | "ingest">
       )[req.url ?? ""];
       if (
-        (req.url !== "/v1/runs" && !retrievalOperation) ||
+        (req.url !== "/v1/runs" && !retrievalOperation && !approvalDecision) ||
         req.method !== "POST"
       ) {
         json(res, 404, {
@@ -204,6 +210,17 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "Compressed requests are not supported.",
         );
       const body = await readRequest(req);
+      if (approvalDecision) {
+        // A waiting run occupies a slot. Its decision must not compete for that slot.
+        // Validate the original body inside the driver, including exact argument preservation.
+        const result = driver.decideApproval(body as ApprovalDecision, {
+          subject: principal.subject,
+          providers: principal.providers,
+          approveTools: principal.approveTools,
+        });
+        json(res, 200, result);
+        return;
+      }
       const retrievalSchema =
         retrievalOperation === "ingest"
           ? IngestRequestSchema
@@ -389,7 +406,16 @@ function json(res: ServerResponse, status: number, value: unknown) {
 }
 function statusFor(code: string) {
   if (code === "UNAUTHORIZED") return 401;
-  if (["FORBIDDEN", "ORIGIN_DENIED", "APPROVAL_REQUIRED"].includes(code))
+  if (code === "APPROVAL_NOT_FOUND") return 404;
+  if (code === "APPROVAL_MISMATCH") return 409;
+  if (
+    [
+      "FORBIDDEN",
+      "ORIGIN_DENIED",
+      "APPROVAL_REQUIRED",
+      "APPROVAL_DENIED",
+    ].includes(code)
+  )
     return 403;
   if (code === "BODY_TOO_LARGE") return 413;
   if (
@@ -406,6 +432,7 @@ function statusFor(code: string) {
     return 409;
   if (
     [
+      "APPROVAL_AUDIT_FAILED",
       "OPERATION_STORE_ERROR",
       "OPERATION_STORE_FULL",
       "OPERATION_RECORD_LIMIT",
@@ -413,10 +440,14 @@ function statusFor(code: string) {
     ].includes(code)
   )
     return 503;
-  if (code === "BUSY" || code === "RATE_LIMITED") return 429;
+  if (["BUSY", "RATE_LIMITED", "APPROVAL_CAPACITY"].includes(code)) return 429;
   if (code === "IDLE_TIMEOUT" || code === "TIMEOUT") return 504;
   if (
     [
+      "INVALID_APPROVAL",
+      "APPROVAL_UNAVAILABLE",
+      "APPROVAL_POLICY",
+      "APPROVAL_STREAM_REQUIRED",
       "INVALID_REQUEST",
       "IDEMPOTENCY_UNAVAILABLE",
       "INVALID_SCHEMA",

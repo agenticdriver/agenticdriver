@@ -62,3 +62,10 @@ deadlines remain under the application's control.
 With no configured timeout, an unresponsive provider remains pending until the
 application cancels it. Applications own job lifecycle and operator controls;
 disconnecting or closing an unfinished event stream also cancels that run.
+
+Interactive tool reviews explicitly choose `approvals.idlePolicy: "pause"` or
+`"continue"`. A host permitting pause suspends its activity clock only during
+human review and resumes a full interval once the decision settles; set
+`approvals.allowIdlePause: false` on the host to require continued accounting.
+There is no default review deadline. An application can independently select
+`approvals.expiresAfterMs` for each review. See [interactive approvals](approvals.md).

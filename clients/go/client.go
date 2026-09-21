@@ -35,6 +35,7 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
+	Approvals            *ApprovalPolicy   `json:"approvals,omitempty"`
 	Retrieval            *RetrievalRequest `json:"retrieval,omitempty"`
 	Attachments          []ContextInput    `json:"attachments,omitempty"`
 	OutputArtifact       *ArtifactRequest  `json:"outputArtifact,omitempty"`
@@ -110,23 +111,25 @@ type ModelCatalog struct {
 	Complete bool     `json:"complete"`
 }
 type Event struct {
-	Provider  string          `json:"provider,omitempty"`
-	Model     string          `json:"model,omitempty"`
-	Step      int             `json:"step,omitempty"`
-	Phase     string          `json:"phase,omitempty"`
-	Call      *ToolCall       `json:"call,omitempty"`
-	CallID    string          `json:"callId,omitempty"`
-	Output    json.RawMessage `json:"output,omitempty"`
-	Usage     *Usage          `json:"usage,omitempty"`
-	Type      string          `json:"type"`
-	RunID     string          `json:"runId"`
-	Sequence  int             `json:"sequence"`
-	Timestamp string          `json:"timestamp"`
-	Optional  bool            `json:"optional,omitempty"`
-	Text      string          `json:"text,omitempty"`
-	Result    *Result         `json:"result,omitempty"`
-	Error     *Error          `json:"error,omitempty"`
-	Raw       json.RawMessage `json:"-"`
+	Approval   *ApprovalRequest    `json:"approval,omitempty"`
+	Resolution *ApprovalResolution `json:"resolution,omitempty"`
+	Provider   string              `json:"provider,omitempty"`
+	Model      string              `json:"model,omitempty"`
+	Step       int                 `json:"step,omitempty"`
+	Phase      string              `json:"phase,omitempty"`
+	Call       *ToolCall           `json:"call,omitempty"`
+	CallID     string              `json:"callId,omitempty"`
+	Output     json.RawMessage     `json:"output,omitempty"`
+	Usage      *Usage              `json:"usage,omitempty"`
+	Type       string              `json:"type"`
+	RunID      string              `json:"runId"`
+	Sequence   int                 `json:"sequence"`
+	Timestamp  string              `json:"timestamp"`
+	Optional   bool                `json:"optional,omitempty"`
+	Text       string              `json:"text,omitempty"`
+	Result     *Result             `json:"result,omitempty"`
+	Error      *Error              `json:"error,omitempty"`
+	Raw        json.RawMessage     `json:"-"`
 }
 type ToolCall struct {
 	ID        string                     `json:"id"`
@@ -268,6 +271,9 @@ func (c *Client) Protocol(ctx context.Context) (ProtocolInfo, error) {
 	return info, nil
 }
 func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
+	if request.Approvals != nil {
+		return Result{}, &Error{Code: "APPROVAL_STREAM_REQUIRED", Message: "Use Stream to receive and decide interactive approvals."}
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	var result Result
@@ -336,6 +342,9 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 				fields, size = nil, 0
 				continue
 			}
+			if strings.HasPrefix(event.Type, "approval.") && request.Approvals == nil {
+				return &Error{Code: "UNSUPPORTED_EVENT", Message: "Interactive approvals were not selected for this run."}
+			}
 			event.Raw = data
 			if err := visit(event); err != nil {
 				return err
@@ -361,7 +370,7 @@ func (c *Client) Stream(ctx context.Context, request Request, visit func(Event) 
 
 func knownEvent(kind string) bool {
 	switch kind {
-	case "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled":
+	case "approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled":
 		return true
 	default:
 		return false

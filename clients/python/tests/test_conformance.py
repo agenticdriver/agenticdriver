@@ -22,10 +22,12 @@ class ClientConformance(unittest.TestCase):
                         client.providers()
                     elif case.get("operation") == "protocol":
                         client.protocol()
+                    elif case.get("operation") == "approval":
+                        client.decide_approval(case["decision"])
                     elif case.get("operation") == "ingest":
                         client.ingest_context({"corpus": "library", "document": {"type": "reference", "id": "paper", "revision": "r1", "mediaType": "text/markdown"}})
                     else:
-                        stream = client.stream(provider="mock", model="demo", input="Hello", **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
+                        stream = client.stream(provider="mock", model="demo", input="Hello", **({"approvals": case["approvals"]} if "approvals" in case else {}), **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
                         completed = cancelled = False
                         try:
                             for event in stream:
@@ -145,3 +147,26 @@ class ClientConformance(unittest.TestCase):
                 if kind == "pdf": self.assertEqual(hit["ingestion"]["pages"]["total"], 2)
                 if kind == "email": self.assertEqual(hit["source"]["location"]["messageId"], "message-one")
                 if kind == "markdown": self.assertEqual(hit["source"]["location"]["section"], "Solar evidence")
+
+    def test_interactive_approvals(self):
+        with self.client() as client:
+            for action in ("approve", "deny", "cancel", "expire"):
+                events = []
+                policy = {"mode": "interactive", "idlePolicy": "pause"}
+                if action == "expire": policy["expiresAfterMs"] = 20
+                with client.stream(provider="mock", model="demo", input="conformance-approval", tools=["approved_echo"], approvals=policy) as stream:
+                    for event in stream:
+                        events.append(event)
+                        if event["type"] == "approval.requested" and action != "expire":
+                            approval = event["approval"]
+                            decision = {k: approval[k] for k in ("approvalId", "runId", "call")}
+                            decision["decision"] = action
+                            receipt = client.decide_approval(decision)
+                            self.assertEqual(receipt["callId"], approval["call"]["id"])
+                            with self.assertRaises(DriverError) as stale:
+                                client.decide_approval(decision)
+                            self.assertEqual(stale.exception.code, "APPROVAL_NOT_FOUND")
+                self.assertEqual(events[-1]["type"], "run.completed" if action == "approve" else "run.cancelled" if action == "cancel" else "run.failed")
+                self.assertEqual(any(e["type"] == "tool.completed" for e in events), action == "approve")
+                resolution = next(e["resolution"] for e in events if e["type"] == "approval.resolved")
+                self.assertEqual(resolution["outcome"], {"approve": "approved", "deny": "denied", "cancel": "cancelled", "expire": "expired"}[action])

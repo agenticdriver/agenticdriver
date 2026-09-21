@@ -15,12 +15,12 @@ agenticdriver = { path = "../agenticdriver/clients/rust", default-features = fal
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-| Features | Interface |
-| --- | --- |
-| Default: `async`, `blocking` | Both client styles |
-| `async` only | `AsyncAgenticClient`, `EventStream` |
-| `blocking` only | `AgenticClient` (also `blocking::AgenticClient`) |
-| No default features | Shared request, response, event and error types; no client constructors |
+| Features                     | Interface                                                               |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| Default: `async`, `blocking` | Both client styles                                                      |
+| `async` only                 | `AsyncAgenticClient`, `EventStream`                                     |
+| `blocking` only              | `AgenticClient` (also `blocking::AgenticClient`)                        |
+| No default features          | Shared request, response, event and error types; no client constructors |
 
 Both transports use Rustls with certificate and hostname verification. Remote
 hosts require HTTPS; HTTP is allowed only for loopback. Redirects and automatic
@@ -117,3 +117,13 @@ archive into a separate application, checks every feature combination on Rust
 1.89, and exercises both clients over HTTP and verified HTTPS. It also runs
 shared wire/version fixtures, cancellation/disconnection checks, scoped RAG and
 ingestion round trips. It does not publish to a registry or call a live model.
+
+## Interactive approvals
+
+Set `request.approvals = Some(ApprovalPolicy::interactive(ApprovalIdlePolicy::Pause))` and consume a stream. Match `EventPayload::ApprovalRequested { approval }`, review its call, then use `client.decide_approval(&approval.decision(ApprovalAction::Approve))` (await on the async client). `Deny` and `Cancel` are also explicit actions. Match `ApprovalResolved` for the outcome; keep consuming to the terminal run event.
+
+The host must enable this feature and grant `approveTools`. `run` rejects
+interactive mode because it cannot deliver review requests. There is no default
+approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
+Decisions are single-use and are never retried automatically. A receipt does not
+confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).

@@ -1,7 +1,7 @@
 use crate::{protocol_error, DriverError, Event, Result, RunResult, Usage};
 #[cfg(any(feature = "blocking", feature = "async"))]
 use crate::{validation, RunRequest};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -13,7 +13,7 @@ pub enum ProgressPhase {
     Context,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
     pub id: String,
     pub name: String,
@@ -24,16 +24,45 @@ pub struct ToolCall {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum EventPayload<'a> {
-    RunStarted { provider: &'a str, model: &'a str },
-    StepStarted { step: u64 },
-    TextDelta { text: &'a str },
-    Progress { phase: ProgressPhase },
-    ToolCalled { call: ToolCall },
-    ToolCompleted { call_id: &'a str, output: &'a Value },
-    UsageReported { step: u64, usage: Usage },
-    RunCompleted { result: &'a RunResult },
-    RunFailed { error: &'a DriverError },
-    RunCancelled { error: &'a DriverError },
+    RunStarted {
+        provider: &'a str,
+        model: &'a str,
+    },
+    StepStarted {
+        step: u64,
+    },
+    TextDelta {
+        text: &'a str,
+    },
+    Progress {
+        phase: ProgressPhase,
+    },
+    ApprovalRequested {
+        approval: crate::ApprovalRequest,
+    },
+    ApprovalResolved {
+        resolution: crate::ApprovalResolution,
+    },
+    ToolCalled {
+        call: ToolCall,
+    },
+    ToolCompleted {
+        call_id: &'a str,
+        output: &'a Value,
+    },
+    UsageReported {
+        step: u64,
+        usage: Usage,
+    },
+    RunCompleted {
+        result: &'a RunResult,
+    },
+    RunFailed {
+        error: &'a DriverError,
+    },
+    RunCancelled {
+        error: &'a DriverError,
+    },
 }
 
 impl Event {
@@ -72,6 +101,14 @@ impl Event {
             },
             "run.progress" => EventPayload::Progress {
                 phase: serde_json::from_value(value("phase")?.clone()).map_err(|_| invalid())?,
+            },
+            "approval.requested" => EventPayload::ApprovalRequested {
+                approval: serde_json::from_value(value("approval")?.clone())
+                    .map_err(|_| invalid())?,
+            },
+            "approval.resolved" => EventPayload::ApprovalResolved {
+                resolution: serde_json::from_value(value("resolution")?.clone())
+                    .map_err(|_| invalid())?,
             },
             "tool.called" => EventPayload::ToolCalled {
                 call: serde_json::from_value(value("call")?.clone()).map_err(|_| invalid())?,
@@ -147,10 +184,22 @@ impl EventDecoder {
         }
         self.sequence = event.sequence;
         self.run_id.clone_from(&event.run_id);
+        if matches!(
+            event.kind.as_str(),
+            "approval.requested" | "approval.resolved"
+        ) && request.approvals.is_none()
+        {
+            return Err(protocol_error(
+                "UNSUPPORTED_EVENT",
+                "Interactive approvals were not selected for this run.",
+            ));
+        }
         match event.kind.as_str() {
-            "run.started" | "step.started" | "text.delta" | "run.progress" | "tool.called"
-            | "tool.completed" | "usage.reported" | "run.completed" | "run.failed"
-            | "run.cancelled" => Ok(Some(event)),
+            "approval.requested" | "approval.resolved" | "run.started" | "step.started"
+            | "text.delta" | "run.progress" | "tool.called" | "tool.completed"
+            | "usage.reported" | "run.completed" | "run.failed" | "run.cancelled" => {
+                Ok(Some(event))
+            }
             _ if event.optional => Ok(None),
             _ => Err(protocol_error(
                 "UNSUPPORTED_EVENT",

@@ -1,5 +1,11 @@
 import { z } from "zod";
 import {
+  ApprovalPolicySchema,
+  type ApprovalRequest,
+  type ApprovalResolution,
+} from "./approval-types.js";
+export type * from "./approval-types.js";
+import {
   RetrievalRequestSchema,
   type RetrievalResult,
 } from "./retrieval-types.js";
@@ -51,6 +57,7 @@ export const RunRequestSchema = z
       )
       .max(100)
       .optional(),
+    approvals: ApprovalPolicySchema.optional(),
     tools: z
       .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
       .max(32)
@@ -111,7 +118,7 @@ export interface ProviderContext extends ExecutionContext {
   emitText(text: string): void;
 }
 export interface Tool extends ToolDefinition {
-  /** A required approval fails closed if the host has not supplied an approval handler. */
+  /** Required approval fails closed without a host callback or an explicitly enabled interactive decision. */
   requiresApproval?: boolean;
   execute(input: JsonObject, context: ExecutionContext): Promise<Json> | Json;
 }
@@ -240,6 +247,8 @@ type EventPayload =
   | { type: "step.started"; step: number }
   | { type: "text.delta"; text: string }
   | { type: "run.progress"; phase: "model" | "tool" | "context" }
+  | { type: "approval.requested"; approval: ApprovalRequest }
+  | { type: "approval.resolved"; resolution: ApprovalResolution }
   | { type: "tool.called"; call: ToolCall }
   | { type: "tool.completed"; callId: string; output: Json }
   | { type: "usage.reported"; step: number; usage: Usage }

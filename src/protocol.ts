@@ -9,6 +9,8 @@ export const RUN_EVENT_TYPES = [
   "step.started",
   "text.delta",
   "run.progress",
+  "approval.requested",
+  "approval.resolved",
   "tool.called",
   "tool.completed",
   "usage.reported",
@@ -26,6 +28,7 @@ export interface ProtocolInfo {
 
 export function protocolInfo(
   options: {
+    interactiveApprovals?: boolean;
     idempotency?: boolean;
     contextReferences?: boolean;
     retrieval?: boolean;
@@ -38,6 +41,7 @@ export function protocolInfo(
     supportedVersions: [PROTOCOL_VERSION],
     features: [
       "json-results",
+      ...(options.interactiveApprovals ? ["interactive-approvals"] : []),
       "event-stream",
       "cancel-on-disconnect",
       "optional-idle-timeout",

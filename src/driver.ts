@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
 import {
+  ApprovalManager,
+  type ApprovalOptions,
+  type ApprovalPrincipal,
+} from "./approvals.js";
+import type { ApprovalDecision, ApprovalResolution } from "./approval-types.js";
+import {
   ingestDocument,
   ingestionPolicy,
   type IngestionOptions,
@@ -14,7 +20,12 @@ import type {
 } from "./retrieval-types.js";
 import { Ajv, type ValidateFunction } from "ajv";
 import { Ajv2020 } from "ajv/dist/2020.js";
-import { abortable, DriverError, publicError } from "./errors.js";
+import {
+  abortable,
+  cancelOnClose,
+  DriverError,
+  publicError,
+} from "./errors.js";
 import { RunRequestSchema } from "./types.js";
 import { withProgress } from "./progress.js";
 import { ProviderDiscovery, type DiscoveryOptions } from "./discovery.js";
@@ -56,6 +67,7 @@ export interface DriverOptions {
   context?: ContextOptions;
   retrieval?: RetrievalService;
   ingestion?: IngestionOptions;
+  approvals?: ApprovalOptions;
   approve?: (
     call: ToolCall,
     context: ExecutionContext,
@@ -74,6 +86,7 @@ export interface DriverOptions {
 
 export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
+  private readonly approvals: ApprovalManager;
   private readonly usagePolicy: UsagePolicy;
   private readonly contextOptions: ReturnType<typeof contextPolicy>;
   private readonly ingestionOptions: ReturnType<typeof ingestionPolicy>;
@@ -89,6 +102,7 @@ export class AgenticDriver {
     validateFormats: false,
   });
   constructor(private readonly options: DriverOptions) {
+    this.approvals = new ApprovalManager(options.approvals);
     this.discovery = new ProviderDiscovery(options.discovery);
     this.usagePolicy = new UsagePolicy(options.usage, options.providers);
     this.contextOptions = contextPolicy(options.context);
@@ -124,6 +138,16 @@ export class AgenticDriver {
 
   listProviders() {
     return structuredClone([...this.providers.values()].map((p) => p.info));
+  }
+
+  get supportsInteractiveApprovals(): boolean {
+    return this.approvals.enabled;
+  }
+  decideApproval(
+    decision: ApprovalDecision,
+    principal: ApprovalPrincipal = {},
+  ): ApprovalResolution {
+    return this.approvals.decide(decision, principal);
   }
 
   get supportsIdempotency(): boolean {
@@ -381,6 +405,7 @@ export class AgenticDriver {
           "UNKNOWN_TOOL",
           "A requested tool is not registered on this host.",
         );
+    this.approvals.validate(request.approvals);
     if (request.outputSchema) this.outputValidator(request.outputSchema);
     return request;
   }
@@ -410,6 +435,11 @@ export class AgenticDriver {
   }
 
   async run(input: RunRequest, options: RunOptions = {}): Promise<RunResult> {
+    if (input.approvals)
+      throw new DriverError(
+        "APPROVAL_STREAM_REQUIRED",
+        "Use stream() to receive and decide interactive approvals.",
+      );
     for await (const event of this.stream(input, options)) {
       if (event.type === "run.completed") return event.result;
       if (event.type === "run.failed" || event.type === "run.cancelled")
@@ -426,7 +456,23 @@ export class AgenticDriver {
     );
   }
 
-  async *stream(
+  stream(
+    input: RunRequest,
+    options: RunOptions = {},
+  ): AsyncGenerator<RunEvent> {
+    const controller = new AbortController();
+    return cancelOnClose(
+      this.streamInternal(input, {
+        ...options,
+        signal: options.signal
+          ? AbortSignal.any([options.signal, controller.signal])
+          : controller.signal,
+      }),
+      controller,
+    );
+  }
+
+  private async *streamInternal(
     input: RunRequest,
     options: RunOptions = {},
   ): AsyncGenerator<RunEvent> {
@@ -570,8 +616,15 @@ export class AgenticDriver {
     ].filter((value): value is number => value !== undefined && value > 0);
     const idleTimeoutMs = idleLimits.length ? Math.min(...idleLimits) : 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let idlePaused = false;
     const reportProgress = () => {
-      if (!idleTimeoutMs || controller.signal.aborted) return;
+      if (
+        !idleTimeoutMs ||
+        controller.signal.aborted ||
+        options.signal?.aborted ||
+        idlePaused
+      )
+        return;
       clearTimeout(timer);
       timer = setTimeout(
         () =>
@@ -751,7 +804,8 @@ export class AgenticDriver {
           yield event({ type: "usage.reported", step, usage: stepUsage });
         if (turn.text && !streamed)
           yield event({ type: "text.delta", text: turn.text });
-        const calls = turn.toolCalls ?? [];
+        // Provider adapters and event consumers must not mutate an approved action.
+        const calls = structuredClone(turn.toolCalls ?? []);
         if (!calls.length) {
           let output: Json | undefined;
           if (validateOutput) {
@@ -840,32 +894,99 @@ export class AgenticDriver {
         messages.push({
           role: "assistant",
           content: turn.text,
-          toolCalls: calls,
+          toolCalls: structuredClone(calls),
           native: turn.native,
         });
         for (const call of calls) {
           signal.throwIfAborted();
           const { tool } = this.tools.get(call.name)!;
-          yield event({ type: "tool.called", call });
+          yield event({ type: "tool.called", call: structuredClone(call) });
           signal.throwIfAborted();
-          if (
-            tool.requiresApproval &&
-            (!this.options.approve ||
-              !(await abortable(
-                Promise.resolve(this.options.approve(call, context)),
+          if (tool.requiresApproval) {
+            if (this.options.approve) {
+              const approved = await abortable(
+                Promise.resolve(
+                  this.options.approve(structuredClone(call), context),
+                ),
                 signal,
-              )))
-          )
-            throw new DriverError(
-              "APPROVAL_REQUIRED",
-              "The host did not approve this tool call.",
-            );
+              );
+              if (!approved)
+                throw new DriverError(
+                  "APPROVAL_REQUIRED",
+                  "The host did not approve this tool call.",
+                );
+            } else if (!request.approvals) {
+              throw new DriverError(
+                "APPROVAL_REQUIRED",
+                "The host did not approve this tool call.",
+              );
+            }
+            if (request.approvals) {
+              signal.throwIfAborted();
+              const pending = this.approvals.request(
+                call,
+                request.provider,
+                request.approvals,
+                context,
+              );
+              if (request.approvals.idlePolicy === "pause") {
+                idlePaused = true;
+                clearTimeout(timer);
+              }
+              const resumeActivity = (resume = true) => {
+                if (idlePaused) {
+                  idlePaused = false;
+                  // Resume when the decision settles, even if a local event consumer is paused.
+                  if (resume) reportProgress();
+                }
+              };
+              void pending.result.then((resolution) =>
+                resumeActivity(
+                  !(resolution instanceof DriverError) &&
+                    resolution.outcome === "approved",
+                ),
+              );
+              try {
+                yield event({
+                  type: "approval.requested",
+                  approval: pending.approval,
+                });
+                const resolution = await pending.result;
+                if (resolution instanceof DriverError) throw resolution;
+                yield event({
+                  type: "approval.resolved",
+                  resolution: structuredClone(resolution),
+                });
+                if (resolution.outcome === "cancelled")
+                  controller.abort(
+                    new DriverError(
+                      "CANCELLED",
+                      "The run was cancelled while awaiting approval.",
+                    ),
+                  );
+                signal.throwIfAborted();
+                if (resolution.outcome !== "approved")
+                  throw new DriverError(
+                    resolution.outcome === "expired"
+                      ? "APPROVAL_EXPIRED"
+                      : "APPROVAL_DENIED",
+                    resolution.outcome === "expired"
+                      ? "The application's approval period expired. The tool was not executed."
+                      : "The application denied this tool call. The tool was not executed.",
+                  );
+              } finally {
+                pending.cancel();
+                resumeActivity();
+              }
+            }
+          }
           signal.throwIfAborted();
           let output: Json;
           toolOutcomePending = true;
           try {
             output = (yield* withProgress(
-              (toolContext) => tool.execute(call.arguments, toolContext),
+              (toolContext) =>
+                tool.execute(structuredClone(call.arguments), toolContext),
               context,
               "tool",
               (error) => controller.abort(error),

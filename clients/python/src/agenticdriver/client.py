@@ -18,6 +18,7 @@ from ._protocol import (
     valid_error,
     valid_protocol,
     valid_result,
+    valid_resolution,
 )
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 from ._transport import (
@@ -27,7 +28,7 @@ from ._transport import (
     headers,
     validate_timeout,
 )
-from .models import ProviderInfo, ProtocolInfo, RunEvent, RunRequest, RunResult
+from .models import ProviderInfo, ProtocolInfo, RunEvent, RunRequest, RunResult, ApprovalDecision, ApprovalResolution
 from .retrieval import (
     RetrievalSearch,
     RetrievalResult,
@@ -188,6 +189,13 @@ class AgenticClient:
             raise DriverError("RESPONSE_TOO_LARGE", "The response exceeded 2 MB.")
         return parse_json(data)
 
+    def decide_approval(self, decision: ApprovalDecision) -> ApprovalResolution:
+        with self._request("v1/approvals/decisions", decision) as response:
+            result = self._json(response)
+            if not valid_resolution(result, decision=decision):
+                raise DriverError("INVALID_RESPONSE", "The approval receipt does not match the decision; reconcile using the run stream.")
+            return cast(ApprovalResolution, result)
+
     def ingest_context(self, request: IngestRequest) -> IngestResult:
         with self._request("v1/retrieval/ingest", request) as response:
             result = self._json(response)
@@ -258,6 +266,8 @@ class AgenticClient:
             return cast(ProtocolInfo, info)
 
     def run(self, **request: Unpack[RunRequest]) -> RunResult:
+        if request.get("approvals"):
+            raise DriverError("APPROVAL_STREAM_REQUIRED", "Use stream() to receive and decide interactive approvals.")
         with self._request("v1/runs", request) as response:
             result = self._json(response)
             if not valid_result(result, request):

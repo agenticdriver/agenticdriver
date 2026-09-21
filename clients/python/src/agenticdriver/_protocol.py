@@ -11,7 +11,7 @@ from ._context import valid_context_result, valid_media_catalog
 PROTOCOL_VERSION = "1.0"
 MAX_BYTES = 2_000_000
 MAX_INTEGER = 9_007_199_254_740_991
-EVENT_TYPES = {"run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled"}
+EVENT_TYPES = {"approval.requested", "approval.resolved", "run.started", "step.started", "text.delta", "run.progress", "tool.called", "tool.completed", "usage.reported", "run.completed", "run.failed", "run.cancelled"}
 
 
 def parse_json(data, code="INVALID_RESPONSE"):
@@ -105,6 +105,30 @@ def valid_timestamp(value):
         return False
 
 
+def valid_approval(value, run_id=None, policy=None):
+    if not (isinstance(value, dict) and all(text(value.get(k)) for k in ["approvalId", "runId"]) and
+            (run_id is None or value["runId"] == run_id) and valid_timestamp(value.get("requestedAt")) and
+            value.get("idlePolicy") in ("pause", "continue") and
+            (policy is None or value["idlePolicy"] == policy.get("idlePolicy")) and
+            ("expiresAt" not in value or valid_timestamp(value["expiresAt"]))):
+        return False
+    call = value.get("call")
+    return (isinstance(call, dict) and text(call.get("id")) and len(call["id"]) <= 256 and
+            isinstance(call.get("name"), str) and re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_]{0,63}", call["name"]) is not None and
+            isinstance(call.get("arguments"), dict))
+
+
+def valid_resolution(value, run_id=None, decision=None):
+    valid = (isinstance(value, dict) and all(text(value.get(k)) for k in ["approvalId", "runId", "callId"]) and
+             (run_id is None or value["runId"] == run_id) and valid_timestamp(value.get("decidedAt")) and
+             value.get("outcome") in ("approved", "denied", "cancelled", "expired"))
+    if valid and decision is not None:
+        valid = (value["approvalId"] == decision["approvalId"] and value["runId"] == decision["runId"] and
+                 value["callId"] == decision["call"]["id"] and
+                 value["outcome"] == {"approve": "approved", "deny": "denied", "cancel": "cancelled"}.get(decision["decision"]))
+    return valid
+
+
 class EventDecoder:
     def __init__(self, request):
         self.request, self.sequence, self.run_id = request, 0, None
@@ -123,7 +147,13 @@ class EventDecoder:
             if event.get("optional") is not True:
                 raise DriverError("UNSUPPORTED_EVENT", "The host sent an unknown required event type.")
             return None
-        if kind == "run.started":
+        if kind.startswith("approval.") and not self.request.get("approvals"):
+            raise DriverError("UNSUPPORTED_EVENT", "Interactive approvals were not selected for this run.")
+        if kind == "approval.requested":
+            valid = valid_approval(event.get("approval"), self.run_id, self.request.get("approvals"))
+        elif kind == "approval.resolved":
+            valid = valid_resolution(event.get("resolution"), self.run_id)
+        elif kind == "run.started":
             valid = event.get("provider") == self.request["provider"] and event.get("model") == self.request["model"]
         elif kind == "step.started":
             valid = count(event.get("step"), True)
