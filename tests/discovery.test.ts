@@ -17,6 +17,7 @@ import {
   openai,
   openaiCompatible,
   xai,
+  xaiResponses,
 } from "../src/providers/index.js";
 import { mockProvider } from "../src/providers/mock.js";
 import type { ProviderAdapter } from "../src/types.js";
@@ -216,6 +217,7 @@ test("API probes use documented GET routes, host keys and bounded pagination", a
     "anthropic",
     "gemini",
     "xai",
+    "xaiResponses",
     "compatible",
   ] as const) {
     const calls: URL[] = [];
@@ -284,6 +286,7 @@ test("API probes use documented GET routes, host keys and bounded pagination", a
       anthropic,
       gemini,
       xai,
+      xaiResponses,
       compatible: openaiCompatible,
     }[vendor](options);
     const [info] = await new AgenticDriver({

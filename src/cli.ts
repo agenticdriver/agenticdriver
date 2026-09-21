@@ -29,7 +29,7 @@ run reads stdin when --input is omitted, and accepts --url, --token-id,
 --idempotency-key, --idle-timeout-ms and --max-attempts. Run inactivity timeouts
 and provider retries are disabled by default. --json streams JSONL events for run.
 
-Providers: mock, openai, anthropic, gemini, xai, openai-compatible, codex,
+Providers: mock, openai, anthropic, gemini, xai, xai-responses, openai-compatible, codex,
 claude-code and gemini-cli.
 
 --config overrides AGENTICDRIVER_CONFIG and the OS user configuration directory.
@@ -116,6 +116,7 @@ async function initialize(path: string, values: Values) {
     "anthropic",
     "gemini",
     "xai",
+    "xai-responses",
     "openai-compatible",
   ].includes(kind);
   const cli = ["codex", "claude-code", "gemini-cli"].includes(kind);
@@ -145,6 +146,7 @@ async function initialize(path: string, values: Values) {
                   anthropic: "ANTHROPIC_API_KEY",
                   gemini: "GEMINI_API_KEY",
                   xai: "XAI_API_KEY",
+                  "xai-responses": "XAI_API_KEY",
                 } as Record<string, string>
               )[kind] ??
               "PROVIDER_API_KEY",

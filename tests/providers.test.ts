@@ -9,6 +9,7 @@ import {
   anthropic,
   gemini,
   xai,
+  xaiResponses,
   codex,
 } from "../src/providers/index.js";
 import { normalizeCli, runProcess } from "../src/providers/local-cli.js";
@@ -58,6 +59,23 @@ test("native session continuation replays private API state without exporting it
   const cases = [
     {
       factory: openai,
+      response: {
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "r1",
+            encrypted_content: "private-state-marker",
+          },
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "visible" }],
+          },
+        ],
+      },
+    },
+    {
+      factory: xaiResponses,
       response: {
         status: "completed",
         output: [

@@ -28,6 +28,7 @@ import {
   openai,
   openaiCompatible,
   xai,
+  xaiResponses,
 } from "./providers/index.js";
 import {
   secretResolver,
@@ -63,7 +64,14 @@ const common = {
 const api = z
   .object({
     ...common,
-    kind: z.enum(["openai", "anthropic", "gemini", "xai", "openai-compatible"]),
+    kind: z.enum([
+      "openai",
+      "anthropic",
+      "gemini",
+      "xai",
+      "xai-responses",
+      "openai-compatible",
+    ]),
     apiKeyRef: SecretReferenceSchema,
     inputMediaTypes: z
       .record(model, z.array(ContextMediaTypeSchema).max(6))
@@ -259,7 +267,7 @@ export function validateHostConfig(input: unknown): HostConfig {
     if ("apiKeyRef" in provider)
       validateInputMediaTypes(
         provider,
-        !["xai", "openai-compatible"].includes(provider.kind),
+        !["xai", "xai-responses", "openai-compatible"].includes(provider.kind),
       );
   }
   if (config.usagestat) {
@@ -453,7 +461,9 @@ export function configuredDriver(
       };
       if (p.kind === "openai-compatible")
         return openaiCompatible({ ...values, baseUrl: p.baseUrl! });
-      return { openai, anthropic, gemini, xai }[p.kind](values);
+      return { openai, anthropic, gemini, xai, "xai-responses": xaiResponses }[
+        p.kind
+      ](values);
     }
     return { codex, "claude-code": claudeCode, "gemini-cli": geminiCli }[
       p.kind

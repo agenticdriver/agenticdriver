@@ -15,6 +15,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `anthropic({ apiKey })`                 | `anthropic`         | Anthropic API key; Messages API         | Yes                                 |
 | `gemini({ apiKey })`                    | `gemini`            | Gemini API key; streamGenerateContent   | Yes                                 |
 | `xai({ apiKey })`                       | `xai`               | xAI API key; Chat Completions           | Yes                                 |
+| `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                  | Yes                                 |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                      | Yes, if endpoint supports functions |
 | `codex()`                               | `codex`             | Official CLI's existing session         | Text only                           |
 | `claudeCode()`                          | `claude-code`       | Official CLI's existing session         | Text only                           |
@@ -68,10 +69,11 @@ zero still terminates after ten seconds of silence. It also attempted separate
 session-title generation. These controls need qualification before the SDK can
 offer its default disabled-inactivity contract through that native route; the
 test used only a synthetic local endpoint, with no account or paid inference.
-xAI documents Chat Completions as supported but legacy; the adapter
-uses that established function-calling contract, and a native Responses adapter
-can be added separately.
-[xAI Chat Completions](https://docs.x.ai/developers/model-capabilities/legacy/chat-completions).
+The published 0.1.0 `xai()` adapter retains Chat Completions. Development source
+also offers an explicit `xaiResponses()` factory and `xai-responses` host kind;
+see [the unreleased Responses adapter and migration guide](xai-responses.md).
+[xAI recommends Responses for new integrations](https://docs.x.ai/developers/model-capabilities/text/comparison).
+Both API paths remain separate from the pending Grok Build native-session route.
 
 The normalized mode is called `cli-session`: an existing CLI login may itself use
 subscription or API billing. The SDK does not infer the plan, scrape browser

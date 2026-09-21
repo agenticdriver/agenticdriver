@@ -127,6 +127,7 @@
                   "anthropic",
                   "gemini",
                   "xai",
+                  "xai-responses",
                   "openai-compatible"
                 ]
               },
