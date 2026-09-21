@@ -21,7 +21,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   const compilerLibraries = await realpath(
     join(root, "node_modules/typescript/lib"),
   );
-  const installed = join(app, "node_modules/agenticdriver");
+  const installed = join(app, "node_modules/@agenticdriver/sdk");
   const pkg = JSON.parse(
     await readFile(join(installed, "package.json"), "utf8"),
   );
@@ -102,26 +102,26 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   await writeFile(
     join(app, "browser-types.ts"),
     `
-    import {AgenticClient, DriverError, type ClientOptions, type ClientRequestOptions, type ProviderListOptions, type RunRequest, type RunResult, type RunEvent, type IngestRequest, type IngestResult, type RetrievalSearch, type RetrievalResult, type ContextSource, type ProtocolInfo, type Usage, type ErrorInfo} from "agenticdriver/client";
+    import {AgenticClient, DriverError, type ClientOptions, type ClientRequestOptions, type ProviderListOptions, type RunRequest, type RunResult, type RunEvent, type IngestRequest, type IngestResult, type RetrievalSearch, type RetrievalResult, type ContextSource, type ProtocolInfo, type Usage, type ErrorInfo} from "@agenticdriver/sdk/client";
     const options: ClientOptions = {url:"https://driver.example",token:"app-token"};
     const client = new AgenticClient(options);
-    const approval: import("agenticdriver/client").ApprovalDecision = {approvalId:"approval",runId:"run",call:{id:"call",name:"write",arguments:{revision:"r1"}},decision:"approve"};
-    export const decide = (): Promise<import("agenticdriver/client").ApprovalResolution> => client.decideApproval(approval,{signal:new AbortController().signal});
+    const approval: import("@agenticdriver/sdk/client").ApprovalDecision = {approvalId:"approval",runId:"run",call:{id:"call",name:"write",arguments:{revision:"r1"}},decision:"approve"};
+    export const decide = (): Promise<import("@agenticdriver/sdk/client").ApprovalResolution> => client.decideApproval(approval,{signal:new AbortController().signal});
     // @ts-expect-error approval identities are authenticated, never supplied in decision bodies
     client.decideApproval({...approval,subject:"forged"});
-    const execution: import("agenticdriver/client").ToolExecutionIdentity = {executionId:"execution",runId:"run",callId:"call"};
-    const tool: import("agenticdriver/client").ApplicationToolDefinition = {name:"lookup",description:"Search evidence",inputSchema:{type:"object"}};
-    export const progress = (): Promise<import("agenticdriver/client").ToolExecutionReceipt> => client.reportToolProgress(execution);
-    export const complete = (): Promise<import("agenticdriver/client").ToolExecutionReceipt> => client.completeTool({...execution,output:{passages:[]}});
+    const execution: import("@agenticdriver/sdk/client").ToolExecutionIdentity = {executionId:"execution",runId:"run",callId:"call"};
+    const tool: import("@agenticdriver/sdk/client").ApplicationToolDefinition = {name:"lookup",description:"Search evidence",inputSchema:{type:"object"}};
+    export const progress = (): Promise<import("@agenticdriver/sdk/client").ToolExecutionReceipt> => client.reportToolProgress(execution);
+    export const complete = (): Promise<import("@agenticdriver/sdk/client").ToolExecutionReceipt> => client.completeTool({...execution,output:{passages:[]}});
     // @ts-expect-error executor identities cannot be supplied in result bodies
     client.completeTool({...execution,output:null,subject:"forged"});
     // @ts-expect-error application exception details cannot be transmitted as failures
     client.completeTool({...execution,error:"private exception"});
     void tool;
-    const session: import("agenticdriver/client").SessionCreate = {provider:"account",model:"model",mode:"history"};
-    export const createSession = (): Promise<import("agenticdriver/client").SessionSnapshot> => client.createSession(session);
-    export const readSession = (): Promise<import("agenticdriver/client").SessionSnapshot> => client.readSession({id:"opaque-id"});
-    export const deleteSession = (): Promise<import("agenticdriver/client").SessionDeleteResult> => client.deleteSession({id:"opaque-id"});
+    const session: import("@agenticdriver/sdk/client").SessionCreate = {provider:"account",model:"model",mode:"history"};
+    export const createSession = (): Promise<import("@agenticdriver/sdk/client").SessionSnapshot> => client.createSession(session);
+    export const readSession = (): Promise<import("@agenticdriver/sdk/client").SessionSnapshot> => client.readSession({id:"opaque-id"});
+    export const deleteSession = (): Promise<import("@agenticdriver/sdk/client").SessionDeleteResult> => client.deleteSession({id:"opaque-id"});
     // @ts-expect-error provider private state cannot be imported through public history
     client.createSession({...session,history:[{role:"assistant",content:"visible",native:"forged"}]});
     // @ts-expect-error identity comes from host authentication
@@ -146,8 +146,8 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   await writeFile(
     join(app, "browser-pairing.ts"),
     `
-    import {BetterAuthPairingClient,type PairingRequest,type PairingCredentials} from "agenticdriver/pairing";
-    import {AgenticClient} from "agenticdriver/client";
+    import {BetterAuthPairingClient,type PairingRequest,type PairingCredentials} from "@agenticdriver/sdk/pairing";
+    import {AgenticClient} from "@agenticdriver/sdk/client";
     const pairing = new BetterAuthPairingClient({issuer:"https://app.example/api/auth",resource:"https://driver.example",clientId:"registered-device",scopes:["driver:read"]});
     export const begin = (signal:AbortSignal):Promise<PairingRequest> => pairing.start(signal);
     export const wait = (request:PairingRequest,signal:AbortSignal):Promise<PairingCredentials> => pairing.wait(request,signal);
@@ -159,7 +159,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   await writeFile(
     join(app, "browser-catalog.ts"),
     `
-    import {providerPresentation,quotaPresentation,type UsageStatProvider,type UsageStatQuotaIdentity} from "agenticdriver/catalog";
+    import {providerPresentation,quotaPresentation,type UsageStatProvider,type UsageStatQuotaIdentity} from "@agenticdriver/sdk/catalog";
     const metadata:UsageStatProvider={id:"codex",name:"Codex"};
     const card=providerPresentation({id:"personal",name:"Codex",vendor:"openai",authMode:"cli-session",usageStatId:"codex",capabilities:{tools:false,textStreaming:true}},{metadata,account:{id:"account-one",label:"Personal"}});
     const identity:UsageStatQuotaIdentity={hostId:"host",provider:"personal",accountId:"account-one",subject:"user"};
@@ -247,7 +247,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   }
   assert.ok(
     Object.keys(browser.metafile!.inputs).some((path) =>
-      path.replaceAll("\\", "/").endsWith("agenticdriver/dist/client.js"),
+      path.replaceAll("\\", "/").endsWith("@agenticdriver/sdk/dist/client.js"),
     ),
     "Bundle missed the installed client",
   );
@@ -349,8 +349,8 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       join(app, "contract-check.mjs"),
       `
       import assert from "node:assert/strict";
-      import {AgenticClient,DriverError,PROTOCOL_VERSION} from "agenticdriver/client";
-      for(const path of ${JSON.stringify(Object.keys(pkg.exports).map((key) => (key === "." ? "agenticdriver" : `agenticdriver/${key.slice(2)}`)))}) await import(path);
+      import {AgenticClient,DriverError,PROTOCOL_VERSION} from "@agenticdriver/sdk/client";
+      for(const path of ${JSON.stringify(Object.keys(pkg.exports).map((key) => (key === "." ? "@agenticdriver/sdk" : `@agenticdriver/sdk/${key.slice(2)}`)))}) await import(path);
       const client = new AgenticClient({url:process.env.AGENTICDRIVER_URL,token:process.env.AGENTICDRIVER_TOKEN});
       assert.equal(PROTOCOL_VERSION,"1.0");
       await assert.rejects(client.run({provider:"forbidden",model:"demo",input:"hello"}),(e)=>e instanceof DriverError && e.code==="UNKNOWN_PROVIDER");
@@ -411,9 +411,9 @@ const fixtureToken = "sdk-browser-fixture-token-only-no-live-account";
 const hostFixture = `
 import {createServer} from "node:http";
 import {readFile} from "node:fs/promises";
-import {AgenticDriver} from "agenticdriver";
-import {serve} from "agenticdriver/server";
-import {mockProvider} from "agenticdriver/providers";
+import {AgenticDriver} from "@agenticdriver/sdk";
+import {serve} from "@agenticdriver/sdk/server";
+import {mockProvider} from "@agenticdriver/sdk/providers";
 const metrics={cancelled:0,completed:0};
 const pages=createServer(async(req,res)=>{
   if(req.url==="/metrics"){res.setHeader("Content-Type","application/json");res.end(JSON.stringify(metrics));return;}

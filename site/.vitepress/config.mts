@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const docs = resolve(root, "docs");
-const repository = "https://github.com/hashimkarim/agenticdriver";
+const repository = "https://github.com/agenticdriver/agenticdriver";
 const require = createRequire(import.meta.url);
 
 export default defineConfig({

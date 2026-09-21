@@ -26,7 +26,7 @@ QUICKSTARTS = ROOT / "examples/quickstart"
 IMAGE = os.environ.get("AGENTICDRIVER_TEST_IMAGE", "agenticdriver:deployment-test")
 AUTH_IMAGE = IMAGE + "-auth"
 PROXY_IMAGE = IMAGE + "-proxy"
-MODULE = "github.com/hashimkarim/agenticdriver/clients/go"
+MODULE = "github.com/agenticdriver/agenticdriver/clients/go"
 
 
 def run(command, *, cwd=ROOT, env=None, timeout=300, capture=False, check=True):

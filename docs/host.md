@@ -23,7 +23,7 @@ npm run check
 npm pack
 
 # In an application directory; replace the path with your actual archive
-npm install /absolute/path/to/agenticdriver-0.1.0.tgz
+npm install /absolute/path/to/agenticdriver-sdk-0.1.0.tgz
 npx --no-install agenticdriver init
 npx --no-install agenticdriver doctor
 npx --no-install agenticdriver serve
@@ -223,7 +223,7 @@ restart. Driver bearer tokens and TLS identity are loaded when `serve` starts;
 restart after changing them. Never delete operation records as a rotation step.
 
 Embedding applications can import `configuredDriver`, `configuredServer`,
-`configuredClient`, and `readHostConfig` from `agenticdriver/host` and supply a
+`configuredClient`, and `readHostConfig` from `@agenticdriver/sdk/host` and supply a
 `SecretResolver` for their own store. Registered tools and approval callbacks are
 also supplied programmatically; config JSON cannot load arbitrary executable code.
 

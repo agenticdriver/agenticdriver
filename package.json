@@ -1,15 +1,15 @@
 {
-  "name": "agenticdriver",
+  "name": "@agenticdriver/sdk",
   "version": "0.1.0",
   "description": "Bring-your-own-agent SDK for local and remote applications",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hashimkarim/agenticdriver.git"
+    "url": "git+https://github.com/agenticdriver/agenticdriver.git"
   },
-  "homepage": "https://github.com/hashimkarim/agenticdriver#readme",
-  "bugs": "https://github.com/hashimkarim/agenticdriver/issues",
+  "homepage": "https://github.com/agenticdriver/agenticdriver#readme",
+  "bugs": "https://github.com/agenticdriver/agenticdriver/issues",
   "engines": {
     "node": ">=22.13.0"
   },

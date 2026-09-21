@@ -6,12 +6,12 @@ remote applications select only a configured instance and an enabled model.
 Extensions run with the host's privileges. This is a compatibility boundary,
 not a JavaScript sandbox or a review of third-party code.
 
-`agenticdriver/provider-kit` exports `defineProviderExtension`, its TypeScript
+`@agenticdriver/sdk/provider-kit` exports `defineProviderExtension`, its TypeScript
 contracts, `ProviderExtensionManifestSchema`, `providerEndpoint` and
-`readProviderResponse`. `agenticdriver/provider-conformance` exports synthetic
+`readProviderResponse`. `@agenticdriver/sdk/provider-conformance` exports synthetic
 compatibility checks. The [manifest JSON Schema](../protocol/provider-extension.schema.json)
 is also included in the installed package. Both are Node host modules; browser applications continue
-to import `agenticdriver/client`.
+to import `@agenticdriver/sdk/client`.
 
 ## Construction and registration
 
@@ -27,8 +27,8 @@ import {
   configuredDriver,
   readHostConfig,
   configuredServer,
-} from "agenticdriver/host";
-import { serve } from "agenticdriver/server";
+} from "@agenticdriver/sdk/host";
+import { serve } from "@agenticdriver/sdk/server";
 import { customProvider } from "./custom-provider.mjs";
 
 const path = "/absolute/path/to/host.json";
@@ -133,7 +133,7 @@ must not imply unimplemented image/PDF or native-agent support.
 ## Compatibility tests
 
 ```ts
-import { testProviderConformance } from "agenticdriver/provider-conformance";
+import { testProviderConformance } from "@agenticdriver/sdk/provider-conformance";
 const report = await testProviderConformance({
   mode: "fixture",
   model: "fixture-model",

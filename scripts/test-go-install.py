@@ -12,7 +12,7 @@ import datetime
 from tls_fixture import create_tls_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
-MODULE = "github.com/hashimkarim/agenticdriver/clients/go"
+MODULE = "github.com/agenticdriver/agenticdriver/clients/go"
 local_archive = len(sys.argv) == 2 and sys.argv[1] == "--local-archive"
 if not local_archive and (len(sys.argv) != 2 or re.fullmatch(r"[a-f0-9]{7,40}|v[0-9]+\.[0-9]+\.[0-9]+(?:[-.a-zA-Z0-9]+)?", sys.argv[1]) is None):
     raise SystemExit("Usage: python3 scripts/test-go-install.py PUSHED_COMMIT_OR_VERSION | --local-archive")
@@ -63,7 +63,7 @@ import (
     "fmt"
     "net/http"
     "os"
-    sdk "github.com/hashimkarim/agenticdriver/clients/go"
+    sdk "github.com/agenticdriver/agenticdriver/clients/go"
 )
 func must(err error) { if err != nil { panic(err) } }
 func main() {

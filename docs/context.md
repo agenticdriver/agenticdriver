@@ -62,7 +62,7 @@ Mappings follow the provider documentation: [OpenAI images](https://developers.o
 Large documents and private corpora should use an app-owned resolver. A request carries only `{ type: "reference", id, revision, mediaType }`. The resolver receives the authenticated execution `subject`, cancellation signal, run ID and progress callback. It must authorize the exact reference and revision against that subject before returning any content.
 
 ```ts
-import { AgenticDriver, MemoryContextStore } from "agenticdriver";
+import { AgenticDriver, MemoryContextStore } from "@agenticdriver/sdk";
 
 const context = new MemoryContextStore({
   maxEntries: 100,

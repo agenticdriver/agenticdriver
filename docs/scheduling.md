@@ -130,7 +130,7 @@ Usagestat remains the dependency for quota probes and durable metering. The SDK
 does not add a usage database, price table, spend ledger or offline outbox.
 
 ```ts
-import { UsageStatClient } from "agenticdriver/usagestat";
+import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 
 const usage = new UsageStatClient({
   url: "http://127.0.0.1:6736",

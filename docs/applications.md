@@ -12,7 +12,7 @@ included in that package. Copy it into a fresh application directory before
 running it; Node does not strip TypeScript inside `node_modules`:
 
 ```sh
-node -e 'for (const name of ["brandstorm", "literature-review", "email-workspace"]) require("node:fs").copyFileSync("node_modules/agenticdriver/examples/javascript/" + name + ".mts", name + ".mts")'
+node -e 'for (const name of ["brandstorm", "literature-review", "email-workspace"]) require("node:fs").copyFileSync("node_modules/@agenticdriver/sdk/examples/javascript/" + name + ".mts", name + ".mts")'
 node --experimental-strip-types brandstorm.mts
 node --experimental-strip-types literature-review.mts
 node --experimental-strip-types email-workspace.mts

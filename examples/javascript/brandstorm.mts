@@ -1,5 +1,5 @@
-import { AgenticDriver } from "agenticdriver";
-import { mockProvider } from "agenticdriver/providers";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { mockProvider } from "@agenticdriver/sdk/providers";
 
 // Synthetic recipe: this example never uses an account or external inference.
 const model = "demo";

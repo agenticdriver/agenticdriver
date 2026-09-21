@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-release-test-") as direct
     (javascript / "package.json").write_text('{"private":true,"type":"module"}')
     run(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
          candidate / packages["npm"]["archive"]], javascript, env)
-    installed = javascript / "node_modules/agenticdriver"
+    installed = javascript / "node_modules/@agenticdriver/sdk"
     for name in ["brandstorm", "literature-review", "email-workspace"]:
         shutil.copyfile(installed / f"examples/javascript/{name}.mts", javascript / f"{name}.mts")
         result = run(["node", "--experimental-strip-types", f"{name}.mts"], javascript, env)
@@ -43,9 +43,9 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-release-test-") as direct
     shutil.copyfile(installed / "examples/quickstart/client.mjs", javascript / "client.mjs")
     (javascript / "host.mjs").write_text('''
 import { readFile } from 'node:fs/promises';
-import { AgenticDriver } from 'agenticdriver';
-import { mockProvider } from 'agenticdriver/providers';
-import { serve } from 'agenticdriver/server';
+import { AgenticDriver } from '@agenticdriver/sdk';
+import { mockProvider } from '@agenticdriver/sdk/providers';
+import { serve } from '@agenticdriver/sdk/server';
 const host = await serve(new AgenticDriver({providers:[mockProvider()]}), {
   port: 0,
   tokens: [{token: process.env.FIXTURE_TOKEN, subject:'fixture', providers:['mock']}],

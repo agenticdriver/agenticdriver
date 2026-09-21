@@ -88,7 +88,7 @@ subprocess/parser fixtures are credential-free. See the documented
 
 ## Follow-up
 
-[AD-051](https://github.com/hashimkarim/agenticdriver/issues/28) tracks readiness
+[AD-051](https://github.com/agenticdriver/agenticdriver/issues/28) tracks readiness
 and this compatibility gate. [AD-052](../roadmap.md#ad-052) tracks the restricted
 adapter and live certification once the official interface exposes enforceable
 effective capabilities. Keep the selected Local Antigravity account/model for

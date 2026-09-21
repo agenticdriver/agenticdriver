@@ -9,7 +9,7 @@ import {
   type RunRequest,
   type RunResult,
   type RunEvent,
-} from "agenticdriver/client";
+} from "@agenticdriver/sdk/client";
 
 const form = document.querySelector<HTMLFormElement>("#connection")!;
 const output = document.querySelector<HTMLOutputElement>("#status")!;

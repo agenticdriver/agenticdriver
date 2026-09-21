@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"strings"
 
-	sdk "github.com/hashimkarim/agenticdriver/clients/go"
+	sdk "github.com/agenticdriver/agenticdriver/clients/go"
 )
 
 func must(err error) {

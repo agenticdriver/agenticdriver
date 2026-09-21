@@ -129,7 +129,7 @@ The host must enable this feature and grant `approveTools`. `run` rejects
 interactive mode because it cannot deliver review requests. There is no default
 approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
 Decisions are single-use and are never retried automatically. A receipt does not
-confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
+confirm a tool effect. See the [approval contract](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
 
 ## Functions in your application
 
@@ -145,7 +145,7 @@ Await both methods on `AsyncAgenticClient`. For callback failures, use
 The host must enable application tools and grant the named functions. Review is
 required by default. Closing the stream invalidates pending tickets; cancellation
 of work inside your own function is cooperative. There is no default inactivity
-deadline or automatic retry. See the [full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).
+deadline or automatic retry. See the [full contract](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).
 
 ## Conversation sessions
 
@@ -155,4 +155,4 @@ use the next revision from the successful result. Provider/account/model changes
 require an explicitly created conversation with exported visible history.
 Host opt-in, account binding and per-operation token grants are required. Idle
 retention pauses during active work; no default execution deadline is introduced.
-See the [session contract and binding examples](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/sessions.md).
+See the [session contract and binding examples](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/sessions.md).

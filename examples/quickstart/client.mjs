@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { AgenticClient } from "agenticdriver/client";
+import { AgenticClient } from "@agenticdriver/sdk/client";
 
 const client = new AgenticClient({
   url: process.env.AGENTICDRIVER_URL,

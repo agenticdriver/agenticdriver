@@ -7,8 +7,8 @@ does not create a telemetry connection. Token and billing accounting continue to
 use [Usagestat](usagestat.md); diagnostics do not create another usage backend.
 
 ```ts
-import { AgenticDriver } from "agenticdriver";
-import { Diagnostics } from "agenticdriver/diagnostics";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { Diagnostics } from "@agenticdriver/sdk/diagnostics";
 
 const diagnostics = new Diagnostics({
   level: "steps",
@@ -114,14 +114,14 @@ records or authoritative request totals.
 
 ## OpenTelemetry bridge
 
-`agenticdriver/opentelemetry` accepts your application's tracer, meter and context
+`@agenticdriver/sdk/opentelemetry` accepts your application's tracer, meter and context
 functions. It does not install a global provider, collector or runtime dependency.
 Configure the application's OpenTelemetry SDK and network exporters separately.
 
 ```ts
 import { ROOT_CONTEXT, trace, metrics } from "@opentelemetry/api";
-import { Diagnostics } from "agenticdriver/diagnostics";
-import { openTelemetryExporter } from "agenticdriver/opentelemetry";
+import { Diagnostics } from "@agenticdriver/sdk/diagnostics";
+import { openTelemetryExporter } from "@agenticdriver/sdk/opentelemetry";
 
 const diagnostics = new Diagnostics({
   level: "steps",

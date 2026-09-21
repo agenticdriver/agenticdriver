@@ -1,13 +1,13 @@
 // Installed-package fixture. The real Better Auth + AuthYard recipe is in docs/authentication.md.
 import assert from "node:assert/strict";
-import { AgenticDriver } from "agenticdriver";
-import { AgenticClient } from "agenticdriver/client";
-import { serve } from "agenticdriver/server";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { AgenticClient } from "@agenticdriver/sdk/client";
+import { serve } from "@agenticdriver/sdk/server";
 import {
   betterAuthAuthentication,
   type BetterAuthIdentity,
-} from "agenticdriver/better-auth";
-import { mockProvider } from "agenticdriver/providers";
+} from "@agenticdriver/sdk/better-auth";
+import { mockProvider } from "@agenticdriver/sdk/providers";
 
 const issuer = "https://app.example.test/api/auth";
 const resource = "https://driver.example.test";

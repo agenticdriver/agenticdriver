@@ -18,9 +18,9 @@ directory and requires Node 22.13+. It commits before acknowledging submission
 or advancing execution past an event. It does not install a database service.
 
 ```ts
-import { AgenticDriver, SqliteJobStore } from "agenticdriver";
-import { serve } from "agenticdriver/server";
-import { mockProvider } from "agenticdriver/providers";
+import { AgenticDriver, SqliteJobStore } from "@agenticdriver/sdk";
+import { serve } from "@agenticdriver/sdk/server";
+import { mockProvider } from "@agenticdriver/sdk/providers";
 
 const store = await SqliteJobStore.open("/private/driver/jobs.sqlite", {
   retentionMs: 7 * 24 * 60 * 60 * 1000,

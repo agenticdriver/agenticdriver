@@ -13,8 +13,8 @@ readme = "README.md"
 dependencies = ["typing_extensions>=4.12"]
 
 [project.urls]
-Source = "https://github.com/hashimkarim/agenticdriver"
-Issues = "https://github.com/hashimkarim/agenticdriver/issues"
+Source = "https://github.com/agenticdriver/agenticdriver"
+Issues = "https://github.com/agenticdriver/agenticdriver/issues"
 
 [project.optional-dependencies]
 async = ["httpx>=0.28,<1"]

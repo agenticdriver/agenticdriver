@@ -6,7 +6,7 @@ rust-version = "1.89"
 description = "Rust client for the AgenticDriver SDK"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/hashimkarim/agenticdriver"
+repository = "https://github.com/agenticdriver/agenticdriver"
 include = ["src/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "examples/**"]
 
 [features]

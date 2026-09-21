@@ -2,18 +2,18 @@
 
 AgenticDriver reuses Usagestat's catalog and account quota API. It does not add provider probes, copy the logo collection into this package, or turn quota differences into per-run usage. The same helpers support Brandstorm's account picker, LitAgent's provider settings and AI Workspace's connection/account UI. Each application keeps its own layout, authenticated sessions, account bindings and workflows.
 
-| Entry                           | Where it runs                 | Responsibility                                                               |
-| ------------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
-| `agenticdriver/catalog`         | Browser or server             | Pure provider and quota presentation, accessible names and fallback states   |
-| `agenticdriver/usagestat`       | Trusted application server    | Existing metadata and explicitly bound quota reads; optional per-run capture |
-| `agenticdriver/provider-assets` | Trusted Node.js startup/build | Load approved existing icons/notices into an immutable asset cache           |
+| Entry                                | Where it runs                 | Responsibility                                                               |
+| ------------------------------------ | ----------------------------- | ---------------------------------------------------------------------------- |
+| `@agenticdriver/sdk/catalog`         | Browser or server             | Pure provider and quota presentation, accessible names and fallback states   |
+| `@agenticdriver/sdk/usagestat`       | Trusted application server    | Existing metadata and explicitly bound quota reads; optional per-run capture |
+| `@agenticdriver/sdk/provider-assets` | Trusted Node.js startup/build | Load approved existing icons/notices into an immutable asset cache           |
 
 ## Provider and account identity
 
 Use a provider from the authenticated driver's discovery response. Match its explicit `usageStatId` to Usagestat's provider ID; do not join names, guess vendor aliases or use an account quota ID as a branding ID. The helper rejects mismatched metadata.
 
 ```ts
-import { providerPresentation } from "agenticdriver/catalog";
+import { providerPresentation } from "@agenticdriver/sdk/catalog";
 
 // providers: authorized driver discovery; metadata: server-side Usagestat catalog.
 const selected = providers.find((p) => p.id === selectedProviderId)!;
@@ -36,8 +36,8 @@ Render names, labels and attribution as text. For `card.icon.kind === "asset"`, 
 Configure [Usagestat account bindings](usagestat.md) on the trusted server. Only pass `accountLimits(identity)` results to the presentation helper. Raw `usage()` and `limits()` are administrative data and must not be sent wholesale to browsers.
 
 ```ts
-import { quotaPresentation } from "agenticdriver/catalog";
-import type { UsageStatAccountQuota } from "agenticdriver/catalog";
+import { quotaPresentation } from "@agenticdriver/sdk/catalog";
+import type { UsageStatAccountQuota } from "@agenticdriver/sdk/catalog";
 
 // Derive all four values from the authenticated session and host configuration.
 const identity = {
@@ -77,7 +77,7 @@ Also display `quality`: `cached`, `estimated`, `reported` or `unknown`. A recent
 Build the cache on the same trusted filesystem as the selected Usagestat catalog. The allowlist belongs in application/deployment configuration, never in an HTTP request. Review the installed source assets and notices when pinning your Usagestat dependency.
 
 ```ts
-import { createProviderAssetCache } from "agenticdriver/provider-assets";
+import { createProviderAssetCache } from "@agenticdriver/sdk/provider-assets";
 
 const assetCache = await createProviderAssetCache({
   providers: await usagestat.providers(),

@@ -13,7 +13,7 @@ Hosts without one reject keyed requests with `IDEMPOTENCY_UNAVAILABLE` and do no
 start a model call. Configured hosts advertise `idempotency` in `/v1/protocol`.
 
 ```ts
-import { AgenticDriver, FileOperationStore } from "agenticdriver";
+import { AgenticDriver, FileOperationStore } from "@agenticdriver/sdk";
 
 const driver = new AgenticDriver({
   providers,

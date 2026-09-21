@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { AgenticClient } from "agenticdriver/client";
+import { AgenticClient } from "@agenticdriver/sdk/client";
 
 const client = new AgenticClient({
   url: process.env.AGENTICDRIVER_TEST_URL,

@@ -1,6 +1,10 @@
 // Offline server-side example. Replace the explicit fixture adapter with your configured provider.
-import { AgenticDriver, type RunRequest, type RunResult } from "agenticdriver";
-import { mockProvider } from "agenticdriver/providers";
+import {
+  AgenticDriver,
+  type RunRequest,
+  type RunResult,
+} from "@agenticdriver/sdk";
+import { mockProvider } from "@agenticdriver/sdk/providers";
 
 const driver = new AgenticDriver({
   providers: [

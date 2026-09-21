@@ -2,17 +2,17 @@
 
 AgenticDriver can [ingest PDF, Markdown and email sources](ingestion.md), index prepared passages, search an authorized corpus, and supply retrieved evidence to a generation run. Applications keep their canonical email threads, papers, Markdown, permissions and accepted answers. A retrieval corpus is a rebuildable index of that application data.
 
-Use `agenticdriver/retrieval` on the execution host. All four clients support `searchContext`/`search_context`, `indexContext`/`index_context`, `deleteContext`/`delete_context` and the `retrieval` run option. Remote calls use the existing authenticated HTTPS protocol. `scoped-retrieval` and `retrieval-indexing` appear in protocol discovery only when a service is configured.
+Use `@agenticdriver/sdk/retrieval` on the execution host. All four clients support `searchContext`/`search_context`, `indexContext`/`index_context`, `deleteContext`/`delete_context` and the `retrieval` run option. Remote calls use the existing authenticated HTTPS protocol. `scoped-retrieval` and `retrieval-indexing` appear in protocol discovery only when a service is configured.
 
 ## Configure a corpus
 
 ```ts
-import { AgenticDriver } from "agenticdriver";
+import { AgenticDriver } from "@agenticdriver/sdk";
 import {
   RetrievalService,
   SqliteVectorStore,
   OpenAIEmbeddingAdapter,
-} from "agenticdriver/retrieval";
+} from "@agenticdriver/sdk/retrieval";
 
 const store = await SqliteVectorStore.open("/private/app-state/library.db");
 const embedding = new OpenAIEmbeddingAdapter({

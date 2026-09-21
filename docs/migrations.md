@@ -11,6 +11,19 @@ workflow uses, and check the [compatibility matrix](compatibility.md). Unknown
 required events or incompatible major wire versions must fail clearly.
 [Protocol rules](protocol.md) define optional-event negotiation and stable errors.
 
+## Organization package names before 0.1.0
+
+The SDK repository is now `agenticdriver/agenticdriver`. JavaScript applications
+adopt the npm package `@agenticdriver/sdk`, replacing development imports from
+`agenticdriver` and its subpaths. The CLI command remains `agenticdriver`.
+Go applications adopt `github.com/agenticdriver/agenticdriver/clients/go` in both
+their imports and `go.mod`. Python and Rust retain the name `agenticdriver`.
+
+No registry package or semantic-version Go tag was published under the earlier
+personal ownership plan. Existing development archives should remain pinned
+until each app verifies the new published package, imports, lockfile and workflow.
+The wire protocol remains 1.0. See [release ownership and readiness](releases.md).
+
 ## From sibling source dependencies
 
 Build or obtain reviewed npm/wheel/module/crate artifacts, install them in the

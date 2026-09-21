@@ -132,9 +132,9 @@ try {
       join(app, "context-check.mjs"),
       `
     import assert from "node:assert/strict";
-    import {AgenticDriver} from "agenticdriver";
-    import {MemoryContextStore} from "agenticdriver/context";
-    import {mockProvider} from "agenticdriver/providers";
+    import {AgenticDriver} from "@agenticdriver/sdk";
+    import {MemoryContextStore} from "@agenticdriver/sdk/context";
+    import {mockProvider} from "@agenticdriver/sdk/providers";
     const store=new MemoryContextStore();
     const attachment=store.put({attachment:{type:"text",source:{id:"installed-source",revision:"r1"},mediaType:"text/markdown",text:"Selected document"},subjects:["local"],expiresAt:new Date(Date.now()+60000).toISOString()});
     const driver=new AgenticDriver({providers:[mockProvider()],context:{resolve:store.resolve}});
@@ -150,11 +150,11 @@ try {
       join(app, "retrieval-check.mjs"),
       `
     import assert from "node:assert/strict";
-    import {AgenticDriver} from "agenticdriver";
+    import {AgenticDriver} from "@agenticdriver/sdk";
     import {fileURLToPath} from "node:url";
-    import {RetrievalService,SqliteVectorStore,DeterministicEmbeddingAdapter} from "agenticdriver/retrieval";
-    import {PopplerPdfExtractor, IngestRequestSchema} from "agenticdriver/ingestion";
-    import {mockProvider} from "agenticdriver/providers";
+    import {RetrievalService,SqliteVectorStore,DeterministicEmbeddingAdapter} from "@agenticdriver/sdk/retrieval";
+    import {PopplerPdfExtractor, IngestRequestSchema} from "@agenticdriver/sdk/ingestion";
+    import {mockProvider} from "@agenticdriver/sdk/providers";
     const store=await SqliteVectorStore.open(fileURLToPath(new URL("./private-state/vectors.db",import.meta.url)));
     const retrieval=new RetrievalService([{id:"library",version:"v1",store,embedding:new DeterministicEmbeddingAdapter(32),
       authorize:()=>({namespace:"local",sources:{paper:"r1",document:"r1"}})}]);
@@ -176,7 +176,7 @@ try {
     const bin = join(app, "node_modules", ".bin", "agenticdriver");
     const entry =
       process.platform === "win32"
-        ? join(app, "node_modules", "agenticdriver", "dist", "cli.js")
+        ? join(app, "node_modules", "@agenticdriver", "sdk", "dist", "cli.js")
         : bin;
     await access(
       process.platform === "win32" ? bin + ".cmd" : bin,

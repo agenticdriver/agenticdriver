@@ -10,7 +10,7 @@ cancel accepted background work; call `CancelJob` explicitly. Reconnect using
 Until release tags are published, pin a reviewed commit on `sdk-roadmap`:
 
 ```sh
-go get github.com/hashimkarim/agenticdriver/clients/go@COMMIT_SHA
+go get github.com/agenticdriver/agenticdriver/clients/go@COMMIT_SHA
 ```
 
 Go resolves the commit to an immutable pseudoversion in your application's `go.mod`/`go.sum`. No sibling checkout, `replace` directive or workspace is required. Tags, when published, use the monorepo module prefix `clients/go/vX.Y.Z`; package release work is tracked separately. Inspect a commit before choosing it; the placeholders here do not mean “use latest automatically.”
@@ -27,7 +27,7 @@ import (
     "os"
     "os/signal"
 
-    "github.com/hashimkarim/agenticdriver/clients/go"
+    "github.com/agenticdriver/agenticdriver/clients/go"
 )
 
 func main() {
@@ -91,7 +91,7 @@ The host must enable this feature and grant `approveTools`. `run` rejects
 interactive mode because it cannot deliver review requests. There is no default
 approval expiry; choose `expiresAfterMs` / the typed equivalent when needed.
 Decisions are single-use and are never retried automatically. A receipt does not
-confirm a tool effect. See the [approval contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
+confirm a tool effect. See the [approval contract](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/approvals.md).
 
 ## Functions in your application
 
@@ -108,7 +108,7 @@ Host opt-in and named token grants are required; review defaults to required.
 Pass the stream's context to your application function so cancellation propagates
 through its I/O. Cancelled runs invalidate pending tickets but cannot undo effects.
 No default inactivity deadline or automatic retries apply. See the
-[full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).
+[full contract](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).
 
 ## Conversation sessions
 
@@ -118,4 +118,4 @@ use the next revision from the successful result. Provider/account/model changes
 require an explicitly created conversation with exported visible history.
 Host opt-in, account binding and per-operation token grants are required. Idle
 retention pauses during active work; no default execution deadline is introduced.
-See the [session contract and binding examples](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/sessions.md).
+See the [session contract and binding examples](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/sessions.md).

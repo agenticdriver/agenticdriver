@@ -92,12 +92,12 @@ Install a reviewed built archive in your application:
 npm ci
 npm pack --pack-destination /path/to/artifacts
 # Application:
-npm install /path/to/artifacts/agenticdriver-0.1.0.tgz
+npm install /path/to/artifacts/agenticdriver-sdk-0.1.0.tgz
 ```
 
 ```ts
-import { AgenticDriver } from "agenticdriver";
-import { openai, codex } from "agenticdriver/providers";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { openai, codex } from "@agenticdriver/sdk/providers";
 
 const driver = new AgenticDriver({
   providers: [
@@ -216,7 +216,7 @@ SSE and allow long-lived responses; the SDK sets no total run deadline. HTTP on 
 rejected by every bundled client. Redirects never forward bearer credentials.
 
 ```ts
-import { AgenticClient } from "agenticdriver/client";
+import { AgenticClient } from "@agenticdriver/sdk/client";
 
 const client = new AgenticClient({
   url: "https://driver.example.com",
@@ -255,7 +255,7 @@ with HTTPS and JSON can call the protocol; four language packages are included.
 
 | Language                | Local installation                                                                             | Interface                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                              |
+| TypeScript / JavaScript | [Install the npm archive](docs/quickstart.md)                                                  | `AgenticClient.run()` / `.stream()`                              |
 | Python 3.10+            | [Build/install a wheel](clients/python/README.md); add `[async]` for asyncio                   | Typed sync `AgenticClient` and native `AsyncAgenticClient`       |
 | Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)`   |
 | Rust 1.89+              | [Crate features and installation](clients/rust/README.md)                                      | Async `AsyncAgenticClient` and optional blocking `AgenticClient` |

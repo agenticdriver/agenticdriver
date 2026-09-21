@@ -4,7 +4,7 @@ Node.js applications can opt into [diagnostics and OpenTelemetry](diagnostics.md
 through separate package entries. The [diagnostics example](../examples/javascript/diagnostics.mts)
 is compiled and run against the installed package, with no telemetry SDK required.
 
-Use `agenticdriver/client` in browsers and servers that connect to an execution host. Use the main `agenticdriver` entry on a Node.js 22.13+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle. See the [compatibility matrix](compatibility.md) for tested runtime combinations and platform limits.
+Use `@agenticdriver/sdk/client` in browsers and servers that connect to an execution host. Use the main `@agenticdriver/sdk` entry on a Node.js 22.13+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle. See the [compatibility matrix](compatibility.md) for tested runtime combinations and platform limits.
 
 Optional [detached jobs](jobs.md) add `submitJob`, `readJob`, `cancelJob` and
 `jobEvents` to the browser-safe client. `JobService` and `SqliteJobStore` belong
@@ -20,7 +20,7 @@ Package registries are not published yet. From a reviewed SDK checkout, create a
 npm ci
 npm pack --pack-destination /path/to/artifacts
 # Application:
-npm install /path/to/artifacts/agenticdriver-0.1.0.tgz
+npm install /path/to/artifacts/agenticdriver-sdk-0.1.0.tgz
 ```
 
 Set `"type": "module"` in the application's `package.json`, or use `.mjs` / `.mts` files. TypeScript servers use `module` and `moduleResolution` set to `NodeNext`; browser bundlers use `module: "ESNext"` and `moduleResolution: "Bundler"`, with DOM libraries. These modes understand the package's explicit export map and declaration entries. See the [TypeScript module reference](https://www.typescriptlang.org/docs/handbook/modules/reference.html#packagejson-exports).
@@ -30,7 +30,7 @@ Set `"type": "module"` in the application's `package.json`, or use `.mjs` / `.mt
 This example works in an ESM JavaScript application. `driverUrl`, `driverToken`, `providerId`, `modelId` and `prompt` are values supplied by your application's connection and account selection flow.
 
 ```js
-import { AgenticClient, DriverError } from "agenticdriver/client";
+import { AgenticClient, DriverError } from "@agenticdriver/sdk/client";
 
 const client = new AgenticClient({ url: driverUrl, token: driverToken });
 const controller = new AbortController();
@@ -69,7 +69,7 @@ import {
   type RunResult,
   type RunEvent,
   type ProviderInfo,
-} from "agenticdriver/client";
+} from "@agenticdriver/sdk/client";
 ```
 
 Context, ingestion and retrieval request/result types are also exported there. `ingestContext`, `indexContext`, `searchContext` and `deleteContext` accept the same optional `AbortSignal`. See [ingestion](ingestion.md) and [retrieval](retrieval.md) for source revision and authorization requirements.
@@ -107,8 +107,8 @@ To build the installed browser example with esbuild:
 
 ```sh
 npm install --save-dev esbuild typescript
-npx esbuild node_modules/agenticdriver/examples/javascript/browser.ts --bundle --platform=browser --format=esm --target=es2023 --outfile=public/browser.js
-cp node_modules/agenticdriver/examples/javascript/index.html public/index.html
+npx esbuild node_modules/@agenticdriver/sdk/examples/javascript/browser.ts --bundle --platform=browser --format=esm --target=es2023 --outfile=public/browser.js
+cp node_modules/@agenticdriver/sdk/examples/javascript/index.html public/index.html
 ```
 
 Serve `public` using your application's development server. The host must allow that exact origin, and remote hosts require trusted HTTPS. An HTTPS application should connect to an HTTPS host so browser mixed-content policy does not block it. The runtime needs Fetch, Web Streams, `TextDecoder`, `AbortController`, `AbortSignal.any` and `AbortSignal.timeout`; use a browser that provides them. A custom `fetch` implementation can be supplied through `ClientOptions` on a compatible platform. No browser polyfills are installed by the SDK.

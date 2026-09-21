@@ -32,7 +32,7 @@ In a fresh application directory, install the npm archive:
 
 ```sh
 npm init -y
-npm install /absolute/path/to/agenticdriver-0.1.0.tgz
+npm install /absolute/path/to/agenticdriver-sdk-0.1.0.tgz
 npx --no-install agenticdriver init --config ./driver/config.json
 npx --no-install agenticdriver serve --config ./driver/config.json
 ```
@@ -114,12 +114,13 @@ Install the wheel with `[async]` to use `AsyncAgenticClient`.
 ### Go
 
 Requires Go 1.22+. Until a release tag is chosen, this explicit pushed SDK
-revision contains the client. This is source-module installation, not a claim
+revision contains the client. Replace `REVIEWED_COMMIT` with a reviewed commit
+after the organization module-path migration. This is source-module installation, not a claim
 that a semantic-version release has been published:
 
 ```sh
 go mod init example.test/my-driver-client
-go get github.com/hashimkarim/agenticdriver/clients/go@36d36ad813194de785e34c06d705b2d90537000c
+go get github.com/agenticdriver/agenticdriver/clients/go@REVIEWED_COMMIT
 go run .
 ```
 

@@ -11,7 +11,7 @@ The inspected Usagestat endpoints are:
 | `GET /v1/limits`    | `UsageStatClient.limits()`    | Machine-readable quota resources          |
 
 ```ts
-import { UsageStatClient } from "agenticdriver/usagestat";
+import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 
 const usagestat = new UsageStatClient({ url: "http://127.0.0.1:6736" });
 const providers = await usagestat.providers();

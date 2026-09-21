@@ -1,3 +1,3 @@
-module github.com/hashimkarim/agenticdriver/clients/go
+module github.com/agenticdriver/agenticdriver/clients/go
 
 go 1.22

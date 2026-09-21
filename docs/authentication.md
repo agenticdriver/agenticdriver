@@ -102,9 +102,9 @@ signed-in user; a different user or unrelated origin cannot approve it.
 ## Authenticate the SDK host
 
 ```ts
-import { serve } from "agenticdriver/server";
-import { betterAuthAuthentication } from "agenticdriver/better-auth";
-import { secretResolver } from "agenticdriver/host";
+import { serve } from "@agenticdriver/sdk/server";
+import { betterAuthAuthentication } from "@agenticdriver/sdk/better-auth";
+import { secretResolver } from "@agenticdriver/sdk/host";
 
 const secrets = secretResolver("/etc/agenticdriver");
 const authentication = betterAuthAuthentication({
@@ -161,8 +161,8 @@ they do not gain rotation or expiry. New application auth uses Better Auth.
 ## Pair and rotate a device
 
 ```ts
-import { BetterAuthPairingClient } from "agenticdriver/pairing";
-import { AgenticClient } from "agenticdriver/client";
+import { BetterAuthPairingClient } from "@agenticdriver/sdk/pairing";
+import { AgenticClient } from "@agenticdriver/sdk/client";
 
 const pairing = new BetterAuthPairingClient({
   issuer: "https://app.example/api/auth",
@@ -254,7 +254,7 @@ Run `npm run test:auth` with Node 24+. It installs pinned real packages from the
 integration lockfile and exercises persistent native SQLite, real loopback HTTP,
 two users/devices, deliberate consent, unrelated origins, scoped SDK access,
 rotation/reuse/revocation, service identity/expiry and AuthYard outage behavior.
-The [fixture artifact provenance](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/integrations/better-auth/vendor/README.md)
+The [fixture artifact provenance](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/integrations/better-auth/vendor/README.md)
 records the exact connector revision and checksum. CI runs these contracts on
 the Node 24/26 platform rows; ordinary SDK tests also cover malformed introspection,
 auth cancellation, scope changes while queued, polling intervals and job grants.

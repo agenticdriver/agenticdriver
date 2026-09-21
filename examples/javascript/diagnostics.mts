@@ -1,9 +1,12 @@
 /** Optional diagnostics use public exports and need no OpenTelemetry dependency. */
 import assert from "node:assert/strict";
-import { AgenticDriver } from "agenticdriver";
-import { mockProvider } from "agenticdriver/providers";
-import { Diagnostics, type DiagnosticRecord } from "agenticdriver/diagnostics";
-import { openTelemetryExporter } from "agenticdriver/opentelemetry";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { mockProvider } from "@agenticdriver/sdk/providers";
+import {
+  Diagnostics,
+  type DiagnosticRecord,
+} from "@agenticdriver/sdk/diagnostics";
+import { openTelemetryExporter } from "@agenticdriver/sdk/opentelemetry";
 
 const records: DiagnosticRecord[] = [];
 const diagnostics = new Diagnostics({

@@ -7,44 +7,55 @@ and remaining live-provider limitations.
 
 ## Distribution inventory
 
-Read-only checks on 2026-09-21 returned HTTP 404 for `agenticdriver` on npm,
-PyPI and crates.io. No public package was found; this does not reserve a name,
-establish ownership or verify publishing permission. The source repository is
-public at `hashimkarim/agenticdriver`. The selected initial owner on all three
-registries is **`hashimkarim`**, with the package name **`agenticdriver`**.
-This selection is recorded in `release/config.json`; it does not establish a
-registry login or publishing permission.
+The user selected organization ownership before the first upload. The source
+repository is public at `agenticdriver/agenticdriver`; its issues and history
+transferred from the personal account. npm uses **`@agenticdriver/sdk`**, while
+PyPI and crates.io keep **`agenticdriver`**. `release/config.json` records the
+selected owners, package names and bootstrap maintainer.
 
-| Channel   | Candidate identity                                | Version source                  | Current state                                                |
-| --------- | ------------------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| npm       | `agenticdriver`                                   | Root `package.json`             | `hashimkarim` CLI identity verified; first upload pending    |
-| PyPI      | `agenticdriver`                                   | `clients/python/pyproject.toml` | Wheel and sdist built; `hashimkarim` publisher setup pending |
-| crates.io | `agenticdriver`                                   | `clients/rust/Cargo.toml`       | Crate built; `hashimkarim` login/bootstrap pending           |
-| Go        | `github.com/hashimkarim/agenticdriver/clients/go` | `release/config.json`           | Public source available; no version tag published            |
+Read-only checks on 2026-09-21 found no published package at those coordinates.
+This does not reserve a name or prove publishing permission. The npm CLI verified
+`hashimkarim` as an owner of the `agenticdriver` npm organization. The GitHub
+`agenticdriver:maintainers` team exists with that user as a maintainer. PyPI
+organization/project setup and crates.io bootstrap authentication are pending.
+
+| Channel   | Candidate identity                                  | Version source                  | Current state                                               |
+| --------- | --------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| npm       | `@agenticdriver/sdk`                                | Root `package.json`             | Organization access verified; first upload pending          |
+| PyPI      | `agenticdriver`                                     | `clients/python/pyproject.toml` | Organization/project publisher setup pending                |
+| crates.io | `agenticdriver`                                     | `clients/rust/Cargo.toml`       | GitHub team prepared; bootstrap and crate ownership pending |
+| Go        | `github.com/agenticdriver/agenticdriver/clients/go` | `release/config.json`           | Public source available; no version tag published           |
 
 These channels match the SDK's language packages. Node also supplies the host
 CLI; Python and Rust are libraries, not `pipx`/`cargo install` apps. OS package
 managers, desktop stores, a public container registry and the docs domain are
 separate distribution choices. This work does not create those destinations.
 
-## Ownership migration
+## Organization ownership
 
-Keep the unscoped npm name `agenticdriver`: owners can change, and organization
-teams can receive package access without changing the install name. Moving a
-personal-scoped name such as `@hashimkarim/agenticdriver` to a different scope
-would instead create a new package. [npm ownership](https://docs.npmjs.com/transferring-a-package-from-a-user-account-to-another-user-account/),
-[organization access](https://docs.npmjs.com/about-organization-scopes-and-packages/)
+npm's `@agenticdriver` scope belongs to its organization. The publishing human
+remains `hashimkarim`, an organization owner; no shared organization password is
+needed. Existing development imports from `agenticdriver` must change to
+`@agenticdriver/sdk`, including subpaths such as `@agenticdriver/sdk/client`.
+The executable remains `agenticdriver`.
+[npm organization packages](https://docs.npmjs.com/creating-and-publishing-an-organization-scoped-package/)
 
-PyPI supports transferring the existing project to an approved organization.
-On crates.io, add an `agenticdriver` GitHub team as an owner later and retain
-an individual owner to manage ownership; team owners can publish and yank,
-but cannot change owners. These operations retain the package names and versions.
-[PyPI transfer](https://docs.pypi.org/organization-accounts/actions/project-actions/),
+PyPI organizations are separate from GitHub organizations. Create/select the
+approved `agenticdriver` PyPI organization, create its `agenticdriver` project,
+and bind that project's trusted publisher. Do not create a personal pending
+publisher as a substitute for the selected organization owner.
+[PyPI organization projects](https://docs.pypi.org/organization-accounts/actions/project-actions/)
+
+crates.io uses GitHub teams as organization owners. Its first upload still needs
+an individual member's token; immediately add `github:agenticdriver:maintainers`
+as a crate owner and verify the team. Retain `hashimkarim` as the individual
+administrator: team owners can publish and yank but cannot change owners.
 [Cargo owners](https://doc.rust-lang.org/cargo/reference/publishing.html#cargo-owner)
 
-GitHub ownership is separate. The Go import path contains `hashimkarim`, so a
-future repository transfer needs its own module-path migration review. Registry
-ownership changes do not change that import path or transfer the repository.
+The Go module is `github.com/agenticdriver/agenticdriver/clients/go`. Update
+development imports and `go.mod` from the personal path before adopting 0.1.0.
+No semantic-version tag was published under the personal path. Historical
+pseudoversions remain historical artifacts, not aliases for the new module.
 
 ## Build and verify
 
@@ -86,12 +97,13 @@ repository permissions with no registry-upload step or publishing secrets.
 ## Prepare publication
 
 AD-042 remains open until registry installation and all three app migrations
-are verified. The selected release target is 0.1.0 under `hashimkarim`, with public
+are verified. The selected release target is 0.1.0 under `agenticdriver`, with public
 source and public packages. Authenticate the selected registry identities and
 configure their publishing destinations before uploading the tested candidate.
 Public Go installation uses the public module proxy and checksum database.
-The npm CLI authenticated as `hashimkarim` on 2026-09-21. PyPI and crates.io
-publishing identities still need verification; no credentials live in this repo.
+The npm CLI authenticated as the organization member `hashimkarim` on 2026-09-21.
+PyPI and crates.io publishing access still needs verification; no credentials
+live in this repo.
 
 The current first-publication requirements differ:
 
@@ -101,9 +113,10 @@ The current first-publication requirements differ:
   placeholder to create settings. Automatic provenance also requires the public
   source repository and a supported trusted-publishing workflow.
   [npm guidance](https://docs.npmjs.com/trusted-publishers/)
-- PyPI supports a pending publisher for a new project. Bind the exact repository,
-  workflow and environment, then use PyPA's action with job-scoped `id-token: write`.
-  Pending publishers do not reserve names.
+- PyPI supports a pending publisher for a new personal project, but this release
+  selects an organization-owned project. Create that project in the organization
+  first, then bind its exact repository, workflow and environment. Use PyPA's
+  action with job-scoped `id-token: write`.
   [New projects](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/),
   [publishing](https://docs.pypi.org/trusted-publishers/using-a-publisher/)
 - crates.io requires an existing crate before trusted publishing. Its first
@@ -113,6 +126,47 @@ The current first-publication requirements differ:
 - The Go package's 0.1.0 tag is `clients/go/v0.1.0`, because it lives below the
   repository root. Tags remain immutable; there is no registry-upload token.
   [Go publication](https://go.dev/doc/modules/publishing)
+
+### Publisher bindings
+
+The manual [publication workflow](../.github/workflows/publish.yml) accepts one
+`registry` (`npm`, `python`, `rust` or `go`) and a `ci_run` ID. Run it on
+`sdk-roadmap` at the **same commit** as the successful SDK checks run. It rejects
+pull-request runs, unrelated workflows/repositories, failed/incomplete checks,
+changed source revisions and mismatched candidate identities. It downloads and
+verifies that run's exact candidate bundle; it does not rebuild npm or Python.
+Artifacts expire after 14 days, so a missing bundle requires a fresh CI run.
+
+Configure the registry-side trusted publishers with these exact values:
+
+| Setting           | npm                              | PyPI                                   | crates.io                                                        |
+| ----------------- | -------------------------------- | -------------------------------------- | ---------------------------------------------------------------- |
+| Owner             | npm organization `agenticdriver` | PyPI organization `agenticdriver`      | `github:agenticdriver:maintainers` plus individual administrator |
+| Package/project   | `@agenticdriver/sdk`             | `agenticdriver`                        | `agenticdriver`                                                  |
+| GitHub owner      | `agenticdriver`                  | `agenticdriver`                        | `agenticdriver`                                                  |
+| Repository        | `agenticdriver`                  | `agenticdriver`                        | `agenticdriver`                                                  |
+| Workflow filename | `publish.yml`                    | `publish.yml`                          | `publish.yml`                                                    |
+| Environment       | `npm`                            | `python`                               | `rust`                                                           |
+| First upload      | Organization member login        | Organization project trusted publisher | Scoped member token, then team ownership                         |
+
+npm's binding permits `npm publish`; staged publishing is not used. The Python
+upload uses the pinned PyPA action and OIDC. Rust checks Cargo's repackaged files
+against the candidate before acquiring its short-lived crates.io identity.
+Only the Go job has `contents: write`, to create `clients/go/vX.Y.Z` at the
+verified commit. It never updates an existing tag to a different commit, and
+tests a fresh installation from the public Go proxy after tagging.
+
+The npm and Rust initial uploads use the same `scripts/publish.py prepare` gate
+and inspected CI bundle with the selected owner's native registry login. Never
+use a first-upload placeholder. Bind trusted publishing once those packages
+exist; the workflow has no fallback to another owner or stored registry token.
+Publisher configuration and successful local login are not publication evidence.
+
+Retries query the exact version before upload. A matching existing npm/crate
+is verified and skipped. PyPI checks every existing file and uploads only missing
+files; a conflicting digest or unexpected file stops the entire attempt. HTTP
+401/403/429, redirects and outages are errors, not evidence that a version is
+available. Every channel verifies its actual remote metadata after publication.
 
 Use native registry authentication. Keep credentials out of source, artifacts
 and command arguments; preserve other package owners/tokens. Hosted CI could not

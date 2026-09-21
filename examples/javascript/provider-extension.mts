@@ -1,11 +1,11 @@
 /** Run against a synthetic endpoint; no account, credentials or inference service needed. */
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { AgenticClient } from "agenticdriver/client";
-import { configuredDriver, validateHostConfig } from "agenticdriver/host";
-import { serve } from "agenticdriver/server";
-import { testProviderConformance } from "agenticdriver/provider-conformance";
-import type { ProviderRequest } from "agenticdriver/provider-kit";
+import { AgenticClient } from "@agenticdriver/sdk/client";
+import { configuredDriver, validateHostConfig } from "@agenticdriver/sdk/host";
+import { serve } from "@agenticdriver/sdk/server";
+import { testProviderConformance } from "@agenticdriver/sdk/provider-conformance";
+import type { ProviderRequest } from "@agenticdriver/sdk/provider-kit";
 import { customProvider } from "./custom-provider.mjs";
 
 const secret = "synthetic-endpoint-secret",

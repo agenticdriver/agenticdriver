@@ -3,8 +3,8 @@
 `ingestContext` prepares and atomically indexes one application-owned source revision. It accepts plain text, Markdown, a PDF, a plain-text email thread, or an authorized reference to one of the first three formats. Applications keep canonical documents, revisions, permissions, jobs and accepted citations. Configure a [retrieval corpus](retrieval.md) first; ingestion uses that corpus's explicit embedding account, vector store and `index` authorization.
 
 ```ts
-import { AgenticDriver } from "agenticdriver";
-import { PopplerPdfExtractor } from "agenticdriver/ingestion";
+import { AgenticDriver } from "@agenticdriver/sdk";
+import { PopplerPdfExtractor } from "@agenticdriver/sdk/ingestion";
 
 const driver = new AgenticDriver({
   providers,

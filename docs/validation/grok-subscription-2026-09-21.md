@@ -141,4 +141,4 @@ side work and ambient policy, and packaged conformance. A separately explicit
 native-limit mode would need its own design and must be rejected by default;
 zero must never silently mean a positive SDK timeout. This evidence establishes
 a binary compatibility limit, not account certification. The implementation
-issue retains the [probe record](https://github.com/hashimkarim/agenticdriver/issues/32#issuecomment-5759978439).
+issue retains the [probe record](https://github.com/agenticdriver/agenticdriver/issues/32#issuecomment-5759978439).

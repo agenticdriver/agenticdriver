@@ -1,5 +1,5 @@
 // Run against an authenticated driver. These are driver credentials, never vendor API keys.
-import { AgenticClient, DriverError } from "agenticdriver/client";
+import { AgenticClient, DriverError } from "@agenticdriver/sdk/client";
 
 const required = (name) => {
   const value = process.env[name];

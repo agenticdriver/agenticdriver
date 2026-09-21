@@ -1,7 +1,7 @@
 /** Credential-free embedded example using only public package exports. */
 import assert from "node:assert/strict";
-import { AgenticDriver, type ResourceAdmission } from "agenticdriver";
-import { mockProvider } from "agenticdriver/providers";
+import { AgenticDriver, type ResourceAdmission } from "@agenticdriver/sdk";
+import { mockProvider } from "@agenticdriver/sdk/providers";
 
 const authority: ResourceAdmission = {
   unknown: "reject",

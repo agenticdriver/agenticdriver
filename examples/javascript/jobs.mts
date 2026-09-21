@@ -4,9 +4,13 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { AgenticDriver, AgenticClient, SqliteJobStore } from "agenticdriver";
-import { mockProvider } from "agenticdriver/providers";
-import { serve } from "agenticdriver/server";
+import {
+  AgenticDriver,
+  AgenticClient,
+  SqliteJobStore,
+} from "@agenticdriver/sdk";
+import { mockProvider } from "@agenticdriver/sdk/providers";
+import { serve } from "@agenticdriver/sdk/server";
 
 const directory = await mkdtemp(
   join(tmpdir(), "agenticdriver-installed-jobs-"),

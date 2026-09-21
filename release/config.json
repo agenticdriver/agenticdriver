@@ -1,17 +1,18 @@
 {
-  "repository": "hashimkarim/agenticdriver",
+  "repository": "agenticdriver/agenticdriver",
   "githubVisibility": "public",
   "initialOwners": {
-    "npm": "hashimkarim",
-    "python": "hashimkarim",
-    "rust": "hashimkarim"
+    "npm": "agenticdriver",
+    "python": "agenticdriver",
+    "rust": "github:agenticdriver:maintainers"
   },
   "protocolVersion": "1.0",
   "goVersion": "0.1.0",
   "names": {
-    "npm": "agenticdriver",
+    "npm": "@agenticdriver/sdk",
     "python": "agenticdriver",
     "rust": "agenticdriver",
-    "go": "github.com/hashimkarim/agenticdriver/clients/go"
-  }
+    "go": "github.com/agenticdriver/agenticdriver/clients/go"
+  },
+  "bootstrapMaintainer": "hashimkarim"
 }

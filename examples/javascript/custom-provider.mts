@@ -1,11 +1,11 @@
 /** Independent adapter: public package imports only, no SDK source dependencies. */
-import { DriverError } from "agenticdriver";
+import { DriverError } from "@agenticdriver/sdk";
 import {
   defineProviderExtension,
   providerEndpoint,
   readProviderResponse,
   type ProviderTurn,
-} from "agenticdriver/provider-kit";
+} from "@agenticdriver/sdk/provider-kit";
 
 // Example enterprise protocol: GET models; POST complete returns bounded NDJSON.
 // Replace this module with your own endpoint's translation, keeping the contract.
