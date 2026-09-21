@@ -9,45 +9,39 @@ import tempfile
 import ssl
 import time
 from urllib.request import Request, urlopen
+from python_package import prepare_python
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "clients/python/src"))
-from agenticdriver import AgenticClient, DriverError
+PYTHON_ONLY = "--python-only" in sys.argv[1:]
 
 
-def check_clients(url, token, ca, env):
-    client = AgenticClient(url, token, ca_file=ca)
-    assert client.providers()[0]["id"] == "mock"
-    assert client.protocol()["version"] == "1.0"
-    request = {"provider": "mock", "model": "demo", "input": "Unicode 🌍 round trip", "idleTimeoutMs": 10_000}
-    assert client.run(**request)["text"] == "AgenticDriver is connected."
-    assert list(client.stream(**request))[-1]["type"] == "run.completed"
-    try:
-        AgenticClient(url, "wrong-token", ca_file=ca).run(**request)
-        raise AssertionError("unauthorized request succeeded")
-    except DriverError as error:
-        assert error.code == "UNAUTHORIZED"
-    print(f"Python client passed ({url.split(':')[0]})", flush=True)
-    env = {**env, "PYTHONPATH": str(ROOT / "clients/python/src")}
-    commands = [([sys.executable, "-m", "unittest", "discover", "-s", "clients/python/tests"], ROOT), (["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-race", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
+def check_clients(url, token, ca, env, python, application):
+    env = {key: value for key, value in env.items() if key not in {"PYTHONPATH", "PYTHONHOME"}}
+    commands = [([python, "app.py"], application),
+                ([python, "-m", "unittest", "discover", "-s", "clients/python/tests"], ROOT)]
+    if not PYTHON_ONLY:
+        commands += [(["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-race", "-count=1", "./..."], ROOT / "clients/go"), (["cargo", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
     failures = []
     for command, directory in commands:
         result = subprocess.run(command, cwd=directory, env=env, timeout=180)
         if result.returncode:
             failures.append(command)
     assert not failures, f"Client checks failed: {failures}"
+    expected_cancellations = 2 if PYTHON_ONLY else 5
     for attempt in range(50):
         request = Request(env["AGENTICDRIVER_TEST_REFERENCE_URL"] + "/metrics", headers={"Authorization": "Bearer " + token})
         with urlopen(request, context=ssl.create_default_context(cafile=ca), timeout=5) as response:
             metrics = json.load(response)
-        if metrics["cancelled"] == 4:
+        if metrics["cancelled"] == expected_cancellations:
             break
         time.sleep(0.02)
-    assert metrics["cancelled"] == 4, metrics
+    assert metrics["cancelled"] == expected_cancellations, metrics
     assert metrics["redirects"] == 0, metrics
+    print(f"Installed sync/async Python clients passed ({url.split(':')[0]}); peer confirmed cancellation.", flush=True)
 
 
 with tempfile.TemporaryDirectory(prefix="agenticdriver-client-test-") as directory:
+    python, application = prepare_python(Path(directory))
     cert, key = str(Path(directory) / "cert.pem"), str(Path(directory) / "key.pem")
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1", "-addext", "basicConstraints=critical,CA:FALSE", "-addext", "extendedKeyUsage=serverAuth"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for secure in [False, True]:
@@ -63,7 +57,7 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-client-test-") as directo
             env.update(AGENTICDRIVER_TEST_URL=url, AGENTICDRIVER_TEST_TOKEN=token, AGENTICDRIVER_TEST_REFERENCE_URL=hosts["referenceUrl"])
             if secure:
                 env["AGENTICDRIVER_TEST_CA"] = cert
-            check_clients(url, token, cert if secure else None, env)
+            check_clients(url, token, cert if secure else None, env, python, application)
         finally:
             server.terminate()
             try:
@@ -71,4 +65,4 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-client-test-") as directo
             except subprocess.TimeoutExpired:
                 server.kill()
                 server.wait()
-print("All four language clients passed over HTTP and verified HTTPS.")
+print(("Python clients" if PYTHON_ONLY else "All four language clients") + " passed over HTTP and verified HTTPS.")

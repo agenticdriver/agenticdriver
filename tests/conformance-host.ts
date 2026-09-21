@@ -121,7 +121,13 @@ const driver = await serve(
                 sources: {
                   "ingestion-reference": "r1",
                   ...Object.fromEntries(
-                    ["typescript", "python", "go", "rust"].flatMap((language) =>
+                    [
+                      "typescript",
+                      "python",
+                      "python-async",
+                      "go",
+                      "rust",
+                    ].flatMap((language) =>
                       ["markdown", "email", "pdf"].map((format) => [
                         `${language}-${format}`,
                         "r1",
@@ -130,6 +136,7 @@ const driver = await serve(
                   ),
                   "typescript-paper": "r1",
                   "python-paper": "r1",
+                  "python-async-paper": "r1",
                   "go-paper": "r1",
                   "rust-paper": "r1",
                 },

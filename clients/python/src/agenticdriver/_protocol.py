@@ -147,42 +147,55 @@ class EventDecoder:
         return event
 
 
-def sse_data(response):
-    """Recognize all SSE line endings without waiting for an extra byte after CR."""
-    buffer, fields = bytearray(), []
-    skip_lf, first_line, frame_bytes = False, True, 0
-    while True:
-        chunk = response.read1(8192)
-        buffer.extend(chunk)
+class SSEDecoder:
+    """Incremental byte framing shared by sync and async transports."""
+    def __init__(self):
+        self.buffer, self.fields = bytearray(), []
+        self.skip_lf, self.first_line, self.frame_bytes = False, True, 0
+
+    def feed(self, chunk):
+        self.buffer.extend(chunk)
         while True:
-            if skip_lf and buffer:
-                if buffer[0] == 10:
-                    del buffer[:1]
-                skip_lf = False
-            positions = [n for n in [buffer.find(b"\r"), buffer.find(b"\n")] if n >= 0]
+            if self.skip_lf and self.buffer:
+                if self.buffer[0] == 10:
+                    del self.buffer[:1]
+                self.skip_lf = False
+            positions = [n for n in [self.buffer.find(b"\r"), self.buffer.find(b"\n")] if n >= 0]
             if not positions:
                 break
             end = min(positions)
-            line = bytes(buffer[:end])
-            skip_lf = buffer[end] == 13
-            del buffer[:end + 1]
-            if first_line:
+            line = bytes(self.buffer[:end])
+            self.skip_lf = self.buffer[end] == 13
+            del self.buffer[:end + 1]
+            if self.first_line:
                 line = line.removeprefix(b"\xef\xbb\xbf")
-                first_line = False
-            frame_bytes += len(line)
-            if frame_bytes > MAX_BYTES:
+                self.first_line = False
+            self.frame_bytes += len(line)
+            if self.frame_bytes > MAX_BYTES:
                 raise DriverError("RESPONSE_TOO_LARGE", "An event exceeded 2 MB.")
             try:
                 decoded = line.decode("utf-8")
             except UnicodeError:
                 raise DriverError("INVALID_STREAM", "The event stream is not valid UTF-8.") from None
             if decoded.startswith("data:"):
-                fields.append(decoded[5:].removeprefix(" "))
+                self.fields.append(decoded[5:].removeprefix(" "))
             elif not decoded:
+                fields = self.fields
+                self.fields, self.frame_bytes = [], 0
                 if fields:
                     yield "\n".join(fields)
-                fields, frame_bytes = [], 0
-        if len(buffer) + frame_bytes > MAX_BYTES:
+        if len(self.buffer) + self.frame_bytes > MAX_BYTES:
             raise DriverError("RESPONSE_TOO_LARGE", "An event exceeded 2 MB.")
+
+    def finish(self):
+        raise DriverError("INCOMPLETE_STREAM", "Connection closed before a terminal run event.")
+
+
+def sse_data(response):
+    """Recognize all SSE line endings without waiting for an extra byte after CR."""
+    decoder = SSEDecoder()
+    while True:
+        chunk = response.read1(8192)
+        yield from decoder.feed(chunk)
         if not chunk:
-            raise DriverError("INCOMPLETE_STREAM", "Connection closed before a terminal run event.")
+            decoder.finish()

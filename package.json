@@ -72,6 +72,7 @@
     "demo": "tsx examples/brandstorm.ts",
     "demo:server": "tsx examples/server.ts",
     "test:clients": "python3 scripts/test-clients.py",
+    "test:python": "python3 scripts/test-clients.py --python-only",
     "test:install": "tsx scripts/test-install.ts",
     "test:usagestat": "tsx scripts/test-usagestat.ts",
     "protocol": "tsx scripts/protocol.ts",

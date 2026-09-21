@@ -227,19 +227,21 @@ with HTTPS and JSON can call the protocol; four language packages are included.
 | Language                | Local installation                                                                             | Interface                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                            |
-| Python 3.10+            | `pip install ./clients/python`                                                                 | `AgenticClient.run(**request)` / `.stream(**request)`          |
+| Python 3.10+            | [Build/install a wheel](clients/python/README.md); add `[async]` for asyncio                   | Typed sync `AgenticClient` and native `AsyncAgenticClient`     |
 | Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
 | Rust                    | `agenticdriver = { path = "../agenticdriver/clients/rust" }` in Cargo.toml                     | `AgenticClient.run(&request)` / `.stream(&request, callback)`  |
 
-Python and Rust clients are synchronous; use a worker thread in an async
-application. Go supports context cancellation. Python generators should be closed
-when abandoning a stream; Rust callbacks return `false` to stop and close it.
+Python provides synchronous and native asyncio clients. Use `with client.stream`
+or `async with client.stream` to close responses on early exit; asyncio task
+cancellation also interrupts pending receives. Go supports context cancellation.
+Rust currently provides blocking calls; its stream callbacks return `false` to
+stop and close the response.
 
 ```python
 from agenticdriver import AgenticClient
 
-client = AgenticClient("http://127.0.0.1:7433", token="YOUR_DRIVER_TOKEN")
-print(client.run(provider="mock", model="demo", input="Hello")["text"])
+with AgenticClient("http://127.0.0.1:7433", token="YOUR_DRIVER_TOKEN") as client:
+    print(client.run(provider="mock", model="demo", input="Hello")["text"])
 ```
 
 For private CAs, Python accepts `ca_file`, Rust accepts `with_ca_pem`, Go accepts
@@ -264,6 +266,7 @@ and [architecture and boundaries](docs/architecture.md).
 ```bash
 npm run check
 npm run test:clients   # Node, Python, Go, Rust, and OpenSSL required
+npm run test:python    # Installed wheel, sync/async, typing, HTTP and verified HTTPS
 npm run test:install   # Packed SDK, JS/TS examples, browser bundle and CLI
 ```
 

@@ -58,7 +58,7 @@ def valid_context_result(value, timestamp):
         if not isinstance(artifact, dict):
             return False
         name, aid = artifact.get("name"), artifact.get("id")
-        if (not _string(name, 128, False) or name in (".", "..") or re.search(r"[/\\\x00-\x1f]", name)
+        if (not isinstance(name, str) or not _string(name, 128, False) or name in (".", "..") or re.search(r"[/\\\x00-\x1f]", name)
                 or not isinstance(aid, str) or re.fullmatch(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}", aid) is None
                 or artifact.get("status") != "draft" or not isinstance(artifact.get("mediaType"), str) or artifact["mediaType"] not in ARTIFACT_MEDIA
                 or not _string(artifact.get("content"), 262_144) or not _digest(artifact.get("sha256"))):

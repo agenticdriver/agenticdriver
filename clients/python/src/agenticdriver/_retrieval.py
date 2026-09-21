@@ -21,7 +21,7 @@ def valid_retrieval(value, request=None):
             return False
         source, score = hit.get("source"), hit.get("score")
         if (not isinstance(source, dict) or not _source({**source, "mediaType": "text/plain", "bytes": 1, "sha256": "0"*64, "origin": "inline"}, lambda _: False) or
-                type(score) not in (int, float) or not -1 <= score <= 1 or not math.isfinite(score)):
+                not isinstance(score, (int, float)) or isinstance(score, bool) or not -1 <= score <= 1 or not math.isfinite(score)):
             return False
         try:
             size += len(hit["text"].encode("utf-8"))

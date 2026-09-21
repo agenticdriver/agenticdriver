@@ -8,6 +8,16 @@ version = "0.1.0"
 description = "Python client for the AgenticDriver SDK"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+dependencies = ["typing_extensions>=4.12"]
+
+[project.optional-dependencies]
+async = ["httpx>=0.28,<1"]
+dev = ["httpx>=0.28,<1", "mypy>=1.18,<2", "build>=1.2"]
+
+[tool.setuptools.package-data]
+agenticdriver = ["py.typed"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

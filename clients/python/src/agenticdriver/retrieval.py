@@ -9,14 +9,16 @@ class _IngestionOptional(TypedDict, total=False):
 class _Corpus(TypedDict):
     corpus: str
 
-class RetrievalRequest(_Corpus, total=False):
+class _RetrievalOptions(_Corpus, total=False):
     sourceIds: list[str]
-    query: str
     limit: int
     maxContextBytes: int
     minScore: float
 
-class RetrievalSearch(RetrievalRequest):
+class RetrievalRequest(_RetrievalOptions, total=False):
+    query: str
+
+class RetrievalSearch(_RetrievalOptions):
     query: str
 
 class VectorIndex(TypedDict):

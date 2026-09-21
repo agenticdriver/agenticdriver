@@ -169,7 +169,7 @@ request.retrieval = Some(RetrievalRequest {
 let answer = client.run(&request)?;
 ```
 
-All clients preserve and validate retrieval metadata, scope, source-manifest relationships and `run.progress` with phase `context`. Runs have no default inactivity timeout or total deadline. Explicit `idleTimeoutMs` includes actual embedding, authorization and vector-scan progress; heartbeat comments do not reset it. Standalone calls have no execution deadline; ingestion also accepts an explicit inactivity timeout. TypeScript/Go accept caller cancellation; Python/Rust retain their existing blocking transport model, with run-stream close/callback cancellation. Use a worker for their blocking calls.
+All clients preserve and validate retrieval metadata, scope, source-manifest relationships and `run.progress` with phase `context`. Runs have no default inactivity timeout or total deadline. Explicit `idleTimeoutMs` includes actual embedding, authorization and vector-scan progress; heartbeat comments do not reset it. Standalone calls have no execution deadline; ingestion also accepts an explicit inactivity timeout. TypeScript/Go accept caller cancellation. Python has [typed sync and asyncio clients](../clients/python/README.md), including async task cancellation and stream context managers. Rust currently uses blocking calls with callback cancellation; use a worker for its blocking calls.
 
 ## Storage and limits
 
