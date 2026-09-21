@@ -59,6 +59,9 @@ Supply `OPENAI_API_KEY` to the host through your environment or secret manager.
 The configuration contains its environment variable name, never its value. API
 kinds are `openai`, `anthropic`, `gemini`, `xai`, and `openai-compatible`. The last
 requires `--base-url`; HTTPS is required except for loopback development endpoints.
+Custom `extension` entries require a custom host's statically imported registry
+and an exact version pin; the stock CLI does not dynamically load packages.
+See the [extension host example](provider-extensions.md).
 Model selection is required for every non-mock initialization and every run:
 
 ```bash

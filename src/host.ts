@@ -11,7 +11,11 @@ import { dirname, resolve, join } from "node:path";
 import { z } from "zod";
 import { AgenticDriver, type DriverOptions } from "./driver.js";
 import { AgenticClient } from "./client.js";
-import { DriverError } from "./errors.js";
+import { abortable, DriverError } from "./errors.js";
+import {
+  ProviderExtensionManifestSchema,
+  type ProviderExtension,
+} from "./provider-kit.js";
 import { FileOperationStore } from "./operations.js";
 import { isLoopback, secureBaseUrl } from "./security.js";
 import {
@@ -98,6 +102,16 @@ export const HostConfigSchema = z
         z.union([
           api,
           cli,
+          z
+            .object({
+              ...common,
+              kind: z.literal("extension"),
+              extensionId: instance,
+              extensionVersion: z.string().min(1).max(100),
+              settings: z.record(z.string(), z.json()).default({}),
+              secretRefs: z.record(instance, SecretReferenceSchema).default({}),
+            })
+            .strict(),
           z.object({ ...common, kind: z.literal("mock") }).strict(),
         ]),
       )
@@ -362,6 +376,8 @@ export function configuredDriver(
   config: HostConfig,
   configPath: string,
   options: {
+    /** Statically imported, operator-approved implementations. No dynamic module/path loading. */
+    extensions?: ReadonlyMap<string, ProviderExtension>;
     secrets?: SecretResolver;
     tools?: DriverOptions["tools"];
     approve?: DriverOptions["approve"];
@@ -378,6 +394,38 @@ export function configuredDriver(
     secrets = options.secrets ?? secretResolver(directory);
   const providers = config.providers.map((p): ProviderAdapter => {
     const shared = { id: p.id, name: p.name, models: [...p.models] };
+    if (p.kind === "extension") {
+      const extension = options.extensions?.get(p.extensionId);
+      const manifest = ProviderExtensionManifestSchema.safeParse(
+        extension?.manifest,
+      );
+      if (
+        !extension ||
+        !manifest.success ||
+        manifest.data.id !== p.extensionId ||
+        manifest.data.version !== p.extensionVersion
+      )
+        throw new DriverError(
+          "PROVIDER_EXTENSION_UNAVAILABLE",
+          "The host has not registered the exact configured provider extension and adapter contract version.",
+        );
+      return extension.create({
+        ...shared,
+        settings: p.settings,
+        getSecret: async (alias, signal) => {
+          signal.throwIfAborted();
+          if (!Object.hasOwn(p.secretRefs, alias))
+            throw new DriverError(
+              "AUTH_REQUIRED",
+              "The extension credential alias is not configured on this host.",
+            );
+          return abortable(
+            singleLineSecret(secrets, p.secretRefs[alias]!),
+            signal,
+          );
+        },
+      });
+    }
     if (p.kind === "mock") {
       const adapter = mockProvider();
       return {

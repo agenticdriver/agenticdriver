@@ -20,6 +20,10 @@ has its own stable ID and optional model allowlist. Capabilities describe actual
 implementation support. API adapters share the runtime's application-tool loop;
 local CLI adapters currently return text from their own restricted native runtime.
 New vendors implement `ProviderAdapter` without changing the client protocol.
+The [provider extension kit](provider-extensions.md) adds versioned manifests,
+validated construction and fixture checks. Custom hosts register statically
+imported implementations and pin their versions in host configuration; remote
+requests cannot load extension code or choose endpoint URLs.
 
 The transport exposes `GET /v1/providers` and `POST /v1/runs` over HTTP on loopback
 or HTTPS remotely. The latter returns JSON or SSE according to `Accept`. The

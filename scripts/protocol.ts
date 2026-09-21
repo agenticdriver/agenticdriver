@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
+import { ProviderExtensionManifestSchema } from "../src/provider-kit.js";
 import {
   JobSubmitSchema,
   JobIdentitySchema,
@@ -688,6 +689,17 @@ for (const path of Object.values(document.paths)) {
   }
 }
 await mkdir(new URL("../protocol/", import.meta.url), { recursive: true });
+await writeFile(
+  new URL("../protocol/provider-extension.schema.json", import.meta.url),
+  await format(
+    JSON.stringify(
+      z.toJSONSchema(ProviderExtensionManifestSchema, {
+        target: "draft-2020-12",
+      }),
+    ),
+    { parser: "json" },
+  ),
+);
 await writeFile(
   new URL("../protocol/openapi.json", import.meta.url),
   await format(JSON.stringify(document), { parser: "json" }),

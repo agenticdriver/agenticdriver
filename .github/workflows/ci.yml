@@ -22,6 +22,6 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - run: npm ci
       - run: npm run check
-      - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json
+      - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json
       - run: npm run test:clients
       - run: npm run test:install

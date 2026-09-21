@@ -20,7 +20,7 @@ import { MemoryContextStore } from "../src/context.js";
 import type { ProviderAdapter } from "../src/types.js";
 import { MemoryOperationStore } from "../src/operations.js";
 import { DriverError } from "../src/errors.js";
-import { mockProvider } from "../src/providers/mock.js";
+import { defineProviderExtension } from "../src/provider-kit.js";
 import { serve } from "../src/server.js";
 import type { ServerResponse } from "node:http";
 
@@ -164,69 +164,88 @@ const driver = await serve(
     ]),
     providers: [
       withMedia(
-        mockProvider(async (request, context) => {
-          const input = request.messages.at(-1)?.content;
-          if (input === "session-first")
-            return {
-              text: "first visible reply",
-              native: { marker: "private-state" },
-            };
-          if (input === "session-next") {
-            if (
-              !request.messages.some(
-                (message) =>
-                  message.role === "user" &&
-                  message.content === "session-first",
-              )
-            )
-              throw new Error("Missing conversation history");
-            return { text: "continued" };
-          }
-          if (input === "conformance-application-tool")
-            return {
-              text: "Use the app function",
-              toolCalls: [
-                {
-                  id: "application-call",
-                  name: "application_lookup",
-                  arguments: { query: "solar" },
-                },
-              ],
-            };
-          if (input === "conformance-approval")
-            return {
-              text: "Review this action",
-              toolCalls: [
-                {
-                  id: "approval-call",
-                  name: "approved_echo",
-                  arguments: { text: "Review 🌍", nested: { ids: [1, 2] } },
-                },
-              ],
-            };
-          if (input === "conformance-cost")
-            return {
-              text: "AgenticDriver is connected.",
-              usage: { apiEquivalentCostUsd: 0.25 },
-            };
-          if (input === "conformance-uncertain")
-            throw new DriverError(
-              "IDLE_TIMEOUT",
-              "The fixture tool outcome is uncertain.",
-              false,
-              "uncertain",
-            );
-          if (input === "conformance-stall") return new Promise(() => {});
-          if (input === "conformance-progress") {
-            for (let n = 0; n < 16; n++) {
-              await delay(20, undefined, { signal: context.signal });
-              context.reportProgress();
-            }
-          }
-          if (input === "conformance-quiet")
-            await delay(80, undefined, { signal: context.signal });
-          return { text: "AgenticDriver is connected." };
-        }),
+        defineProviderExtension(
+          {
+            id: "wire-fixture",
+            name: "Independent wire fixture",
+            version: "1.0.0",
+            contractVersion: "1.0",
+            vendor: "mock",
+            authMode: "none",
+            usageSource: "synthetic",
+            capabilities: {
+              tools: true,
+              textStreaming: false,
+              historyContinuation: true,
+              nativeContinuation: true,
+            },
+          },
+          () => ({
+            async complete(request, context) {
+              const input = request.messages.at(-1)?.content;
+              if (input === "session-first")
+                return {
+                  text: "first visible reply",
+                  native: { marker: "private-state" },
+                };
+              if (input === "session-next") {
+                if (
+                  !request.messages.some(
+                    (message) =>
+                      message.role === "user" &&
+                      message.content === "session-first",
+                  )
+                )
+                  throw new Error("Missing conversation history");
+                return { text: "continued" };
+              }
+              if (input === "conformance-application-tool")
+                return {
+                  text: "Use the app function",
+                  toolCalls: [
+                    {
+                      id: "application-call",
+                      name: "application_lookup",
+                      arguments: { query: "solar" },
+                    },
+                  ],
+                };
+              if (input === "conformance-approval")
+                return {
+                  text: "Review this action",
+                  toolCalls: [
+                    {
+                      id: "approval-call",
+                      name: "approved_echo",
+                      arguments: { text: "Review 🌍", nested: { ids: [1, 2] } },
+                    },
+                  ],
+                };
+              if (input === "conformance-cost")
+                return {
+                  text: "AgenticDriver is connected.",
+                  usage: { apiEquivalentCostUsd: 0.25 },
+                };
+              if (input === "conformance-uncertain")
+                throw new DriverError(
+                  "IDLE_TIMEOUT",
+                  "The fixture tool outcome is uncertain.",
+                  false,
+                  "uncertain",
+                );
+              if (input === "conformance-stall") return new Promise(() => {});
+              if (input === "conformance-progress") {
+                for (let n = 0; n < 16; n++) {
+                  await delay(20, undefined, { signal: context.signal });
+                  context.reportProgress();
+                }
+              }
+              if (input === "conformance-quiet")
+                await delay(80, undefined, { signal: context.signal });
+              return { text: "AgenticDriver is connected." };
+            },
+          }),
+        ).create({ id: "mock", models: ["demo"] }),
       ),
     ],
     tools: [

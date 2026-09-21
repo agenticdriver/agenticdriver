@@ -21,6 +21,10 @@ server-owned `baseUrl`. `models` is an allowlist, not just presentation metadata
 CLI options include a trusted `binary` and absolute `accountDirectory`; remote
 requests cannot choose binaries, arguments, environment variables, or directories.
 
+Custom local or enterprise integrations can use the [provider extension kit](provider-extensions.md).
+It supplies a versioned construction contract, trusted host registration and
+fixture checks without changes to the runtime or language clients.
+
 ## Subscription mode is provider-specific
 
 Codex supports a ChatGPT sign-in as well as API-key authentication, and OpenAI

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "version": {
+      "type": "string",
+      "maxLength": 100,
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "contractVersion": { "type": "string", "const": "1.0" },
+    "vendor": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+    },
+    "authMode": {
+      "type": "string",
+      "enum": ["api-key", "cli-session", "none"]
+    },
+    "usageSource": {
+      "type": "string",
+      "enum": ["provider-response", "cli-report", "adapter-report", "synthetic"]
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "tools": { "type": "boolean" },
+        "textStreaming": { "type": "boolean" }
+      },
+      "required": ["tools", "textStreaming"],
+      "additionalProperties": { "type": "boolean" }
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "version",
+    "contractVersion",
+    "vendor",
+    "authMode",
+    "usageSource",
+    "capabilities"
+  ],
+  "additionalProperties": false
+}

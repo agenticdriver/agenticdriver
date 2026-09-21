@@ -61,6 +61,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         "examples/server.mts",
         "examples/scheduling.mts",
         "examples/jobs.mts",
+        "examples/provider-extension.mts",
       ],
     }),
   );
@@ -265,6 +266,18 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     assert.match(
       jobs.stdout,
       /Installed durable job submit, reopen and replay passed/,
+    );
+    const extension = await run(
+      process.execPath,
+      [join(app, "compiled-server/provider-extension.mjs")],
+      {
+        cwd: app,
+        timeout: 20000,
+      },
+    );
+    assert.match(
+      extension.stdout,
+      /Installed independent extension: six conformance scenarios and scoped HTTP host passed/,
     );
     await writeFile(
       join(app, "contract-check.mjs"),

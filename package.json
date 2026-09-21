@@ -31,6 +31,14 @@
       "types": "./dist/providers/index.d.ts",
       "import": "./dist/providers/index.js"
     },
+    "./provider-kit": {
+      "types": "./dist/provider-kit.d.ts",
+      "import": "./dist/provider-kit.js"
+    },
+    "./provider-conformance": {
+      "types": "./dist/provider-conformance.d.ts",
+      "import": "./dist/provider-conformance.js"
+    },
     "./usagestat": {
       "types": "./dist/usagestat.d.ts",
       "import": "./dist/usagestat.js"

@@ -4,6 +4,12 @@ Run `npm run check` and `npm run test:clients` to verify the protocol and all fo
 clients. The suite uses synthetic data and a local reference peer; it never
 loads an API key or starts a native agent.
 
+The real host uses a versioned fixture extension through the
+[provider extension kit](provider-extensions.md), so every language exercises
+that adapter boundary. `npm run test:install` separately compiles an independent
+NDJSON adapter from public package imports and runs its six fixture scenarios
+against a local endpoint, including upstream cancellation and host policy checks.
+
 Scheduling tests check tenant rotation, account alias isolation, bounded queues,
 cancellation, shutdown and control requests under saturation. Fake-clock checks
 keep queued work pending for 30 days without starting a configured inactivity
