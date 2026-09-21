@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createServer, request as forward } from "node:http";
 import { request as httpsRequest } from "node:https";
+import { connect as tlsConnect } from "node:tls";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -235,6 +236,22 @@ test(
           tokens: [{ token, subject: "synthetic", providers: ["mock"] }],
         },
       );
+      // Prove this CA is trusted for the actual listener before testing rejection.
+      // A raw TLS handshake sends no HTTP request or bearer token.
+      const endpoint = new URL("/v1/runs", host.url);
+      await new Promise<void>((resolveHandshake, reject) => {
+        const socket = tlsConnect({
+          host: endpoint.hostname,
+          port: Number(endpoint.port),
+          ca,
+        });
+        socket.once("error", reject);
+        socket.once("secureConnect", () => {
+          assert.equal(socket.authorized, true);
+          socket.destroy();
+          resolveHandshake();
+        });
+      });
       await assert.rejects(
         new AgenticClient({ url: host.url, token }).run(input),
         (error) =>
@@ -247,14 +264,15 @@ test(
             (error.cause as { code?: string } | undefined)?.code ?? "",
           ),
       );
-      const endpoint = new URL("/v1/runs", host.url);
       await assert.rejects(
         new Promise<void>((resolveRequest, reject) => {
           const request = httpsRequest(
             endpoint,
             {
               ca,
-              servername: "wrong-hostname.example",
+              agent: false,
+              // The certificate covers the loopback IP, not its DNS name.
+              servername: "localhost",
               method: "POST",
               headers: {
                 authorization: `Bearer ${token}`,

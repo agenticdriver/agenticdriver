@@ -12,7 +12,7 @@ class ClientConformance(unittest.TestCase):
         return AgenticClient(url or os.environ["AGENTICDRIVER_TEST_URL"], token or os.environ["AGENTICDRIVER_TEST_TOKEN"], ca_file=os.environ.get("AGENTICDRIVER_TEST_CA") if ca else None)
 
     def test_wire_cases(self):
-        fixture = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/conformance.json").read_text())
+        fixture = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/conformance.json").read_text(encoding="utf-8"))
         for case in fixture["cases"]:
             with self.subTest(case=case["id"]):
                 client = self.client(os.environ["AGENTICDRIVER_TEST_REFERENCE_URL"] + "/fixtures/" + case["id"])

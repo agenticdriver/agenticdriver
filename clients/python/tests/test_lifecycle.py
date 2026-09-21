@@ -98,7 +98,7 @@ class AsyncLifecycle(unittest.IsolatedAsyncioTestCase):
             (
                 Path(__file__).resolve().parents[3]
                 / "protocol/fixtures/versioning.json"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
         for case in fixtures["cases"]:
             with self.subTest(case=case["id"]):

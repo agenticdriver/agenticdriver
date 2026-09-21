@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 
 class ProtocolCompatibility(unittest.TestCase):
     def test_shared_version_fixtures(self):
-        fixtures = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/versioning.json").read_text())
+        fixtures = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/versioning.json").read_text(encoding="utf-8"))
         for case in fixtures["cases"]:
             with self.subTest(case=case["id"]):
                 headers = Message()
