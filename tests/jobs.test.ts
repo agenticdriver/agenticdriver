@@ -585,6 +585,15 @@ test("queued work rechecks revoked permissions and changed account bindings afte
 
 test("explicit cancellation works for queued and running jobs without introducing a default deadline", async (t) => {
   const { store, cleanup } = await setup(t);
+  // Lease age is controlled independently of a loaded CI runner's wall-clock scheduling.
+  // Heartbeats and the explicitly configured inactivity timer still execute normally.
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
+  let renewals = 0;
+  const renew = store.renew.bind(store);
+  t.mock.method(store, "renew", async (owner: string, leaseMs: number) => {
+    await renew(owner, leaseMs);
+    renewals++;
+  });
   let calls = 0;
   const runtime = driver({
     scheduling: { total: 1 },
@@ -615,7 +624,14 @@ test("explicit cancellation works for queued and running jobs without introducin
     { key: "queued", request: base },
     "alice-token",
   );
-  await delay(400); // Multiple lease renewals are independent of absent model progress.
+  for (let i = 0; i < 4; i++) {
+    const previous = renewals;
+    t.mock.timers.tick(200);
+    await until(
+      async () => renewals,
+      (count) => count > previous,
+    );
+  }
   assert.equal(
     (await service.read({ id: one.id }, "alice-token")).state,
     "running",

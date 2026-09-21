@@ -1,16 +1,26 @@
 /** Validate the installed package, never aliases to workspace source. Compilers are test tooling. */
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { cp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { build } from "esbuild";
 import { CliProcess } from "../tests/cli-helpers.js";
 const run = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
+const contains = (directory: string, path: string): boolean => {
+  const local = relative(directory, path);
+  return !isAbsolute(local) && local !== ".." && !local.startsWith(`..${sep}`);
+};
 
 export async function checkJavaScriptPackage(app: string): Promise<void> {
+  // macOS exposes temporary directories through /var -> /private/var, and
+  // TypeScript uses forward slashes even on Windows. Compare canonical paths.
+  app = await realpath(app);
+  const compilerLibraries = await realpath(
+    join(root, "node_modules/typescript/lib"),
+  );
   const installed = join(app, "node_modules/agenticdriver");
   const pkg = JSON.parse(
     await readFile(join(installed, "package.json"), "utf8"),
@@ -148,16 +158,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       { cwd: app, timeout: 60_000, maxBuffer: 2_000_000 },
     );
     // Only compiler standard libraries may come from the tool checkout.
-    for (const path of result.stdout.trim().split("\n")) {
-      const local = relative(app, path);
+    for (const listedPath of result.stdout.trim().split(/\r?\n/)) {
+      const path = await realpath(listedPath);
       assert.ok(
-        (!local.startsWith("..") && !isAbsolute(local)) ||
-          path.startsWith(join(root, "node_modules/typescript/lib/")),
+        contains(app, path) || contains(compilerLibraries, path),
         `Compiler escaped the installed application: ${path}`,
       );
       if (config === "browser")
         assert.ok(
-          !path.includes("/@types/node/"),
+          !path.split(sep).join("/").includes("/@types/node/"),
           "Browser declarations pulled in Node types",
         );
     }
@@ -194,14 +203,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     "security.js",
   ]);
   for (const [path, info] of Object.entries(browser.metafile!.inputs)) {
-    const local = relative(app, resolve(app, path));
+    const canonical = await realpath(resolve(app, path));
     assert.ok(
-      !local.startsWith("..") && !isAbsolute(local),
+      contains(app, canonical),
       `Bundle escaped the installed application: ${path}`,
     );
-    if (path.includes("agenticdriver/dist/"))
+    const module = relative(installed, canonical).split(sep).join("/");
+    if (module.startsWith("dist/"))
       assert.ok(
-        safeModules.has(path.split("agenticdriver/dist/")[1]!),
+        safeModules.has(module.slice("dist/".length)),
         `Unexpected host module in browser: ${path}`,
       );
     assert.ok(
@@ -213,7 +223,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   }
   assert.ok(
     Object.keys(browser.metafile!.inputs).some((path) =>
-      path.endsWith("agenticdriver/dist/client.js"),
+      path.replaceAll("\\", "/").endsWith("agenticdriver/dist/client.js"),
     ),
     "Bundle missed the installed client",
   );
