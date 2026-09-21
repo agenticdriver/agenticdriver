@@ -270,6 +270,8 @@ and [architecture and boundaries](docs/architecture.md).
 
 ## Verification
 
+OpenSSL is required for the temporary loopback HTTPS fixtures in `npm run check`.
+
 ```bash
 npm run check
 npm run test:package   # Fresh external npm archive install, ESM exports and TypeScript declarations

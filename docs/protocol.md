@@ -42,6 +42,13 @@ default JSON Schema output). Each dialect is validated with its own rules;
 and asynchronous validators are unsupported and fail before model execution.
 The driver validates returned JSON before emitting a completed result.
 
+`npm run check` includes standalone TypeScript client transport tests over
+loopback HTTP and certificate-verified HTTPS (OpenSSL required). They exercise
+both `run()` and `stream()`, local references, composed `unevaluatedProperties`,
+tuple constraints, draft-07 fallback, and rejection before provider execution.
+Invalid returned JSON produces `INVALID_OUTPUT`: `run()` throws a `DriverError`,
+while `stream()` ends with `run.failed` and never emits `run.completed`.
+
 ## Required capabilities
 
 Provider discovery returns instance-specific boolean capabilities. Currently
