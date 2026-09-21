@@ -2,17 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createServer, request as forward } from "node:http";
 import { request as httpsRequest } from "node:https";
-import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { promisify } from "node:util";
 import { AgenticDriver } from "../src/driver.js";
 import { AgenticClient } from "../src/client.js";
 import { serve } from "../src/server.js";
 import { mockProvider } from "../src/providers/mock.js";
 import { Diagnostics } from "../src/diagnostics.js";
 import type { ProviderContext } from "../src/types.js";
+import { createTlsFixture } from "./tls-fixture.js";
 
 const token = "network-fixture-token-at-least-32-characters";
 const input = {
@@ -213,30 +212,8 @@ test(
     const directory = await mkdtemp(join(tmpdir(), "agenticdriver-tls-fault-"));
     let host: Awaited<ReturnType<typeof serve>> | undefined;
     try {
-      const key = join(directory, "key.pem"),
-        cert = join(directory, "cert.pem");
-      await promisify(execFile)("openssl", [
-        "req",
-        "-x509",
-        "-newkey",
-        "rsa:2048",
-        "-nodes",
-        "-keyout",
-        key,
-        "-out",
-        cert,
-        "-days",
-        "1",
-        "-subj",
-        "/CN=127.0.0.1",
-        "-addext",
-        "subjectAltName=IP:127.0.0.1",
-        "-addext",
-        "basicConstraints=critical,CA:FALSE",
-        "-addext",
-        "extendedKeyUsage=serverAuth",
-      ]);
-      const ca = await readFile(cert),
+      const fixture = await createTlsFixture(directory);
+      const ca = await readFile(fixture.ca),
         diagnostics = new Diagnostics();
       let calls = 0;
       host = await serve(
@@ -251,7 +228,10 @@ test(
         }),
         {
           port: 0,
-          tls: { key: await readFile(key), cert: await readFile(cert) },
+          tls: {
+            key: await readFile(fixture.key),
+            cert: await readFile(fixture.cert),
+          },
           tokens: [{ token, subject: "synthetic", providers: ["mock"] }],
         },
       );

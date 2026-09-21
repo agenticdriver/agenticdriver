@@ -9,6 +9,7 @@ import sys
 import tempfile
 import zipfile
 import datetime
+from tls_fixture import create_tls_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
 MODULE = "github.com/hashimkarim/agenticdriver/clients/go"
@@ -99,8 +100,7 @@ func main() {
     fmt.Println("Installed Go module passed: verified transport, discovery, typed run/events, ingestion, provenance, errors and cancellation")
 }
 ''')
-    cert, key = work / "cert.pem", work / "key.pem"
-    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(key), "-out", str(cert), "-days", "1", "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1", "-addext", "basicConstraints=critical,CA:FALSE", "-addext", "extendedKeyUsage=serverAuth"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ca, cert, key = create_tls_fixture(work)
     for secure in (False, True):
         token = secrets.token_urlsafe(32)
         host_env = {**env, "AGENTICDRIVER_TOKEN": token}
@@ -108,7 +108,7 @@ func main() {
         host = subprocess.Popen(["node", "--import", "tsx", "tests/conformance-host.ts"], cwd=ROOT, env=host_env, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
         try:
             hosts = json.loads(host.stdout.readline())
-            env.update(AGENTICDRIVER_TEST_URL=hosts["url"], AGENTICDRIVER_TEST_TOKEN=token, AGENTICDRIVER_TEST_CA=str(cert) if secure else "")
+            env.update(AGENTICDRIVER_TEST_URL=hosts["url"], AGENTICDRIVER_TEST_TOKEN=token, AGENTICDRIVER_TEST_CA=ca if secure else "")
             run("go", "run", "-race", ".")
         finally:
             host.terminate()

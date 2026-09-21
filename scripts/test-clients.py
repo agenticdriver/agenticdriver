@@ -11,6 +11,7 @@ import time
 from urllib.request import Request, urlopen
 from python_package import prepare_python
 from rust_package import prepare_rust, TOOLCHAIN
+from tls_fixture import create_tls_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
 PYTHON_ONLY = "--python-only" in sys.argv[1:]
@@ -51,22 +52,21 @@ def check_clients(url, token, ca, env, python, application, rust_application, ru
 with tempfile.TemporaryDirectory(prefix="agenticdriver-client-test-") as directory:
     python, application = (None, None) if RUST_ONLY else prepare_python(Path(directory))
     rust_application, rust_env = (None, {}) if PYTHON_ONLY else prepare_rust(Path(directory))
-    cert, key = str(Path(directory) / "cert.pem"), str(Path(directory) / "key.pem")
-    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", key, "-out", cert, "-days", "1", "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1", "-addext", "basicConstraints=critical,CA:FALSE", "-addext", "extendedKeyUsage=serverAuth"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ca, cert, key = create_tls_fixture(Path(directory))
     for secure in [False, True]:
         token = secrets.token_urlsafe(32)
         env = {key: value for key, value in os.environ.items() if not key.startswith("AGENTICDRIVER_")}
         env.update(AGENTICDRIVER_PROVIDER="mock", AGENTICDRIVER_PORT="0", AGENTICDRIVER_TOKEN=token)
         if secure:
-            env.update(AGENTICDRIVER_TLS_CERT=cert, AGENTICDRIVER_TLS_KEY=key, NODE_EXTRA_CA_CERTS=cert)
+            env.update(AGENTICDRIVER_TLS_CERT=cert, AGENTICDRIVER_TLS_KEY=key, NODE_EXTRA_CA_CERTS=ca)
         server = subprocess.Popen(["node", "--import", "tsx", "tests/conformance-host.ts"], cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=sys.stderr, text=True)
         try:
             hosts = json.loads(server.stdout.readline())
             url = hosts["url"]
             env.update(AGENTICDRIVER_TEST_URL=url, AGENTICDRIVER_TEST_TOKEN=token, AGENTICDRIVER_TEST_REFERENCE_URL=hosts["referenceUrl"])
             if secure:
-                env["AGENTICDRIVER_TEST_CA"] = cert
-            check_clients(url, token, cert if secure else None, env, python, application, rust_application, rust_env)
+                env["AGENTICDRIVER_TEST_CA"] = ca
+            check_clients(url, token, ca if secure else None, env, python, application, rust_application, rust_env)
         finally:
             server.terminate()
             try:
