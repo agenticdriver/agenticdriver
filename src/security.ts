@@ -8,7 +8,15 @@ export function isLoopback(host: string): boolean {
 
 /** No redirects or URL credentials: neither may silently move a bearer/API key. */
 export function secureBaseUrl(value: string): URL {
-  const url = new URL(value);
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new DriverError(
+      "INSECURE_TRANSPORT",
+      "The driver URL must be an absolute HTTPS or loopback HTTP URL.",
+    );
+  }
   if (
     url.username ||
     url.password ||

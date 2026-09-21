@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgenticDriver browser example</title>
+  <style>
+    body {
+      font:
+        16px system-ui,
+        sans-serif;
+      max-width: 42rem;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      color: #17243b;
+      background: #f5f7fa;
+    }
+    h1 {
+      font-size: 1.8rem;
+    }
+    p {
+      line-height: 1.5;
+    }
+    form {
+      display: grid;
+      gap: 0.8rem;
+      background: white;
+      border: 1px solid #d7deeb;
+      padding: 1.2rem;
+      border-radius: 0.6rem;
+    }
+    label {
+      display: grid;
+      gap: 0.3rem;
+    }
+    input,
+    textarea,
+    button {
+      font: inherit;
+      padding: 0.55rem;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:disabled {
+      cursor: default;
+    }
+    output {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+  </style>
+  <h1>AgenticDriver browser example</h1>
+  <p>
+    Connect to an execution host with a scoped driver token. Select a provider
+    and model explicitly. Submitting runs once, then streams a second request.
+    Cancel stops ongoing work. Settings stay in this page.
+  </p>
+  <form id="connection">
+    <label
+      >Driver URL
+      <input
+        name="url"
+        type="url"
+        placeholder="https://driver.example"
+        required
+    /></label>
+    <label
+      >Driver token
+      <input name="token" type="password" autocomplete="off" required
+    /></label>
+    <label
+      >Provider instance
+      <input name="provider" placeholder="my-account" required
+    /></label>
+    <label
+      >Model <input name="model" placeholder="explicit-model" required
+    /></label>
+    <label
+      >Prompt
+      <textarea name="input" rows="3" required>
+Hello from the browser.</textarea>
+    </label>
+    <div>
+      <button id="start" type="submit">Run example</button>
+      <button id="stop" type="button" disabled>Cancel request</button>
+    </div>
+  </form>
+  <output id="status" aria-live="polite"></output>
+  <script type="module" src="./browser.js"></script>
+</html>

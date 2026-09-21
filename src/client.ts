@@ -9,6 +9,7 @@ export type * from "./context-types.js";
 export type * from "./retrieval-types.js";
 export type * from "./ingestion-types.js";
 import { IngestResultSchema, type IngestRequest } from "./ingestion-types.js";
+import type { IngestResult } from "./ingestion-types.js";
 import {
   RetrievalResultSchema,
   RetrievalIndexResultSchema,
@@ -18,6 +19,9 @@ import {
   type RetrievalSearch,
   type RetrievalIndexRequest,
   type RetrievalDelete,
+  type RetrievalResult,
+  type RetrievalIndexResult,
+  type RetrievalDeleteResult,
 } from "./retrieval-types.js";
 import {
   ModelCatalogSchema,
@@ -25,6 +29,24 @@ import {
   UsageSchema,
 } from "./types.js";
 import { DriverError } from "./errors.js";
+export { DriverError } from "./errors.js";
+export { PROTOCOL_VERSION } from "./protocol.js";
+export type { ProtocolInfo } from "./protocol.js";
+export type {
+  RunRequest,
+  RunResult,
+  RunEvent,
+  ProviderInfo,
+  ProviderHealth,
+  ModelCatalog,
+  Usage,
+  ErrorInfo,
+  ToolCall,
+  RetryPolicy,
+  Json,
+  JsonObject,
+  AuthMode,
+} from "./types.js";
 import { readLimited, secureBaseUrl } from "./security.js";
 import {
   checkResponseVersion,
@@ -40,6 +62,13 @@ export interface ClientOptions {
   url: string;
   token: string;
   fetch?: typeof globalThis.fetch;
+}
+/** A client may cancel transport; subject and provider credentials belong to the host. */
+export interface ClientRequestOptions {
+  signal?: AbortSignal;
+}
+export interface ProviderListOptions extends ClientRequestOptions {
+  refresh?: boolean;
 }
 const errorSchema = z.object({
   error: z.object({
@@ -124,7 +153,12 @@ export class AgenticClient {
         "AUTH_REQUIRED",
         "A driver bearer token is required.",
       );
-    this.fetcher = options.fetch ?? globalThis.fetch;
+    if (typeof (options.fetch ?? globalThis.fetch) !== "function")
+      throw new DriverError(
+        "UNSUPPORTED_ENVIRONMENT",
+        "A Fetch-compatible implementation is required.",
+      );
+    this.fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
   private async request(
     path: string,
@@ -198,8 +232,8 @@ export class AgenticClient {
   }
   async ingestContext(
     request: IngestRequest,
-    options: { signal?: AbortSignal } = {},
-  ) {
+    options: ClientRequestOptions = {},
+  ): Promise<IngestResult> {
     const result = await this.retrievalRequest(
       "v1/retrieval/ingest",
       request,
@@ -223,8 +257,8 @@ export class AgenticClient {
   }
   async searchContext(
     request: RetrievalSearch,
-    options: { signal?: AbortSignal } = {},
-  ) {
+    options: ClientRequestOptions = {},
+  ): Promise<RetrievalResult> {
     const result = await this.retrievalRequest(
       "v1/retrieval/search",
       request,
@@ -240,8 +274,8 @@ export class AgenticClient {
   }
   async indexContext(
     request: RetrievalIndexRequest,
-    options: { signal?: AbortSignal } = {},
-  ) {
+    options: ClientRequestOptions = {},
+  ): Promise<RetrievalIndexResult> {
     const result = await this.retrievalRequest(
       "v1/retrieval/index",
       request,
@@ -261,8 +295,8 @@ export class AgenticClient {
   }
   async deleteContext(
     request: RetrievalDelete,
-    options: { signal?: AbortSignal } = {},
-  ) {
+    options: ClientRequestOptions = {},
+  ): Promise<RetrievalDeleteResult> {
     const result = await this.retrievalRequest(
       "v1/retrieval/delete",
       request,
@@ -280,9 +314,7 @@ export class AgenticClient {
       );
     return result;
   }
-  async protocol(
-    options: { signal?: AbortSignal } = {},
-  ): Promise<ProtocolInfo> {
+  async protocol(options: ClientRequestOptions = {}): Promise<ProtocolInfo> {
     const response = await this.request(
       "v1/protocol",
       undefined,
@@ -306,9 +338,7 @@ export class AgenticClient {
       );
     return parsed.data;
   }
-  async providers(
-    options: { signal?: AbortSignal; refresh?: boolean } = {},
-  ): Promise<ProviderInfo[]> {
+  async providers(options: ProviderListOptions = {}): Promise<ProviderInfo[]> {
     const response = await this.request(
       options.refresh ? "v1/providers?refresh=true" : "v1/providers",
       undefined,
@@ -348,7 +378,7 @@ export class AgenticClient {
   }
   async run(
     request: RunRequest,
-    options: { signal?: AbortSignal } = {},
+    options: ClientRequestOptions = {},
   ): Promise<RunResult> {
     for await (const event of this.stream(request, options)) {
       if (event.type === "run.completed") return event.result;
@@ -367,7 +397,7 @@ export class AgenticClient {
   }
   async *stream(
     request: RunRequest,
-    options: { signal?: AbortSignal } = {},
+    options: ClientRequestOptions = {},
   ): AsyncGenerator<RunEvent> {
     const controller = new AbortController();
     const signal = options.signal

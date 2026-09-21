@@ -16,6 +16,11 @@ export type {
 } from "./operations.js";
 export { DriverError } from "./errors.js";
 export { AgenticClient } from "./client.js";
+export type {
+  ClientOptions,
+  ClientRequestOptions,
+  ProviderListOptions,
+} from "./client.js";
 export { RunRequestSchema, UsageSchema } from "./types.js";
 export type * from "./types.js";
 export { PROTOCOL_VERSION, protocolInfo } from "./protocol.js";

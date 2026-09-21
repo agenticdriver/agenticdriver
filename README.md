@@ -23,6 +23,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - An [installable host CLI](docs/host.md) with `init`, `serve`, `status`, `doctor`,
   and `run`, explicit account/model selection, and separate credential references.
 - TypeScript/JavaScript, Python, Go, and Rust clients for discovery, runs, and events.
+- [JavaScript and TypeScript package guide](docs/javascript.md) with installed ESM examples, a browser entry, typed errors and cancellation.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
 - [Selected context and draft artifacts](docs/context.md): bounded text/Markdown,
@@ -222,12 +223,12 @@ See [inactivity and cancellation](docs/timeouts.md) for examples and host policy
 All clients use the same [OpenAPI contract](protocol/openapi.json). Any language
 with HTTPS and JSON can call the protocol; four language packages are included.
 
-| Language                | Local installation                                                                                                                                               | Interface                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                                                                                   | `AgenticClient.run()` / `.stream()`                            |
-| Python 3.10+            | `pip install ./clients/python`                                                                                                                                   | `AgenticClient.run(**request)` / `.stream(**request)`          |
-| Go 1.22+                | `go mod edit -replace github.com/hashimkarim/agenticdriver/clients/go=../agenticdriver/clients/go` then `go get github.com/hashimkarim/agenticdriver/clients/go` | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
-| Rust                    | `agenticdriver = { path = "../agenticdriver/clients/rust" }` in Cargo.toml                                                                                       | `AgenticClient.run(&request)` / `.stream(&request, callback)`  |
+| Language                | Local installation                                                                             | Interface                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| TypeScript / JavaScript | `npm install ../agenticdriver`                                                                 | `AgenticClient.run()` / `.stream()`                            |
+| Python 3.10+            | `pip install ./clients/python`                                                                 | `AgenticClient.run(**request)` / `.stream(**request)`          |
+| Go 1.22+                | [Install a reviewed commit](clients/go/README.md) with `go get`; no local replacement required | `Client.Run(ctx, request)` / `.Stream(ctx, request, callback)` |
+| Rust                    | `agenticdriver = { path = "../agenticdriver/clients/rust" }` in Cargo.toml                     | `AgenticClient.run(&request)` / `.stream(&request, callback)`  |
 
 Python and Rust clients are synchronous; use a worker thread in an async
 application. Go supports context cancellation. Python generators should be closed
@@ -262,6 +263,7 @@ and [architecture and boundaries](docs/architecture.md).
 ```bash
 npm run check
 npm run test:clients   # Node, Python, Go, Rust, and OpenSSL required
+npm run test:install   # Packed SDK, JS/TS examples, browser bundle and CLI
 ```
 
 The client suite starts temporary hosts and verifies all four clients over HTTP

@@ -15,5 +15,6 @@
     "tests/**/*.ts",
     "examples/**/*.ts",
     "scripts/**/*.ts"
-  ]
+  ],
+  "exclude": ["examples/javascript"]
 }

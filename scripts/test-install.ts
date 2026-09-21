@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { CliProcess } from "../tests/cli-helpers.js";
+import { checkJavaScriptPackage } from "./test-javascript-package.js";
 
 const run = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -105,9 +106,17 @@ try {
       "--no-audit",
       "--no-fund",
       join(directory, archive),
+      "@types/node@" +
+        JSON.parse(
+          await readFile(
+            join(root, "node_modules/@types/node/package.json"),
+            "utf8",
+          ),
+        ).version,
     ],
     { cwd: directory, timeout: 120_000, maxBuffer: 2_000_000 },
   );
+  await checkJavaScriptPackage(app);
   // Verify the context export and a draft round trip from the installed artifact.
   await writeFile(
     join(app, "context-check.mjs"),
