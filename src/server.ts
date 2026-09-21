@@ -874,11 +874,14 @@ async function readRequest(req: IncomingMessage): Promise<unknown> {
     chunks.push(buffer);
   }
   try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as RunRequest;
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(
+      Buffer.concat(chunks),
+    );
+    return JSON.parse(text) as RunRequest;
   } catch {
     throw new DriverError(
       "INVALID_REQUEST",
-      "The request must contain valid JSON.",
+      "The request must contain valid UTF-8 JSON.",
     );
   }
 }

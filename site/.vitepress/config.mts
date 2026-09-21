@@ -88,6 +88,7 @@ export default defineConfig({
           { text: "Diagnostics", link: "/diagnostics" },
           { text: "Provider extensions", link: "/provider-extensions" },
           { text: "Architecture", link: "/architecture" },
+          { text: "Security boundaries", link: "/security" },
           { text: "Protocol", link: "/protocol" },
           { text: "Compatibility", link: "/compatibility" },
           { text: "Migration notes", link: "/migrations" },

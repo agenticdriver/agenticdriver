@@ -1,5 +1,8 @@
 # Better Auth, AuthYard and device pairing
 
+The [security review](security.md) describes token, tenant and execution trust
+boundaries, tested defenses and remaining native-isolation qualification.
+
 Use the application's **Better Auth** runtime and database for identity, OAuth
 clients, consent and credentials. Add **AuthYard's existing `controlPlane`
 connector** for management. AgenticDriver authenticates OAuth access tokens and
