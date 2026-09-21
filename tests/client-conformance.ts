@@ -10,6 +10,11 @@ import type {
   ToolExecutionIdentity,
   ToolExecutionResult,
 } from "../src/tool-types.js";
+import type {
+  SessionCreate,
+  SessionIdentity,
+  SessionHandle,
+} from "../src/session-types.js";
 import type { RetrievalRequest } from "../src/retrieval-types.js";
 import { DriverError } from "../src/errors.js";
 
@@ -33,6 +38,9 @@ const fixtures = JSON.parse(
     tools?: string[];
     toolIdentity?: ToolExecutionIdentity;
     toolResult?: ToolExecutionResult;
+    sessionCreate?: SessionCreate;
+    sessionIdentity?: SessionIdentity;
+    session?: SessionHandle;
     approvals?: ApprovalPolicy;
     decision?: ApprovalDecision;
   }[];
@@ -48,6 +56,12 @@ for (const example of fixtures.cases) {
   try {
     if (example.operation === "providers") await client.providers();
     else if (example.operation === "protocol") await client.protocol();
+    else if (example.operation === "session-create")
+      await client.createSession(example.sessionCreate!);
+    else if (example.operation === "session-read")
+      await client.readSession(example.sessionIdentity!);
+    else if (example.operation === "session-delete")
+      await client.deleteSession(example.sessionIdentity!);
     else if (example.operation === "tool-result")
       await client.completeTool(example.toolResult!);
     else if (example.operation === "tool-progress")
@@ -70,6 +84,7 @@ for (const example of fixtures.cases) {
       for await (const event of client.stream({
         ...request,
         approvals: example.approvals,
+        session: example.session,
         applicationTools: example.applicationTools,
         tools: example.tools,
         ...(example.retrieval ? { retrieval: example.retrieval } : {}),
@@ -277,4 +292,45 @@ for (const requiresApproval of [false, true]) {
   }
   assert.equal(executed, 1);
   assert.equal(completed, true);
+}
+
+for (const mode of ["history", "native"] as const) {
+  const created = await client.createSession({
+    provider: "mock",
+    model: "demo",
+    mode,
+  });
+  const identity = { id: created.session.id };
+  const session = { ...identity, revision: 0 };
+  const first = await client.run({
+    ...request,
+    input: "session-first",
+    session,
+  });
+  assert.equal(first.session?.revision, 1);
+  await assert.rejects(client.run({ ...request, session }), {
+    code: "SESSION_REVISION_CONFLICT",
+  });
+  const saved = await client.readSession(identity);
+  assert.equal(saved.history.length, 2);
+  assert.equal(JSON.stringify(saved).includes("private-state"), false);
+  let completed = false;
+  for await (const event of client.stream({
+    ...request,
+    input: "session-next",
+    session: { ...identity, revision: 1 },
+  })) {
+    if (event.type === "run.completed") {
+      assert.equal(event.result.text, "continued");
+      assert.equal(event.result.session?.revision, 2);
+      completed = true;
+    }
+    if (event.type === "run.failed" || event.type === "run.cancelled")
+      assert.fail(event.error.code);
+  }
+  assert.equal(completed, true);
+  assert.equal((await client.deleteSession(identity)).deleted, true);
+  await assert.rejects(client.readSession(identity), {
+    code: "SESSION_NOT_FOUND",
+  });
 }

@@ -22,6 +22,12 @@ class ClientConformance(unittest.TestCase):
                         client.providers()
                     elif case.get("operation") == "protocol":
                         client.protocol()
+                    elif case.get("operation") == "session-create":
+                        client.create_session(case["sessionCreate"])
+                    elif case.get("operation") == "session-read":
+                        client.read_session(case["sessionIdentity"])
+                    elif case.get("operation") == "session-delete":
+                        client.delete_session(case["sessionIdentity"])
                     elif case.get("operation") == "tool-result":
                         client.complete_tool(case["toolResult"])
                     elif case.get("operation") == "tool-progress":
@@ -31,7 +37,7 @@ class ClientConformance(unittest.TestCase):
                     elif case.get("operation") == "ingest":
                         client.ingest_context({"corpus": "library", "document": {"type": "reference", "id": "paper", "revision": "r1", "mediaType": "text/markdown"}})
                     else:
-                        stream = client.stream(provider="mock", model="demo", input="Hello", **({k: case[k] for k in ["applicationTools", "tools"] if k in case}),  **({"approvals": case["approvals"]} if "approvals" in case else {}), **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
+                        stream = client.stream(provider="mock", model="demo", input="Hello", **({k: case[k] for k in ["applicationTools", "tools", "session"] if k in case}),  **({"approvals": case["approvals"]} if "approvals" in case else {}), **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
                         completed = cancelled = False
                         try:
                             for event in stream:
@@ -207,3 +213,31 @@ class ClientConformance(unittest.TestCase):
                         if event["type"] == "run.completed": completed = True
                 self.assertEqual(len(calls), 1)
                 self.assertTrue(completed)
+
+    def test_conversation_sessions(self):
+        with self.client() as client:
+            for mode in ("history", "native"):
+                created = client.create_session({"provider":"mock", "model":"demo", "mode":mode})
+                identity = {"id":created["session"]["id"]}
+                first = client.run(provider="mock", model="demo", input="session-first", session={**identity, "revision":0})
+                self.assertEqual(first["session"]["revision"],1)
+                with self.assertRaises(DriverError) as stale:
+                    client.run(provider="mock", model="demo", input="session-next", session={**identity, "revision":0})
+                self.assertEqual(stale.exception.code,"SESSION_REVISION_CONFLICT")
+                saved = client.read_session(identity)
+                self.assertEqual(len(saved["history"]),2)
+                self.assertNotIn("private-state",json.dumps(saved))
+                completed = False
+                with client.stream(provider="mock",model="demo",input="session-next",session={**identity,"revision":1}) as stream:
+                    for event in stream:
+                        if event["type"] == "run.completed":
+                            self.assertEqual(event["result"]["text"],"continued")
+                            self.assertEqual(event["result"]["session"]["revision"],2)
+                            completed = True
+                        if event["type"] in ("run.failed","run.cancelled"): self.fail(event["error"]["code"])
+                self.assertTrue(completed)
+                result = client.delete_session(identity)
+                self.assertTrue(result["deleted"])
+                with self.assertRaises(DriverError) as deleted:
+                    client.read_session(identity)
+                self.assertEqual(deleted.exception.code,"SESSION_NOT_FOUND")

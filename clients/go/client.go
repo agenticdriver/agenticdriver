@@ -35,6 +35,7 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
+	Session              *SessionHandle              `json:"session,omitempty"`
 	ApplicationTools     []ApplicationToolDefinition `json:"applicationTools,omitempty"`
 	Approvals            *ApprovalPolicy             `json:"approvals,omitempty"`
 	Retrieval            *RetrievalRequest           `json:"retrieval,omitempty"`
@@ -73,6 +74,7 @@ type Usage struct {
 	APIEquivalentCostUSD *float64 `json:"apiEquivalentCostUsd,omitempty"`
 }
 type Result struct {
+	Session      *SessionInfo      `json:"session,omitempty"`
 	Retrieval    *RetrievalResult  `json:"retrieval,omitempty"`
 	Sources      []ContextManifest `json:"sources,omitempty"`
 	Artifacts    []DraftArtifact   `json:"artifacts,omitempty"`
@@ -96,8 +98,10 @@ type Provider struct {
 	Health          *ProviderHealth     `json:"health,omitempty"`
 	ModelCatalog    *ModelCatalog       `json:"modelCatalog,omitempty"`
 	Capabilities    struct {
-		Tools         bool `json:"tools"`
-		TextStreaming bool `json:"textStreaming"`
+		HistoryContinuation bool `json:"historyContinuation"`
+		NativeContinuation  bool `json:"nativeContinuation"`
+		Tools               bool `json:"tools"`
+		TextStreaming       bool `json:"textStreaming"`
 	} `json:"capabilities"`
 }
 type ProviderHealth struct {
@@ -287,7 +291,7 @@ func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
 		return result, err
 	}
 	err = decode(res, &result)
-	if err == nil && (result.Provider != request.Provider || result.Model != request.Model || !retrievalSelection(result.Retrieval, request.Retrieval)) {
+	if err == nil && (result.Provider != request.Provider || result.Model != request.Model || !retrievalSelection(result.Retrieval, request.Retrieval) || !sessionSelection(result, request)) {
 		err = &Error{Code: "INVALID_RESPONSE", Message: "The result does not match the requested provider and model."}
 	}
 	return result, err

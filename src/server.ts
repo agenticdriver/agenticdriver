@@ -7,6 +7,12 @@ import {
 } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
+import {
+  SessionOperationSchema,
+  type SessionOperation,
+  type SessionCreate,
+  type SessionIdentity,
+} from "./session-types.js";
 import type { ApprovalDecision } from "./approval-types.js";
 import {
   ApplicationToolGrantSchema,
@@ -34,6 +40,7 @@ import { IngestRequestSchema } from "./ingestion-types.js";
 import type { RetrievalOperation } from "./retrieval.js";
 
 export interface AccessToken {
+  sessions?: SessionOperation[];
   /** Use at least 32 random characters. Authentication compares SHA-256 token digests. */
   token: string;
   subject: string;
@@ -82,6 +89,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     )
       throw new Error("Application tool token grants must have unique names.");
     return {
+      sessions: SessionOperationSchema.array()
+        .max(4)
+        .parse(entry.sessions ?? []),
       applicationTools,
       digest,
       subject: entry.subject,
@@ -170,6 +180,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            sessions: driver.supportsSessions,
             applicationTools: driver.supportsApplicationTools,
             interactiveApprovals: driver.supportsInteractiveApprovals,
             idempotency: driver.supportsIdempotency,
@@ -194,6 +205,14 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         return;
       }
       const approvalDecision = req.url === "/v1/approvals/decisions";
+      const sessionOperation =
+        req.url === "/v1/sessions/create"
+          ? "create"
+          : req.url === "/v1/sessions/read"
+            ? "read"
+            : req.url === "/v1/sessions/delete"
+              ? "delete"
+              : undefined;
       const toolOperation =
         req.url === "/v1/tool-executions/progress"
           ? "progress"
@@ -212,6 +231,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         (req.url !== "/v1/runs" &&
           !retrievalOperation &&
           !approvalDecision &&
+          !sessionOperation &&
           !toolOperation) ||
         req.method !== "POST"
       ) {
@@ -236,6 +256,21 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "Compressed requests are not supported.",
         );
       const body = await readRequest(req);
+      if (sessionOperation) {
+        const identity = {
+          subject: principal.subject,
+          providers: principal.providers,
+          sessions: principal.sessions,
+        };
+        const result =
+          sessionOperation === "create"
+            ? driver.createSession(body as SessionCreate, identity)
+            : sessionOperation === "read"
+              ? driver.readSession(body as SessionIdentity, identity)
+              : driver.deleteSession(body as SessionIdentity, identity);
+        json(res, 200, result);
+        return;
+      }
       if (toolOperation) {
         const executor = {
           subject: principal.subject,
@@ -340,6 +375,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         res.off("close", disconnect);
       };
       const runOptions = {
+        sessionOperations: principal.sessions,
         subject: principal.subject,
         signal: controller.signal,
         applicationToolApprovals: principal.applicationTools
@@ -457,6 +493,31 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (code === "SESSION_NOT_FOUND") return 404;
+  if (
+    [
+      "SESSION_REVISION_CONFLICT",
+      "SESSION_BUSY",
+      "SESSION_INTERRUPTED",
+      "SESSION_PROVIDER_MISMATCH",
+      "SESSION_ACCOUNT_CHANGED",
+    ].includes(code)
+  )
+    return 409;
+  if (code === "SESSION_CAPACITY") return 429;
+  if (
+    [
+      "SESSIONS_UNAVAILABLE",
+      "INVALID_SESSION",
+      "UNSUPPORTED_CONTINUATION",
+      "SESSION_ACCOUNT_REQUIRED",
+      "SESSION_HISTORY_CONFLICT",
+      "SESSION_CONTEXT_UNSUPPORTED",
+      "SESSION_CONTEXT_LIMIT",
+      "INVALID_SESSION_STATE",
+    ].includes(code)
+  )
+    return 400;
   if (code === "UNAUTHORIZED") return 401;
   if (["APPROVAL_NOT_FOUND", "TOOL_EXECUTION_NOT_FOUND"].includes(code))
     return 404;

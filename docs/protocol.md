@@ -178,3 +178,19 @@ unsupported or malformed usage (HTTP 400). `TOOL_DEFINITION_CONFLICT` and
 `TOOL_EXECUTION_MISMATCH` report conflicts (409); `TOOL_EXECUTION_NOT_FOUND` covers
 unknown, consumed, cancelled or other-subject tickets (404).
 `TOOL_EXECUTOR_CAPACITY` reports pending capacity exhaustion (429).
+
+## Conversation sessions extension
+
+Hosts advertising `conversation-sessions` provide authenticated POST endpoints
+`/v1/sessions/create`, `/v1/sessions/read` and `/v1/sessions/delete`. Runs opt in
+with `session: { id, revision }`; successful results return metadata at the next
+revision. Token `sessions` grants are separate for create/read/continue/delete.
+See [sessions](sessions.md) for account binding, capabilities, context limits,
+process affinity, deletion and retention between turns.
+
+`SESSION_NOT_FOUND` is HTTP 404. `SESSION_REVISION_CONFLICT`, `SESSION_BUSY`,
+`SESSION_INTERRUPTED`, `SESSION_PROVIDER_MISMATCH` and `SESSION_ACCOUNT_CHANGED`
+are conflicts (409). `SESSION_CAPACITY` is 429. Invalid/unsupported session
+requests and context bounds are 400; `FORBIDDEN` remains 403. Session deletion
+cancels active work with `SESSION_DELETED`; effects already dispatched can remain
+uncertain. Native state is absent from all public session/result schemas.

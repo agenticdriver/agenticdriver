@@ -95,6 +95,11 @@ const withMedia = (adapter: ProviderAdapter): ProviderAdapter => ({
 });
 const driver = await serve(
   new AgenticDriver({
+    sessions: { retentionMs: 60000 },
+    usage: {
+      hostId: "conformance-host",
+      accounts: { mock: "fixture-account" },
+    },
     operations: new MemoryOperationStore(),
     approvals: { interactive: true },
     applicationTools: { enabled: true, requireApproval: false },
@@ -152,6 +157,22 @@ const driver = await serve(
       withMedia(
         mockProvider(async (request, context) => {
           const input = request.messages.at(-1)?.content;
+          if (input === "session-first")
+            return {
+              text: "first visible reply",
+              native: { marker: "private-state" },
+            };
+          if (input === "session-next") {
+            if (
+              !request.messages.some(
+                (message) =>
+                  message.role === "user" &&
+                  message.content === "session-first",
+              )
+            )
+              throw new Error("Missing conversation history");
+            return { text: "continued" };
+          }
           if (input === "conformance-application-tool")
             return {
               text: "Use the app function",
@@ -225,6 +246,7 @@ const driver = await serve(
         providers: ["mock"],
         tools: ["approved_echo"],
         approveTools: ["approved_echo", "application_lookup"],
+        sessions: ["create", "read", "continue", "delete"],
         applicationTools: [
           { name: "application_lookup", requiresApproval: false },
         ],
@@ -270,7 +292,7 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       return;
     }
     const id =
-      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results))$/.exec(
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results)|sessions\/(?:create|read|delete))$/.exec(
         req.url ?? "",
       )?.[1];
     const example = fixture.cases.find((c) => c.id === id);

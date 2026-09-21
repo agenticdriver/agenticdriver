@@ -47,3 +47,5 @@ export type {
   ApplicationToolOptions,
   ToolExecutorPrincipal,
 } from "./application-tools.js";
+export * from "./session-types.js";
+export type { SessionPrincipal } from "./sessions.js";

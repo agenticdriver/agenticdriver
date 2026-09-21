@@ -69,7 +69,8 @@ pub(crate) fn optional_cost<'de, D: Deserializer<'de>>(
 }
 #[cfg(any(feature = "blocking", feature = "async"))]
 pub(crate) fn result_valid(result: &RunResult, request: &RunRequest) -> bool {
-    crate::context::relationships_valid(result)
+    crate::sessions::selection(result, request)
+        && crate::context::relationships_valid(result)
         && crate::retrieval::links(result)
         && crate::retrieval::selection(result.retrieval.as_ref(), request.retrieval.as_ref())
         && !result.run_id.is_empty()

@@ -182,6 +182,33 @@ impl AgenticClient {
         };
         Ok(read_json::<Catalog>(self.request(path, None, false)?)?.providers)
     }
+    pub fn create_session(&self, request: &crate::SessionCreate) -> Result<crate::SessionSnapshot> {
+        let value: Value = read_json(self.request(
+            "v1/sessions/create",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::sessions::snapshot(value, Some(request), None)
+    }
+    pub fn read_session(&self, request: &crate::SessionIdentity) -> Result<crate::SessionSnapshot> {
+        let value: Value = read_json(self.request(
+            "v1/sessions/read",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::sessions::snapshot(value, None, Some(request))
+    }
+    pub fn delete_session(
+        &self,
+        request: &crate::SessionIdentity,
+    ) -> Result<crate::SessionDeleteResult> {
+        let value: Value = read_json(self.request(
+            "v1/sessions/delete",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::sessions::deletion(value, request)
+    }
     pub fn report_tool_progress(
         &self,
         identity: &crate::ToolExecutionIdentity,

@@ -19,6 +19,11 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+pub mod sessions;
+pub use sessions::{
+    SessionCreate, SessionDeleteResult, SessionHandle, SessionIdentity, SessionInfo, SessionMode,
+    SessionSnapshot, SessionState,
+};
 pub mod application_tools;
 pub use application_tools::{
     ApplicationToolDefinition, ApplicationToolFailure, ToolExecutionIdentity, ToolExecutionReceipt,
@@ -104,6 +109,8 @@ impl From<std::io::Error> for Error {
 #[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RunRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session: Option<SessionHandle>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub application_tools: Vec<ApplicationToolDefinition>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -163,7 +170,7 @@ impl RunRequest {
         }
     }
 }
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Message {
     pub role: String,
     pub content: String,
@@ -187,6 +194,8 @@ pub struct Usage {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunResult {
+    #[serde(default, deserialize_with = "sessions::optional_info")]
+    pub session: Option<SessionInfo>,
     #[serde(default, deserialize_with = "retrieval::optional_result")]
     pub retrieval: Option<RetrievalResult>,
     #[serde(default, deserialize_with = "context::optional_sources")]
@@ -205,6 +214,10 @@ pub struct RunResult {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Capabilities {
+    #[serde(default)]
+    pub history_continuation: bool,
+    #[serde(default)]
+    pub native_continuation: bool,
     pub tools: bool,
     pub text_streaming: bool,
 }

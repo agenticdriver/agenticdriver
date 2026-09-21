@@ -75,10 +75,16 @@ func (result *Result) UnmarshalJSON(data []byte) error {
 	type rawResult Result
 	var decoded rawResult
 	value, ok := object(data)
+	if raw, present := value["session"]; present {
+		var info SessionInfo
+		if json.Unmarshal(raw, &info) != nil {
+			return invalidSession()
+		}
+	}
 	if raw, present := value["retrieval"]; present && !retrievalValid(raw) {
 		return invalidRetrieval()
 	}
-	if !ok || !contextResultValid(value) || json.Unmarshal(data, &decoded) != nil || !stringField(value, "runId", false) || !stringField(value, "provider", false) || !stringField(value, "model", false) || !stringField(value, "text", true) || !numberValue(value["steps"], true, true) || !usageValid(value["usage"]) || (decoded.FinishReason != "stop" && decoded.FinishReason != "length") {
+	if !ok || !contextResultValid(value) || json.Unmarshal(exactSessionFields(value, "session", "retrieval", "sources", "artifacts", "runId", "provider", "model", "text", "output", "usage", "steps", "finishReason"), &decoded) != nil || !stringField(value, "runId", false) || !stringField(value, "provider", false) || !stringField(value, "model", false) || !stringField(value, "text", true) || !numberValue(value["steps"], true, true) || !usageValid(value["usage"]) || (decoded.FinishReason != "stop" && decoded.FinishReason != "length") {
 		return &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid run result."}
 	}
 	*result = Result(decoded)
@@ -175,7 +181,7 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 	case "usage.reported":
 		return numberValue(value["step"], true, true) && usageValid(value["usage"])
 	case "run.completed":
-		return event.Result != nil && event.Result.RunID == event.RunID && event.Result.Provider == request.Provider && event.Result.Model == request.Model && retrievalSelection(event.Result.Retrieval, request.Retrieval)
+		return event.Result != nil && event.Result.RunID == event.RunID && event.Result.Provider == request.Provider && event.Result.Model == request.Model && retrievalSelection(event.Result.Retrieval, request.Retrieval) && sessionSelection(*event.Result, request)
 	case "run.failed", "run.cancelled":
 		return errorValid(value["error"])
 	default:

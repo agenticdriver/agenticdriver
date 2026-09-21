@@ -1,5 +1,16 @@
 import { z } from "zod";
 import {
+  SessionInfoSchema,
+  SessionSnapshotSchema,
+  SessionDeleteResultSchema,
+  validSessionResult,
+  type SessionCreate,
+  type SessionIdentity,
+  type SessionSnapshot,
+  type SessionDeleteResult,
+} from "./session-types.js";
+export type * from "./session-types.js";
+import {
   ToolExecutionRequestSchema,
   ToolExecutionReceiptSchema,
   matchesToolReceipt,
@@ -99,6 +110,7 @@ const usageSchema = UsageSchema;
 const resultSchema = z
   .object({
     runId: z.string(),
+    session: SessionInfoSchema.optional(),
     provider: z.string(),
     model: z.string(),
     text: z.string(),
@@ -198,6 +210,8 @@ export class AgenticClient {
       | RetrievalDelete
       | IngestRequest
       | ApprovalDecision
+      | SessionCreate
+      | SessionIdentity
       | ToolExecutionIdentity
       | ToolExecutionResult,
     signal?: AbortSignal,
@@ -495,6 +509,72 @@ export class AgenticClient {
       "The run ended without a result.",
     );
   }
+  async createSession(
+    input: SessionCreate,
+    options: ClientRequestOptions = {},
+  ): Promise<SessionSnapshot> {
+    const result = SessionSnapshotSchema.safeParse(
+      await this.sessionRequest("create", input, options),
+    );
+    if (
+      !result.success ||
+      result.data.session.provider !== input.provider ||
+      result.data.session.model !== input.model ||
+      result.data.session.mode !== input.mode ||
+      result.data.session.state !== "ready" ||
+      result.data.session.revision !== 0 ||
+      result.data.instructions !== input.instructions ||
+      JSON.stringify(result.data.history) !==
+        JSON.stringify(
+          (input.history ?? []).map(({ role, content }) => ({ role, content })),
+        )
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The conversation receipt does not match its creation request.",
+      );
+    return result.data;
+  }
+  async readSession(
+    input: SessionIdentity,
+    options: ClientRequestOptions = {},
+  ): Promise<SessionSnapshot> {
+    const result = SessionSnapshotSchema.safeParse(
+      await this.sessionRequest("read", input, options),
+    );
+    if (!result.success || result.data.session.id !== input.id)
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The conversation response does not match its identity.",
+      );
+    return result.data;
+  }
+  async deleteSession(
+    input: SessionIdentity,
+    options: ClientRequestOptions = {},
+  ): Promise<SessionDeleteResult> {
+    const result = SessionDeleteResultSchema.safeParse(
+      await this.sessionRequest("delete", input, options),
+    );
+    if (!result.success || result.data.id !== input.id)
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The deletion receipt does not match its conversation.",
+      );
+    return result.data;
+  }
+  private async sessionRequest(
+    operation: string,
+    input: SessionCreate | SessionIdentity,
+    options: ClientRequestOptions,
+  ): Promise<unknown> {
+    const response = await this.request(
+      `v1/sessions/${operation}`,
+      input,
+      options.signal,
+    );
+    return readResponseJson(response);
+  }
   stream(
     request: RunRequest,
     options: ClientRequestOptions = {},
@@ -604,6 +684,7 @@ export class AgenticClient {
               event.model !== request.model)) ||
           (event.type === "run.completed" &&
             (event.result.runId !== runId ||
+              !validSessionResult(event.result, request) ||
               event.result.provider !== request.provider ||
               event.result.model !== request.model ||
               Boolean(event.result.retrieval) !== Boolean(request.retrieval) ||

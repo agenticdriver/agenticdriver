@@ -75,3 +75,5 @@ language equivalent) after real milestones. There is no separate default tool
 execution deadline. Closing the run invalidates pending execution tickets;
 the application must pass its cancellation signal/context to its own callbacks.
 A lost connection cannot undo their effects. See [application-owned functions](application-tools.md).
+
+Session retention measures idle storage age between turns. An active conversation turn suspends retention, including during tool/review waits. It does not impose a run deadline. See [sessions](sessions.md).

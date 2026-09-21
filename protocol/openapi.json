@@ -7,6 +7,150 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/v1/sessions/create": {
+      "post": {
+        "operationId": "createSession",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Explicit process-local conversation storage. Requires the originating subject, provider and separate session operation grant. Visible history can be exported; opaque provider state stays inside the host. Deletion cancels an active turn. No automatic retries or run deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SessionCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized conversation snapshot or deletion receipt",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionSnapshot" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions/read": {
+      "post": {
+        "operationId": "readSession",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Explicit process-local conversation storage. Requires the originating subject, provider and separate session operation grant. Visible history can be exported; opaque provider state stays inside the host. Deletion cancels an active turn. No automatic retries or run deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SessionIdentity" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized conversation snapshot or deletion receipt",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionSnapshot" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions/delete": {
+      "post": {
+        "operationId": "deleteSession",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Explicit process-local conversation storage. Requires the originating subject, provider and separate session operation grant. Visible history can be exported; opaque provider state stays inside the host. Deletion cancels an active turn. No automatic retries or run deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SessionIdentity" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized conversation snapshot or deletion receipt",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionDeleteResult" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tool-executions/progress": {
       "post": {
         "operationId": "reportToolProgress",
@@ -538,6 +682,204 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "SessionCreate": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+          },
+          "mode": { "type": "string", "enum": ["history", "native"] },
+          "history": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": { "type": "string", "enum": ["user", "assistant"] },
+                "content": { "type": "string", "maxLength": 100000 }
+              },
+              "required": ["role", "content"],
+              "additionalProperties": false
+            }
+          },
+          "instructions": { "type": "string", "maxLength": 100000 }
+        },
+        "required": ["provider", "model", "mode"],
+        "additionalProperties": false
+      },
+      "SessionIdentity": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "SessionHandle": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["id", "revision"],
+        "additionalProperties": false
+      },
+      "SessionInfo": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "provider": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+          },
+          "mode": { "type": "string", "enum": ["history", "native"] },
+          "state": {
+            "type": "string",
+            "enum": ["ready", "running", "interrupted"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "provider",
+          "model",
+          "mode",
+          "state",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SessionSnapshot": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "session": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "provider": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "model": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+              },
+              "mode": { "type": "string", "enum": ["history", "native"] },
+              "state": {
+                "type": "string",
+                "enum": ["ready", "running", "interrupted"]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "provider",
+              "model",
+              "mode",
+              "state",
+              "createdAt",
+              "updatedAt"
+            ]
+          },
+          "history": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": { "type": "string", "enum": ["user", "assistant"] },
+                "content": { "type": "string", "maxLength": 100000 }
+              },
+              "required": ["role", "content"],
+              "additionalProperties": false
+            }
+          },
+          "instructions": { "type": "string", "maxLength": 100000 }
+        },
+        "required": ["session", "history"]
+      },
+      "SessionDeleteResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+          },
+          "deleted": { "type": "boolean", "const": true }
+        },
+        "required": ["id", "deleted"]
+      },
       "ApplicationToolDefinition": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -2573,6 +2915,22 @@
               "additionalProperties": false
             }
           },
+          "session": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["id", "revision"],
+            "additionalProperties": false
+          },
           "approvals": {
             "type": "object",
             "properties": {
@@ -2849,6 +3207,7 @@
           "finishReason"
         ],
         "properties": {
+          "session": { "$ref": "#/components/schemas/SessionInfo" },
           "runId": { "type": "string" },
           "provider": { "type": "string" },
           "model": { "type": "string" },

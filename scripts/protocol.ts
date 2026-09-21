@@ -47,6 +47,14 @@ import {
   ToolExecutionResultSchema,
   ToolExecutionReceiptSchema,
 } from "../src/tool-types.js";
+import {
+  SessionCreateSchema,
+  SessionIdentitySchema,
+  SessionHandleSchema,
+  SessionInfoSchema,
+  SessionSnapshotSchema,
+  SessionDeleteResultSchema,
+} from "../src/session-types.js";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const string = { type: "string" },
@@ -56,6 +64,12 @@ const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
   ...Object.fromEntries(
     Object.entries({
+      SessionCreate: SessionCreateSchema,
+      SessionIdentity: SessionIdentitySchema,
+      SessionHandle: SessionHandleSchema,
+      SessionInfo: SessionInfoSchema,
+      SessionSnapshot: SessionSnapshotSchema,
+      SessionDeleteResult: SessionDeleteResultSchema,
       ApplicationToolDefinition: ApplicationToolDefinitionSchema,
       ApplicationToolGrant: ApplicationToolGrantSchema,
       ToolExecutionIdentity: ToolExecutionIdentitySchema,
@@ -161,6 +175,7 @@ const schemas = {
       "finishReason",
     ],
     properties: {
+      session: ref("SessionInfo"),
       runId: string,
       provider: string,
       model: string,
@@ -397,6 +412,35 @@ const document = {
   ],
   security: [{ bearerAuth: [] }],
   paths: {
+    ...Object.fromEntries(
+      [
+        ["create", "SessionCreate", "SessionSnapshot"],
+        ["read", "SessionIdentity", "SessionSnapshot"],
+        ["delete", "SessionIdentity", "SessionDeleteResult"],
+      ].map(([operation, input, output]) => [
+        `/v1/sessions/${operation}`,
+        {
+          post: {
+            operationId: `${operation}Session`,
+            parameters,
+            description:
+              "Explicit process-local conversation storage. Requires the originating subject, provider and separate session operation grant. Visible history can be exported; opaque provider state stays inside the host. Deletion cancels an active turn. No automatic retries or run deadline.",
+            requestBody: {
+              required: true,
+              content: { "application/json": { schema: ref(input!) } },
+            },
+            responses: {
+              "200": {
+                description:
+                  "Authorized conversation snapshot or deletion receipt",
+                content: { "application/json": { schema: ref(output!) } },
+              },
+              default: errorResponse,
+            },
+          },
+        },
+      ]),
+    ),
     ...Object.fromEntries(
       [
         ["progress", "reportToolProgress", "ToolExecutionIdentity"],

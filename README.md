@@ -293,3 +293,5 @@ provider; see the documented [support matrix](docs/providers.md).
 ## License
 
 MIT. Vendor names and icon references identify their respective providers.
+
+Opt-in [conversation sessions](docs/sessions.md) support explicit continuation, revision checks and deletion. Visible history can be exported; provider state stays bound to its account. Idle retention never limits an active run.

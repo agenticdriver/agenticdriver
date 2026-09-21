@@ -104,3 +104,13 @@ Pass the stream's context to your application function so cancellation propagate
 through its I/O. Cancelled runs invalidate pending tickets but cannot undo effects.
 No default inactivity deadline or automatic retries apply. See the
 [full contract](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/application-tools.md).
+
+## Conversation sessions
+
+Create/read/delete methods and typed session models support explicit conversation
+continuation. Pass only the returned session ID and revision on each run, then
+use the next revision from the successful result. Provider/account/model changes
+require an explicitly created conversation with exported visible history.
+Host opt-in, account binding and per-operation token grants are required. Idle
+retention pauses during active work; no default execution deadline is introduced.
+See the [session contract and binding examples](https://github.com/hashimkarim/agenticdriver/blob/sdk-roadmap/docs/sessions.md).

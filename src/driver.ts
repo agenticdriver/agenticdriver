@@ -1,4 +1,10 @@
 import { randomUUID } from "node:crypto";
+import { SessionManager, type SessionPrincipal } from "./sessions.js";
+import type {
+  SessionCreate,
+  SessionIdentity,
+  SessionOptions,
+} from "./session-types.js";
 import {
   ApplicationToolManager,
   ApplicationToolError,
@@ -71,6 +77,7 @@ import type {
 } from "./types.js";
 
 export interface DriverOptions {
+  sessions?: SessionOptions;
   providers: ProviderAdapter[];
   discovery?: DiscoveryOptions;
   /** Explicitly configure a store before accepting idempotency keys. */
@@ -107,6 +114,7 @@ type SelectedTool =
     };
 
 export class AgenticDriver {
+  private readonly sessions: SessionManager;
   private readonly discovery: ProviderDiscovery;
   private readonly approvals: ApprovalManager;
   private readonly applicationTools: ApplicationToolManager;
@@ -131,6 +139,19 @@ export class AgenticDriver {
     );
     this.discovery = new ProviderDiscovery(options.discovery);
     this.usagePolicy = new UsagePolicy(options.usage, options.providers);
+    this.sessions = new SessionManager(
+      options.sessions,
+      (provider, subject) => this.usagePolicy.identity(provider, subject),
+      (id) => {
+        const provider = this.providers.get(id);
+        if (!provider)
+          throw new DriverError(
+            "UNKNOWN_PROVIDER",
+            "The provider instance is not configured.",
+          );
+        return provider.info;
+      },
+    );
     this.contextOptions = contextPolicy(options.context);
     this.ingestionOptions = ingestionPolicy(options.ingestion);
     for (const provider of options.providers) {
@@ -168,6 +189,18 @@ export class AgenticDriver {
 
   get supportsApplicationTools(): boolean {
     return this.applicationTools.enabled;
+  }
+  get supportsSessions(): boolean {
+    return this.sessions.enabled;
+  }
+  createSession(request: SessionCreate, principal: SessionPrincipal = {}) {
+    return this.sessions.create(request, principal);
+  }
+  readSession(identity: SessionIdentity, principal: SessionPrincipal = {}) {
+    return this.sessions.read(identity, principal);
+  }
+  deleteSession(identity: SessionIdentity, principal: SessionPrincipal = {}) {
+    return this.sessions.delete(identity, principal);
   }
   reportToolProgress(
     identity: ToolExecutionIdentity,
@@ -358,6 +391,7 @@ export class AgenticDriver {
         "The run request does not match the v1 schema.",
       );
     const request = parsed.data;
+    this.sessions.validate(request);
     if (request.retrieval) {
       this.retrievalService();
       if (
@@ -593,6 +627,10 @@ export class AgenticDriver {
           "IDEMPOTENCY_CONFLICT",
           "This idempotency key was already accepted with a different request.",
         );
+      this.sessions.authorizeReplay(request, {
+        subject: options.subject,
+        sessions: options.sessionOperations,
+      });
       if (claim.record.state === "running" && this.activeOperations.has(key))
         throw new DriverError(
           "OPERATION_IN_PROGRESS",
@@ -704,6 +742,10 @@ export class AgenticDriver {
   ): AsyncGenerator<RunEvent> {
     const provider = this.providers.get(request.provider)!;
     const selectedTools = this.selectedTools(request, options);
+    const session = this.sessions.begin(request, {
+      subject: options.subject,
+      sessions: options.sessionOperations,
+    });
     const startedAt = Date.now();
     const controller = new AbortController();
     const idleLimits = [
@@ -735,9 +777,16 @@ export class AgenticDriver {
       );
     };
     reportProgress();
-    const signal = options.signal
-      ? AbortSignal.any([options.signal, controller.signal])
-      : controller.signal;
+    const signal = AbortSignal.any([
+      controller.signal,
+      ...(options.signal ? [options.signal] : []),
+      ...(session ? [session.signal] : []),
+    ]);
+    // Cancellation must release stored state even if the consumer has paused
+    // reading at a yielded event; generator finally may run much later.
+    const releaseSession = () => session?.release();
+    signal.addEventListener("abort", releaseSession, { once: true });
+    if (signal.aborted) releaseSession();
     const context: ExecutionContext = {
       runId,
       signal,
@@ -757,7 +806,7 @@ export class AgenticDriver {
       timestamp: new Date().toISOString(),
     });
     const messages: ProviderMessage[] = [
-      ...(request.history ?? []),
+      ...(session?.messages ?? request.history ?? []),
       { role: "user", content: request.input },
     ];
     const maxSteps = Math.min(
@@ -772,7 +821,7 @@ export class AgenticDriver {
       ? this.outputValidator(request.outputSchema)
       : undefined;
     const instructions = [
-      request.instructions,
+      session?.instructions ?? request.instructions,
       request.outputSchema
         ? `Return only JSON matching this JSON Schema: ${JSON.stringify(request.outputSchema)}`
         : undefined,
@@ -848,9 +897,16 @@ export class AgenticDriver {
           ),
         };
       }
-      const callIds = new Set<string>();
+      const callIds = new Set<string>(
+        messages.flatMap((message) =>
+          message.role === "assistant"
+            ? (message.toolCalls ?? []).map((call) => call.id)
+            : [],
+        ),
+      );
       for (let step = 1; step <= maxSteps; step++) {
         signal.throwIfAborted();
+        session?.check(messages);
         if (retrieval)
           await this.retrievalService().revalidate(
             request.retrieval!,
@@ -861,6 +917,7 @@ export class AgenticDriver {
         signal.throwIfAborted();
         const { value: turn, streamed } = yield* withProgress(
           (providerContext) => {
+            session?.started();
             meter.start();
             return provider.complete(
               {
@@ -933,6 +990,14 @@ export class AgenticDriver {
                 ),
               ]
             : undefined;
+          const continuation = session?.commit(
+            [
+              ...messages,
+              { role: "assistant", content: turn.text, native: turn.native },
+            ],
+            request.input,
+            turn.text,
+          );
           status = "completed";
           yield event({
             type: "run.completed",
@@ -940,6 +1005,7 @@ export class AgenticDriver {
               runId,
               provider: request.provider,
               model: request.model,
+              ...(continuation ? { session: continuation } : {}),
               text: turn.text,
               ...(output === undefined ? {} : { output }),
               usage: meter.snapshot().usage,
@@ -1164,7 +1230,9 @@ export class AgenticDriver {
       });
     } finally {
       clearTimeout(timer);
+      signal.removeEventListener("abort", releaseSession);
       controller.abort();
+      session?.release();
       await resolved?.release();
       try {
         // Keep telemetry optional and bounded; a failed sink must not replay a successful run.

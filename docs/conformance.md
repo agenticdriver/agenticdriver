@@ -62,3 +62,5 @@ fixtures also reject malformed/unselected invocations, duplicate execution or ca
 IDs, unnegotiated events and receipts with altered identities or status. Core tests
 cover scopes, host/token review requirements, input/output schemas, cancellation,
 explicit idle expiry, pending capacity and replay without redispatch.
+
+The shared suite also checks session metadata, identity/revision matching, visible-history shapes, deletion receipts and selected-run continuation. Every language creates a session, completes two turns through run/stream APIs, rejects a stale revision, reads its visible history and deletes it against HTTP and verified HTTPS hosts. Native API fixtures check private state preservation without including it in public history.

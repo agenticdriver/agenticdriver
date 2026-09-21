@@ -168,6 +168,9 @@ func TestReferencePeerConformance(t *testing.T) {
 	token := os.Getenv("AGENTICDRIVER_TEST_TOKEN")
 	var fixture struct {
 		Cases []struct {
+			SessionCreate        SessionCreate               `json:"sessionCreate"`
+			SessionIdentity      SessionIdentity             `json:"sessionIdentity"`
+			Session              *SessionHandle              `json:"session"`
 			ID                   string                      `json:"id"`
 			ApplicationTools     []ApplicationToolDefinition `json:"applicationTools"`
 			Tools                []string                    `json:"tools"`
@@ -197,6 +200,12 @@ func TestReferencePeerConformance(t *testing.T) {
 				_, err = client.Providers(context.Background())
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
+			} else if example.Operation == "session-create" {
+				_, err = client.CreateSession(context.Background(), example.SessionCreate)
+			} else if example.Operation == "session-read" {
+				_, err = client.ReadSession(context.Background(), example.SessionIdentity)
+			} else if example.Operation == "session-delete" {
+				_, err = client.DeleteSession(context.Background(), example.SessionIdentity)
 			} else if example.Operation == "tool-result" {
 				_, err = client.CompleteTool(context.Background(), example.ToolResult)
 			} else if example.Operation == "tool-progress" {
@@ -208,7 +217,7 @@ func TestReferencePeerConformance(t *testing.T) {
 			} else {
 				stop := errors.New("intentional stream close")
 				completed, cancelled := false, false
-				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval, Approvals: example.Approvals, ApplicationTools: example.ApplicationTools, Tools: example.Tools}, func(event Event) error {
+				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval, Approvals: example.Approvals, ApplicationTools: example.ApplicationTools, Tools: example.Tools, Session: example.Session}, func(event Event) error {
 					if example.Cancel && event.Type == "text.delta" {
 						cancelled = true
 						return stop
@@ -388,5 +397,57 @@ func TestIngestionRoundTrips(t *testing.T) {
 				t.Fatal("lost Markdown section")
 			}
 		})
+	}
+}
+
+func TestConversationSessions(t *testing.T) {
+	base := os.Getenv("AGENTICDRIVER_TEST_URL")
+	if base == "" {
+		t.Skip("requires reference host")
+	}
+	client := conformanceClient(t, base, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	ctx := context.Background()
+	for _, mode := range []string{"history", "native"} {
+		created, err := client.CreateSession(ctx, SessionCreate{Provider: "mock", Model: "demo", Mode: mode})
+		if err != nil {
+			t.Fatal(err)
+		}
+		identity := SessionIdentity{ID: created.Session.ID}
+		request := Request{Provider: "mock", Model: "demo", Input: "session-first", Session: &SessionHandle{ID: identity.ID, Revision: 0}}
+		first, err := client.Run(ctx, request)
+		if err != nil || first.Session == nil || first.Session.Revision != 1 {
+			t.Fatalf("first turn: %+v %v", first, err)
+		}
+		_, err = client.Run(ctx, request)
+		var failure *Error
+		if !errors.As(err, &failure) || failure.Code != "SESSION_REVISION_CONFLICT" {
+			t.Fatalf("stale turn: %v", err)
+		}
+		saved, err := client.ReadSession(ctx, identity)
+		if err != nil || len(saved.History) != 2 {
+			t.Fatalf("history: %+v %v", saved, err)
+		}
+		request.Input = "session-next"
+		request.Session.Revision = 1
+		completed := false
+		err = client.Stream(ctx, request, func(event Event) error {
+			if event.Type == "run.completed" {
+				if event.Result.Text != "continued" || event.Result.Session == nil || event.Result.Session.Revision != 2 {
+					t.Fatalf("continuation: %+v", event.Result)
+				}
+				completed = true
+			}
+			return nil
+		})
+		if err != nil || !completed {
+			t.Fatalf("continuation: %v", err)
+		}
+		if _, err = client.DeleteSession(ctx, identity); err != nil {
+			t.Fatal(err)
+		}
+		_, err = client.ReadSession(ctx, identity)
+		if !errors.As(err, &failure) || failure.Code != "SESSION_NOT_FOUND" {
+			t.Fatalf("deleted session: %v", err)
+		}
 	}
 }

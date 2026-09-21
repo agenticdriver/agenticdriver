@@ -369,6 +369,14 @@
               "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
             }
           },
+          "sessions": {
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["create", "read", "continue", "delete"]
+            }
+          },
           "applicationTools": {
             "maxItems": 32,
             "type": "array",
@@ -419,6 +427,25 @@
         }
       },
       "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "sessions": {
+      "type": "object",
+      "properties": {
+        "retentionMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "maxEntries": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "maxMessages": { "type": "integer", "minimum": 2, "maximum": 100 },
+        "maxRecordBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      },
+      "required": ["retentionMs"],
       "additionalProperties": false
     },
     "approvals": {

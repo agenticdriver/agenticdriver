@@ -1,5 +1,9 @@
 import { constants } from "node:fs";
 import { ApplicationToolGrantSchema } from "./tool-types.js";
+import {
+  SessionOperationSchema,
+  SessionOptionsSchema,
+} from "./session-types.js";
 import { mkdir, open, readFile } from "node:fs/promises";
 import { createSecureContext } from "node:tls";
 import { homedir } from "node:os";
@@ -122,6 +126,7 @@ export const HostConfigSchema = z
               .strict()
               .optional(),
             providers: z.array(instance).max(32),
+            sessions: z.array(SessionOperationSchema).max(4).optional(),
             applicationTools: z
               .array(ApplicationToolGrantSchema)
               .max(32)
@@ -147,6 +152,7 @@ export const HostConfigSchema = z
       })
       .strict()
       .optional(),
+    sessions: SessionOptionsSchema.optional(),
     approvals: z
       .object({
         interactive: z.literal(true),
@@ -396,6 +402,7 @@ export function configuredDriver(
     tools: options.tools,
     approve: options.approve,
     applicationTools: config.applicationTools,
+    sessions: config.sessions,
     approvals: config.approvals
       ? { ...config.approvals, onAudit: options.onApprovalAudit }
       : undefined,
@@ -454,6 +461,7 @@ export async function configuredServer(
       tools: entry.tools,
       approveTools: entry.approveTools,
       applicationTools: entry.applicationTools,
+      sessions: entry.sessions,
       retrieval: entry.retrieval,
     })),
   );

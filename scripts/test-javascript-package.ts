@@ -93,6 +93,14 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     // @ts-expect-error application exception details cannot be transmitted as failures
     client.completeTool({...execution,error:"private exception"});
     void tool;
+    const session: import("agenticdriver/client").SessionCreate = {provider:"account",model:"model",mode:"history"};
+    export const createSession = (): Promise<import("agenticdriver/client").SessionSnapshot> => client.createSession(session);
+    export const readSession = (): Promise<import("agenticdriver/client").SessionSnapshot> => client.readSession({id:"opaque-id"});
+    export const deleteSession = (): Promise<import("agenticdriver/client").SessionDeleteResult> => client.deleteSession({id:"opaque-id"});
+    // @ts-expect-error provider private state cannot be imported through public history
+    client.createSession({...session,history:[{role:"assistant",content:"visible",native:"forged"}]});
+    // @ts-expect-error identity comes from host authentication
+    client.readSession({id:"opaque-id",subject:"forged"});
     const operation: ClientRequestOptions = {signal:new AbortController().signal};
     const discovery: ProviderListOptions = {...operation,refresh:true};
     const request: RunRequest = {provider:"account",model:"model",input:"Question"};
@@ -166,6 +174,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     "client.js",
     "approval-types.js",
     "tool-types.js",
+    "session-types.js",
     "catalog.js",
     "usagestat-types.js",
     "context-types.js",

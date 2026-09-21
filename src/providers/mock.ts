@@ -23,7 +23,12 @@ export function mockProvider(
       vendor: "mock",
       authMode: "none",
       models: ["demo"],
-      capabilities: { tools: true, textStreaming: false },
+      capabilities: {
+        tools: true,
+        textStreaming: false,
+        historyContinuation: true,
+        nativeContinuation: true,
+      },
     },
     async complete(request, context) {
       return respond(request, context);

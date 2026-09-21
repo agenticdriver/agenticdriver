@@ -20,7 +20,10 @@ from ._protocol import (
     valid_result,
     valid_resolution,
     valid_tool_receipt,
+    valid_timestamp,
 )
+from ._sessions import valid_session_snapshot, valid_session_delete
+from .models import SessionCreate, SessionIdentity, SessionSnapshot, SessionDeleteResult
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 from ._transport import (
     TERMINAL_EVENTS,
@@ -258,6 +261,27 @@ class AgenticClient:
                     "The driver returned an invalid deletion receipt.",
                 )
             return cast(RetrievalDeleteResult, result)
+
+    def create_session(self, request: SessionCreate) -> SessionSnapshot:
+        with self._request("v1/sessions/create", request) as response:
+            result = self._json(response)
+            if not valid_session_snapshot(result, request, "create", valid_timestamp):
+                raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
+            return cast(SessionSnapshot, result)
+
+    def read_session(self, request: SessionIdentity) -> SessionSnapshot:
+        with self._request("v1/sessions/read", request) as response:
+            result = self._json(response)
+            if not valid_session_snapshot(result, request, "read", valid_timestamp):
+                raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
+            return cast(SessionSnapshot, result)
+
+    def delete_session(self, request: SessionIdentity) -> SessionDeleteResult:
+        with self._request("v1/sessions/delete", request) as response:
+            result = self._json(response)
+            if not valid_session_delete(result, request):
+                raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
+            return cast(SessionDeleteResult, result)
 
     def providers(self, *, refresh: bool = False) -> list[ProviderInfo]:
         with self._request(

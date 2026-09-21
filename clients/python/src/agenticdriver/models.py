@@ -20,6 +20,54 @@ class HistoryMessage(TypedDict):
     content: str
 
 
+SessionMode = Literal["history", "native"]
+
+
+class SessionIdentity(TypedDict):
+    id: str
+
+
+class SessionHandle(SessionIdentity):
+    revision: int
+
+
+class _SessionCreate(TypedDict):
+    provider: str
+    model: str
+    mode: SessionMode
+
+
+class SessionCreate(_SessionCreate, total=False):
+    history: list[HistoryMessage]
+    instructions: str
+
+
+class _SessionInfo(SessionHandle):
+    provider: str
+    model: str
+    mode: SessionMode
+    state: Literal["ready", "running", "interrupted"]
+    createdAt: str
+    updatedAt: str
+
+
+class SessionInfo(_SessionInfo, total=False):
+    expiresAt: str
+
+
+class _SessionSnapshot(TypedDict):
+    session: SessionInfo
+    history: list[HistoryMessage]
+
+
+class SessionSnapshot(_SessionSnapshot, total=False):
+    instructions: str
+
+
+class SessionDeleteResult(SessionIdentity):
+    deleted: Literal[True]
+
+
 class _Retry(TypedDict):
     maxAttempts: int
 
@@ -36,6 +84,7 @@ class _RunRequest(TypedDict):
 
 
 class RunRequest(_RunRequest, total=False):
+    session: SessionHandle
     instructions: str
     history: list[HistoryMessage]
     attachments: list[ContextInput]
@@ -74,6 +123,7 @@ class _Result(TypedDict):
 
 
 class RunResult(_Result, total=False):
+    session: SessionInfo
     output: Json
     sources: list[ContextManifest]
     artifacts: list[DraftArtifact]
@@ -340,3 +390,5 @@ __all__ = [
     "RunFailed",
     "RunCancelled",
 ]
+
+__all__ += ['SessionMode', 'SessionIdentity', 'SessionHandle', 'SessionCreate', 'SessionInfo', 'SessionSnapshot', 'SessionDeleteResult']

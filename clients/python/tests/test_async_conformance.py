@@ -38,6 +38,12 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                             await client.providers()
                         elif case.get("operation") == "protocol":
                             await client.protocol()
+                        elif case.get("operation") == "session-create":
+                            await client.create_session(case["sessionCreate"])
+                        elif case.get("operation") == "session-read":
+                            await client.read_session(case["sessionIdentity"])
+                        elif case.get("operation") == "session-delete":
+                            await client.delete_session(case["sessionIdentity"])
                         elif case.get("operation") == "tool-result":
                             await client.complete_tool(case["toolResult"])
                         elif case.get("operation") == "tool-progress":
@@ -61,7 +67,7 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                                 provider="mock",
                                 model="demo",
                                 input="Hello",
-                                **({k: case[k] for k in ["applicationTools", "tools"] if k in case}),
+                                **({k: case[k] for k in ["applicationTools", "tools", "session"] if k in case}),
 
                                 **({"approvals": case["approvals"]} if "approvals" in case else {}),
                                 **(
@@ -375,3 +381,31 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                         if event["type"] == "run.completed": completed = True
                 self.assertEqual(len(calls), 1)
                 self.assertTrue(completed)
+
+    async def test_conversation_sessions(self):
+        async with self.client() as client:
+            for mode in ("history", "native"):
+                created = await client.create_session({"provider":"mock", "model":"demo", "mode":mode})
+                identity = {"id":created["session"]["id"]}
+                first = await client.run(provider="mock", model="demo", input="session-first", session={**identity, "revision":0})
+                self.assertEqual(first["session"]["revision"],1)
+                with self.assertRaises(DriverError) as stale:
+                    await client.run(provider="mock", model="demo", input="session-next", session={**identity, "revision":0})
+                self.assertEqual(stale.exception.code,"SESSION_REVISION_CONFLICT")
+                saved = await client.read_session(identity)
+                self.assertEqual(len(saved["history"]),2)
+                self.assertNotIn("private-state",json.dumps(saved))
+                completed = False
+                async with client.stream(provider="mock",model="demo",input="session-next",session={**identity,"revision":1}) as stream:
+                    async for event in stream:
+                        if event["type"] == "run.completed":
+                            self.assertEqual(event["result"]["text"],"continued")
+                            self.assertEqual(event["result"]["session"]["revision"],2)
+                            completed = True
+                        if event["type"] in ("run.failed","run.cancelled"): self.fail(event["error"]["code"])
+                self.assertTrue(completed)
+                result = await client.delete_session(identity)
+                self.assertTrue(result["deleted"])
+                with self.assertRaises(DriverError) as deleted:
+                    await client.read_session(identity)
+                self.assertEqual(deleted.exception.code,"SESSION_NOT_FOUND")

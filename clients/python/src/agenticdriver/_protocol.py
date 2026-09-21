@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 
 from ._errors import DriverError
+from ._sessions import valid_session_result
 from ._retrieval import valid_retrieval_links
 from ._context import valid_context_result, valid_media_catalog
 
@@ -54,7 +55,7 @@ def valid_result(value, request, run_id=None):
             (run_id is None or value["runId"] == run_id) and
             value.get("provider") == request["provider"] and value.get("model") == request["model"] and
             text(value.get("text"), True) and count(value.get("steps"), True) and
-            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp) and valid_retrieval_links(value, request))
+            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp) and valid_retrieval_links(value, request) and valid_session_result(value, request, valid_timestamp))
 
 
 def valid_catalog(value):

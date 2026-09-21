@@ -313,3 +313,5 @@ permitted name through the token's `applicationTools` array. Host and token revi
 requirements default to enabled. Progress/results use the same host process as
 the originating stream; these requests can resolve waiting runs at full run
 capacity. See [application-owned functions](application-tools.md).
+
+Conversation storage is opt-in through `sessions: { "retentionMs": 86400000 }`, explicit token `sessions` operation grants, and each provider's `accountId`. Storage is process-local; idle retention pauses during active turns. See [conversation sessions](sessions.md).

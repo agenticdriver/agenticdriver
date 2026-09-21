@@ -33,6 +33,9 @@ async fn reference_peer_conformance() {
         let id = example["id"].as_str().unwrap();
         let peer = client(&format!("{}/fixtures/{}", base, id), &token, true);
         let mut request = RunRequest::new("mock", "demo", "Hello");
+        if let Some(session) = example.get("session") {
+            request.session = Some(serde_json::from_value(session.clone()).unwrap());
+        }
         if let Some(definitions) = example.get("applicationTools") {
             request.application_tools = serde_json::from_value(definitions.clone()).unwrap();
         }
@@ -48,6 +51,20 @@ async fn reference_peer_conformance() {
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().await.map(|_| ()),
             Some("protocol") => peer.protocol().await.map(|_| ()),
+            Some("session-create") => peer
+                .create_session(&serde_json::from_value(example["sessionCreate"].clone()).unwrap())
+                .await
+                .map(|_| ()),
+            Some("session-read") => peer
+                .read_session(&serde_json::from_value(example["sessionIdentity"].clone()).unwrap())
+                .await
+                .map(|_| ()),
+            Some("session-delete") => peer
+                .delete_session(
+                    &serde_json::from_value(example["sessionIdentity"].clone()).unwrap(),
+                )
+                .await
+                .map(|_| ()),
             Some("tool-result") => peer
                 .complete_tool(&serde_json::from_value(example["toolResult"].clone()).unwrap())
                 .await
@@ -490,5 +507,63 @@ async fn application_owned_function() {
         }
         assert!(completed);
         assert_eq!(calls, 1);
+    }
+}
+
+#[tokio::test]
+async fn conversation_sessions() {
+    use agenticdriver::{EventPayload, SessionCreate, SessionHandle, SessionMode};
+    let Ok(url) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let peer = client(
+        &url,
+        &std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap(),
+        true,
+    );
+    for mode in [SessionMode::History, SessionMode::Native] {
+        let created = peer
+            .create_session(&SessionCreate::new("mock", "demo", mode))
+            .await
+            .unwrap();
+        let identity = created.session.identity();
+        let mut request = RunRequest::new("mock", "demo", "session-first");
+        request.session = Some(created.session.handle.clone());
+        let first = peer.run(&request).await.unwrap();
+        assert_eq!(first.session.unwrap().handle.revision, 1);
+        assert_eq!(
+            code(&peer.run(&request).await.unwrap_err()),
+            Some("SESSION_REVISION_CONFLICT")
+        );
+        let saved = peer.read_session(&identity).await.unwrap();
+        assert_eq!(saved.history.len(), 2);
+        assert!(!format!("{:?}", saved).contains("private-state"));
+        request.input = "session-next".into();
+        request.session = Some(SessionHandle {
+            id: identity.id.clone(),
+            revision: 1,
+        });
+        let mut completed = false;
+        let mut stream = peer.stream(&request).await.unwrap();
+        while let Some(event) = stream.next().await {
+            let event = event.unwrap();
+            match event.payload().unwrap() {
+                EventPayload::RunCompleted { result } => {
+                    assert_eq!(result.text, "continued");
+                    assert_eq!(result.session.as_ref().unwrap().handle.revision, 2);
+                    completed = true;
+                }
+                EventPayload::RunFailed { error } | EventPayload::RunCancelled { error } => {
+                    panic!("unexpected failure: {:?}", error)
+                }
+                _ => {}
+            }
+        }
+        assert!(completed);
+        assert!(peer.delete_session(&identity).await.unwrap().deleted);
+        assert_eq!(
+            code(&peer.read_session(&identity).await.unwrap_err()),
+            Some("SESSION_NOT_FOUND")
+        );
     }
 }

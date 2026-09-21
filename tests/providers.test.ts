@@ -54,6 +54,105 @@ async function run(adapter: ProviderAdapter) {
   });
 }
 
+test("native session continuation replays private API state without exporting it", async () => {
+  const cases = [
+    {
+      factory: openai,
+      response: {
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "r1",
+            encrypted_content: "private-state-marker",
+          },
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "visible" }],
+          },
+        ],
+      },
+    },
+    {
+      factory: anthropic,
+      response: {
+        stop_reason: "end_turn",
+        content: [
+          {
+            type: "thinking",
+            thinking: "private-state-marker",
+            signature: "signature",
+          },
+          { type: "text", text: "visible" },
+        ],
+      },
+    },
+    {
+      factory: gemini,
+      response: {
+        candidates: [
+          {
+            finishReason: "STOP",
+            content: {
+              role: "model",
+              parts: [
+                {
+                  thought: true,
+                  text: "private-state-marker",
+                  thoughtSignature: "signature",
+                },
+                { text: "visible" },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ];
+  for (const { factory, response } of cases) {
+    const f = fixture([response, response]);
+    const provider = factory({ apiKey: "fixture", fetch: f.fetcher });
+    const driver = new AgenticDriver({
+      providers: [provider],
+      usage: {
+        hostId: "session-test",
+        accounts: { [provider.info.id]: "test-account" },
+      },
+      sessions: { retentionMs: 60000 },
+    });
+    const created = driver.createSession({
+      provider: provider.info.id,
+      model: "test-model",
+      mode: "native",
+    });
+    const request = {
+      provider: provider.info.id,
+      model: "test-model",
+      input: "hello",
+      session: { id: created.session.id, revision: 0 },
+    };
+    const first = await driver.run(request);
+    assert.equal(first.text, "visible");
+    const second = await driver.run({
+      ...request,
+      session: { ...request.session, revision: 1 },
+    });
+    assert.equal(second.text, "visible");
+    assert.ok(
+      JSON.stringify(f.calls[1]!.body).includes("private-state-marker"),
+    );
+    assert.equal(
+      JSON.stringify({
+        first,
+        second,
+        exported: driver.readSession({ id: created.session.id }),
+      }).includes("private-state-marker"),
+      false,
+    );
+    driver.deleteSession({ id: created.session.id });
+  }
+});
+
 test("OpenAI retains native reasoning items and tool call IDs across stateless turns", async () => {
   const native = [
     { type: "reasoning", id: "r1", encrypted_content: "opaque" },

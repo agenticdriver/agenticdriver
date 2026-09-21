@@ -7085,6 +7085,1511 @@
         "status": "incorrect"
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-valid",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      }
+    },
+    {
+      "id": "session-read-valid",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      }
+    },
+    {
+      "id": "session-delete-valid",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "deleted": true
+      }
+    },
+    {
+      "id": "session-read-id-137",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789def",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-id-138",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "invalid",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-revision-139",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": -1,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-revision-140",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": true,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-revision-141",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 1.5,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-mode-142",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "unknown",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-state-143",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "unknown",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-createdAt-144",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-02-30T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-updatedAt-145",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-20T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-expiresAt-146",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T00:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-createdAt-147",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-provider-148",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "invalid space",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-model-149",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "bad model",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-missing-expiresAt",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-missing-createdAt",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-missing-revision",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-missing-state",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-running-expiry",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "running",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-running-valid",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "running",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z"
+        },
+        "history": []
+      }
+    },
+    {
+      "id": "session-create-provider",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "other",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-model",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "other",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-mode",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "native",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-revision",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 1,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-state",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "interrupted",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-history-null",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": null
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-history-role",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": [
+          {
+            "role": "tool",
+            "content": "value"
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-history-private",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": [
+          {
+            "role": "assistant",
+            "content": "visible",
+            "native": "private"
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-instructions-null",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": [],
+        "instructions": null
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-instructions-type",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": [],
+        "instructions": false
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-create-history",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": [
+          {
+            "role": "assistant",
+            "content": "unrequested"
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-delete-wrong-id",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789def",
+        "deleted": true
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-delete-not-deleted",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "deleted": false
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-delete-missing-deleted",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-delete-truthy-deleted",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "deleted": "true"
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-stream-valid",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 1,
+              "provider": "mock",
+              "model": "demo",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "session-stream-wrong-id",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789def",
+              "revision": 1,
+              "provider": "mock",
+              "model": "demo",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-wrong-revision",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 0,
+              "provider": "mock",
+              "model": "demo",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-wrong-provider",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 1,
+              "provider": "other",
+              "model": "demo",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-wrong-model",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 1,
+              "provider": "mock",
+              "model": "other",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-not-ready",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 1,
+              "provider": "mock",
+              "model": "demo",
+              "mode": "history",
+              "state": "interrupted",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-missing",
+      "session": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "revision": 0
+      },
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-stream-unrequested",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "session": {
+              "id": "12345678-1234-4234-8234-123456789abc",
+              "revision": 0,
+              "provider": "mock",
+              "model": "demo",
+              "mode": "history",
+              "state": "ready",
+              "createdAt": "2026-09-21T00:00:00.000Z",
+              "updatedAt": "2026-09-21T00:00:00.000Z",
+              "expiresAt": "2026-09-21T01:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "session-read-cased-required-id",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z",
+          "ID": "12345678-1234-4234-8234-123456789abc"
+        },
+        "history": []
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "session-read-ignore-cased-additions",
+      "operation": "session-read",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "demo",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z",
+          "ID": "other"
+        },
+        "history": [],
+        "Session": "ignore"
+      }
+    },
+    {
+      "id": "session-stream-ignore-cased-addition",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "Session": "ignore"
+          }
+        }
+      ]
+    },
+    {
+      "id": "session-delete-cased-deleted",
+      "operation": "session-delete",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "demo",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "id": "12345678-1234-4234-8234-123456789abc",
+        "Deleted": true
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

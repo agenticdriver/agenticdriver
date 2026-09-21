@@ -42,6 +42,8 @@ export function apiInfo(
       tools: true,
       textStreaming: true,
       safeRetries: true,
+      historyContinuation: true,
+      nativeContinuation: ["openai", "anthropic", "gemini"].includes(vendor),
       ...(modalities.some((type) => type.startsWith("image/"))
         ? { images: true }
         : {}),

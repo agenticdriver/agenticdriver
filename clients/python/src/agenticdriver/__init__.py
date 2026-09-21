@@ -168,3 +168,6 @@ __all__ += [
     "AsyncAgenticClient",
     "AsyncRunStream",
 ]
+
+from .models import SessionMode, SessionIdentity, SessionHandle, SessionCreate, SessionInfo, SessionSnapshot, SessionDeleteResult
+__all__ += ['SessionMode', 'SessionIdentity', 'SessionHandle', 'SessionCreate', 'SessionInfo', 'SessionSnapshot', 'SessionDeleteResult']

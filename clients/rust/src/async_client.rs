@@ -203,6 +203,51 @@ impl AsyncAgenticClient {
             .await?
             .providers)
     }
+    pub async fn create_session(
+        &self,
+        request: &crate::SessionCreate,
+    ) -> Result<crate::SessionSnapshot> {
+        let value: Value = read_json(
+            self.request(
+                "v1/sessions/create",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::sessions::snapshot(value, Some(request), None)
+    }
+    pub async fn read_session(
+        &self,
+        request: &crate::SessionIdentity,
+    ) -> Result<crate::SessionSnapshot> {
+        let value: Value = read_json(
+            self.request(
+                "v1/sessions/read",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::sessions::snapshot(value, None, Some(request))
+    }
+    pub async fn delete_session(
+        &self,
+        request: &crate::SessionIdentity,
+    ) -> Result<crate::SessionDeleteResult> {
+        let value: Value = read_json(
+            self.request(
+                "v1/sessions/delete",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::sessions::deletion(value, request)
+    }
     pub async fn report_tool_progress(
         &self,
         identity: &crate::ToolExecutionIdentity,
@@ -287,6 +332,7 @@ impl AsyncAgenticClient {
         // Retain only fields needed to verify the host's selection, not the prompt/attachments.
         let mut selection = RunRequest::new(&request.provider, &request.model, "");
         selection.retrieval.clone_from(&request.retrieval);
+        selection.session.clone_from(&request.session);
         selection.approvals.clone_from(&request.approvals);
         selection
             .application_tools

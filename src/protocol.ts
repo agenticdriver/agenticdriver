@@ -29,6 +29,7 @@ export interface ProtocolInfo {
 
 export function protocolInfo(
   options: {
+    sessions?: boolean;
     applicationTools?: boolean;
     interactiveApprovals?: boolean;
     idempotency?: boolean;
@@ -43,6 +44,7 @@ export function protocolInfo(
     supportedVersions: [PROTOCOL_VERSION],
     features: [
       "json-results",
+      ...(options.sessions ? ["conversation-sessions"] : []),
       ...(options.applicationTools ? ["application-tools"] : []),
       ...(options.interactiveApprovals ? ["interactive-approvals"] : []),
       "event-stream",

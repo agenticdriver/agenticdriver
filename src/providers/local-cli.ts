@@ -88,7 +88,12 @@ function localCli(
         }[vendor],
       vendor,
       authMode: "cli-session",
-      capabilities: { tools: false, textStreaming: vendor !== "codex" },
+      capabilities: {
+        tools: false,
+        textStreaming: vendor !== "codex",
+        historyContinuation: true,
+        nativeContinuation: false,
+      },
       models: options.models,
       usageStatId: {
         codex: "codex",

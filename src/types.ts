@@ -1,5 +1,12 @@
 import { z } from "zod";
 import {
+  PortableMessageSchema,
+  SessionHandleSchema,
+  type SessionInfo,
+  type SessionOperation,
+} from "./session-types.js";
+export type * from "./session-types.js";
+import {
   ApplicationToolDefinitionSchema,
   type ToolExecutionRequest,
 } from "./tool-types.js";
@@ -51,17 +58,8 @@ export const RunRequestSchema = z
       .optional(),
     retry: RetryPolicySchema.optional(),
     instructions: z.string().max(100_000).optional(),
-    history: z
-      .array(
-        z
-          .object({
-            role: z.enum(["user", "assistant"]),
-            content: z.string().max(100_000),
-          })
-          .strict(),
-      )
-      .max(100)
-      .optional(),
+    history: z.array(PortableMessageSchema).max(100).optional(),
+    session: SessionHandleSchema.optional(),
     approvals: ApprovalPolicySchema.optional(),
     applicationTools: z
       .array(ApplicationToolDefinitionSchema)
@@ -157,7 +155,7 @@ export interface ProviderTurn {
   text: string;
   toolCalls?: ToolCall[];
   usage?: Usage;
-  /** Preserved only inside this run for reasoning blocks and signed function calls. */
+  /** Private provider state; retained across runs only in explicitly selected native sessions. */
   native?: unknown;
   finishReason?: "stop" | "length";
 }
@@ -233,6 +231,7 @@ export interface ProviderAdapter {
   ): Promise<ProviderTurn>;
 }
 export interface RunResult {
+  session?: SessionInfo;
   runId: string;
   provider: string;
   model: string;
@@ -272,6 +271,8 @@ export type RunEvent = EventPayload & {
 };
 export type { EventPayload };
 export interface RunOptions {
+  /** Trusted permissions from host authentication, never accepted in request JSON. */
+  sessionOperations?: readonly SessionOperation[];
   /** Trusted host/token additions to application tool approval policy; never accepted in request JSON. */
   applicationToolApprovals?: readonly string[];
   signal?: AbortSignal;
