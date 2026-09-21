@@ -45,7 +45,9 @@ compatibility row, not an assertion of upstream LTS status.
 ## Reproduce the checks
 
 Install Node/npm, Python with `venv`, Go with its race-detector C compiler, Rust
-via rustup, OpenSSL and Poppler (`pdfinfo` and `pdftotext`). Then run:
+via rustup, OpenSSL 3+ and Poppler (`pdfinfo` and `pdftotext`). On macOS, CI
+uses Homebrew `openssl@3` explicitly for certificate generation. TLS fixtures
+verify their generated CA/leaf chain before using it. Then run:
 
 ```sh
 npm ci

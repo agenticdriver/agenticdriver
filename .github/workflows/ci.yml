@@ -61,7 +61,9 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - if: runner.os == 'macOS'
-        run: brew install poppler
+        run: |
+          brew install poppler openssl@3
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - if: runner.os == 'Windows'
         run: |
           choco install poppler --no-progress -y
