@@ -1,6 +1,6 @@
 # AgenticDriver SDK implementation roadmap
 
-The live [organization project](https://github.com/orgs/agenticdriver/projects/1) contains all 48 work items. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
+The live [organization project](https://github.com/orgs/agenticdriver/projects/1) tracks the work items and follow-ups. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
 
 ## Decisions
 
@@ -79,6 +79,14 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 | [AD-043](#ad-043) | Write SDK onboarding, provider setup and three application recipes       | Releases and docs    | Alpha | P1       | agenticdriver             |
 | [AD-044](#ad-044) | Complete v1 operational and compatibility release gates                  | Quality and security | v1    | P0       | agenticdriver             |
 | [AD-045](#ad-045) | Investigate an official Grok subscription integration route              | Providers            | Later | P2       | agenticdriver             |
+
+| [AD-046](#ad-046) | Add scoped RAG, embedding and vector database interfaces | Tools and context | Beta | P1 | agenticdriver |
+| [AD-047](#ad-047) | Index PDF, Markdown and email context with traceable revisions | Tools and context | Beta | P1 | agenticdriver |
+| [AD-048](#ad-048) | Exercise grounded questions in all three applications | Applications | Beta | P1 | agenticdriver |
+| [AD-049](#ad-049) | Implement a restricted official Grok Build session adapter with fixtures | Providers | Later | P2 | agenticdriver |
+| [AD-050](#ad-050) | Certify the Grok Build session route on an explicitly selected account | Providers | Later | P2 | agenticdriver |
+| [AD-051](#ad-051) | Prepare the official Antigravity account route and check native compatibility | Providers | Alpha | P1 | agenticdriver |
+| [AD-052](#ad-052) | Implement and certify the restricted Antigravity session adapter | Providers | Alpha | P1 | agenticdriver |
 
 ## Work item details
 
@@ -1061,3 +1069,36 @@ The [2026-09-21 feasibility review](validation/grok-subscription-2026-09-21.md) 
 - [ ] Provider documentation and the supported matrix distinguish observed account eligibility, consumer usage pools and separately configured developer API billing; no unsupported subscription-credit claim is made.
 
 **Depends on:** [AD-049](#ad-049)
+
+<a id="ad-051"></a>
+
+### AD-051 — Prepare the official Antigravity account route and check native compatibility
+
+**Current state:** The user selected native Antigravity sign-in after Google rejected the Gemini CLI personal account route. Antigravity sign-in is present, but SDK compatibility is unverified.
+
+**Scope:** Verify official authentication, explicit model selection, unlimited native execution and effective tool isolation without submitting a model prompt; publish reproducible readiness evidence and any required adapter follow-up.
+
+**Completion criteria:**
+
+- Official sources and native-version evidence distinguish successful sign-in from generation or application certification.
+- A reproducible no-prompt probe reports only bounded, redacted compatibility metadata and cleans up its child process without altering user settings.
+- Unsafe or ambiguous native capabilities fail closed, with regression fixtures and concrete adapter/certification work tracked separately; no API-key or model fallback is introduced.
+
+**Depends on:** [AD-024](#ad-024)
+
+<a id="ad-052"></a>
+
+### AD-052 — Implement and certify the restricted Antigravity session adapter
+
+**Current state:** Antigravity CLI 1.2.7 exposes 57 tools in a zero-turn headless probe despite a selected custom agent declaring no tools; upstream issue #1015 reports the same mismatch. Local native sign-in is confirmed.
+
+**Scope:** Once the official route exposes enforceable effective capabilities, implement its restricted streaming adapter and verify synthetic execution on the already selected Local Antigravity account and explicit model.
+
+**Completion criteria:**
+
+- The adapter verifies effective native tools, model and policy before submitting application content; hooks, MCP, skills, account configuration and unrelated workspaces remain isolated.
+- Packaged fixtures cover incremental visible text, structured results, truthful usage, private reasoning/error redaction, cancellation, process cleanup and no default run deadline or inactivity timeout.
+- A successful synthetic run with the selected account/model records the exact native version, operating system, authentication route, usage and cancellation evidence; no API billing or model fallback occurs.
+- Brandstorm, LitAgent and AI Workspace receive the reviewed SDK route for separately tracked live application checks; provider availability alone does not close application acceptance.
+
+**Depends on:** [AD-051](#ad-051), [AD-024](#ad-024)

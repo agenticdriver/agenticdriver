@@ -877,6 +877,39 @@
         "Cancellation, native policy enforcement, credential isolation, missing/expired sign-in and model/quota failures have evidence or specific documented limits; no fallback or destructive account changes occur.",
         "Provider documentation and the supported matrix distinguish observed account eligibility, consumer usage pools and separately configured developer API billing; no unsupported subscription-credit claim is made."
       ]
+    },
+    {
+      "id": "AD-051",
+      "title": "Prepare the official Antigravity account route and check native compatibility",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-024"],
+      "current": "The user selected native Antigravity sign-in after Google rejected the Gemini CLI personal account route. Antigravity sign-in is present, but SDK compatibility is unverified.",
+      "scope": "Verify official authentication, explicit model selection, unlimited native execution and effective tool isolation without submitting a model prompt; publish reproducible readiness evidence and any required adapter follow-up.",
+      "acceptance": [
+        "Official sources and native-version evidence distinguish successful sign-in from generation or application certification.",
+        "A reproducible no-prompt probe reports only bounded, redacted compatibility metadata and cleans up its child process without altering user settings.",
+        "Unsafe or ambiguous native capabilities fail closed, with regression fixtures and concrete adapter/certification work tracked separately; no API-key or model fallback is introduced."
+      ]
+    },
+    {
+      "id": "AD-052",
+      "title": "Implement and certify the restricted Antigravity session adapter",
+      "component": "Providers",
+      "phase": "Alpha",
+      "priority": "P1",
+      "target": "agenticdriver",
+      "dependsOn": ["AD-051", "AD-024"],
+      "current": "Antigravity CLI 1.2.7 exposes 57 tools in a zero-turn headless probe despite a selected custom agent declaring no tools; upstream issue #1015 reports the same mismatch. Local native sign-in is confirmed.",
+      "scope": "Once the official route exposes enforceable effective capabilities, implement its restricted streaming adapter and verify synthetic execution on the already selected Local Antigravity account and explicit model.",
+      "acceptance": [
+        "The adapter verifies effective native tools, model and policy before submitting application content; hooks, MCP, skills, account configuration and unrelated workspaces remain isolated.",
+        "Packaged fixtures cover incremental visible text, structured results, truthful usage, private reasoning/error redaction, cancellation, process cleanup and no default run deadline or inactivity timeout.",
+        "A successful synthetic run with the selected account/model records the exact native version, operating system, authentication route, usage and cancellation evidence; no API billing or model fallback occurs.",
+        "Brandstorm, LitAgent and AI Workspace receive the reviewed SDK route for separately tracked live application checks; provider availability alone does not close application acceptance."
+      ]
     }
   ]
 }
