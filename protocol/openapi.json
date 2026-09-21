@@ -7,6 +7,154 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/v1/retrieval/search": {
+      "post": {
+        "operationId": "searchContext",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires an explicit token corpus/operation grant and application authorization. No automatic retries or execution deadline. Disconnect cancels pending work; reconcile an unacknowledged mutation before replacing it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RetrievalSearch" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scoped retrieval result or source mutation receipt",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RetrievalResult" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/retrieval/index": {
+      "post": {
+        "operationId": "indexContext",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires an explicit token corpus/operation grant and application authorization. No automatic retries or execution deadline. Disconnect cancels pending work; reconcile an unacknowledged mutation before replacing it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RetrievalIndexRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scoped retrieval result or source mutation receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrievalIndexResult"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/retrieval/delete": {
+      "post": {
+        "operationId": "deleteContext",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires an explicit token corpus/operation grant and application authorization. No automatic retries or execution deadline. Disconnect cancels pending work; reconcile an unacknowledged mutation before replacing it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RetrievalDelete" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scoped retrieval result or source mutation receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrievalDeleteResult"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health",
@@ -194,6 +342,385 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "RetrievalSearch": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceIds": {
+            "minItems": 1,
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+            }
+          },
+          "query": { "type": "string", "minLength": 1, "maxLength": 16384 },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 16 },
+          "maxContextBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 262144
+          },
+          "minScore": { "type": "number", "minimum": -1, "maximum": 1 }
+        },
+        "required": ["corpus", "query"],
+        "additionalProperties": false
+      },
+      "RetrievalIndexRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "revision": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "title": { "type": "string", "maxLength": 256 },
+              "uri": {
+                "type": "string",
+                "maxLength": 2048,
+                "pattern": "^(https|app):\\/\\/[^\\s]+$"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "documentId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                  },
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "pageEnd": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "startLine": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "endLine": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  "section": { "type": "string", "maxLength": 256 },
+                  "threadId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "revision"],
+            "additionalProperties": false
+          },
+          "chunks": {
+            "minItems": 1,
+            "maxItems": 256,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 16384
+                },
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "documentId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    "pageEnd": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    "startLine": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    "endLine": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    "section": { "type": "string", "maxLength": 256 },
+                    "threadId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "messageId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": ["id", "text"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["corpus", "source", "chunks"],
+        "additionalProperties": false
+      },
+      "RetrievalDelete": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          }
+        },
+        "required": ["corpus", "sourceId", "revision"],
+        "additionalProperties": false
+      },
+      "RetrievalResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "index": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "vendor": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "accountId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "authMode": { "type": "string", "enum": ["api-key", "none"] },
+              "model": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+              },
+              "dimensions": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4096
+              },
+              "metric": { "type": "string", "const": "cosine" },
+              "version": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              }
+            },
+            "required": [
+              "providerId",
+              "vendor",
+              "accountId",
+              "authMode",
+              "model",
+              "dimensions",
+              "metric",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "hits": {
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "chunkId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    },
+                    "title": { "type": "string", "maxLength": 256 },
+                    "uri": {
+                      "type": "string",
+                      "maxLength": 2048,
+                      "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                    },
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "documentId": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                        },
+                        "page": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000
+                        },
+                        "pageEnd": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000
+                        },
+                        "startLine": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000
+                        },
+                        "endLine": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000
+                        },
+                        "section": { "type": "string", "maxLength": 256 },
+                        "threadId": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                        },
+                        "messageId": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["id", "revision"],
+                  "additionalProperties": false
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 16384
+                },
+                "score": { "type": "number", "minimum": -1, "maximum": 1 },
+                "documentSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "chunkId",
+                "source",
+                "text",
+                "score",
+                "documentSha256"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "truncated": { "type": "boolean" }
+        },
+        "required": ["corpus", "index", "hits", "truncated"],
+        "additionalProperties": false
+      },
+      "RetrievalIndexResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "documentSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "chunks": { "type": "integer", "minimum": 1, "maximum": 256 },
+          "status": { "type": "string", "enum": ["indexed", "unchanged"] }
+        },
+        "required": [
+          "corpus",
+          "sourceId",
+          "revision",
+          "documentSha256",
+          "chunks",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "RetrievalDeleteResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "deleted": { "type": "boolean" }
+        },
+        "required": ["corpus", "sourceId", "revision", "deleted"],
+        "additionalProperties": false
+      },
       "ProviderHealth": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -526,6 +1053,34 @@
               ]
             }
           },
+          "retrieval": {
+            "type": "object",
+            "properties": {
+              "corpus": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "sourceIds": {
+                "minItems": 1,
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                }
+              },
+              "query": { "type": "string", "minLength": 1, "maxLength": 16384 },
+              "limit": { "type": "integer", "minimum": 1, "maximum": 16 },
+              "maxContextBytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 262144
+              },
+              "minScore": { "type": "number", "minimum": -1, "maximum": 1 }
+            },
+            "required": ["corpus"],
+            "additionalProperties": false
+          },
           "outputArtifact": {
             "type": "object",
             "properties": {
@@ -690,7 +1245,10 @@
             "maximum": 33554432
           },
           "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "origin": { "type": "string", "enum": ["inline", "reference"] },
+          "origin": {
+            "type": "string",
+            "enum": ["inline", "reference", "retrieval"]
+          },
           "expiresAt": {
             "type": "string",
             "format": "date-time",
@@ -821,6 +1379,7 @@
             "maxItems": 1,
             "items": { "$ref": "#/components/schemas/DraftArtifact" }
           },
+          "retrieval": { "$ref": "#/components/schemas/RetrievalResult" },
           "usage": { "$ref": "#/components/schemas/Usage" },
           "steps": { "type": "integer", "minimum": 1 },
           "finishReason": { "enum": ["stop", "length"] }
@@ -930,7 +1489,7 @@
           {
             "properties": {
               "type": { "const": "run.progress" },
-              "phase": { "enum": ["model", "tool"] }
+              "phase": { "enum": ["model", "tool", "context"] }
             },
             "required": ["phase"]
           },

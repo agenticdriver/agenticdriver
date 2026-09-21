@@ -1786,6 +1786,1343 @@
         ]
       },
       "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "retrieval-with-stable-citations",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "retrieval-null",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": null,
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-wrong-corpus",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "secret-library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-unselected-source",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "other",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-invalid-dimensions",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 0,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-unknown-metric",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "unknown",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-subscription-embedding",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "cli-session",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-invalid-score",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 1.1,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-null-score",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": null,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-duplicate-chunks",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                },
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-digest-missing",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-manifest-missing",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-manifest-wrong-revision",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r2",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-inconsistent-page-range",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "retrieval": {
+              "corpus": "library",
+              "index": {
+                "providerId": "embedding-one",
+                "vendor": "fixture",
+                "accountId": "research",
+                "authMode": "none",
+                "model": "lexical-hash-v1",
+                "dimensions": 64,
+                "metric": "cosine",
+                "version": "v1"
+              },
+              "hits": [
+                {
+                  "chunkId": "paper-p1",
+                  "source": {
+                    "id": "paper",
+                    "revision": "r1",
+                    "location": {
+                      "documentId": "paper",
+                      "page": 2,
+                      "pageEnd": 1
+                    }
+                  },
+                  "text": "Solar batteries retain energy.",
+                  "score": 0.8,
+                  "documentSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              ],
+              "truncated": false
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-result-missing",
+      "retrieval": {
+        "corpus": "library",
+        "query": "solar",
+        "sourceIds": ["paper"]
+      },
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            },
+            "sources": [
+              {
+                "id": "paper-p1",
+                "revision": "r1",
+                "location": {
+                  "documentId": "paper",
+                  "page": 2
+                },
+                "mediaType": "text/plain",
+                "bytes": 30,
+                "sha256": "0d000b4fcbd63c944a54cd24f994bf210b4933181afe64565f41b32699bfd695",
+                "origin": "retrieval"
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "INVALID_STREAM"
+    },
+    {
+      "id": "retrieval-context-progress",
+      "events": [
+        {
+          "type": "run.started",
+          "runId": "compat-run",
+          "sequence": 1,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "provider": "mock",
+          "model": "demo",
+          "futureField": true
+        },
+        {
+          "type": "run.progress",
+          "runId": "compat-run",
+          "sequence": 2,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "phase": "context"
+        },
+        {
+          "type": "text.delta",
+          "runId": "compat-run",
+          "sequence": 3,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "text": "Hello 🌍",
+          "futureField": "ignored"
+        },
+        {
+          "type": "run.completed",
+          "runId": "compat-run",
+          "sequence": 4,
+          "timestamp": "2026-09-20T12:00:00.000Z",
+          "result": {
+            "runId": "compat-run",
+            "provider": "mock",
+            "model": "demo",
+            "text": "Hello 🌍",
+            "usage": {},
+            "steps": 1,
+            "finishReason": "stop",
+            "futureResultField": {
+              "safe": "ignored"
+            }
+          }
+        }
+      ]
     }
   ]
 }

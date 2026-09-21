@@ -147,4 +147,4 @@ Python exports context `TypedDict` types from `agenticdriver.context`; Go expose
 - LitAgent supplies selected paper/passages and immutable Markdown revisions; it resolves passage IDs to quotes, pages/lines and checks claim support. Its corpus coverage metadata and canonical library stay app-owned.
 - AI Workspace supplies authorized thread/message context; it revalidates sources at display time and owns mailbox scope, draft acceptance and sending.
 
-Scoped retrieval, embedding/vector database ports, PDF/Markdown/email ingestion and grounded-answer examples are the follow-on AD-046, AD-047 and AD-048 issues. They extend this context boundary; they are not implemented by an attachment's display URI.
+[Scoped retrieval](retrieval.md) adds explicit embedding/vector database ports, a persistent SQLite index and authorized evidence in all four clients. PDF/Markdown/email ingestion helpers and app-specific grounded-answer examples remain AD-047 and AD-048. A display URI does not fetch, parse or index a document.

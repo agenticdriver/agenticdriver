@@ -64,6 +64,8 @@ pub(crate) fn optional_cost<'de, D: Deserializer<'de>>(
 }
 pub(crate) fn result_valid(result: &RunResult, request: &RunRequest) -> bool {
     crate::context::relationships_valid(result)
+        && crate::retrieval::links(result)
+        && crate::retrieval::selection(result.retrieval.as_ref(), request.retrieval.as_ref())
         && !result.run_id.is_empty()
         && result.provider == request.provider
         && result.model == request.model
@@ -98,7 +100,7 @@ pub(crate) fn event_valid(event: &Event, request: &RunRequest, first: bool) -> b
         "text.delta" => event.text.is_some(),
         "run.progress" => matches!(
             event.extra.get("phase").and_then(Value::as_str),
-            Some("model" | "tool")
+            Some("model" | "tool" | "context")
         ),
         "tool.called" => event.extra.get("call").is_some_and(|call| {
             text(call.get("id"))

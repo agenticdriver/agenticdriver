@@ -38,6 +38,10 @@
     "./context": {
       "types": "./dist/context.d.ts",
       "import": "./dist/context.js"
+    },
+    "./retrieval": {
+      "types": "./dist/retrieval.d.ts",
+      "import": "./dist/retrieval.js"
     }
   },
   "files": [

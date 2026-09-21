@@ -27,6 +27,8 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
 - [Selected context and draft artifacts](docs/context.md): bounded text/Markdown,
   explicit image/PDF model support, authorized source references and provenance.
+- [Scoped retrieval and vector indexes](docs/retrieval.md): explicit embedding accounts,
+  persistent SQLite search, source revision checks and grounded run context in all four clients.
 - [Account-scoped metering](docs/usage.md) with source, measurement coverage,
   separate API-equivalent estimates and a thin authenticated Usagestat sink. The
   native Usagestat dependency owns storage, retention and offline forwarding, plus account quotas, provider metadata, and existing icon references.

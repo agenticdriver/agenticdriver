@@ -31,10 +31,14 @@ fn reference_peer_conformance() {
     for example in fixture["cases"].as_array().unwrap() {
         let id = example["id"].as_str().unwrap();
         let peer = client(&format!("{}/fixtures/{}", base, id), &token, true);
+        let mut request = RunRequest::new("mock", "demo", "Hello");
+        if let Some(retrieval) = example.get("retrieval") {
+            request.retrieval = Some(serde_json::from_value(retrieval.clone()).unwrap());
+        }
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().map(|_| ()),
             Some("protocol") => peer.protocol().map(|_| ()),
-            _ => peer.stream(&RunRequest::new("mock", "demo", "Hello"), |event| {
+            _ => peer.stream(&request, |event| {
                 !(example["cancel"] == true && event.kind == "text.delta")
             }),
         };
@@ -99,4 +103,75 @@ fn real_host_conformance() {
             .providers()
             .is_err());
     }
+}
+
+#[test]
+fn retrieval_round_trip() {
+    use agenticdriver::{
+        ArtifactRequest, ContextSource, RetrievalChunk, RetrievalDelete, RetrievalIndexRequest,
+        RetrievalSearch, SourceLocation,
+    };
+    let Ok(base) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
+    let peer = client(&base, &token, true);
+    let document = RetrievalIndexRequest {
+        corpus: "library".into(),
+        source: ContextSource {
+            id: "rust-paper".into(),
+            revision: "r1".into(),
+            ..Default::default()
+        },
+        chunks: vec![RetrievalChunk {
+            id: "rust-p1".into(),
+            text: "Solar batteries retain energy.".into(),
+            location: Some(SourceLocation {
+                page: Some(2),
+                ..Default::default()
+            }),
+        }],
+    };
+    assert_eq!(peer.index_context(&document).unwrap().status, "indexed");
+    let search = RetrievalSearch {
+        corpus: "library".into(),
+        source_ids: vec!["rust-paper".into()],
+        query: Some("solar energy".into()),
+        ..Default::default()
+    };
+    assert_eq!(
+        peer.search_context(&search).unwrap().hits[0].chunk_id,
+        "rust-p1"
+    );
+    let mut request = RunRequest::new("mock", "demo", "Question");
+    request.retrieval = Some(search);
+    request.output_artifact = Some(ArtifactRequest {
+        name: "answer.md".into(),
+        media_type: "text/markdown".into(),
+    });
+    let result = peer.run(&request).unwrap();
+    assert_eq!(result.retrieval.unwrap().hits[0].source.id, "rust-paper");
+    assert_eq!(result.sources.unwrap()[0].origin, "retrieval");
+    assert_eq!(result.artifacts.unwrap()[0].source_ids, vec!["rust-p1"]);
+    let mut completed = false;
+    peer.stream(&request, |event| {
+        completed = event.kind == "run.completed";
+        true
+    })
+    .unwrap();
+    assert!(completed);
+    assert!(
+        peer.delete_context(&RetrievalDelete {
+            corpus: "library".into(),
+            source_id: "rust-paper".into(),
+            revision: "r1".into()
+        })
+        .unwrap()
+        .deleted
+    );
+    assert!(peer
+        .search_context(request.retrieval.as_ref().unwrap())
+        .unwrap()
+        .hits
+        .is_empty());
 }

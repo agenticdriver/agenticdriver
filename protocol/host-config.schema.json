@@ -331,6 +331,36 @@
               }
             ]
           },
+          "retrieval": {
+            "type": "object",
+            "properties": {
+              "search": {
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                }
+              },
+              "index": {
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                }
+              },
+              "delete": {
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
           "providers": {
             "maxItems": 32,
             "type": "array",

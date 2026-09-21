@@ -22,6 +22,7 @@ export { PROTOCOL_VERSION, protocolInfo } from "./protocol.js";
 export type { ProtocolInfo } from "./protocol.js";
 export * from "./context-types.js";
 export { MemoryContextStore } from "./context.js";
+export * from "./retrieval.js";
 export type {
   ContextOptions,
   ContextResolver,

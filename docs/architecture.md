@@ -86,8 +86,11 @@ The host holds no durable job state and does not replay disconnected runs.
 Applications should add a durable queue around the SDK if they need resumable
 literature reviews or background inbox processing. [Selected context](context.md)
 supports bounded text/Markdown, opt-in images/PDFs and app-authorized references.
-MCP bridges, shared vector retrieval, distributed scheduling and provider
-failover remain tracked extensions.
+[Scoped retrieval](retrieval.md) adds an app-authorized corpus, explicit embedding
+identity and a rebuildable SQLite vector index. The application owns canonical
+documents and revisions. Search filters current source access before ranking and
+rechecks authorization before exposing evidence. MCP bridges, distributed
+scheduling and provider failover remain tracked extensions.
 
 ## Usage
 

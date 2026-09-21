@@ -105,7 +105,7 @@ func sourceValid(data []byte) bool {
 	}
 	media, _ := stringValue(value["mediaType"])
 	origin, _ := stringValue(value["origin"])
-	if !mediaValid(media) || (origin != "inline" && origin != "reference") || !numberValue(value["bytes"], true, true) {
+	if !mediaValid(media) || (origin != "inline" && origin != "reference" && origin != "retrieval") || !numberValue(value["bytes"], true, true) {
 		return false
 	}
 	var size float64

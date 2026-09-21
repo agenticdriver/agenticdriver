@@ -75,10 +75,16 @@ func (result *Result) UnmarshalJSON(data []byte) error {
 	type rawResult Result
 	var decoded rawResult
 	value, ok := object(data)
+	if raw, present := value["retrieval"]; present && !retrievalValid(raw) {
+		return invalidRetrieval()
+	}
 	if !ok || !contextResultValid(value) || json.Unmarshal(data, &decoded) != nil || !stringField(value, "runId", false) || !stringField(value, "provider", false) || !stringField(value, "model", false) || !stringField(value, "text", true) || !numberValue(value["steps"], true, true) || !usageValid(value["usage"]) || (decoded.FinishReason != "stop" && decoded.FinishReason != "length") {
 		return &Error{Code: "INVALID_RESPONSE", Message: "The driver returned an invalid run result."}
 	}
 	*result = Result(decoded)
+	if !retrievalLinks(result) {
+		return invalidRetrieval()
+	}
 	return nil
 }
 func (provider *Provider) UnmarshalJSON(data []byte) error {
@@ -152,7 +158,7 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 		return stringField(value, "text", true)
 	case "run.progress":
 		phase, _ := stringValue(value["phase"])
-		return phase == "model" || phase == "tool"
+		return phase == "model" || phase == "tool" || phase == "context"
 	case "tool.called":
 		call, valid := object(value["call"])
 		_, args := object(call["arguments"])
@@ -163,7 +169,7 @@ func eventValid(data []byte, event Event, request Request, first bool) bool {
 	case "usage.reported":
 		return numberValue(value["step"], true, true) && usageValid(value["usage"])
 	case "run.completed":
-		return event.Result != nil && event.Result.RunID == event.RunID && event.Result.Provider == request.Provider && event.Result.Model == request.Model
+		return event.Result != nil && event.Result.RunID == event.RunID && event.Result.Provider == request.Provider && event.Result.Model == request.Model && retrievalSelection(event.Result.Retrieval, request.Retrieval)
 	case "run.failed", "run.cancelled":
 		return errorValid(value["error"])
 	default:

@@ -1,0 +1,63 @@
+"""Scoped retrieval over app-authorized sources; vector data stays on the host."""
+from typing import Literal, TypedDict
+from .context import ContextSource, SourceLocation
+
+class _Corpus(TypedDict):
+    corpus: str
+
+class RetrievalRequest(_Corpus, total=False):
+    sourceIds: list[str]
+    query: str
+    limit: int
+    maxContextBytes: int
+    minScore: float
+
+class RetrievalSearch(RetrievalRequest):
+    query: str
+
+class VectorIndex(TypedDict):
+    providerId: str
+    vendor: str
+    accountId: str
+    authMode: Literal["api-key", "none"]
+    model: str
+    dimensions: int
+    metric: Literal["cosine"]
+    version: str
+
+class _Chunk(TypedDict):
+    id: str
+    text: str
+
+class RetrievalChunk(_Chunk, total=False):
+    location: SourceLocation
+
+class RetrievalIndexRequest(_Corpus):
+    source: ContextSource
+    chunks: list[RetrievalChunk]
+
+class RetrievalHit(TypedDict):
+    chunkId: str
+    source: ContextSource
+    text: str
+    score: float
+    documentSha256: str
+
+class RetrievalResult(_Corpus):
+    index: VectorIndex
+    hits: list[RetrievalHit]
+    truncated: bool
+
+class RetrievalIndexResult(_Corpus):
+    sourceId: str
+    revision: str
+    documentSha256: str
+    chunks: int
+    status: Literal["indexed", "unchanged"]
+
+class RetrievalDelete(_Corpus):
+    sourceId: str
+    revision: str
+
+class RetrievalDeleteResult(RetrievalDelete):
+    deleted: bool

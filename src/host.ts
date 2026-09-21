@@ -97,6 +97,29 @@ export const HostConfigSchema = z
             id: instance,
             subject: z.string().min(1).max(128),
             tokenRef: SecretReferenceSchema,
+            retrieval: z
+              .object({
+                search: z
+                  .array(
+                    z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/),
+                  )
+                  .max(1000)
+                  .optional(),
+                index: z
+                  .array(
+                    z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/),
+                  )
+                  .max(1000)
+                  .optional(),
+                delete: z
+                  .array(
+                    z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/),
+                  )
+                  .max(1000)
+                  .optional(),
+              })
+              .strict()
+              .optional(),
             providers: z.array(instance).max(32),
             tools: z
               .array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/))
@@ -273,6 +296,7 @@ export function configuredDriver(
     approve?: DriverOptions["approve"];
     onTelemetryError?: DriverOptions["onTelemetryError"];
     context?: DriverOptions["context"];
+    retrieval?: DriverOptions["retrieval"];
   } = {},
 ): AgenticDriver {
   config = validateHostConfig(config);
@@ -340,6 +364,7 @@ export function configuredDriver(
       ),
     },
     context: { ...options.context, ...config.context },
+    retrieval: options.retrieval,
     tools: options.tools,
     approve: options.approve,
     limits: config.limits,
@@ -395,6 +420,7 @@ export async function configuredServer(
       subject: entry.subject,
       providers: entry.providers,
       tools: entry.tools,
+      retrieval: entry.retrieval,
     })),
   );
   if (new Set(tokens.map((entry) => entry.token)).size !== tokens.length)

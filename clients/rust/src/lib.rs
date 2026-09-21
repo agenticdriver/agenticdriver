@@ -9,7 +9,12 @@ pub mod context;
 pub use context::{
     ArtifactRequest, ContextInput, ContextManifest, ContextSource, DraftArtifact, SourceLocation,
 };
+pub mod retrieval;
 mod validation;
+pub use retrieval::{
+    RetrievalChunk, RetrievalDelete, RetrievalDeleteResult, RetrievalHit, RetrievalIndexRequest,
+    RetrievalIndexResult, RetrievalRequest, RetrievalResult, RetrievalSearch, VectorIndex,
+};
 
 pub type Result<T> = std::result::Result<T, Error>;
 pub const PROTOCOL_VERSION: &str = "1.0";
@@ -75,6 +80,8 @@ impl From<std::io::Error> for Error {
 #[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct RunRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retrieval: Option<RetrievalRequest>,
     pub provider: String,
     pub model: String,
     pub input: String,
@@ -152,6 +159,8 @@ pub struct Usage {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunResult {
+    #[serde(default, deserialize_with = "retrieval::optional_result")]
+    pub retrieval: Option<RetrievalResult>,
     #[serde(default, deserialize_with = "context::optional_sources")]
     pub sources: Option<Vec<ContextManifest>>,
     #[serde(default, deserialize_with = "context::optional_artifacts")]
@@ -267,7 +276,7 @@ impl AgenticClient {
             http: builder.build()?,
         })
     }
-    fn request(&self, path: &str, body: Option<&RunRequest>, stream: bool) -> Result<Response> {
+    fn request(&self, path: &str, body: Option<&Value>, stream: bool) -> Result<Response> {
         let url = self
             .base
             .join(path)
@@ -320,6 +329,68 @@ impl AgenticClient {
         }
         Ok(response)
     }
+    pub fn search_context(&self, request: &RetrievalSearch) -> Result<RetrievalResult> {
+        let value: Value = read_json(self.request(
+            "v1/retrieval/search",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        if !retrieval::valid(&value) {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Invalid retrieval evidence.",
+            ));
+        }
+        let result: RetrievalResult = serde_json::from_value(value)?;
+        if !retrieval::selection(Some(&result), Some(request)) {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Evidence does not match the requested scope.",
+            ));
+        }
+        Ok(result)
+    }
+    pub fn index_context(&self, request: &RetrievalIndexRequest) -> Result<RetrievalIndexResult> {
+        let value: Value = read_json(self.request(
+            "v1/retrieval/index",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        if !context::digest(value.get("documentSha256")) {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Invalid indexing receipt.",
+            ));
+        }
+        let result: RetrievalIndexResult = serde_json::from_value(value)?;
+        if result.corpus != request.corpus
+            || result.source_id != request.source.id
+            || result.revision != request.source.revision
+            || result.chunks == 0
+            || result.chunks > 256
+            || !matches!(result.status.as_str(), "indexed" | "unchanged")
+        {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Invalid indexing receipt.",
+            ));
+        }
+        Ok(result)
+    }
+    pub fn delete_context(&self, request: &RetrievalDelete) -> Result<RetrievalDeleteResult> {
+        let result: RetrievalDeleteResult = read_json(self.request(
+            "v1/retrieval/delete",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        if &result.request != request {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Mismatched deletion receipt.",
+            ));
+        }
+        Ok(result)
+    }
     pub fn protocol(&self) -> Result<ProtocolInfo> {
         let info: ProtocolInfo = read_json(self.request("v1/protocol", None, false)?)?;
         if info.protocol != "agenticdriver"
@@ -355,7 +426,8 @@ impl AgenticClient {
         Ok(read_json::<Catalog>(self.request(path, None, false)?)?.providers)
     }
     pub fn run(&self, request: &RunRequest) -> Result<RunResult> {
-        let result: RunResult = read_json(self.request("v1/runs", Some(request), false)?)?;
+        let result: RunResult =
+            read_json(self.request("v1/runs", Some(&serde_json::to_value(request)?), false)?)?;
         if !validation::result_valid(&result, request) {
             return Err(protocol_error(
                 "INVALID_RESPONSE",
@@ -367,7 +439,7 @@ impl AgenticClient {
     /// Return false from `visit` to close the response and cancel an unfinished run.
     /// Use a blocking worker when calling this synchronous API from an async runtime.
     pub fn stream(&self, request: &RunRequest, mut visit: impl FnMut(Event) -> bool) -> Result<()> {
-        let response = self.request("v1/runs", Some(request), true)?;
+        let response = self.request("v1/runs", Some(&serde_json::to_value(request)?), true)?;
         if !response
             .headers()
             .get("content-type")

@@ -42,11 +42,12 @@ func TestReferencePeerConformance(t *testing.T) {
 	token := os.Getenv("AGENTICDRIVER_TEST_TOKEN")
 	var fixture struct {
 		Cases []struct {
-			ID                   string `json:"id"`
-			Operation            string `json:"operation"`
-			ExpectedError        string `json:"expectedError"`
-			ExpectTransportError bool   `json:"expectTransportError"`
-			Cancel               bool   `json:"cancel"`
+			ID                   string            `json:"id"`
+			Retrieval            *RetrievalRequest `json:"retrieval"`
+			Operation            string            `json:"operation"`
+			ExpectedError        string            `json:"expectedError"`
+			ExpectTransportError bool              `json:"expectTransportError"`
+			Cancel               bool              `json:"cancel"`
 		}
 	}
 	raw, err := os.ReadFile("../../protocol/fixtures/conformance.json")
@@ -67,7 +68,7 @@ func TestReferencePeerConformance(t *testing.T) {
 			} else {
 				stop := errors.New("intentional stream close")
 				completed, cancelled := false, false
-				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello"}, func(event Event) error {
+				err = client.Stream(context.Background(), Request{Provider: "mock", Model: "demo", Input: "Hello", Retrieval: example.Retrieval}, func(event Event) error {
 					if example.Cancel && event.Type == "text.delta" {
 						cancelled = true
 						return stop
@@ -154,5 +155,44 @@ func TestRealHostConformance(t *testing.T) {
 		if _, err := conformanceClient(t, strings.Replace(base, "127.0.0.1", "localhost", 1), token, true).Providers(context.Background()); err == nil {
 			t.Fatal("invalid certificate hostname accepted")
 		}
+	}
+}
+
+func TestRetrieval(t *testing.T) {
+	base, token := os.Getenv("AGENTICDRIVER_TEST_URL"), os.Getenv("AGENTICDRIVER_TEST_TOKEN")
+	if base == "" {
+		t.Skip("requires real host")
+	}
+	client := conformanceClient(t, base, token, true)
+	ctx := context.Background()
+	page := 2
+	document := RetrievalIndexRequest{Corpus: "library", Source: ContextSource{ID: "go-paper", Revision: "r1"},
+		Chunks: []RetrievalChunk{{ID: "go-p1", Text: "Solar batteries retain energy.", Location: &SourceLocation{Page: &page}}}}
+	indexed, err := client.IndexContext(ctx, document)
+	if err != nil || indexed.Status != "indexed" {
+		t.Fatalf("index: %v %v", indexed, err)
+	}
+	search := RetrievalSearch{Corpus: "library", SourceIDs: []string{"go-paper"}, Query: "solar energy"}
+	evidence, err := client.SearchContext(ctx, search)
+	if err != nil || len(evidence.Hits) != 1 || evidence.Hits[0].ChunkID != "go-p1" {
+		t.Fatalf("search: %v %v", evidence, err)
+	}
+	result, err := client.Run(ctx, Request{Provider: "mock", Model: "demo", Input: "Question", Retrieval: &search,
+		OutputArtifact: &ArtifactRequest{Name: "answer.md", MediaType: "text/markdown"}})
+	if err != nil || result.Retrieval == nil || result.Retrieval.Hits[0].Source.ID != "go-paper" || result.Sources[0].Origin != "retrieval" || result.Artifacts[0].SourceIDs[0] != "go-p1" {
+		t.Fatalf("run: %v %v", result, err)
+	}
+	var completed bool
+	err = client.Stream(ctx, Request{Provider: "mock", Model: "demo", Input: "Question", Retrieval: &search}, func(event Event) error { completed = event.Type == "run.completed"; return nil })
+	if err != nil || !completed {
+		t.Fatalf("stream: %v", err)
+	}
+	deleted, err := client.DeleteContext(ctx, RetrievalDelete{Corpus: "library", SourceID: "go-paper", Revision: "r1"})
+	if err != nil || !deleted.Deleted {
+		t.Fatalf("delete: %v %v", deleted, err)
+	}
+	evidence, err = client.SearchContext(ctx, search)
+	if err != nil || len(evidence.Hits) != 0 {
+		t.Fatalf("deleted search: %v %v", evidence, err)
 	}
 }

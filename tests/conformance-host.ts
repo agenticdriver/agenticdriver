@@ -8,6 +8,11 @@ import {
   setTimeout as delay,
 } from "node:timers/promises";
 import { AgenticDriver } from "../src/driver.js";
+import {
+  RetrievalService,
+  MemoryVectorStore,
+  DeterministicEmbeddingAdapter,
+} from "../src/retrieval.js";
 import { MemoryContextStore } from "../src/context.js";
 import type { ProviderAdapter } from "../src/types.js";
 import { MemoryOperationStore } from "../src/operations.js";
@@ -82,6 +87,26 @@ const driver = await serve(
   new AgenticDriver({
     operations: new MemoryOperationStore(),
     context: { resolve: contextStore.resolve },
+    retrieval: new RetrievalService([
+      {
+        id: "library",
+        version: "v1",
+        store: new MemoryVectorStore(),
+        embedding: new DeterministicEmbeddingAdapter(64),
+        authorize: (_, context) =>
+          context.subject === "test-user"
+            ? {
+                namespace: "test-user",
+                sources: {
+                  "typescript-paper": "r1",
+                  "python-paper": "r1",
+                  "go-paper": "r1",
+                  "rust-paper": "r1",
+                },
+              }
+            : null,
+      },
+    ]),
     providers: [
       withMedia(
         mockProvider(async (request, context) => {
@@ -124,7 +149,16 @@ const driver = await serve(
     port: 0,
     tls,
     tokens: [
-      { token, subject: "test-user", providers: ["mock"] },
+      {
+        token,
+        subject: "test-user",
+        providers: ["mock"],
+        retrieval: {
+          search: ["library"],
+          index: ["library"],
+          delete: ["library"],
+        },
+      },
       {
         token: token + "-restricted",
         subject: "restricted-user",

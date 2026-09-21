@@ -9,6 +9,14 @@ import {
 } from "../src/context-types.js";
 import { UsageRecordSchema } from "../src/usage.js";
 import {
+  RetrievalSearchSchema,
+  RetrievalIndexRequestSchema,
+  RetrievalDeleteSchema,
+  RetrievalResultSchema,
+  RetrievalIndexResultSchema,
+  RetrievalDeleteResultSchema,
+} from "../src/retrieval-types.js";
+import {
   RunRequestSchema,
   ModelCatalogSchema,
   ProviderHealthSchema,
@@ -26,6 +34,24 @@ const string = { type: "string" },
 const request = z.toJSONSchema(RunRequestSchema, { target: "draft-2020-12" });
 const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
+  RetrievalSearch: z.toJSONSchema(RetrievalSearchSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalIndexRequest: z.toJSONSchema(RetrievalIndexRequestSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalDelete: z.toJSONSchema(RetrievalDeleteSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalResult: z.toJSONSchema(RetrievalResultSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalIndexResult: z.toJSONSchema(RetrievalIndexResultSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalDeleteResult: z.toJSONSchema(RetrievalDeleteResultSchema, {
+    target: "draft-2020-12",
+  }),
   ProviderHealth: z.toJSONSchema(ProviderHealthSchema, {
     target: "draft-2020-12",
     io: "input",
@@ -88,6 +114,7 @@ const schemas = {
       output: {},
       sources: { type: "array", maxItems: 16, items: ref("ContextManifest") },
       artifacts: { type: "array", maxItems: 1, items: ref("DraftArtifact") },
+      retrieval: ref("RetrievalResult"),
       usage: ref("Usage"),
       steps: { type: "integer", minimum: 1 },
       finishReason: { enum: ["stop", "length"] },
@@ -186,7 +213,7 @@ const schemas = {
       {
         properties: {
           type: { const: "run.progress" },
-          phase: { enum: ["model", "tool"] },
+          phase: { enum: ["model", "tool", "context"] },
         },
         required: ["phase"],
       },
@@ -274,6 +301,35 @@ const document = {
   ],
   security: [{ bearerAuth: [] }],
   paths: {
+    ...Object.fromEntries(
+      [
+        ["search", "RetrievalSearch", "RetrievalResult"],
+        ["index", "RetrievalIndexRequest", "RetrievalIndexResult"],
+        ["delete", "RetrievalDelete", "RetrievalDeleteResult"],
+      ].map(([operation, input, output]) => [
+        `/v1/retrieval/${operation}`,
+        {
+          post: {
+            operationId: `${operation}Context`,
+            parameters,
+            description:
+              "Requires an explicit token corpus/operation grant and application authorization. No automatic retries or execution deadline. Disconnect cancels pending work; reconcile an unacknowledged mutation before replacing it.",
+            requestBody: {
+              required: true,
+              content: { "application/json": { schema: ref(input!) } },
+            },
+            responses: {
+              "200": {
+                description:
+                  "Scoped retrieval result or source mutation receipt",
+                content: { "application/json": { schema: ref(output!) } },
+              },
+              default: errorResponse,
+            },
+          },
+        },
+      ]),
+    ),
     "/health": {
       get: {
         operationId: "health",

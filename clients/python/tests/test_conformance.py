@@ -23,7 +23,7 @@ class ClientConformance(unittest.TestCase):
                     elif case.get("operation") == "protocol":
                         client.protocol()
                     else:
-                        stream = client.stream(provider="mock", model="demo", input="Hello")
+                        stream = client.stream(provider="mock", model="demo", input="Hello", **({"retrieval": case["retrieval"]} if "retrieval" in case else {}))
                         completed = cancelled = False
                         try:
                             for event in stream:
@@ -103,3 +103,19 @@ class ClientConformance(unittest.TestCase):
                 self.client(ca=False).providers()
             with self.assertRaises(Exception):
                 self.client(os.environ["AGENTICDRIVER_TEST_URL"].replace("127.0.0.1", "localhost")).providers()
+
+    def test_retrieval(self):
+        from agenticdriver import RetrievalIndexRequest, RetrievalSearch
+        client = self.client()
+        document: RetrievalIndexRequest = {"corpus": "library", "source": {"id": "python-paper", "revision": "r1"},
+            "chunks": [{"id": "python-p1", "text": "Solar batteries retain energy.", "location": {"page": 2}}]}
+        self.assertEqual(client.index_context(document)["status"], "indexed")
+        query: RetrievalSearch = {"corpus": "library", "sourceIds": ["python-paper"], "query": "solar energy"}
+        self.assertEqual(client.search_context(query)["hits"][0]["chunkId"], "python-p1")
+        result = client.run(provider="mock", model="demo", input="Question", retrieval=query,
+            outputArtifact={"name": "answer.md", "mediaType": "text/markdown"})
+        self.assertEqual(result["retrieval"]["hits"][0]["source"]["id"], "python-paper")
+        self.assertEqual(result["sources"][0]["origin"], "retrieval")
+        self.assertEqual(result["artifacts"][0]["sourceIds"], ["python-p1"])
+        self.assertTrue(client.delete_context({"corpus": "library", "sourceId": "python-paper", "revision": "r1"})["deleted"])
+        self.assertEqual(client.search_context(query)["hits"], [])

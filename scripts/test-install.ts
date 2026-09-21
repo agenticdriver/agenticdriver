@@ -127,6 +127,27 @@ try {
     cwd: app,
     timeout: 10000,
   });
+  await writeFile(
+    join(app, "retrieval-check.mjs"),
+    `
+    import assert from "node:assert/strict";
+    import {AgenticDriver} from "agenticdriver";
+    import {fileURLToPath} from "node:url";
+    import {RetrievalService,SqliteVectorStore,DeterministicEmbeddingAdapter} from "agenticdriver/retrieval";
+    import {mockProvider} from "agenticdriver/providers";
+    const store=await SqliteVectorStore.open(fileURLToPath(new URL("./private-state/vectors.db",import.meta.url)));
+    const retrieval=new RetrievalService([{id:"library",version:"v1",store,embedding:new DeterministicEmbeddingAdapter(32),
+      authorize:()=>({namespace:"local",sources:{paper:"r1"}})}]);
+    const driver=new AgenticDriver({providers:[mockProvider()],retrieval});
+    await driver.indexContext({corpus:"library",source:{id:"paper",revision:"r1"},chunks:[{id:"p1",text:"Solar batteries retain energy."}]});
+    const result=await driver.run({provider:"mock",model:"demo",input:"solar energy",retrieval:{corpus:"library",sourceIds:["paper"]}});
+    assert.equal(result.retrieval.hits[0].chunkId,"p1");assert.equal(result.sources[0].origin,"retrieval");await store.close();
+  `,
+  );
+  await run(process.execPath, [join(app, "retrieval-check.mjs")], {
+    cwd: app,
+    timeout: 10000,
+  });
   const bin = join(app, "node_modules", ".bin", "agenticdriver");
   const entry =
     process.platform === "win32"

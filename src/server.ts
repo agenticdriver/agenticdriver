@@ -17,6 +17,13 @@ import {
   PROTOCOL_VERSION_HEADER,
 } from "./protocol.js";
 import type { RunRequest } from "./types.js";
+import {
+  RetrievalIdSchema,
+  RetrievalSearchSchema,
+  RetrievalIndexRequestSchema,
+  RetrievalDeleteSchema,
+} from "./retrieval-types.js";
+import type { RetrievalOperation } from "./retrieval.js";
 
 export interface AccessToken {
   /** Use at least 32 random characters. Authentication compares SHA-256 token digests. */
@@ -24,6 +31,8 @@ export interface AccessToken {
   subject: string;
   providers: string[];
   tools?: string[];
+  /** Explicit corpus allowlists for each operation. Omitted permissions deny retrieval access. */
+  retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
 export interface ServerOptions {
   tokens: AccessToken[];
@@ -58,6 +67,14 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       subject: entry.subject,
       providers: [...entry.providers],
       tools: [...(entry.tools ?? [])],
+      retrieval: Object.fromEntries(
+        ["search", "index", "delete"].map((operation) => [
+          operation,
+          (entry.retrieval?.[operation as RetrievalOperation] ?? []).map((id) =>
+            RetrievalIdSchema.parse(id),
+          ),
+        ]),
+      ) as Record<RetrievalOperation, string[]>,
     };
   });
   const active = new Set<AbortController>(),
@@ -134,6 +151,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           protocolInfo({
             idempotency: driver.supportsIdempotency,
             contextReferences: driver.supportsContextReferences,
+            retrieval: driver.supportsRetrieval,
           }),
         );
         return;
@@ -151,7 +169,17 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         });
         return;
       }
-      if (req.url !== "/v1/runs" || req.method !== "POST") {
+      const retrievalOperation = (
+        {
+          "/v1/retrieval/search": "search",
+          "/v1/retrieval/index": "index",
+          "/v1/retrieval/delete": "delete",
+        } as Record<string, RetrievalOperation>
+      )[req.url ?? ""];
+      if (
+        (req.url !== "/v1/runs" && !retrievalOperation) ||
+        req.method !== "POST"
+      ) {
         json(res, 404, {
           error: new DriverError("NOT_FOUND", "Endpoint not found.").toJSON(),
         });
@@ -172,7 +200,25 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "INVALID_REQUEST",
           "Compressed requests are not supported.",
         );
-      const request = driver.validate(await readRequest(req));
+      const body = await readRequest(req);
+      const retrievalSchema =
+        retrievalOperation === "search"
+          ? RetrievalSearchSchema
+          : retrievalOperation === "index"
+            ? RetrievalIndexRequestSchema
+            : RetrievalDeleteSchema;
+      const parsedRetrieval = retrievalOperation
+        ? retrievalSchema.safeParse(body)
+        : undefined;
+      if (parsedRetrieval && !parsedRetrieval.success)
+        throw new DriverError(
+          "INVALID_RETRIEVAL",
+          "The retrieval request does not match the schema.",
+        );
+      const retrievalRequest = parsedRetrieval?.data;
+      const request = retrievalOperation
+        ? undefined
+        : driver.validate(body as RunRequest);
       if (closing)
         throw new DriverError(
           "HOST_SHUTTING_DOWN",
@@ -180,12 +226,21 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           true,
         );
       if (
-        !principal.providers.includes(request.provider) ||
-        request.tools?.some((name) => !principal.tools.includes(name))
+        (request &&
+          (!principal.providers.includes(request.provider) ||
+            request.tools?.some((name) => !principal.tools.includes(name)) ||
+            (request.retrieval &&
+              !principal.retrieval.search.includes(
+                request.retrieval.corpus,
+              )))) ||
+        (retrievalOperation &&
+          !principal.retrieval[retrievalOperation].includes(
+            retrievalRequest!.corpus,
+          ))
       )
         throw new DriverError(
           "FORBIDDEN",
-          "This token cannot access the requested provider or tools.",
+          "This token cannot access the requested provider, tools or retrieval operation.",
         );
       if (
         active.size >= maxConcurrent ||
@@ -217,8 +272,27 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         subject: principal.subject,
         signal: controller.signal,
       };
+      if (retrievalOperation) {
+        const result =
+          retrievalOperation === "search"
+            ? await driver.searchContext(
+                RetrievalSearchSchema.parse(retrievalRequest),
+                runOptions,
+              )
+            : retrievalOperation === "index"
+              ? await driver.indexContext(
+                  RetrievalIndexRequestSchema.parse(retrievalRequest),
+                  runOptions,
+                )
+              : await driver.deleteContext(
+                  RetrievalDeleteSchema.parse(retrievalRequest),
+                  runOptions,
+                );
+        json(res, 200, result);
+        return;
+      }
       if (req.headers.accept?.includes("text/event-stream")) {
-        const events = driver.stream(request, runOptions);
+        const events = driver.stream(request!, runOptions);
         // Claims and conflicts must be resolved before a successful stream response is committed.
         let next = await events.next();
         res.writeHead(200, {
@@ -247,7 +321,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           await events.return(undefined);
         }
         res.end();
-      } else json(res, 200, await driver.run(request, runOptions));
+      } else json(res, 200, await driver.run(request!, runOptions));
     } catch (error) {
       if (res.headersSent) {
         res.destroy();
@@ -314,6 +388,9 @@ function statusFor(code: string) {
       "OPERATION_IN_PROGRESS",
       "OPERATION_UNCERTAIN",
       "TOOL_OUTCOME_UNCERTAIN",
+      "SOURCE_CONFLICT",
+      "CHUNK_CONFLICT",
+      "INDEX_INCOMPATIBLE",
     ].includes(code)
   )
     return 409;
@@ -339,13 +416,16 @@ function statusFor(code: string) {
       "UNSUPPORTED_TOOLS",
       "UNSUPPORTED_CAPABILITY",
       "UNSUPPORTED_PROTOCOL_VERSION",
+      "INVALID_RETRIEVAL",
+      "RETRIEVAL_UNAVAILABLE",
+      "NO_RETRIEVAL_EVIDENCE",
     ].includes(code)
   )
     return 400;
   if (code === "INTERNAL_ERROR") return 500;
   return 502;
 }
-async function readRequest(req: IncomingMessage): Promise<RunRequest> {
+async function readRequest(req: IncomingMessage): Promise<unknown> {
   if (Number(req.headers["content-length"] ?? 0) > 1_000_000)
     throw new DriverError("BODY_TOO_LARGE", "Requests must not exceed 1 MB.");
   const chunks: Buffer[] = [];

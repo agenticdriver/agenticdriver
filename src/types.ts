@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  RetrievalRequestSchema,
+  type RetrievalResult,
+} from "./retrieval-types.js";
+import {
   ArtifactRequestSchema,
   ContextInputSchema,
   type ContextAttachment,
@@ -28,6 +32,7 @@ export const RunRequestSchema = z
     model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
     input: z.string().min(1).max(100_000),
     attachments: z.array(ContextInputSchema).max(16).optional(),
+    retrieval: RetrievalRequestSchema.optional(),
     outputArtifact: ArtifactRequestSchema.optional(),
     idempotencyKey: z
       .string()
@@ -221,6 +226,7 @@ export interface RunResult {
   finishReason: "stop" | "length";
   sources?: ContextManifest[];
   artifacts?: DraftArtifact[];
+  retrieval?: RetrievalResult;
 }
 export interface ErrorInfo {
   code: string;
@@ -233,7 +239,7 @@ type EventPayload =
   | { type: "run.started"; provider: string; model: string }
   | { type: "step.started"; step: number }
   | { type: "text.delta"; text: string }
-  | { type: "run.progress"; phase: "model" | "tool" }
+  | { type: "run.progress"; phase: "model" | "tool" | "context" }
   | { type: "tool.called"; call: ToolCall }
   | { type: "tool.completed"; callId: string; output: Json }
   | { type: "usage.reported"; step: number; usage: Usage }

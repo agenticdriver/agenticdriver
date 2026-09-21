@@ -6,6 +6,17 @@ import {
   ContextMediaTypeSchema,
 } from "./context-types.js";
 export type * from "./context-types.js";
+export type * from "./retrieval-types.js";
+import {
+  RetrievalResultSchema,
+  RetrievalIndexResultSchema,
+  RetrievalDeleteResultSchema,
+  validRetrievalLinks,
+  validRetrievalSelection,
+  type RetrievalSearch,
+  type RetrievalIndexRequest,
+  type RetrievalDelete,
+} from "./retrieval-types.js";
 import {
   ModelCatalogSchema,
   ProviderHealthSchema,
@@ -49,8 +60,10 @@ const resultSchema = z
     finishReason: z.enum(["stop", "length"]),
     sources: z.array(ContextManifestSchema).max(16).optional(),
     artifacts: z.array(DraftArtifactSchema).max(1).optional(),
+    retrieval: RetrievalResultSchema.optional(),
   })
-  .refine(validContextResult);
+  .refine(validContextResult)
+  .refine(validRetrievalLinks);
 const eventSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("run.started"),
@@ -64,7 +77,7 @@ const eventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text.delta"), text: z.string() }),
   z.object({
     type: z.literal("run.progress"),
-    phase: z.enum(["model", "tool"]),
+    phase: z.enum(["model", "tool", "context"]),
   }),
   z.object({
     type: z.literal("tool.called"),
@@ -113,7 +126,8 @@ export class AgenticClient {
   }
   private async request(
     path: string,
-    body?: RunRequest,
+    body?:
+      RunRequest | RetrievalSearch | RetrievalIndexRequest | RetrievalDelete,
     signal?: AbortSignal,
     stream = false,
   ): Promise<Response> {
@@ -159,6 +173,80 @@ export class AgenticClient {
       throw error;
     }
     return response;
+  }
+  private async retrievalRequest<T extends z.ZodType>(
+    path: string,
+    body: RetrievalSearch | RetrievalIndexRequest | RetrievalDelete,
+    schema: T,
+    signal?: AbortSignal,
+  ): Promise<z.infer<T>> {
+    const response = await this.request(path, body, signal);
+    const parsed = schema.safeParse(await readResponseJson(response));
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The driver returned invalid retrieval metadata.",
+      );
+    return parsed.data;
+  }
+  async searchContext(
+    request: RetrievalSearch,
+    options: { signal?: AbortSignal } = {},
+  ) {
+    const result = await this.retrievalRequest(
+      "v1/retrieval/search",
+      request,
+      RetrievalResultSchema,
+      options.signal,
+    );
+    if (!validRetrievalSelection(result, request))
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The returned evidence does not match the selected corpus or sources.",
+      );
+    return result;
+  }
+  async indexContext(
+    request: RetrievalIndexRequest,
+    options: { signal?: AbortSignal } = {},
+  ) {
+    const result = await this.retrievalRequest(
+      "v1/retrieval/index",
+      request,
+      RetrievalIndexResultSchema,
+      options.signal,
+    );
+    if (
+      result.corpus !== request.corpus ||
+      result.sourceId !== request.source.id ||
+      result.revision !== request.source.revision
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The indexing receipt does not match the requested source.",
+      );
+    return result;
+  }
+  async deleteContext(
+    request: RetrievalDelete,
+    options: { signal?: AbortSignal } = {},
+  ) {
+    const result = await this.retrievalRequest(
+      "v1/retrieval/delete",
+      request,
+      RetrievalDeleteResultSchema,
+      options.signal,
+    );
+    if (
+      result.corpus !== request.corpus ||
+      result.sourceId !== request.sourceId ||
+      result.revision !== request.revision
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The deletion receipt does not match the requested source.",
+      );
+    return result;
   }
   async protocol(
     options: { signal?: AbortSignal } = {},
@@ -314,7 +402,13 @@ export class AgenticClient {
           (event.type === "run.completed" &&
             (event.result.runId !== runId ||
               event.result.provider !== request.provider ||
-              event.result.model !== request.model))
+              event.result.model !== request.model ||
+              Boolean(event.result.retrieval) !== Boolean(request.retrieval) ||
+              (event.result.retrieval &&
+                !validRetrievalSelection(
+                  event.result.retrieval,
+                  request.retrieval!,
+                ))))
         )
           throw new DriverError(
             "INVALID_STREAM",

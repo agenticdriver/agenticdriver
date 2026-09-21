@@ -85,7 +85,7 @@ export const ContextManifestSchema = ContextSourceSchema.extend({
   mediaType: ContextMediaTypeSchema,
   bytes: z.number().int().positive().max(33_554_432),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
-  origin: z.enum(["inline", "reference"]),
+  origin: z.enum(["inline", "reference", "retrieval"]),
   expiresAt: z.iso.datetime({ offset: true }).optional(),
 }).strict();
 export type ContextManifest = z.infer<typeof ContextManifestSchema>;

@@ -44,7 +44,7 @@ def _source(value, timestamp):
     if "location" in value and not _location(value["location"]):
         return False
     return (isinstance(value.get("mediaType"), str) and value["mediaType"] in MEDIA and type(value.get("bytes")) is int and 0 < value["bytes"] <= 33_554_432
-            and _digest(value.get("sha256")) and value.get("origin") in ("inline", "reference")
+            and _digest(value.get("sha256")) and value.get("origin") in ("inline", "reference", "retrieval")
             and ("expiresAt" not in value or timestamp(value["expiresAt"])))
 
 def valid_context_result(value, timestamp):

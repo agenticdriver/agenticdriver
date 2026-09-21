@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 
 from ._errors import DriverError
+from ._retrieval import valid_retrieval_links
 from ._context import valid_context_result, valid_media_catalog
 
 PROTOCOL_VERSION = "1.0"
@@ -53,7 +54,7 @@ def valid_result(value, request, run_id=None):
             (run_id is None or value["runId"] == run_id) and
             value.get("provider") == request["provider"] and value.get("model") == request["model"] and
             text(value.get("text"), True) and count(value.get("steps"), True) and
-            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp))
+            value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp) and valid_retrieval_links(value, request))
 
 
 def valid_catalog(value):
@@ -129,7 +130,7 @@ class EventDecoder:
         elif kind == "text.delta":
             valid = text(event.get("text"), True)
         elif kind == "run.progress":
-            valid = event.get("phase") in ("model", "tool")
+            valid = event.get("phase") in ("model", "tool", "context")
         elif kind == "tool.called":
             call = event.get("call")
             valid = isinstance(call, dict) and text(call.get("id")) and text(call.get("name")) and isinstance(call.get("arguments"), dict)

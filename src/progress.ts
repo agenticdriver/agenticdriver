@@ -9,7 +9,7 @@ import type {
 export async function* withProgress<T, E>(
   operation: (context: ProviderContext) => Promise<T> | T,
   context: ExecutionContext,
-  phase: "model" | "tool",
+  phase: "model" | "tool" | "context",
   abort: (error: DriverError) => void,
   event: (payload: EventPayload) => E,
 ): AsyncGenerator<E, { value: T; streamed: boolean }> {

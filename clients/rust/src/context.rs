@@ -91,12 +91,12 @@ pub struct DraftArtifact {
     pub sha256: String,
     pub source_ids: Vec<String>,
 }
-fn bounded(value: Option<&Value>, limit: usize, empty: bool) -> bool {
+pub(crate) fn bounded(value: Option<&Value>, limit: usize, empty: bool) -> bool {
     value
         .and_then(Value::as_str)
         .is_some_and(|s| (empty || !s.is_empty()) && s.encode_utf16().count() <= limit)
 }
-fn id(value: Option<&Value>) -> bool {
+pub(crate) fn id(value: Option<&Value>) -> bool {
     value.and_then(Value::as_str).is_some_and(|s| {
         !s.is_empty()
             && s.len() <= 128
@@ -105,7 +105,7 @@ fn id(value: Option<&Value>) -> bool {
                 .all(|c| c.is_ascii_alphanumeric() || b"._:-".contains(&c))
     })
 }
-fn digest(value: Option<&Value>) -> bool {
+pub(crate) fn digest(value: Option<&Value>) -> bool {
     value.and_then(Value::as_str).is_some_and(|s| {
         s.len() == 64
             && s.bytes()
@@ -130,7 +130,7 @@ fn positive(value: Option<&Value>, max: u64) -> bool {
         .and_then(Value::as_u64)
         .is_some_and(|n| n > 0 && n <= max)
 }
-fn source_valid(value: &Value) -> bool {
+pub(crate) fn source_valid(value: &Value) -> bool {
     let Some(source) = value.as_object() else {
         return false;
     };
@@ -141,7 +141,7 @@ fn source_valid(value: &Value) -> bool {
         || !positive(source.get("bytes"), 33_554_432)
         || !matches!(
             source.get("origin").and_then(Value::as_str),
-            Some("inline" | "reference")
+            Some("inline" | "reference" | "retrieval")
         )
     {
         return false;

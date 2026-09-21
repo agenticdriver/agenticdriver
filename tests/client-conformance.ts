@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { AgenticClient } from "../src/client.js";
+import type { RetrievalRequest } from "../src/retrieval-types.js";
 import { DriverError } from "../src/errors.js";
 
 const reference = process.env.AGENTICDRIVER_TEST_REFERENCE_URL!;
@@ -18,6 +19,7 @@ const fixtures = JSON.parse(
     expectTransportError?: boolean;
     cancel?: boolean;
     operation?: string;
+    retrieval?: RetrievalRequest;
   }[];
 };
 const request = { provider: "mock", model: "demo", input: "Hello" };
@@ -34,7 +36,10 @@ for (const example of fixtures.cases) {
     else {
       let completed = false,
         cancelled = false;
-      for await (const event of client.stream(request)) {
+      for await (const event of client.stream({
+        ...request,
+        ...(example.retrieval ? { retrieval: example.retrieval } : {}),
+      })) {
         if (example.cancel && event.type === "text.delta") {
           cancelled = true;
           break;

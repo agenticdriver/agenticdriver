@@ -14,6 +14,10 @@ from .context import ArtifactRequest, ContextInput, ContextManifest, ContextRefe
 
 __all__ = ["AgenticClient", "DriverError", "PROTOCOL_VERSION", "ArtifactRequest", "ContextInput", "ContextManifest", "ContextReference", "ContextSource", "DraftArtifact", "ImageAttachment", "MediaType", "PdfAttachment", "SourceLocation", "TextAttachment"]
 
+from .retrieval import RetrievalRequest, RetrievalSearch, VectorIndex, RetrievalChunk, RetrievalIndexRequest, RetrievalHit, RetrievalResult, RetrievalIndexResult, RetrievalDelete, RetrievalDeleteResult
+from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
+__all__ += ["RetrievalRequest", "RetrievalSearch", "VectorIndex", "RetrievalChunk", "RetrievalIndexRequest", "RetrievalHit", "RetrievalResult", "RetrievalIndexResult", "RetrievalDelete", "RetrievalDeleteResult"]
+
 class _NoRedirects(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -64,6 +68,27 @@ class AgenticClient:
         if len(data) > 2_000_000:
             raise DriverError("RESPONSE_TOO_LARGE", "The response exceeded 2 MB.")
         return parse_json(data)
+
+    def search_context(self, request: RetrievalSearch) -> RetrievalResult:
+        with self._request("v1/retrieval/search", request) as response:
+            result = self._json(response)
+            if not valid_retrieval(result, request):
+                raise DriverError("INVALID_RESPONSE", "The driver returned invalid or unscoped retrieval evidence.")
+            return result
+
+    def index_context(self, request: RetrievalIndexRequest) -> RetrievalIndexResult:
+        with self._request("v1/retrieval/index", request) as response:
+            result = self._json(response)
+            if not valid_index_result(result, request):
+                raise DriverError("INVALID_RESPONSE", "The driver returned an invalid indexing receipt.")
+            return result
+
+    def delete_context(self, request: RetrievalDelete) -> RetrievalDeleteResult:
+        with self._request("v1/retrieval/delete", request) as response:
+            result = self._json(response)
+            if not valid_delete_result(result, request):
+                raise DriverError("INVALID_RESPONSE", "The driver returned an invalid deletion receipt.")
+            return result
 
     def providers(self, *, refresh: bool = False) -> list[dict[str, Any]]:
         with self._request("v1/providers?refresh=true" if refresh else "v1/providers") as response:

@@ -74,3 +74,46 @@ assert.deepEqual(contextual.artifacts![0]!.sourceIds, [
   "image-one",
   "pdf-one",
 ]);
+
+const indexedSource = {
+  corpus: "library",
+  source: { id: "typescript-paper", revision: "r1" },
+  chunks: [
+    {
+      id: "typescript-p1",
+      text: "Solar batteries retain energy.",
+      location: { page: 2 },
+    },
+  ],
+};
+assert.equal((await client.indexContext(indexedSource)).status, "indexed");
+const search = {
+  corpus: "library",
+  sourceIds: ["typescript-paper"],
+  query: "solar energy",
+};
+assert.equal(
+  (await client.searchContext(search)).hits[0]!.chunkId,
+  "typescript-p1",
+);
+const grounded = await client.run({
+  provider: "mock",
+  model: "demo",
+  input: "Question",
+  retrieval: search,
+  outputArtifact: { name: "answer.md", mediaType: "text/markdown" },
+});
+assert.equal(grounded.retrieval!.hits[0]!.source.id, "typescript-paper");
+assert.equal(grounded.sources![0]!.origin, "retrieval");
+assert.deepEqual(grounded.artifacts![0]!.sourceIds, ["typescript-p1"]);
+assert.equal(
+  (
+    await client.deleteContext({
+      corpus: "library",
+      sourceId: "typescript-paper",
+      revision: "r1",
+    })
+  ).deleted,
+  true,
+);
+assert.deepEqual((await client.searchContext(search)).hits, []);

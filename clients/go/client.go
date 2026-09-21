@@ -35,6 +35,7 @@ type Error struct {
 func (e *Error) Error() string { return e.Code + ": " + e.Message }
 
 type Request struct {
+	Retrieval            *RetrievalRequest `json:"retrieval,omitempty"`
 	Attachments          []ContextInput    `json:"attachments,omitempty"`
 	OutputArtifact       *ArtifactRequest  `json:"outputArtifact,omitempty"`
 	Provider             string            `json:"provider"`
@@ -70,6 +71,7 @@ type Usage struct {
 	APIEquivalentCostUSD *float64 `json:"apiEquivalentCostUsd,omitempty"`
 }
 type Result struct {
+	Retrieval    *RetrievalResult  `json:"retrieval,omitempty"`
 	Sources      []ContextManifest `json:"sources,omitempty"`
 	Artifacts    []DraftArtifact   `json:"artifacts,omitempty"`
 	RunID        string            `json:"runId"`
@@ -261,7 +263,7 @@ func (c *Client) Run(ctx context.Context, request Request) (Result, error) {
 		return result, err
 	}
 	err = decode(res, &result)
-	if err == nil && (result.Provider != request.Provider || result.Model != request.Model) {
+	if err == nil && (result.Provider != request.Provider || result.Model != request.Model || !retrievalSelection(result.Retrieval, request.Retrieval)) {
 		err = &Error{Code: "INVALID_RESPONSE", Message: "The result does not match the requested provider and model."}
 	}
 	return result, err

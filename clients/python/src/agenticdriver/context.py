@@ -52,7 +52,7 @@ class _ManifestRequired(ContextSource):
     mediaType: MediaType
     bytes: int
     sha256: str
-    origin: Literal["inline", "reference"]
+    origin: Literal["inline", "reference", "retrieval"]
 
 class ContextManifest(_ManifestRequired, total=False):
     expiresAt: str
