@@ -53,8 +53,11 @@ subscription tier or successful model access from cached credentials. See the
 [Antigravity migration guidance](https://antigravity.google/docs/cli/overview/#migrating-from-gemini-cli)
 describes a separate route; it is not an automatic fallback in this SDK.
 
-Grok is supported through the xAI API. A Grok subscription bridge is not
-implemented. xAI documents Chat Completions as supported but legacy; the adapter
+AgenticDriver currently supports Grok through the xAI API. Official Grok Build
+headless/ACP and native sign-in interfaces now provide an integration route,
+but its SDK adapter and live certification are pending. See the
+[dated feasibility decision and implementation work](validation/grok-subscription-2026-09-21.md).
+xAI documents Chat Completions as supported but legacy; the adapter
 uses that established function-calling contract, and a native Responses adapter
 can be added separately.
 [xAI Chat Completions](https://docs.x.ai/developers/model-capabilities/legacy/chat-completions).

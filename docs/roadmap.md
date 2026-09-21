@@ -1020,3 +1020,44 @@ Provide optional RAG and vector database capabilities in the SDK for application
 - [ ] Brandstorm answers from chosen briefs/brand documents, LitAgent answers from selected PDF/Markdown evidence, and AI Workspace answers from chosen email threads with navigable citations.
 - [ ] Cross-tenant and unselected-source leakage, revocation/deletion, stale revisions, insufficient evidence and fabricated citation identifiers are covered by shared evaluation fixtures.
 - [ ] A reproducible local/remote example uses a persistent vector store and documents embedding/provider choices, ingestion, queries, updates and cleanup without requiring a particular generation vendor.
+
+## Grok Build work identified by AD-045
+
+The [2026-09-21 feasibility review](validation/grok-subscription-2026-09-21.md) found an official native integration route. These optional items separate adapter implementation from live account certification.
+
+<a id="ad-049"></a>
+
+### AD-049 — Implement a restricted official Grok Build session adapter with fixtures
+
+**Target:** agenticdriver · **Component:** Providers · **Phase:** Later · **Priority:** P2
+
+**Current state:** AD-045 found official Grok Build headless/ACP and native sign-in interfaces. No SDK session adapter is implemented.
+
+**Scope:** Implement the documented official CLI route with explicit host-owned account/model selection, restricted execution, progress, cancellation and packaged synthetic conformance. Keep live certification separate as AD-050.
+
+**Completion criteria:**
+
+- [ ] A pinned official binary uses its native sign-in and explicit model; no consumer token extraction, ambient API-key/endpoint fallback, or unrequested native tools execute.
+- [ ] Fixture tests prove incremental visible output, redacted errors/private reasoning, truthful usage, process cleanup, explicit cancellation, and disabled default inactivity; document or reject incompatible native limits.
+- [ ] Effective native configuration, permissions, hooks/MCP/plugins/skills/memory and session storage are bounded and verified read-only without changing the user account configuration.
+- [ ] The installed adapter passes packaged conformance and shared language transport checks, with capabilities and OS limitations recorded; fixture success does not advertise live account certification.
+
+**Depends on:** [AD-024](#ad-024), [AD-045](#ad-045)
+
+<a id="ad-050"></a>
+
+### AD-050 — Certify the Grok Build session route on an explicitly selected account
+
+**Target:** agenticdriver · **Component:** Providers · **Phase:** Later · **Priority:** P2
+
+**Current state:** Official documentation establishes an integration route, but no account or model has been selected for Grok live checks.
+
+**Scope:** Recheck official integration/authentication requirements and verify the restricted session adapter using an explicitly selected account/model and synthetic input before listing live support.
+
+**Completion criteria:**
+
+- [ ] An explicitly selected account/model completes a synthetic run with recorded native version, OS, authentication route, progress, final result and known or unknown usage.
+- [ ] Cancellation, native policy enforcement, credential isolation, missing/expired sign-in and model/quota failures have evidence or specific documented limits; no fallback or destructive account changes occur.
+- [ ] Provider documentation and the supported matrix distinguish observed account eligibility, consumer usage pools and separately configured developer API billing; no unsupported subscription-credit claim is made.
+
+**Depends on:** [AD-049](#ad-049)
