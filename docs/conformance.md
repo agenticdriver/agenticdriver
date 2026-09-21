@@ -1,5 +1,9 @@
 # Protocol conformance
 
+The [compatibility matrix](compatibility.md) declares OS/runtime rows, artifact
+installation checks and proxy/TLS fault scenarios. Native account certification
+is separate from the credential-free matrix.
+
 Run `npm run check` and `npm run test:clients` to verify the protocol and all four
 clients. The suite uses synthetic data and a local reference peer; it never
 loads an API key or starts a native agent.

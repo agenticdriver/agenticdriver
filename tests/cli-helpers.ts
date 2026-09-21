@@ -16,14 +16,19 @@ export class CliProcess {
   constructor(
     entry: string[],
     args: string[],
-    options: { cwd?: string; env?: NodeJS.ProcessEnv; input?: string } = {},
+    options: {
+      cwd?: string;
+      env?: NodeJS.ProcessEnv;
+      input?: string;
+      fixtureIpc?: boolean;
+    } = {},
   ) {
     this.child = spawn(process.execPath, [...entry, ...args], {
       cwd: options.cwd,
       env: options.env,
-      stdio: "pipe",
+      stdio: ["pipe", "pipe", "pipe", options.fixtureIpc ? "ipc" : "ignore"],
       shell: false,
-    });
+    }) as ChildProcessWithoutNullStreams; // The three standard streams are explicitly pipes.
     // A test watchdog, never a host/model run deadline.
     const watchdog = setTimeout(() => this.child.kill("SIGKILL"), 20_000);
     watchdog.unref();
@@ -77,7 +82,11 @@ export class CliProcess {
     });
   }
   async stop() {
-    if (!this.exited) this.child.kill("SIGTERM");
+    if (!this.exited) {
+      // IPC is test-fixture control, not a public SDK shutdown endpoint.
+      if (this.child.connected) this.child.send({ type: "fixture.shutdown" });
+      else this.child.kill("SIGTERM");
+    }
     return this.finished;
   }
 }

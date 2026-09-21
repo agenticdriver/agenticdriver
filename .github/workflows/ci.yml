@@ -1,27 +1,79 @@
 name: SDK checks
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux minimum runtimes
+            os: ubuntu-24.04
+            node: 22.13.0
+            python: "3.10"
+            go: "1.22"
+            rust: "1.89.0"
+          - label: Linux LTS and current clients
+            os: ubuntu-24.04
+            node: "24"
+            python: "3.14"
+            go: stable
+            rust: stable
+          - label: Linux current Node
+            os: ubuntu-24.04
+            node: "26"
+            python: "3.14"
+            go: stable
+            rust: stable
+          - label: macOS arm64
+            os: macos-15
+            node: "24"
+            python: "3.14"
+            go: stable
+            rust: "1.89.0"
+          - label: Windows clients and programmatic host
+            os: windows-2022
+            node: "24"
+            python: "3.14"
+            go: "1.22"
+            rust: "1.89.0"
+    env:
+      AGENTICDRIVER_TEST_RUST_TOOLCHAIN: ${{ matrix.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ matrix.go }}
           cache: false
-      - uses: dtolnay/rust-toolchain@1.89.0
-      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - if: runner.os == 'macOS'
+        run: brew install poppler
+      - if: runner.os == 'Windows'
+        run: |
+          choco install poppler --no-progress -y
+          $poppler = Get-ChildItem C:\ProgramData\chocolatey\lib\poppler -Recurse -Filter pdftotext.exe | Select-Object -First 1
+          if (-not $poppler) { throw "Poppler installation did not provide pdftotext" }
+          $poppler.DirectoryName >> $env:GITHUB_PATH
       - run: npm ci
       - run: npm run check
       - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json
       - run: npm run test:clients
-      - run: npm run test:install
+      - run: python scripts/test-go-install.py --local-archive
+      - if: runner.os != 'Windows'
+        run: npm run test:install
+      - if: runner.os == 'Windows'
+        run: npm run test:install -- --package-only

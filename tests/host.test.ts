@@ -291,7 +291,10 @@ test("init creates private credentials without replacement and mock CLI commands
       JSON.parse(replay.stdout.trim().split("\n").at(-1)!).result,
       completed.result,
     );
-    assert.equal((await server.stop()).code, 0);
+    const stopped = await server.stop();
+    // Windows termination is forceful; it does not exercise POSIX graceful shutdown.
+    if (process.platform === "win32") assert.equal(stopped.signal, "SIGTERM");
+    else assert.equal(stopped.code, 0);
   } finally {
     await server?.stop();
     await rm(directory, { recursive: true, force: true });

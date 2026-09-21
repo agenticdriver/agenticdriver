@@ -4,7 +4,7 @@ Node.js applications can opt into [diagnostics and OpenTelemetry](diagnostics.md
 through separate package entries. The [diagnostics example](../examples/javascript/diagnostics.mts)
 is compiled and run against the installed package, with no telemetry SDK required.
 
-Use `agenticdriver/client` in browsers and servers that connect to an execution host. Use the main `agenticdriver` entry on a Node.js 22+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle.
+Use `agenticdriver/client` in browsers and servers that connect to an execution host. Use the main `agenticdriver` entry on a Node.js 22.13+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle. See the [compatibility matrix](compatibility.md) for tested runtime combinations and platform limits.
 
 Optional [detached jobs](jobs.md) add `submitJob`, `readJob`, `cancelJob` and
 `jobEvents` to the browser-safe client. `JobService` and `SqliteJobStore` belong

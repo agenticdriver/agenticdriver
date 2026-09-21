@@ -7,12 +7,15 @@ import secrets
 import subprocess
 import sys
 import tempfile
+import zipfile
+import datetime
 
 ROOT = Path(__file__).resolve().parent.parent
 MODULE = "github.com/hashimkarim/agenticdriver/clients/go"
-if len(sys.argv) != 2 or re.fullmatch(r"[a-f0-9]{7,40}|v[0-9]+\.[0-9]+\.[0-9]+(?:[-.a-zA-Z0-9]+)?", sys.argv[1]) is None:
-    raise SystemExit("Usage: python3 scripts/test-go-install.py PUSHED_COMMIT_OR_VERSION")
-version = sys.argv[1]
+local_archive = len(sys.argv) == 2 and sys.argv[1] == "--local-archive"
+if not local_archive and (len(sys.argv) != 2 or re.fullmatch(r"[a-f0-9]{7,40}|v[0-9]+\.[0-9]+\.[0-9]+(?:[-.a-zA-Z0-9]+)?", sys.argv[1]) is None):
+    raise SystemExit("Usage: python3 scripts/test-go-install.py PUSHED_COMMIT_OR_VERSION | --local-archive")
+version = "v0.0.0-ci" if local_archive else sys.argv[1]
 with tempfile.TemporaryDirectory(prefix="agenticdriver-go-install-") as directory:
     work = Path(directory)
     app = work / "application"
@@ -24,6 +27,21 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-go-install-") as director
     private = "github.com/hashimkarim/agenticdriver"
     for key in ("GOPRIVATE", "GONOPROXY", "GONOSUMDB"):
         env[key] = ",".join(filter(None, (env.get(key, ""), private)))
+    if local_archive:
+        # Build the same Go module archive layout without needing repository credentials
+        # in CI or publishing an unfinished release. go get must install the archive.
+        proxy = work / "module-proxy"
+        versions = proxy / MODULE / "@v"
+        versions.mkdir(parents=True)
+        (versions / "list").write_text(version + "\n")
+        (versions / (version + ".mod")).write_bytes((ROOT / "clients/go/go.mod").read_bytes())
+        (versions / (version + ".info")).write_text(json.dumps({"Version": version, "Time": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")}))
+        with zipfile.ZipFile(versions / (version + ".zip"), "w", zipfile.ZIP_DEFLATED) as archive:
+            for path in (ROOT / "clients/go").rglob("*"):
+                relative = path.relative_to(ROOT / "clients/go")
+                if path.is_file() and not any(part.startswith(".") for part in relative.parts):
+                    archive.write(path, MODULE + "@" + version + "/" + relative.as_posix())
+        env.update(GOPROXY=proxy.as_uri(), GONOPROXY="none", GONOSUMDB=private)
     env["GIT_TERMINAL_PROMPT"] = "0"
     def run(*args, **kwargs):
         return subprocess.run(args, cwd=app, env=env, check=True, timeout=240, text=True, **kwargs)
@@ -97,4 +115,4 @@ func main() {
             try: host.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 host.kill(); host.wait()
-    print(json.dumps({"module": MODULE, "version": module["Version"], "replace": False, "http": "passed", "verifiedHttps": "passed"}))
+    print(json.dumps({"module": MODULE, "version": module["Version"], "source": "local archive" if local_archive else "published revision", "replace": False, "http": "passed", "verifiedHttps": "passed"}))

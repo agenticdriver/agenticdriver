@@ -389,12 +389,18 @@ test("CLI subprocess input cannot become a shell command and cancellation kills 
   );
 });
 
-test("Codex runs a restricted child with stdin context and no ambient provider keys", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "agenticdriver-cli-fixture-"));
-  const binary = join(directory, "codex-fixture");
-  await writeFile(
-    binary,
-    `#!${process.execPath}
+// This fixture is a POSIX executable; Windows native wrapper support is tracked in AD-012.
+test(
+  "Codex runs a restricted child with stdin context and no ambient provider keys",
+  { skip: process.platform === "win32" },
+  async () => {
+    const directory = await mkdtemp(
+      join(tmpdir(), "agenticdriver-cli-fixture-"),
+    );
+    const binary = join(directory, "codex-fixture");
+    await writeFile(
+      binary,
+      `#!${process.execPath}
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
   process.stdout.write('--ignore-user-config --ephemeral --sandbox --json');
@@ -411,26 +417,27 @@ if (args.includes('--help')) {
   });
 }
 `,
-    { mode: 0o700 },
-  );
-  try {
-    const provider = codex({ binary, accountDirectory: directory });
-    const input = "Literal $(echo should-not-execute) and 🌍";
-    const result = await new AgenticDriver({ providers: [provider] }).run({
-      provider: "codex",
-      model: "fixture",
-      input,
-    });
-    const output = JSON.parse(result.text);
-    assert.ok(output.input.includes(input));
-    assert.equal(output.restricted, true);
-    assert.equal(output.privateCwd, true);
-    assert.equal(output.account, directory);
-    assert.equal(output.leakedKey, false);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
+      { mode: 0o700 },
+    );
+    try {
+      const provider = codex({ binary, accountDirectory: directory });
+      const input = "Literal $(echo should-not-execute) and 🌍";
+      const result = await new AgenticDriver({ providers: [provider] }).run({
+        provider: "codex",
+        model: "fixture",
+        input,
+      });
+      const output = JSON.parse(result.text);
+      assert.ok(output.input.includes(input));
+      assert.equal(output.restricted, true);
+      assert.equal(output.privateCwd, true);
+      assert.equal(output.account, directory);
+      assert.equal(output.leakedKey, false);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
 
 test("Usagestat reads the existing provider, usage, and quota contracts", async () => {
   const client = new UsageStatClient({

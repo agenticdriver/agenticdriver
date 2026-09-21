@@ -9,12 +9,13 @@ import tarfile
 
 ROOT = Path(__file__).resolve().parent.parent
 MSRV = "1.89.0"
+TOOLCHAIN = os.environ.get("AGENTICDRIVER_TEST_RUST_TOOLCHAIN", MSRV)
 
 
 def prepare_rust(directory: Path) -> tuple[Path, dict[str, str]]:
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "clients/rust/target")).resolve()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
-    command = ["cargo", f"+{MSRV}"]
+    command = ["cargo", f"+{TOOLCHAIN}"]
     subprocess.run(
         [*command, "package", "--locked", "--allow-dirty"],
         cwd=ROOT / "clients/rust", env=env, check=True, timeout=300,
@@ -91,5 +92,5 @@ pub fn blocking(client: &agenticdriver::AgenticClient) -> agenticdriver::Result<
     metadata = json.loads(result.stdout)
     dependency = next(d for d in metadata["packages"][0]["dependencies"] if d["name"] == "agenticdriver")
     assert Path(dependency["path"]).resolve() == package.resolve()
-    print("Installed Rust crate: archive contents, independent application and four feature combinations passed on Rust 1.89.", flush=True)
+    print(f"Installed Rust crate: archive contents, independent application and four feature combinations passed on Rust {TOOLCHAIN} (MSRV {MSRV}).", flush=True)
     return application, {"CARGO_TARGET_DIR": str(target)}

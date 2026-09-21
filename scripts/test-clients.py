@@ -10,7 +10,7 @@ import ssl
 import time
 from urllib.request import Request, urlopen
 from python_package import prepare_python
-from rust_package import prepare_rust, MSRV
+from rust_package import prepare_rust, TOOLCHAIN
 
 ROOT = Path(__file__).resolve().parent.parent
 PYTHON_ONLY = "--python-only" in sys.argv[1:]
@@ -28,7 +28,7 @@ def check_clients(url, token, ca, env, python, application, rust_application, ru
         commands += [(["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-race", "-count=1", "./..."], ROOT / "clients/go")]
     if not PYTHON_ONLY:
         env.update(rust_env)
-        commands += [(["cargo", f"+{MSRV}", "run", "--locked", "--quiet"], rust_application), (["cargo", f"+{MSRV}", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
+        commands += [(["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet"], rust_application), (["cargo", f"+{TOOLCHAIN}", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
     failures = []
     for command, directory in commands:
         result = subprocess.run(command, cwd=directory, env=env, timeout=180)

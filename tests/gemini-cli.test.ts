@@ -46,15 +46,19 @@ test("Gemini failure classification never exposes native account/error details",
   );
 });
 
-test("restricted Gemini subprocess normalizes startup and streamed failures before generic exit handling", async () => {
-  const directory = await mkdtemp(
-    join(tmpdir(), "agenticdriver-gemini-fixture-"),
-  );
-  const binary = join(directory, "gemini-fixture");
-  try {
-    await writeFile(
-      binary,
-      `#!/usr/bin/env node
+// Native executable wrappers need the separate Windows process-isolation work (AD-012).
+test(
+  "restricted Gemini subprocess normalizes startup and streamed failures before generic exit handling",
+  { skip: process.platform === "win32" },
+  async () => {
+    const directory = await mkdtemp(
+      join(tmpdir(), "agenticdriver-gemini-fixture-"),
+    );
+    const binary = join(directory, "gemini-fixture");
+    try {
+      await writeFile(
+        binary,
+        `#!/usr/bin/env node
 const fs=require('node:fs');
 const args=process.argv.slice(2);
 if(args.includes('--help')){console.log('--admin-policy --output-format --extensions');process.exit(0)}
@@ -81,53 +85,54 @@ let input='';process.stdin.on('data',c=>input+=c);process.stdin.on('end',()=>{
  else{console.log(JSON.stringify({type:'message',role:'assistant',content:'done'}));console.log(JSON.stringify({type:'result',status:'success',stats:{input_tokens:4,output_tokens:2,cached:0,tool_calls:0}}))}
 });
 `,
-      { mode: 0o700 },
-    );
-    const driver = new AgenticDriver({
-      providers: [
-        geminiCli({
-          binary,
-          accountDirectory: directory,
-          models: ["fixture-model"],
-        }),
-      ],
-    });
-    for (const [input, code] of [
-      ["unsupported", "CLI_AUTH_UNSUPPORTED"],
-      ["expired", "CLI_AUTH_REQUIRED"],
-      ["unauthenticated", "CLI_AUTH_REQUIRED"],
-      ["quota", "RATE_LIMITED"],
-      ["unknown", "CLI_FAILED"],
-    ]) {
-      await assert.rejects(
-        driver.run({
-          provider: "gemini-cli",
-          model: "fixture-model",
-          input: input!,
-        }),
-        (error: unknown) => {
-          assert.equal((error as { code: string }).code, code);
-          assert.equal(
-            (error as Error).message.includes("private-marker"),
-            false,
-          );
-          return true;
-        },
+        { mode: 0o700 },
       );
+      const driver = new AgenticDriver({
+        providers: [
+          geminiCli({
+            binary,
+            accountDirectory: directory,
+            models: ["fixture-model"],
+          }),
+        ],
+      });
+      for (const [input, code] of [
+        ["unsupported", "CLI_AUTH_UNSUPPORTED"],
+        ["expired", "CLI_AUTH_REQUIRED"],
+        ["unauthenticated", "CLI_AUTH_REQUIRED"],
+        ["quota", "RATE_LIMITED"],
+        ["unknown", "CLI_FAILED"],
+      ]) {
+        await assert.rejects(
+          driver.run({
+            provider: "gemini-cli",
+            model: "fixture-model",
+            input: input!,
+          }),
+          (error: unknown) => {
+            assert.equal((error as { code: string }).code, code);
+            assert.equal(
+              (error as Error).message.includes("private-marker"),
+              false,
+            );
+            return true;
+          },
+        );
+      }
+      const result = await driver.run({
+        provider: "gemini-cli",
+        model: "fixture-model",
+        input: "success",
+      });
+      assert.equal(result.text, "done");
+      assert.equal(result.usage.costUsd, undefined);
+      assert.deepEqual(result.usage, {
+        inputTokens: 4,
+        outputTokens: 2,
+        cachedInputTokens: 0,
+      });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
     }
-    const result = await driver.run({
-      provider: "gemini-cli",
-      model: "fixture-model",
-      input: "success",
-    });
-    assert.equal(result.text, "done");
-    assert.equal(result.usage.costUsd, undefined);
-    assert.deepEqual(result.usage, {
-      inputTokens: 4,
-      outputTokens: 2,
-      cachedInputTokens: 0,
-    });
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
+  },
+);

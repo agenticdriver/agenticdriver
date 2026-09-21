@@ -55,7 +55,7 @@ flowchart LR
 
 ## Try all three examples
 
-Requires Node.js 22+ and npm. These examples use deterministic fixtures by default
+Requires Node.js 22.13+ and npm. These examples use deterministic fixtures by default
 and require no credentials. The literature and email inputs are explicitly synthetic.
 
 ```bash

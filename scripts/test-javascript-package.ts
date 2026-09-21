@@ -225,6 +225,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   await writeFile(join(app, "fixture-host.mjs"), hostFixture);
   const host = new CliProcess([join(app, "fixture-host.mjs")], [], {
     cwd: app,
+    fixtureIpc: true,
   });
   try {
     const url = await host.listening();
@@ -374,4 +375,5 @@ console.log(JSON.stringify({event:"listening",url:host.url,previewUrl,token:${JS
 let closing=false;
 async function close(){if(closing)return;closing=true;await host.close();pages.closeAllConnections();await new Promise(resolve=>pages.close(resolve));process.exit(0);}
 process.once("SIGTERM",close);process.once("SIGINT",close);
+process.on("message",message=>{if(message?.type==="fixture.shutdown")close()});
 `;
