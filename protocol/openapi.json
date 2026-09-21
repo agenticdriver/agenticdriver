@@ -7,6 +7,198 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/v1/jobs/submit": {
+      "post": {
+        "operationId": "submitJob",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Opt-in detached jobs with tenant isolation and separate submit/read/cancel grants. HTTP disconnect leaves execution running. Worker recovery resumes queued jobs and marks started jobs interrupted without replaying effects. Job payload retention is explicit; accepted key tombstones remain. No job duration deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobSubmit" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized job metadata or committed event page",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobInfo" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/read": {
+      "post": {
+        "operationId": "readJob",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Opt-in detached jobs with tenant isolation and separate submit/read/cancel grants. HTTP disconnect leaves execution running. Worker recovery resumes queued jobs and marks started jobs interrupted without replaying effects. Job payload retention is explicit; accepted key tombstones remain. No job duration deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobIdentity" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized job metadata or committed event page",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobInfo" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/cancel": {
+      "post": {
+        "operationId": "cancelJob",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Opt-in detached jobs with tenant isolation and separate submit/read/cancel grants. HTTP disconnect leaves execution running. Worker recovery resumes queued jobs and marks started jobs interrupted without replaying effects. Job payload retention is explicit; accepted key tombstones remain. No job duration deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobIdentity" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized job metadata or committed event page",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobInfo" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/events": {
+      "post": {
+        "operationId": "jobEvents",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Opt-in detached jobs with tenant isolation and separate submit/read/cancel grants. HTTP disconnect leaves execution running. Worker recovery resumes queued jobs and marks started jobs interrupted without replaying effects. Job payload retention is explicit; accepted key tombstones remain. No job duration deadline.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobEventsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized job metadata or committed event page",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobEventPage" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sessions/create": {
       "post": {
         "operationId": "createSession",
@@ -682,6 +874,597 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "JobSubmit": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "model": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+              },
+              "input": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100000
+              },
+              "attachments": {
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": { "type": "string", "const": "text" },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "revision": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "title": { "type": "string", "maxLength": 256 },
+                                "uri": {
+                                  "type": "string",
+                                  "maxLength": 2048,
+                                  "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "documentId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "page": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "pageEnd": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "startLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "endLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "section": {
+                                      "type": "string",
+                                      "maxLength": 256
+                                    },
+                                    "threadId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "messageId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "revision"],
+                              "additionalProperties": false
+                            },
+                            "mediaType": {
+                              "type": "string",
+                              "enum": ["text/plain", "text/markdown"]
+                            },
+                            "text": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 1000000
+                            }
+                          },
+                          "required": ["type", "source", "mediaType", "text"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": { "type": "string", "const": "image" },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "revision": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "title": { "type": "string", "maxLength": 256 },
+                                "uri": {
+                                  "type": "string",
+                                  "maxLength": 2048,
+                                  "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "documentId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "page": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "pageEnd": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "startLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "endLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "section": {
+                                      "type": "string",
+                                      "maxLength": 256
+                                    },
+                                    "threadId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "messageId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "revision"],
+                              "additionalProperties": false
+                            },
+                            "mediaType": {
+                              "type": "string",
+                              "enum": ["image/png", "image/jpeg", "image/webp"]
+                            },
+                            "data": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 44739244
+                            }
+                          },
+                          "required": ["type", "source", "mediaType", "data"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": { "type": "string", "const": "pdf" },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "revision": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                },
+                                "title": { "type": "string", "maxLength": 256 },
+                                "uri": {
+                                  "type": "string",
+                                  "maxLength": 2048,
+                                  "pattern": "^(https|app):\\/\\/[^\\s]+$"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "documentId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "page": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "pageEnd": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "startLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "endLine": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1000000
+                                    },
+                                    "section": {
+                                      "type": "string",
+                                      "maxLength": 256
+                                    },
+                                    "threadId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    },
+                                    "messageId": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                                    }
+                                  },
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": ["id", "revision"],
+                              "additionalProperties": false
+                            },
+                            "mediaType": {
+                              "type": "string",
+                              "const": "application/pdf"
+                            },
+                            "data": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 44739244
+                            }
+                          },
+                          "required": ["type", "source", "mediaType", "data"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "const": "reference" },
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                        },
+                        "mediaType": {
+                          "type": "string",
+                          "enum": [
+                            "text/plain",
+                            "text/markdown",
+                            "image/png",
+                            "image/jpeg",
+                            "image/webp",
+                            "application/pdf"
+                          ]
+                        }
+                      },
+                      "required": ["type", "id", "revision", "mediaType"],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "retrieval": {
+                "type": "object",
+                "properties": {
+                  "corpus": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                  },
+                  "sourceIds": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "query": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 16384
+                  },
+                  "limit": { "type": "integer", "minimum": 1, "maximum": 16 },
+                  "maxContextBytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 262144
+                  },
+                  "minScore": { "type": "number", "minimum": -1, "maximum": 1 }
+                },
+                "required": ["corpus"],
+                "additionalProperties": false
+              },
+              "outputArtifact": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[^/\\\\\\u0000-\\u001f]+$"
+                  },
+                  "mediaType": {
+                    "type": "string",
+                    "enum": ["text/plain", "text/markdown", "application/json"]
+                  }
+                },
+                "required": ["name", "mediaType"],
+                "additionalProperties": false
+              },
+              "idempotencyKey": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+              },
+              "retry": {
+                "type": "object",
+                "properties": {
+                  "maxAttempts": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "baseDelayMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60000
+                  },
+                  "maxDelayMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60000
+                  }
+                },
+                "required": ["maxAttempts"],
+                "additionalProperties": false
+              },
+              "instructions": { "type": "string", "maxLength": 100000 },
+              "history": {
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": { "type": "string", "enum": ["user", "assistant"] },
+                    "content": { "type": "string", "maxLength": 100000 }
+                  },
+                  "required": ["role", "content"],
+                  "additionalProperties": false
+                }
+              },
+              "session": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": ["id", "revision"],
+                "additionalProperties": false
+              },
+              "approvals": {
+                "type": "object",
+                "properties": {
+                  "mode": { "type": "string", "const": "interactive" },
+                  "idlePolicy": {
+                    "type": "string",
+                    "enum": ["pause", "continue"]
+                  },
+                  "expiresAfterMs": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  }
+                },
+                "required": ["mode", "idlePolicy"],
+                "additionalProperties": false
+              },
+              "applicationTools": {
+                "minItems": 1,
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "inputSchema": {
+                      "type": "object",
+                      "propertyNames": { "type": "string" },
+                      "additionalProperties": {}
+                    },
+                    "outputSchema": {
+                      "type": "object",
+                      "propertyNames": { "type": "string" },
+                      "additionalProperties": {}
+                    },
+                    "requiresApproval": { "type": "boolean" }
+                  },
+                  "required": ["name", "description", "inputSchema"],
+                  "additionalProperties": false
+                }
+              },
+              "tools": {
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                }
+              },
+              "requiredCapabilities": {
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9._-]{0,79}$"
+                }
+              },
+              "maxSteps": { "type": "integer", "minimum": 1, "maximum": 64 },
+              "maxOutputTokens": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65536
+              },
+              "idleTimeoutMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              },
+              "outputSchema": {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {}
+              },
+              "metadata": {
+                "type": "object",
+                "propertyNames": { "type": "string", "maxLength": 80 },
+                "additionalProperties": { "type": "string", "maxLength": 500 }
+              }
+            },
+            "required": ["provider", "model", "input"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["key", "request"],
+        "additionalProperties": false
+      },
+      "JobIdentity": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "JobInfo": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+          },
+          "runId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+          },
+          "provider": { "type": "string", "minLength": 1 },
+          "model": { "type": "string", "minLength": 1 },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "cancelled",
+              "interrupted"
+            ]
+          },
+          "cursor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "cancelRequested": { "type": "boolean" },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "runId",
+          "provider",
+          "model",
+          "state",
+          "cursor",
+          "cancelRequested",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "JobEventsRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+          },
+          "after": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+        },
+        "required": ["id", "after"],
+        "additionalProperties": false
+      },
       "SessionCreate": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -1052,6 +1835,25 @@
           "status": { "type": "string", "enum": ["progress", "accepted"] }
         },
         "required": ["executionId", "runId", "callId", "status"]
+      },
+      "JobEventPage": {
+        "type": "object",
+        "required": ["job", "events", "nextCursor", "hasMore"],
+        "properties": {
+          "job": { "$ref": "#/components/schemas/JobInfo" },
+          "events": {
+            "type": "array",
+            "maxItems": 100,
+            "items": { "$ref": "#/components/schemas/RunEvent" }
+          },
+          "nextCursor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hasMore": { "type": "boolean" }
+        },
+        "description": "Contiguous committed events after the requested cursor, bounded to 100 events and approximately 1.5 MB per page. No automatic tool dispatch or retry."
       },
       "ApprovalPolicy": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",

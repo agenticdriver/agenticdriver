@@ -57,7 +57,11 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         types: ["node"],
         outDir: "compiled-server",
       },
-      files: ["examples/server.mts", "examples/scheduling.mts"],
+      files: [
+        "examples/server.mts",
+        "examples/scheduling.mts",
+        "examples/jobs.mts",
+      ],
     }),
   );
   await writeFile(
@@ -175,6 +179,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     "approval-types.js",
     "tool-types.js",
     "session-types.js",
+    "job-types.js",
     "catalog.js",
     "usagestat-types.js",
     "context-types.js",
@@ -251,6 +256,15 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     assert.match(
       scheduling.stdout,
       /Installed scheduling and resource policies passed/,
+    );
+    const jobs = await run(
+      process.execPath,
+      [join(app, "compiled-server/jobs.mjs")],
+      { cwd: app, timeout: 10000 },
+    );
+    assert.match(
+      jobs.stdout,
+      /Installed durable job submit, reopen and replay passed/,
     );
     await writeFile(
       join(app, "contract-check.mjs"),

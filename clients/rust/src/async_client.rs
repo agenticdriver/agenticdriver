@@ -203,6 +203,53 @@ impl AsyncAgenticClient {
             .await?
             .providers)
     }
+    pub async fn submit_job(&self, request: &crate::JobSubmit) -> Result<crate::JobInfo> {
+        let value: Value = read_json(
+            self.request(
+                "v1/jobs/submit",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::jobs::info(value, Some(request), None)
+    }
+    pub async fn read_job(&self, request: &crate::JobIdentity) -> Result<crate::JobInfo> {
+        let value: Value = read_json(
+            self.request("v1/jobs/read", Some(&serde_json::to_value(request)?), false)
+                .await?,
+        )
+        .await?;
+        crate::jobs::info(value, None, Some(request))
+    }
+    pub async fn cancel_job(&self, request: &crate::JobIdentity) -> Result<crate::JobInfo> {
+        let value: Value = read_json(
+            self.request(
+                "v1/jobs/cancel",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::jobs::info(value, None, Some(request))
+    }
+    pub async fn job_events(
+        &self,
+        request: &crate::JobEventsRequest,
+    ) -> Result<crate::JobEventPage> {
+        let value: Value = read_json(
+            self.request(
+                "v1/jobs/events",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::jobs::page(value, request)
+    }
     pub async fn create_session(
         &self,
         request: &crate::SessionCreate,

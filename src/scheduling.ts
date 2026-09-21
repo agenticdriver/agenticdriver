@@ -76,6 +76,26 @@ export class FairScheduler {
     return { active: this.active, queued: this.queued };
   }
   submit(identity: SchedulingIdentity, signal: AbortSignal): AdmissionTicket {
+    return this.admit(identity, signal, true);
+  }
+  /** Durable queues already retain waiting work. Probe capacity without occupying a second queue. */
+  trySubmit(
+    identity: SchedulingIdentity,
+    signal: AbortSignal,
+  ): AdmissionTicket | undefined {
+    try {
+      return this.admit(identity, signal, false);
+    } catch (error) {
+      if (error instanceof DriverError && error.code === "BUSY")
+        return undefined;
+      throw error;
+    }
+  }
+  private admit(
+    identity: SchedulingIdentity,
+    signal: AbortSignal,
+    allowQueue: boolean,
+  ): AdmissionTicket {
     if (signal.aborted) throw publicError(signal.reason, signal);
     if (!subject.safeParse(identity.subject).success)
       throw new DriverError(
@@ -126,7 +146,7 @@ export class FairScheduler {
     this.pump();
     if (this.eligible(entry)) this.start(entry);
     else {
-      const queue = this.options.queue;
+      const queue = allowQueue ? this.options.queue : undefined;
       if (!queue)
         throw new DriverError(
           "BUSY",

@@ -17,6 +17,11 @@ import type {
 } from "../src/session-types.js";
 import type { RetrievalRequest } from "../src/retrieval-types.js";
 import { DriverError } from "../src/errors.js";
+import type {
+  JobSubmit,
+  JobIdentity,
+  JobEventsRequest,
+} from "../src/job-types.js";
 
 const reference = process.env.AGENTICDRIVER_TEST_REFERENCE_URL!;
 const url = process.env.AGENTICDRIVER_TEST_URL!;
@@ -29,6 +34,9 @@ const fixtures = JSON.parse(
 ) as {
   cases: {
     id: string;
+    jobSubmit?: JobSubmit;
+    jobIdentity?: JobIdentity;
+    jobEvents?: JobEventsRequest;
     expectedError?: string;
     expectTransportError?: boolean;
     cancel?: boolean;
@@ -56,6 +64,14 @@ for (const example of fixtures.cases) {
   try {
     if (example.operation === "providers") await client.providers();
     else if (example.operation === "protocol") await client.protocol();
+    else if (example.operation === "job-submit")
+      await client.submitJob(example.jobSubmit!);
+    else if (example.operation === "job-read")
+      await client.readJob(example.jobIdentity!);
+    else if (example.operation === "job-cancel")
+      await client.cancelJob(example.jobIdentity!);
+    else if (example.operation === "job-events")
+      await client.jobEvents(example.jobEvents!);
     else if (example.operation === "session-create")
       await client.createSession(example.sessionCreate!);
     else if (example.operation === "session-read")
@@ -127,6 +143,40 @@ for (const example of fixtures.cases) {
 }
 
 const client = new AgenticClient({ url, token });
+{
+  const submitted = await client.submitJob({ key: "typescript-job", request });
+  const identity = { id: submitted.id };
+  assert.equal(
+    (await client.submitJob({ key: "typescript-job", request })).id,
+    submitted.id,
+  );
+  let state = submitted;
+  for (let i = 0; i < 200 && state.state !== "completed"; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    state = await client.readJob(identity);
+  }
+  assert.equal(state.state, "completed");
+  let cursor = 0;
+  do {
+    const page = await client.jobEvents({
+      ...identity,
+      after: cursor,
+      limit: 2,
+    });
+    cursor = page.nextCursor;
+  } while (cursor < state.cursor);
+  assert.equal((await client.cancelJob(identity)).state, "completed");
+  const stalled = await client.submitJob({
+    key: "typescript-job-cancel",
+    request: { ...request, input: "conformance-stall" },
+  });
+  await client.cancelJob({ id: stalled.id });
+  for (let i = 0; i < 200; i++) {
+    if ((await client.readJob({ id: stalled.id })).state === "cancelled") break;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  assert.equal((await client.readJob({ id: stalled.id })).state, "cancelled");
+}
 for (const action of ["approve", "deny", "cancel", "expire"] as const) {
   const events = [];
   for await (const event of client.stream({

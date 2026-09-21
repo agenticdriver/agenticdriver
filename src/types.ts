@@ -271,6 +271,8 @@ export type RunEvent = EventPayload & {
 };
 export type { EventPayload };
 export interface RunOptions {
+  /** Trusted durable-job identity. Never accepted from run request JSON. */
+  runId?: string;
   /** Trusted host admission ticket; never accepted in request JSON. */
   admission?: () => Promise<void>;
   /** Trusted permissions from host authentication, never accepted in request JSON. */

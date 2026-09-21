@@ -49,6 +49,10 @@ from .retrieval import (
     RetrievalDeleteResult,
 )
 
+from .jobs import JobState, JobSubmit, JobIdentity, JobEventsRequest, JobInfo, JobEventPage
+
+__all__ += ["JobState", "JobSubmit", "JobIdentity", "JobEventsRequest", "JobInfo", "JobEventPage"]
+
 __all__ += [
     "RetrievalRequest",
     "RetrievalSearch",

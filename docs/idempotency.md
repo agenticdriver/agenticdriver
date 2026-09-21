@@ -94,7 +94,8 @@ events and the terminal outcome. It excludes streaming text and progress deltas;
 the completed result retains its final text. Streaming the same request/key
 replays that log with contiguous sequence numbers and the original run ID. This
 is recovery of recorded outcomes, not full token-stream replay or resumed model
-execution. Durable jobs and full event replay are separate roadmap items.
+execution. Opt-in [detached jobs](jobs.md) use a separate submission key and retain
+full event logs for cursor replay without restarting interrupted execution.
 
 If a process stops or storage fails before a terminal outcome is recorded,
 replay returns the known tool records followed by `OPERATION_UNCERTAIN`. A

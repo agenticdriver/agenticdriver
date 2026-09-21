@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func conformanceClient(t *testing.T, base, token string, trustCA bool) *Client {
@@ -168,6 +169,9 @@ func TestReferencePeerConformance(t *testing.T) {
 	token := os.Getenv("AGENTICDRIVER_TEST_TOKEN")
 	var fixture struct {
 		Cases []struct {
+			JobSubmit            JobSubmit                   `json:"jobSubmit"`
+			JobIdentity          JobIdentity                 `json:"jobIdentity"`
+			JobEvents            JobEventsRequest            `json:"jobEvents"`
 			SessionCreate        SessionCreate               `json:"sessionCreate"`
 			SessionIdentity      SessionIdentity             `json:"sessionIdentity"`
 			Session              *SessionHandle              `json:"session"`
@@ -200,6 +204,14 @@ func TestReferencePeerConformance(t *testing.T) {
 				_, err = client.Providers(context.Background())
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
+			} else if example.Operation == "job-submit" {
+				_, err = client.SubmitJob(context.Background(), example.JobSubmit)
+			} else if example.Operation == "job-read" {
+				_, err = client.ReadJob(context.Background(), example.JobIdentity)
+			} else if example.Operation == "job-cancel" {
+				_, err = client.CancelJob(context.Background(), example.JobIdentity)
+			} else if example.Operation == "job-events" {
+				_, err = client.JobEvents(context.Background(), example.JobEvents)
 			} else if example.Operation == "session-create" {
 				_, err = client.CreateSession(context.Background(), example.SessionCreate)
 			} else if example.Operation == "session-read" {
@@ -247,6 +259,66 @@ func TestReferencePeerConformance(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestDurableJobs(t *testing.T) {
+	base := os.Getenv("AGENTICDRIVER_TEST_URL")
+	if base == "" {
+		t.Skip("requires host")
+	}
+	peer := conformanceClient(t, base, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	ctx := context.Background()
+	input := JobSubmit{Key: "go-job", Request: Request{Provider: "mock", Model: "demo", Input: "Hello"}}
+	job, err := peer.SubmitJob(ctx, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	same, err := peer.SubmitJob(ctx, input)
+	if err != nil || same.ID != job.ID {
+		t.Fatalf("dedup: %v", err)
+	}
+	for i := 0; i < 200 && job.State != "completed"; i++ {
+		time.Sleep(10 * time.Millisecond)
+		job, err = peer.ReadJob(ctx, JobIdentity{ID: job.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if job.State != "completed" {
+		t.Fatal(job.State)
+	}
+	var cursor int64
+	for cursor < job.Cursor {
+		page, err := peer.JobEvents(ctx, JobEventsRequest{ID: job.ID, After: cursor, Limit: 2})
+		if err != nil {
+			t.Fatal(err)
+		}
+		cursor = page.NextCursor
+	}
+	finished, err := peer.CancelJob(ctx, JobIdentity{ID: job.ID})
+	if err != nil || finished.State != "completed" {
+		t.Fatalf("cancel terminal: %v", err)
+	}
+	input.Key = "go-job-cancel"
+	input.Request.Input = "conformance-stall"
+	job, err = peer.SubmitJob(ctx, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	job, err = peer.CancelJob(ctx, JobIdentity{ID: job.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 200 && job.State != "cancelled"; i++ {
+		time.Sleep(10 * time.Millisecond)
+		job, err = peer.ReadJob(ctx, JobIdentity{ID: job.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if job.State != "cancelled" {
+		t.Fatal(job.State)
 	}
 }
 

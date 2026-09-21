@@ -19,7 +19,9 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+pub mod jobs;
 pub mod sessions;
+pub use jobs::{JobEventPage, JobEventsRequest, JobIdentity, JobInfo, JobState, JobSubmit};
 pub use sessions::{
     SessionCreate, SessionDeleteResult, SessionHandle, SessionIdentity, SessionInfo, SessionMode,
     SessionSnapshot, SessionState,

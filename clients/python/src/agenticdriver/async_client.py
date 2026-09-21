@@ -26,6 +26,8 @@ from ._protocol import (
     valid_timestamp,
 )
 from ._sessions import valid_session_snapshot, valid_session_delete
+from ._jobs import valid_job, valid_job_page
+from .jobs import JobSubmit, JobIdentity, JobInfo, JobEventsRequest, JobEventPage
 from .models import SessionCreate, SessionIdentity, SessionSnapshot, SessionDeleteResult
 from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
 from ._transport import (
@@ -284,6 +286,29 @@ class AsyncAgenticClient:
                     "The driver returned an invalid deletion receipt.",
                 )
             return cast(RetrievalDeleteResult, result)
+
+    async def submit_job(self, request: JobSubmit) -> JobInfo:
+        return await self._job_request("submit", request)
+
+    async def read_job(self, request: JobIdentity) -> JobInfo:
+        return await self._job_request("read", request)
+
+    async def cancel_job(self, request: JobIdentity) -> JobInfo:
+        return await self._job_request("cancel", request)
+
+    async def _job_request(self, operation: str, request: JobSubmit | JobIdentity) -> JobInfo:
+        async with self._request(f"v1/jobs/{operation}", request) as response:
+            result = await self._json(response)
+            if not valid_job(result, request):
+                raise DriverError("INVALID_RESPONSE", "Invalid or mismatched job metadata.")
+            return cast(JobInfo, result)
+
+    async def job_events(self, request: JobEventsRequest) -> JobEventPage:
+        async with self._request("v1/jobs/events", request) as response:
+            result = await self._json(response)
+            if not valid_job_page(result, request):
+                raise DriverError("INVALID_RESPONSE", "Invalid or out-of-order job event page.")
+            return cast(JobEventPage, result)
 
     async def create_session(self, request: SessionCreate) -> SessionSnapshot:
         async with self._request("v1/sessions/create", request) as response:

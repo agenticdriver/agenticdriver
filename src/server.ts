@@ -8,6 +8,16 @@ import {
 import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
 import {
+  JobService,
+  JobOperationSchema,
+  type JobStore,
+  type JobWorkerOptions,
+  type JobOperation,
+  type JobSubmit,
+  type JobIdentity,
+  type JobEventsRequest,
+} from "./jobs.js";
+import {
   SessionOperationSchema,
   type SessionOperation,
   type SessionCreate,
@@ -41,6 +51,7 @@ import type { RetrievalOperation } from "./retrieval.js";
 import { FairScheduler, type SchedulingOptions } from "./scheduling.js";
 
 export interface AccessToken {
+  jobs?: JobOperation[];
   sessions?: SessionOperation[];
   /** Use at least 32 random characters. Authentication compares SHA-256 token digests. */
   token: string;
@@ -54,6 +65,11 @@ export interface AccessToken {
   retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
 export interface ServerOptions {
+  /** Explicit store and current token policy; accepted work survives HTTP disconnects. */
+  jobs?: JobWorkerOptions & {
+    store: JobStore | (() => Promise<JobStore>);
+    onError?(error: unknown): void;
+  };
   tokens: AccessToken[];
   host?: string;
   port?: number;
@@ -94,6 +110,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     )
       throw new Error("Application tool token grants must have unique names.");
     return {
+      jobs: JobOperationSchema.array()
+        .max(3)
+        .parse(entry.jobs ?? []),
       sessions: SessionOperationSchema.array()
         .max(4)
         .parse(entry.sessions ?? []),
@@ -116,6 +135,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
   const active = new Set<AbortController>();
   const requests = new Set<Promise<void>>();
   let closing = false;
+  let starting = true;
   let closed: Promise<void> | undefined;
   const hasLegacyLimits =
     options.maxConcurrentRuns !== undefined ||
@@ -136,6 +156,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         perSubject: options.maxConcurrentRunsPerSubject,
       },
     );
+  const ownsJobStore = typeof options.jobs?.store === "function";
+  let jobStore: JobStore | undefined;
+  let jobs: JobService | undefined;
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -144,6 +167,12 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       res.setHeader("Strict-Transport-Security", "max-age=31536000");
     let release: (() => void) | undefined;
     try {
+      if (starting)
+        throw new DriverError(
+          "HOST_STARTING",
+          "The execution host is initializing its configured services.",
+          true,
+        );
       if (closing)
         throw new DriverError(
           "HOST_SHUTTING_DOWN",
@@ -195,6 +224,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            jobs: jobs !== undefined,
             sessions: driver.supportsSessions,
             applicationTools: driver.supportsApplicationTools,
             interactiveApprovals: driver.supportsInteractiveApprovals,
@@ -220,6 +250,14 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         return;
       }
       const approvalDecision = req.url === "/v1/approvals/decisions";
+      const jobOperation = (
+        {
+          "/v1/jobs/submit": "submit",
+          "/v1/jobs/read": "read",
+          "/v1/jobs/cancel": "cancel",
+          "/v1/jobs/events": "events",
+        } as Record<string, "submit" | "read" | "cancel" | "events">
+      )[req.url ?? ""];
       const sessionOperation =
         req.url === "/v1/sessions/create"
           ? "create"
@@ -246,6 +284,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         (req.url !== "/v1/runs" &&
           !retrievalOperation &&
           !approvalDecision &&
+          !jobOperation &&
           !sessionOperation &&
           !toolOperation) ||
         req.method !== "POST"
@@ -271,6 +310,40 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "Compressed requests are not supported.",
         );
       const body = await readRequest(req);
+      if (jobOperation) {
+        if (!jobs)
+          throw new DriverError(
+            "JOBS_UNAVAILABLE",
+            "This host has not enabled durable jobs.",
+          );
+        const identity = principal.digest.toString("hex");
+        // Cancel observation/resolver work when its reader disconnects. The
+        // persisted job has its own lifecycle and never receives this signal.
+        const observation = new AbortController();
+        const disconnect = () => {
+          if (!res.writableEnded) observation.abort();
+        };
+        active.add(observation);
+        res.once("close", disconnect);
+        release = () => {
+          active.delete(observation);
+          res.off("close", disconnect);
+        };
+        const result =
+          jobOperation === "submit"
+            ? await jobs.submit(body as JobSubmit, identity)
+            : jobOperation === "read"
+              ? await jobs.read(body as JobIdentity, identity)
+              : jobOperation === "cancel"
+                ? await jobs.cancel(body as JobIdentity, identity)
+                : await jobs.events(
+                    body as JobEventsRequest,
+                    identity,
+                    observation.signal,
+                  );
+        json(res, 200, result);
+        return;
+      }
       if (sessionOperation) {
         const identity = {
           subject: principal.subject,
@@ -478,6 +551,37 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       resolve();
     });
   });
+  try {
+    // Do not claim queued work until TLS and the listener have started successfully.
+    jobStore =
+      typeof options.jobs?.store === "function"
+        ? await options.jobs.store()
+        : options.jobs?.store;
+    if (options.jobs && jobStore)
+      jobs = await JobService.open(driver, {
+        ...options.jobs,
+        store: jobStore,
+        scheduler,
+        resolvePrincipal: (id) => {
+          const token = tokens.find(
+            (entry) => entry.digest.toString("hex") === id,
+          );
+          return token
+            ? { ...token, retrieval: token.retrieval.search }
+            : undefined;
+        },
+      });
+    starting = false;
+  } catch (error) {
+    await jobs?.close();
+    if (ownsJobStore) await jobStore?.close?.();
+    const stopped = new Promise<void>((resolve) =>
+      server.close(() => resolve()),
+    );
+    server.closeAllConnections();
+    await stopped;
+    throw error;
+  }
   const address = server.address();
   if (!address || typeof address === "string")
     throw new Error("Could not determine server address.");
@@ -490,10 +594,16 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           server.close((error) => (error ? reject(error) : resolve())),
         );
         for (const controller of active) controller.abort();
+        const stoppedJobs = jobs?.close();
         server.closeAllConnections();
         await stopped;
         // Let cancellation persist terminal records and release per-run resources.
         await Promise.allSettled([...requests]);
+        try {
+          await stoppedJobs;
+        } finally {
+          if (ownsJobStore) await jobStore?.close?.();
+        }
       })());
     },
   };
@@ -505,6 +615,19 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (code === "JOB_NOT_FOUND") return 404;
+  if (code === "JOB_EXPIRED") return 410;
+  if (["JOB_STORE_FULL", "JOB_WORKER_BUSY"].includes(code)) return 429;
+  if (["JOB_EVENT_CONFLICT", "JOB_ACCOUNT_CHANGED"].includes(code)) return 409;
+  if (
+    [
+      "JOBS_UNAVAILABLE",
+      "JOB_STORE_ERROR",
+      "JOB_STORE_CLOSED",
+      "JOB_LEASE_LOST",
+    ].includes(code)
+  )
+    return 503;
   if (code === "SESSION_NOT_FOUND") return 404;
   if (
     [
@@ -570,6 +693,7 @@ function statusFor(code: string) {
       "OPERATION_STORE_FULL",
       "OPERATION_RECORD_LIMIT",
       "HOST_SHUTTING_DOWN",
+      "HOST_STARTING",
       "RESOURCE_POLICY_UNAVAILABLE",
     ].includes(code)
   )

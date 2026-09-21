@@ -19,7 +19,7 @@ The live [organization project](https://github.com/orgs/agenticdriver/projects/1
 - Tool input and output validation, cancellation, optional inactivity handling, scoped bearer authentication, usage callbacks and Usagestat read integration are implemented.
 - All three repositories have initial integrations and synthetic examples. Brandstorm and LitAgent use remote clients; AI Workspace has a mailbox-backed triage interface.
 - Local tests, type checks, builds and four-client HTTP/HTTPS checks passed during implementation. Provider execution is fixture-tested; live provider accounts and all supported operating systems have not been certified.
-- The SDK has not been published. Consumer dependencies currently use sibling checkouts. CLI adapters do not yet support application tools; the host does not yet provide durable jobs, device pairing or a relay.
+- The SDK has not been published. Consumer integrations use source checkouts or pinned local package archives. CLI adapters do not yet support application tools. The host now offers opt-in durable jobs; device pairing and a relay remain pending.
 
 ## Phases
 

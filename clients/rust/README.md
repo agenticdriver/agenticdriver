@@ -6,6 +6,13 @@ Requires Rust **1.89+** and, for the async interface, a Tokio runtime with I/O a
 time enabled. Canonical data, authorization and acceptance of draft artifacts stay
 with the application.
 
+Optional [detached jobs](../../docs/jobs.md) expose `submit_job`, `read_job`,
+`cancel_job` and `job_events` in both blocking and async clients, with public
+`JobSubmit`, `JobInfo`, `JobState`, `JobIdentity`, `JobEventsRequest` and
+`JobEventPage` types. Dropping an HTTP future does not cancel accepted background
+work; use `cancel_job` explicitly. Reconnect using `next_cursor`; event pages
+never execute application tools.
+
 The crate is currently built from this repository; it is not published on
 crates.io. From an application beside a checkout:
 

@@ -29,6 +29,7 @@ export interface ProtocolInfo {
 
 export function protocolInfo(
   options: {
+    jobs?: boolean;
     sessions?: boolean;
     applicationTools?: boolean;
     interactiveApprovals?: boolean;
@@ -44,6 +45,7 @@ export function protocolInfo(
     supportedVersions: [PROTOCOL_VERSION],
     features: [
       "json-results",
+      ...(options.jobs ? ["durable-jobs"] : []),
       ...(options.sessions ? ["conversation-sessions"] : []),
       ...(options.applicationTools ? ["application-tools"] : []),
       ...(options.interactiveApprovals ? ["interactive-approvals"] : []),

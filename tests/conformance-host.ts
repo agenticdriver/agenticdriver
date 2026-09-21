@@ -1,5 +1,8 @@
 /** Test-only reference peer. Never loads a real provider or account credentials. */
-import { readFile } from "node:fs/promises";
+import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { SqliteJobStore } from "../src/jobs.js";
 import { createServer as httpServer } from "node:http";
 import { createServer as httpsServer } from "node:https";
 import { once } from "node:events";
@@ -92,6 +95,12 @@ const withMedia = (adapter: ProviderAdapter): ProviderAdapter => ({
       documents: true,
     },
   },
+});
+const jobDirectory = await mkdtemp(
+  join(tmpdir(), "agenticdriver-conformance-jobs-"),
+);
+const jobStore = await SqliteJobStore.open(join(jobDirectory, "jobs.db"), {
+  retentionMs: 60_000,
 });
 const driver = await serve(
   new AgenticDriver({
@@ -238,6 +247,7 @@ const driver = await serve(
   }),
   {
     port: 0,
+    jobs: { store: jobStore, pollIntervalMs: 10 },
     tls,
     tokens: [
       {
@@ -247,6 +257,7 @@ const driver = await serve(
         tools: ["approved_echo"],
         approveTools: ["approved_echo", "application_lookup"],
         sessions: ["create", "read", "continue", "delete"],
+        jobs: ["submit", "read", "cancel"],
         applicationTools: [
           { name: "application_lookup", requiresApproval: false },
         ],
@@ -292,7 +303,7 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       return;
     }
     const id =
-      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results)|sessions\/(?:create|read|delete))$/.exec(
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results)|sessions\/(?:create|read|delete)|jobs\/(?:submit|read|cancel|events))$/.exec(
         req.url ?? "",
       )?.[1];
     const example = fixture.cases.find((c) => c.id === id);
@@ -394,5 +405,8 @@ process.once("SIGTERM", () => {
   for (const response of pending) response.destroy();
   reference.closeAllConnections();
   reference.close();
-  void driver.close();
+  void driver
+    .close()
+    .then(() => jobStore.close())
+    .then(() => rm(jobDirectory, { recursive: true, force: true }));
 });

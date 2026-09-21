@@ -377,6 +377,11 @@
               "enum": ["create", "read", "continue", "delete"]
             }
           },
+          "jobs": {
+            "maxItems": 3,
+            "type": "array",
+            "items": { "type": "string", "enum": ["submit", "read", "cancel"] }
+          },
           "applicationTools": {
             "maxItems": 32,
             "type": "array",
@@ -446,6 +451,67 @@
         }
       },
       "required": ["retentionMs"],
+      "additionalProperties": false
+    },
+    "jobs": {
+      "type": "object",
+      "properties": {
+        "retentionMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31536000000
+        },
+        "maxJobs": {
+          "default": 1000,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "maxJobsPerSubject": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "maxBytes": {
+          "default": 64000000,
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 9007199254740991
+        },
+        "maxJobBytes": {
+          "default": 8000000,
+          "type": "integer",
+          "minimum": 16384,
+          "maximum": 64000000
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "worker": {
+          "type": "object",
+          "properties": {
+            "leaseMs": {
+              "default": 30000,
+              "type": "integer",
+              "minimum": 300,
+              "maximum": 3600000
+            },
+            "pollIntervalMs": {
+              "default": 250,
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 60000
+            },
+            "maxWorkers": {
+              "default": 32,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["retentionMs", "path"],
       "additionalProperties": false
     },
     "approvals": {

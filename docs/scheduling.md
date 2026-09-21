@@ -62,6 +62,9 @@ whose account has capacity. A blocked account does not block another account's w
 An admitted tenant's backlog cannot indefinitely overtake another eligible queued
 tenant. Saturation can still reject new work; this is a bounded process-local queue,
 not a durable job service or a guarantee of admission for every incoming request.
+Opt-in [detached jobs](jobs.md) retain their own durable queue and use
+`FairScheduler.trySubmit` to share these execution caps without occupying an
+additional in-memory waiting slot. Busy candidates remain queued for later dispatch.
 
 Running work is not preempted. A provider that never completes can keep a slot until
 the application cancels it. No execution deadline is invented to improve fairness.

@@ -3,6 +3,12 @@ import { z } from "zod";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
 import {
+  JobSubmitSchema,
+  JobIdentitySchema,
+  JobInfoSchema,
+  JobEventsRequestSchema,
+} from "../src/job-types.js";
+import {
   ContextManifestSchema,
   DraftArtifactSchema,
   ContextMediaTypeSchema,
@@ -64,6 +70,10 @@ const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
   ...Object.fromEntries(
     Object.entries({
+      JobSubmit: JobSubmitSchema,
+      JobIdentity: JobIdentitySchema,
+      JobInfo: JobInfoSchema,
+      JobEventsRequest: JobEventsRequestSchema,
       SessionCreate: SessionCreateSchema,
       SessionIdentity: SessionIdentitySchema,
       SessionHandle: SessionHandleSchema,
@@ -81,6 +91,18 @@ const schemas = {
       z.toJSONSchema(schema, { target: "draft-2020-12", io: "input" }),
     ]),
   ),
+  JobEventPage: {
+    type: "object",
+    required: ["job", "events", "nextCursor", "hasMore"],
+    properties: {
+      job: ref("JobInfo"),
+      events: { type: "array", maxItems: 100, items: ref("RunEvent") },
+      nextCursor: count,
+      hasMore: { type: "boolean" },
+    },
+    description:
+      "Contiguous committed events after the requested cursor, bounded to 100 events and approximately 1.5 MB per page. No automatic tool dispatch or retry.",
+  },
   ApprovalPolicy: z.toJSONSchema(ApprovalPolicySchema, {
     target: "draft-2020-12",
   }),
@@ -412,6 +434,36 @@ const document = {
   ],
   security: [{ bearerAuth: [] }],
   paths: {
+    ...Object.fromEntries(
+      [
+        ["submit", "JobSubmit", "JobInfo"],
+        ["read", "JobIdentity", "JobInfo"],
+        ["cancel", "JobIdentity", "JobInfo"],
+        ["events", "JobEventsRequest", "JobEventPage"],
+      ].map(([operation, input, output]) => [
+        `/v1/jobs/${operation}`,
+        {
+          post: {
+            operationId:
+              operation === "events" ? "jobEvents" : `${operation}Job`,
+            parameters,
+            description:
+              "Opt-in detached jobs with tenant isolation and separate submit/read/cancel grants. HTTP disconnect leaves execution running. Worker recovery resumes queued jobs and marks started jobs interrupted without replaying effects. Job payload retention is explicit; accepted key tombstones remain. No job duration deadline.",
+            requestBody: {
+              required: true,
+              content: { "application/json": { schema: ref(input!) } },
+            },
+            responses: {
+              "200": {
+                description: "Authorized job metadata or committed event page",
+                content: { "application/json": { schema: ref(output!) } },
+              },
+              default: errorResponse,
+            },
+          },
+        },
+      ]),
+    ),
     ...Object.fromEntries(
       [
         ["create", "SessionCreate", "SessionSnapshot"],

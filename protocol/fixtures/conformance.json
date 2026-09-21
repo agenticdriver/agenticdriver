@@ -8746,6 +8746,1906 @@
         }
       ],
       "expectedError": "RESOURCE_POLICY_UNAVAILABLE"
+    },
+    {
+      "id": "job-submit-valid",
+      "operation": "job-submit",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-read-valid",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-cancel-valid",
+      "operation": "job-cancel",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-queued-valid",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "queued",
+        "cursor": 0,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-page-valid",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-page-middle",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 3,
+        "hasMore": true
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 1,
+        "limit": 2
+      }
+    },
+    {
+      "id": "job-page-empty",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 4
+      }
+    },
+    {
+      "id": "job-info-id-00000000-0000-0000-0000-000000000003",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-cursor-True",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": true,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-cursor--1",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": -1,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-expiresAt-None",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": null
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-expiresAt-2026-09-21T12-00-00.000Z",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-21T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-cancelRequested-false",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": "false",
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-state-unknown",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "unknown",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-createdAt-2026-09-31T12-00-00.000Z",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-31T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-updatedAt-2026-09-20T12-00-00.000Z",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-20T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-submit-model-mismatch",
+      "operation": "job-submit",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "other",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-missing-id",
+      "operation": "job-read",
+      "json": {
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-missing-cursor",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-missing-cancelRequested",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-missing-runId",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z"
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-info-case-overwrite",
+      "operation": "job-read",
+      "json": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "runId": "00000000-0000-0000-0000-000000000002",
+        "provider": "mock",
+        "model": "demo",
+        "state": "completed",
+        "cursor": 4,
+        "cancelRequested": false,
+        "createdAt": "2026-09-21T12:00:00.000Z",
+        "updatedAt": "2026-09-21T12:00:00.000Z",
+        "expiresAt": "2026-09-22T12:00:00.000Z",
+        "ID": "00000000-0000-0000-0000-000000000003",
+        "Cursor": 42
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
+    },
+    {
+      "id": "job-page-nextCursor-3",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 3,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-page-hasMore-True",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": true
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-page-events-[]",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-page-events-None",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": null,
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-page-too-many",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0,
+        "limit": 1
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-run-id",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000003",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-gap",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 9,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-second-start",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z",
+            "provider": "mock",
+            "model": "demo"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-wrong-terminal",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "failed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-early-terminal",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-missing-terminal",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z",
+            "text": "hello"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-result-model",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "wrong",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-unknown-optional",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "future.event",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z",
+            "optional": true
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-dispatch",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "completed",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "tool.execution.requested",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.completed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-uncertain-missing",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "interrupted",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.failed",
+            "result": {
+              "runId": "00000000-0000-0000-0000-000000000002",
+              "provider": "mock",
+              "model": "demo",
+              "text": "Hello",
+              "usage": {},
+              "steps": 1,
+              "finishReason": "stop"
+            },
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z",
+            "error": {
+              "code": "JOB_INTERRUPTED",
+              "message": "interrupted",
+              "retryable": false
+            }
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "job-interrupted-valid",
+      "operation": "job-events",
+      "json": {
+        "job": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "runId": "00000000-0000-0000-0000-000000000002",
+          "provider": "mock",
+          "model": "demo",
+          "state": "interrupted",
+          "cursor": 4,
+          "cancelRequested": false,
+          "createdAt": "2026-09-21T12:00:00.000Z",
+          "updatedAt": "2026-09-21T12:00:00.000Z",
+          "expiresAt": "2026-09-22T12:00:00.000Z"
+        },
+        "events": [
+          {
+            "type": "run.started",
+            "provider": "mock",
+            "model": "demo",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 1,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "step.started",
+            "step": 1,
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 2,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "text.delta",
+            "text": "Hello",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 3,
+            "timestamp": "2026-09-21T12:00:00.000Z"
+          },
+          {
+            "type": "run.failed",
+            "runId": "00000000-0000-0000-0000-000000000002",
+            "sequence": 4,
+            "timestamp": "2026-09-21T12:00:00.000Z",
+            "error": {
+              "code": "JOB_INTERRUPTED",
+              "message": "reconcile",
+              "retryable": false,
+              "outcome": "uncertain"
+            }
+          }
+        ],
+        "nextCursor": 4,
+        "hasMore": false
+      },
+      "jobSubmit": {
+        "key": "fixture",
+        "request": {
+          "provider": "mock",
+          "model": "demo",
+          "input": "Hello"
+        }
+      },
+      "jobIdentity": {
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      "jobEvents": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "after": 0
+      }
     }
   ]
 }

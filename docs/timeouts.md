@@ -61,7 +61,10 @@ deadlines remain under the application's control.
 
 With no configured timeout, an unresponsive provider remains pending until the
 application cancels it. Applications own job lifecycle and operator controls;
-disconnecting or closing an unfinished event stream also cancels that run.
+disconnecting or closing an unfinished foreground event stream also cancels that run.
+[Detached jobs](jobs.md) continue across client disconnects and have an explicit cancel API.
+Job worker leases measure ownership and crash detection; renewal never counts as
+model/tool progress. Terminal payload retention is independent of execution time.
 
 Interactive tool reviews explicitly choose `approvals.idlePolicy: "pause"` or
 `"continue"`. A host permitting pause suspends its activity clock only during

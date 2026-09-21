@@ -51,6 +51,21 @@ fn reference_peer_conformance() {
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().map(|_| ()),
             Some("protocol") => peer.protocol().map(|_| ()),
+            Some("job-submit") => peer
+                .submit_job(&agenticdriver::JobSubmit {
+                    key: example["jobSubmit"]["key"].as_str().unwrap().into(),
+                    request: RunRequest::new("mock", "demo", "Hello"),
+                })
+                .map(|_| ()),
+            Some("job-read") => peer
+                .read_job(&serde_json::from_value(example["jobIdentity"].clone()).unwrap())
+                .map(|_| ()),
+            Some("job-cancel") => peer
+                .cancel_job(&serde_json::from_value(example["jobIdentity"].clone()).unwrap())
+                .map(|_| ()),
+            Some("job-events") => peer
+                .job_events(&serde_json::from_value(example["jobEvents"].clone()).unwrap())
+                .map(|_| ()),
             Some("session-create") => peer
                 .create_session(&serde_json::from_value(example["sessionCreate"].clone()).unwrap())
                 .map(|_| ()),
@@ -469,6 +484,62 @@ fn application_owned_function() {
         assert!(completed);
         assert_eq!(calls, 1);
     }
+}
+
+#[test]
+fn durable_jobs() {
+    use agenticdriver::{JobEventsRequest, JobState, JobSubmit};
+    let Ok(base) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
+    let peer = client(&base, &token, true);
+    let input = JobSubmit {
+        key: "rust-job".into(),
+        request: RunRequest::new("mock", "demo", "Hello"),
+    };
+    let mut job = peer.submit_job(&input).unwrap();
+    assert_eq!(peer.submit_job(&input).unwrap().id, job.id);
+    let identity = job.identity();
+    for _ in 0..200 {
+        job = peer.read_job(&identity).unwrap();
+        if job.state == JobState::Completed {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert_eq!(job.state, JobState::Completed);
+    let mut cursor = 0;
+    while cursor < job.cursor {
+        let page = peer
+            .job_events(&JobEventsRequest {
+                id: job.id.clone(),
+                after: cursor,
+                limit: Some(2),
+            })
+            .unwrap();
+        cursor = page.next_cursor;
+    }
+    assert_eq!(
+        peer.cancel_job(&identity).unwrap().state,
+        JobState::Completed
+    );
+    let stalled = peer
+        .submit_job(&JobSubmit {
+            key: "rust-job-cancel".into(),
+            request: RunRequest::new("mock", "demo", "conformance-stall"),
+        })
+        .unwrap();
+    let identity = stalled.identity();
+    peer.cancel_job(&identity).unwrap();
+    for _ in 0..200 {
+        job = peer.read_job(&identity).unwrap();
+        if job.state == JobState::Cancelled {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert_eq!(job.state, JobState::Cancelled);
 }
 
 #[test]

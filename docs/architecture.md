@@ -82,9 +82,10 @@ inactivity timeout or explicit cancellation, but cannot kill arbitrary JavaScrip
 observe the signal and enforce idempotency/transaction semantics in their own
 storage. Cancellation does not undo a completed external action.
 
-The host holds no durable job state and does not replay disconnected runs.
-Applications should add a durable queue around the SDK if they need resumable
-literature reviews or background inbox processing. [Selected context](context.md)
+Foreground runs cancel on disconnect. Opt-in [durable jobs](jobs.md) retain queued
+work and event logs across restarts; started work interrupted by a restart stays
+behind a reconciliation barrier. Applications own review/inbox checkpoints and
+canonical state. [Selected context](context.md)
 supports bounded text/Markdown, opt-in images/PDFs and app-authorized references.
 [Scoped retrieval](retrieval.md) adds an app-authorized corpus, explicit embedding
 identity and a rebuildable SQLite vector index. The application owns canonical

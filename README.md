@@ -27,6 +27,7 @@ protocol fixtures; real paid/account-backed inference has not been certified.
 - [Refreshable account health and model catalogs](docs/discovery.md), scoped to authorized provider instances and checked without model generation.
 - [Usagestat catalog helpers](docs/catalog.md) for provider/account labels, reviewed icons with notices, and explicit quota freshness/fallback displays.
 - [Idempotency and recovery](docs/idempotency.md) with optional durable operation records and opt-in retries for safe provider rejections.
+- [Detached jobs](docs/jobs.md) with explicit SQLite persistence, tenant-scoped status/cancellation, cursor replay and restart recovery without repeating started work.
 - [Selected context and draft artifacts](docs/context.md): bounded text/Markdown,
   explicit image/PDF model support, authorized source references and provenance.
 - [Scoped retrieval and vector indexes](docs/retrieval.md): explicit embedding accounts,

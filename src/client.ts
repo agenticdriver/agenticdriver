@@ -85,6 +85,15 @@ import {
   type ProtocolInfo,
 } from "./protocol.js";
 import type { ProviderInfo, RunEvent, RunRequest, RunResult } from "./types.js";
+import {
+  JobInfoSchema,
+  type JobSubmit,
+  type JobIdentity,
+  type JobEventsRequest,
+  type JobInfo,
+  type JobEventPage,
+} from "./job-types.js";
+export type * from "./job-types.js";
 
 export interface ClientOptions {
   url: string;
@@ -212,6 +221,9 @@ export class AgenticClient {
       | ApprovalDecision
       | SessionCreate
       | SessionIdentity
+      | JobSubmit
+      | JobIdentity
+      | JobEventsRequest
       | ToolExecutionIdentity
       | ToolExecutionResult,
     signal?: AbortSignal,
@@ -508,6 +520,124 @@ export class AgenticClient {
       "INCOMPLETE_STREAM",
       "The run ended without a result.",
     );
+  }
+  async submitJob(
+    input: JobSubmit,
+    options: ClientRequestOptions = {},
+  ): Promise<JobInfo> {
+    return this.jobRequest("submit", input, options);
+  }
+  async readJob(
+    input: JobIdentity,
+    options: ClientRequestOptions = {},
+  ): Promise<JobInfo> {
+    return this.jobRequest("read", input, options);
+  }
+  async cancelJob(
+    input: JobIdentity,
+    options: ClientRequestOptions = {},
+  ): Promise<JobInfo> {
+    return this.jobRequest("cancel", input, options);
+  }
+  private async jobRequest(
+    operation: "submit" | "read" | "cancel",
+    input: JobSubmit | JobIdentity,
+    options: ClientRequestOptions,
+  ): Promise<JobInfo> {
+    const result = JobInfoSchema.safeParse(
+      await readResponseJson(
+        await this.request(`v1/jobs/${operation}`, input, options.signal),
+      ),
+    );
+    if (
+      !result.success ||
+      ("id" in input
+        ? result.data.id !== input.id
+        : result.data.provider !== input.request.provider ||
+          result.data.model !== input.request.model)
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid or mismatched job metadata.",
+      );
+    return result.data;
+  }
+  async jobEvents(
+    input: JobEventsRequest,
+    options: ClientRequestOptions = {},
+  ): Promise<JobEventPage> {
+    const raw = await readResponseJson(
+      await this.request("v1/jobs/events", input, options.signal),
+    );
+    const page = z
+      .object({
+        job: JobInfoSchema,
+        events: z.array(z.unknown()).max(100),
+        nextCursor: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+        hasMore: z.boolean(),
+      })
+      .safeParse(raw);
+    const invalid = () =>
+      new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned an invalid or out-of-order job event page.",
+      );
+    if (
+      !page.success ||
+      page.data.job.id !== input.id ||
+      page.data.events.length > (input.limit ?? 100)
+    )
+      throw invalid();
+    const { job, nextCursor, hasMore } = page.data;
+    let cursor = input.after;
+    const events: RunEvent[] = [];
+    for (const value of page.data.events) {
+      const envelope = envelopeSchema.safeParse(value),
+        payload = eventSchema.safeParse(value);
+      if (
+        !envelope.success ||
+        !payload.success ||
+        envelope.data.runId !== job.runId ||
+        envelope.data.sequence !== ++cursor ||
+        cursor > job.cursor
+      )
+        throw invalid();
+      const event: RunEvent = { ...envelope.data, ...payload.data };
+      const ended = ["run.completed", "run.failed", "run.cancelled"].includes(
+        event.type,
+      );
+      const terminal = job.state !== "queued" && job.state !== "running";
+      if (
+        (event.type === "run.started") !== (cursor === 1) ||
+        event.type === "tool.execution.requested" ||
+        event.type.startsWith("approval.") ||
+        (event.type === "run.started" &&
+          (event.provider !== job.provider || event.model !== job.model)) ||
+        (ended && (cursor !== job.cursor || !terminal)) ||
+        (cursor === job.cursor && terminal && !ended) ||
+        (event.type === "run.completed" &&
+          (job.state !== "completed" ||
+            event.result.runId !== job.runId ||
+            event.result.provider !== job.provider ||
+            event.result.model !== job.model ||
+            event.result.session !== undefined)) ||
+        (event.type === "run.cancelled" && job.state !== "cancelled") ||
+        (event.type === "run.failed" &&
+          ((job.state !== "failed" && job.state !== "interrupted") ||
+            (job.state === "interrupted" &&
+              event.error.outcome !== "uncertain")))
+      )
+        throw invalid();
+      events.push(event);
+    }
+    if (
+      nextCursor !== cursor ||
+      cursor > job.cursor ||
+      hasMore !== cursor < job.cursor ||
+      (hasMore && !events.length)
+    )
+      throw invalid();
+    return { job, events, nextCursor, hasMore };
   }
   async createSession(
     input: SessionCreate,

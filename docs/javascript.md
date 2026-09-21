@@ -2,6 +2,11 @@
 
 Use `agenticdriver/client` in browsers and servers that connect to an execution host. Use the main `agenticdriver` entry on a Node.js 22+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle.
 
+Optional [detached jobs](jobs.md) add `submitJob`, `readJob`, `cancelJob` and
+`jobEvents` to the browser-safe client. `JobService` and `SqliteJobStore` belong
+to the Node.js main entry. The installed [jobs example](../examples/javascript/jobs.mts)
+submits a synthetic job, reopens its database, and replays its result once.
+
 ## Install a built artifact
 
 Package registries are not published yet. From a reviewed SDK checkout, create an archive and install that archive in your application:

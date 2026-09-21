@@ -51,6 +51,25 @@ async fn reference_peer_conformance() {
         let result = match example["operation"].as_str() {
             Some("providers") => peer.providers().await.map(|_| ()),
             Some("protocol") => peer.protocol().await.map(|_| ()),
+            Some("job-submit") => peer
+                .submit_job(&agenticdriver::JobSubmit {
+                    key: example["jobSubmit"]["key"].as_str().unwrap().into(),
+                    request: RunRequest::new("mock", "demo", "Hello"),
+                })
+                .await
+                .map(|_| ()),
+            Some("job-read") => peer
+                .read_job(&serde_json::from_value(example["jobIdentity"].clone()).unwrap())
+                .await
+                .map(|_| ()),
+            Some("job-cancel") => peer
+                .cancel_job(&serde_json::from_value(example["jobIdentity"].clone()).unwrap())
+                .await
+                .map(|_| ()),
+            Some("job-events") => peer
+                .job_events(&serde_json::from_value(example["jobEvents"].clone()).unwrap())
+                .await
+                .map(|_| ()),
             Some("session-create") => peer
                 .create_session(&serde_json::from_value(example["sessionCreate"].clone()).unwrap())
                 .await
@@ -508,6 +527,64 @@ async fn application_owned_function() {
         assert!(completed);
         assert_eq!(calls, 1);
     }
+}
+
+#[tokio::test]
+async fn durable_jobs() {
+    use agenticdriver::{JobEventsRequest, JobState, JobSubmit};
+    let Ok(base) = std::env::var("AGENTICDRIVER_TEST_URL") else {
+        return;
+    };
+    let token = std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap();
+    let peer = client(&base, &token, true);
+    let input = JobSubmit {
+        key: "rust-async-job".into(),
+        request: RunRequest::new("mock", "demo", "Hello"),
+    };
+    let mut job = peer.submit_job(&input).await.unwrap();
+    assert_eq!(peer.submit_job(&input).await.unwrap().id, job.id);
+    let identity = job.identity();
+    for _ in 0..200 {
+        job = peer.read_job(&identity).await.unwrap();
+        if job.state == JobState::Completed {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+    assert_eq!(job.state, JobState::Completed);
+    let mut cursor = 0;
+    while cursor < job.cursor {
+        let page = peer
+            .job_events(&JobEventsRequest {
+                id: job.id.clone(),
+                after: cursor,
+                limit: Some(2),
+            })
+            .await
+            .unwrap();
+        cursor = page.next_cursor;
+    }
+    assert_eq!(
+        peer.cancel_job(&identity).await.unwrap().state,
+        JobState::Completed
+    );
+    let stalled = peer
+        .submit_job(&JobSubmit {
+            key: "rust-async-job-cancel".into(),
+            request: RunRequest::new("mock", "demo", "conformance-stall"),
+        })
+        .await
+        .unwrap();
+    let identity = stalled.identity();
+    peer.cancel_job(&identity).await.unwrap();
+    for _ in 0..200 {
+        job = peer.read_job(&identity).await.unwrap();
+        if job.state == JobState::Cancelled {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+    assert_eq!(job.state, JobState::Cancelled);
 }
 
 #[tokio::test]

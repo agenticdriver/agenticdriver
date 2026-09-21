@@ -22,6 +22,14 @@ class ClientConformance(unittest.TestCase):
                         client.providers()
                     elif case.get("operation") == "protocol":
                         client.protocol()
+                    elif case.get("operation") == "job-submit":
+                        client.submit_job(case["jobSubmit"])
+                    elif case.get("operation") == "job-read":
+                        client.read_job(case["jobIdentity"])
+                    elif case.get("operation") == "job-cancel":
+                        client.cancel_job(case["jobIdentity"])
+                    elif case.get("operation") == "job-events":
+                        client.job_events(case["jobEvents"])
                     elif case.get("operation") == "session-create":
                         client.create_session(case["sessionCreate"])
                     elif case.get("operation") == "session-read":
@@ -213,6 +221,31 @@ class ClientConformance(unittest.TestCase):
                         if event["type"] == "run.completed": completed = True
                 self.assertEqual(len(calls), 1)
                 self.assertTrue(completed)
+
+    def test_durable_jobs(self):
+        with self.client() as client:
+            request = {"key": "python-job", "request": {"provider": "mock", "model": "demo", "input": "Hello"}}
+            job = client.submit_job(request)
+            self.assertEqual((client.submit_job(request))["id"], job["id"])
+            identity = {"id": job["id"]}
+            for _ in range(200):
+                job = client.read_job(identity)
+                if job["state"] == "completed": break
+                __import__('time').sleep(0.01)
+            self.assertEqual(job["state"], "completed")
+            cursor = 0
+            while cursor < job["cursor"]:
+                page = client.job_events({**identity, "after": cursor, "limit": 2})
+                cursor = page["nextCursor"]
+            self.assertEqual((client.cancel_job(identity))["state"], "completed")
+            stalled = client.submit_job({"key": "python-job-cancel", "request": {"provider":"mock","model":"demo","input":"conformance-stall"}})
+            identity = {"id": stalled["id"]}
+            client.cancel_job(identity)
+            for _ in range(200):
+                job = client.read_job(identity)
+                if job["state"] == "cancelled": break
+                __import__('time').sleep(0.01)
+            self.assertEqual(job["state"], "cancelled")
 
     def test_conversation_sessions(self):
         with self.client() as client:

@@ -71,3 +71,13 @@ cover scopes, host/token review requirements, input/output schemas, cancellation
 explicit idle expiry, pending capacity and replay without redispatch.
 
 The shared suite also checks session metadata, identity/revision matching, visible-history shapes, deletion receipts and selected-run continuation. Every language creates a session, completes two turns through run/stream APIs, rejects a stale revision, reads its visible history and deletes it against HTTP and verified HTTPS hosts. Native API fixtures check private state preservation without including it in public history.
+
+Detached job checks cover submission deduplication, status, paginated replay and
+explicit cancellation in all four languages, including Python/Rust async APIs,
+over HTTP and verified HTTPS. Shared fixtures reject mismatched identities,
+malformed metadata, cursor gaps, incorrect terminal states and dispatch tickets
+in replay pages. Core tests kill a real worker process after a synthetic tool
+effect, then verify that completed work stays complete, interrupted work is not
+repeated, and only queued work starts under the replacement worker. Lease fencing,
+retention tombstones, revoked grants/account changes, storage bounds, source
+reauthorization and competition with foreground admission are covered separately.

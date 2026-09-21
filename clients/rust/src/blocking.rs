@@ -182,6 +182,38 @@ impl AgenticClient {
         };
         Ok(read_json::<Catalog>(self.request(path, None, false)?)?.providers)
     }
+    pub fn submit_job(&self, request: &crate::JobSubmit) -> Result<crate::JobInfo> {
+        let value: Value = read_json(self.request(
+            "v1/jobs/submit",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::jobs::info(value, Some(request), None)
+    }
+    pub fn read_job(&self, request: &crate::JobIdentity) -> Result<crate::JobInfo> {
+        let value: Value = read_json(self.request(
+            "v1/jobs/read",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::jobs::info(value, None, Some(request))
+    }
+    pub fn cancel_job(&self, request: &crate::JobIdentity) -> Result<crate::JobInfo> {
+        let value: Value = read_json(self.request(
+            "v1/jobs/cancel",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::jobs::info(value, None, Some(request))
+    }
+    pub fn job_events(&self, request: &crate::JobEventsRequest) -> Result<crate::JobEventPage> {
+        let value: Value = read_json(self.request(
+            "v1/jobs/events",
+            Some(&serde_json::to_value(request)?),
+            false,
+        )?)?;
+        crate::jobs::page(value, request)
+    }
     pub fn create_session(&self, request: &crate::SessionCreate) -> Result<crate::SessionSnapshot> {
         let value: Value = read_json(self.request(
             "v1/sessions/create",

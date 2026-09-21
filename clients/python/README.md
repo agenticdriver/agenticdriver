@@ -20,6 +20,12 @@ types, or running the synchronous client does not require HTTPX.
 
 ## Synchronous execution
 
+Optional [detached jobs](../../docs/jobs.md) expose `submit_job`, `read_job`,
+`cancel_job` and `job_events` on both clients. Their `JobSubmit`, `JobIdentity`,
+`JobInfo`, `JobEventsRequest` and `JobEventPage` types are public. Aborting a job
+HTTP request does not cancel accepted background work; use `cancel_job` explicitly.
+Reconnect with the last accepted `nextCursor`. Pages never dispatch tools.
+
 ```python
 from agenticdriver import AgenticClient, RunRequest
 

@@ -2,6 +2,11 @@
 
 Connect a Go 1.22+ application to its local or remote AgenticDriver host. This module has no external Go dependencies. Provider credentials and native agent processes stay on the host. The client uses an application-scoped driver bearer token and explicit provider/model selection.
 
+Optional [detached jobs](../../docs/jobs.md) use `SubmitJob`, `ReadJob`, `CancelJob`
+and `JobEvents` with typed requests/results. Cancelling the HTTP context does not
+cancel accepted background work; call `CancelJob` explicitly. Reconnect using
+`JobEventPage.NextCursor`; pages never automatically execute tool actions.
+
 Until release tags are published, pin a reviewed commit on `sdk-roadmap`:
 
 ```sh

@@ -39,6 +39,12 @@ import type { ProviderAdapter } from "./types.js";
 import type { ServerOptions } from "./server.js";
 import { SchedulingOptionsSchema, assertPolicyMaps } from "./scheduling.js";
 import { ResourceLimitsSchema } from "./resources.js";
+import {
+  JobOperationSchema,
+  JobStoreOptionsSchema,
+  JobWorkerOptionsSchema,
+} from "./job-types.js";
+import { SqliteJobStore } from "./sqlite-job-store.js";
 export { SecretReferenceSchema, secretResolver } from "./secrets.js";
 export type { SecretReference, SecretResolver } from "./secrets.js";
 
@@ -129,6 +135,7 @@ export const HostConfigSchema = z
               .optional(),
             providers: z.array(instance).max(32),
             sessions: z.array(SessionOperationSchema).max(4).optional(),
+            jobs: z.array(JobOperationSchema).max(3).optional(),
             applicationTools: z
               .array(ApplicationToolGrantSchema)
               .max(32)
@@ -155,6 +162,10 @@ export const HostConfigSchema = z
       .strict()
       .optional(),
     sessions: SessionOptionsSchema.optional(),
+    jobs: JobStoreOptionsSchema.extend({
+      path: z.string().min(1),
+      worker: JobWorkerOptionsSchema.optional(),
+    }).optional(),
     approvals: z
       .object({
         interactive: z.literal(true),
@@ -494,6 +505,7 @@ export async function configuredServer(
       approveTools: entry.approveTools,
       applicationTools: entry.applicationTools,
       sessions: entry.sessions,
+      jobs: entry.jobs,
       retrieval: entry.retrieval,
     })),
   );
@@ -536,6 +548,22 @@ export async function configuredServer(
     tls,
     allowedOrigins: config.allowedOrigins,
     scheduling: config.concurrency,
+    jobs: config.jobs
+      ? {
+          ...config.jobs.worker,
+          store: () =>
+            SqliteJobStore.open(
+              resolve(dirname(configPath), config.jobs!.path),
+              {
+                retentionMs: config.jobs!.retentionMs,
+                maxJobs: config.jobs!.maxJobs,
+                maxJobsPerSubject: config.jobs!.maxJobsPerSubject,
+                maxBytes: config.jobs!.maxBytes,
+                maxJobBytes: config.jobs!.maxJobBytes,
+              },
+            ),
+        }
+      : undefined,
   };
 }
 export async function configuredClient(

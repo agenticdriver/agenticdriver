@@ -629,7 +629,12 @@ export class AgenticDriver {
     options: RunOptions = {},
   ): AsyncGenerator<RunEvent> {
     const request = this.validate(input);
-    const runId = randomUUID();
+    const runId = options.runId ?? randomUUID();
+    if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(runId))
+      throw new DriverError(
+        "INVALID_RUN_ID",
+        "A trusted run identity must be a UUID.",
+      );
     if (!request.idempotencyKey) {
       yield* this.execute(request, options, runId);
       return;
@@ -660,60 +665,12 @@ export class AgenticDriver {
           "This operation is already executing. No duplicate operation was started.",
           true,
         );
-      // Replaying an execution outcome must not bypass revoked source access.
-      if (request.attachments?.some((input) => input.type === "reference")) {
-        const restored = await resolveContext(
-          request.attachments,
-          this.contextOptions,
-          {
-            runId: claim.record.runId,
-            subject,
-            signal: options.signal ?? new AbortController().signal,
-            reportProgress: () => {},
-          },
-        );
-        try {
-          const previous = claim.record.events.findLast(
-            (event) => event.type === "run.completed",
-          );
-          if (
-            previous?.type === "run.completed" &&
-            restored.sources.some(
-              (source) =>
-                previous.result.sources?.find((old) => old.id === source.id)
-                  ?.sha256 !== source.sha256,
-            )
-          )
-            throw new DriverError(
-              "CONTEXT_CHANGED",
-              "A selected source revision now identifies different content; reconcile the existing result.",
-            );
-        } finally {
-          await restored.release();
-        }
-      }
-      if (request.retrieval) {
-        const previous = claim.record.events.findLast(
-          (event) => event.type === "run.completed",
-        );
-        if (previous?.type !== "run.completed" || !previous.result.retrieval)
-          throw new DriverError(
-            "CONTEXT_REPLAY_UNAVAILABLE",
-            "This accepted run has no complete evidence snapshot to reauthorize. Reconcile its recorded outcome in the application before starting a replacement run.",
-            false,
-            "uncertain",
-          );
-        await this.retrievalService().revalidate(
-          request.retrieval,
-          previous.result.retrieval,
-          {
-            runId: claim.record.runId,
-            subject,
-            signal: options.signal ?? new AbortController().signal,
-            reportProgress() {},
-          },
-        );
-      }
+      await this.authorizeReplay(
+        request,
+        claim.record.runId,
+        claim.record.events,
+        options,
+      );
       for (const event of recoveryEvents(claim.record)) {
         options.signal?.throwIfAborted();
         yield event;
@@ -755,6 +712,69 @@ export class AgenticDriver {
           /* Existing accepted record remains an uncertainty barrier. */
         });
       this.activeOperations.delete(key);
+    }
+  }
+
+  /** Reauthorize stored evidence without invoking generation, embeddings or tools. */
+  async authorizeReplay(
+    request: RunRequest,
+    runId: string,
+    events: readonly RunEvent[],
+    options: RunOptions = {},
+  ): Promise<void> {
+    const subject = options.subject ?? "local";
+    if (request.attachments?.some((input) => input.type === "reference")) {
+      const restored = await resolveContext(
+        request.attachments,
+        this.contextOptions,
+        {
+          runId,
+          subject,
+          signal: options.signal ?? new AbortController().signal,
+          reportProgress: () => {},
+        },
+      );
+      try {
+        const previous = events.findLast(
+          (event) => event.type === "run.completed",
+        );
+        if (
+          previous?.type === "run.completed" &&
+          restored.sources.some(
+            (source) =>
+              previous.result.sources?.find((old) => old.id === source.id)
+                ?.sha256 !== source.sha256,
+          )
+        )
+          throw new DriverError(
+            "CONTEXT_CHANGED",
+            "A selected source revision now identifies different content; reconcile the existing result.",
+          );
+      } finally {
+        await restored.release();
+      }
+    }
+    if (request.retrieval) {
+      const previous = events.findLast(
+        (event) => event.type === "run.completed",
+      );
+      if (previous?.type !== "run.completed" || !previous.result.retrieval)
+        throw new DriverError(
+          "CONTEXT_REPLAY_UNAVAILABLE",
+          "This accepted run has no complete evidence snapshot to reauthorize. Reconcile its recorded outcome in the application before starting a replacement run.",
+          false,
+          "uncertain",
+        );
+      await this.retrievalService().revalidate(
+        request.retrieval,
+        previous.result.retrieval,
+        {
+          runId,
+          subject,
+          signal: options.signal ?? new AbortController().signal,
+          reportProgress() {},
+        },
+      );
     }
   }
 

@@ -61,6 +61,12 @@ Host `features` describe transport/runtime behavior; provider `capabilities`
 describe a selected execution instance. Neither implies that a provider account
 is currently signed in, healthy or within quota.
 
+`durable-jobs` advertises the optional [detached job endpoints](jobs.md): explicit
+submit/read/cancel grants, committed cursor pages and no cancellation merely
+because a client disconnected. The `cancel-on-disconnect` feature still describes
+foreground `/v1/runs`. Job pages are observations and reject execution tickets;
+applications never replay their tool actions automatically.
+
 Hosts advertising `provider-discovery` add optional `health` and `modelCatalog`
 fields to each authorized provider and accept `GET /v1/providers?refresh=true`.
 See [account discovery](discovery.md) for caching, health states and probe limits.

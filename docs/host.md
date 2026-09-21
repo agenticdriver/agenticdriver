@@ -3,6 +3,8 @@
 The `agenticdriver` command runs the same runtime as the TypeScript SDK. It needs
 Node.js 22 or newer. Applications in any supported language connect through the
 authenticated HTTP/HTTPS protocol; only the execution host needs Node.js.
+Optional [durable jobs](jobs.md) require Node 22.13+, explicit SQLite storage and
+retention, stable account bindings and separate token job grants.
 
 ## Install and run a mock workflow
 
