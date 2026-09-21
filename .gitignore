@@ -15,3 +15,5 @@ clients/rust/target/
 build/
 .DS_Store
 deploy/runtime/
+site/.vitepress/cache/
+site/.vitepress/dist/

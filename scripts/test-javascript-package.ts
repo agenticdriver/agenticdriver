@@ -74,6 +74,9 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         "examples/provider-extension.mts",
         "examples/diagnostics.mts",
         "examples/auth.mts",
+        "examples/brandstorm.mts",
+        "examples/literature-review.mts",
+        "examples/email-workspace.mts",
       ],
     }),
   );
@@ -282,6 +285,18 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       { cwd: app, timeout: 10000 },
     );
     assert.match(server.stdout, /Installed TypeScript server is connected/);
+    for (const [recipe, expected] of [
+      ["brandstorm", "Mossline"],
+      ["literature-review", "fixture-paper-1:p1"],
+      ["email-workspace", "Review proposal"],
+    ]) {
+      const example = await run(
+        process.execPath,
+        ["--experimental-strip-types", join(app, `examples/${recipe}.mts`)],
+        { cwd: app, timeout: 10000 },
+      );
+      assert.ok(example.stdout.includes(expected!));
+    }
     const auth = await run(
       process.execPath,
       [join(app, "compiled-server/auth.mjs")],

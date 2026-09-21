@@ -55,6 +55,10 @@ flowchart LR
     Usagestat --> Applications
 ```
 
+Start with the [install-first quickstart](docs/quickstart.md),
+[three installed application recipes](docs/applications.md), and
+[troubleshooting guide](docs/troubleshooting.md).
+
 ## Try all three examples
 
 Requires Node.js 22.13+ and npm. These examples use deterministic fixtures by default
@@ -79,13 +83,14 @@ AGENTICDRIVER_PROVIDER=codex AGENTICDRIVER_MODEL=YOUR_MODEL npm run demo
 
 ## Embed in TypeScript
 
-From an application alongside this repository, build the SDK, then install it:
+Install a reviewed built archive in your application:
 
 ```bash
-# In agenticdriver
-npm run build
-# In the application
-npm install ../agenticdriver
+# SDK checkout: build an artifact, then transfer it to the application machine.
+npm ci
+npm pack --pack-destination /path/to/artifacts
+# Application:
+npm install /path/to/artifacts/agenticdriver-0.1.0.tgz
 ```
 
 ```ts

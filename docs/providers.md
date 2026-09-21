@@ -6,7 +6,7 @@ list, so an Antigravity SDK adapter and live application certification remain
 pending. See the [readiness evidence and no-prompt check](validation/antigravity-2026-09-21.md).
 This limitation does not require signing in again or switching to API billing.
 
-Documentation reviewed on 2026-09-20. Model IDs are deliberately supplied by the
+Documentation reviewed on 2026-09-21. Model IDs are deliberately supplied by the
 application or host; this SDK does not silently pick a model or change billing modes.
 
 | Factory                                 | Instance default    | Authentication                          | Application tool loop               |
@@ -63,6 +63,11 @@ AgenticDriver currently supports Grok through the xAI API. Official Grok Build
 headless/ACP and native sign-in interfaces now provide an integration route,
 but its SDK adapter and live certification are pending. See the
 [dated feasibility decision and implementation work](validation/grok-subscription-2026-09-21.md).
+An isolated test of Grok Build 1.0.40 found that setting native inference idle to
+zero still terminates after ten seconds of silence. It also attempted separate
+session-title generation. These controls need qualification before the SDK can
+offer its default disabled-inactivity contract through that native route; the
+test used only a synthetic local endpoint, with no account or paid inference.
 xAI documents Chat Completions as supported but legacy; the adapter
 uses that established function-calling contract, and a native Responses adapter
 can be added separately.

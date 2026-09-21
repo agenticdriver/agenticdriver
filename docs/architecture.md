@@ -52,9 +52,13 @@ environment. To use server-owned API credentials, register instances on the
 application's execution server. For multiple accounts with local CLIs, separate
 process users or containers provide the meaningful filesystem boundary.
 
-The v0.1 token registry is configured at startup. Applications needing expiring
-device credentials, browser pairing, OAuth, token rotation without restart, or
-an outbound relay must add those control-plane services. A hosted browser cannot
+Applications use their Better Auth runtime paired with AuthYard for identity,
+OAuth consent, device pairing and revocable credentials. The SDK's native OAuth
+introspection adapter maps current app grants into scoped execution authority;
+its browser-safe pairing client handles the approved device flow and explicit
+refresh/revocation. See [authentication](authentication.md). A static token
+registry remains available for local development and operator-owned hosts.
+An outbound relay is separate, pending work. A hosted browser cannot
 automatically reach a laptop; use a reachable authenticated HTTPS endpoint or a
 trusted tunnel. There is no hidden relay or browser session scraping.
 

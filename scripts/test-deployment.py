@@ -22,6 +22,7 @@ from tls_fixture import create_tls_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "tests/deployment"
+QUICKSTARTS = ROOT / "examples/quickstart"
 IMAGE = os.environ.get("AGENTICDRIVER_TEST_IMAGE", "agenticdriver:deployment-test")
 AUTH_IMAGE = IMAGE + "-auth"
 PROXY_IMAGE = IMAGE + "-proxy"
@@ -37,8 +38,11 @@ def clients(work):
     # Build before minting the short-lived service credential.
     python, py_app = prepare_python(work)
     shutil.copyfile(SOURCES / "client.py", py_app / "app.py")
+    shutil.copyfile(QUICKSTARTS / "client.py", py_app / "quickstart.py")
     rust_app, rust_env = prepare_rust(work)
     shutil.copyfile(SOURCES / "client.rs", rust_app / "src/main.rs")
+    (rust_app / "src/bin").mkdir()
+    shutil.copyfile(QUICKSTARTS / "client.rs", rust_app / "src/bin/quickstart.rs")
     run(["cargo", f"+{TOOLCHAIN}", "build", "--locked"], cwd=rust_app,
         env={**os.environ, **rust_env})
     js_app = work / "javascript-application"
@@ -48,6 +52,7 @@ def clients(work):
     (js_app / "package.json").write_text('{"private":true,"type":"module"}')
     run(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund", str(archive)], cwd=js_app)
     shutil.copyfile(SOURCES / "client.mjs", js_app / "client.mjs")
+    shutil.copyfile(QUICKSTARTS / "client.mjs", js_app / "quickstart.mjs")
     # Install a real module archive with no source-relative replace directive.
     go_app = work / "go-application"
     go_app.mkdir()
@@ -71,9 +76,14 @@ def clients(work):
     assert "replace" not in (go_app / "go.mod").read_text()
     shutil.copyfile(SOURCES / "client.go", go_app / "main.go")
     run(["go", "build", "-o", "client", "."], cwd=go_app, env=go_env)
+    shutil.copyfile(QUICKSTARTS / "client.go", go_app / "main.go")
+    run(["go", "build", "-o", "quickstart", "."], cwd=go_app, env=go_env)
     return [(["node", "client.mjs"], js_app, {}), ([python, "app.py"], py_app, {}),
             ([str(go_app / "client")], go_app, go_env),
-            (["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet"], rust_app, rust_env)]
+            (["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet", "--bin", "agenticdriver-installed-app"], rust_app, rust_env),
+            (["node", "quickstart.mjs"], js_app, {}), ([python, "quickstart.py"], py_app, {}),
+            ([str(go_app / "quickstart")], go_app, go_env),
+            (["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet", "--bin", "quickstart"], rust_app, rust_env)]
 
 
 if "--skip-build" not in sys.argv:
@@ -210,8 +220,20 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-deployment-") as director
         client_env.update(AGENTICDRIVER_TEST_URL=f"https://127.0.0.1:{port}",
                           AGENTICDRIVER_TEST_TOKEN=credential, AGENTICDRIVER_TEST_CA=ca,
                           NODE_EXTRA_CA_CERTS=ca)
+        credential_file = work / "client-token"
+        credential_file.write_text(credential)
+        credential_file.chmod(0o600)
+        client_env.update(AGENTICDRIVER_URL=f"https://127.0.0.1:{port}",
+                          AGENTICDRIVER_TOKEN_FILE=str(credential_file),
+                          AGENTICDRIVER_PROVIDER="fixture", AGENTICDRIVER_MODEL="fixture-model",
+                          AGENTICDRIVER_CA=ca)
         for command, application, extra in commands:
-            run(command, cwd=application, env={**extra, **client_env}, timeout=90)
+            completed = run(command, cwd=application, env={**extra, **client_env}, timeout=90, capture=True)
+            if any("quickstart" in part for part in command):
+                assert completed.stdout.strip() == "Remote deployment works.", command
+                print("Documented quickstart passed with the installed package: " + application.name, flush=True)
+            else:
+                print(completed.stdout.strip(), flush=True)
         baseline = metrics()
         hold = {"provider": "fixture", "model": "fixture-model", "input": "hold-until-cancel"}
 

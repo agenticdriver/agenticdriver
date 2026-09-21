@@ -62,7 +62,22 @@ python scripts/test-go-install.py --local-archive
 npm run test:install
 # Windows installed-package row:
 npm run test:install -- --package-only
+# Node 24+; real Better Auth and AuthYard package contracts:
+npm run test:auth
+# Docker Compose, OpenSSL and the four language toolchains:
+npm run test:deployment
+# Independent static documentation build:
+npm ci --prefix site
+npm run build --prefix site
 ```
+
+The Linux container job installs all four clients and executes the documented
+quickstarts through verified TLS and the native Better Auth service flow. It
+checks proxy cancellation, capacity rejection, graceful shutdown, durable replay
+after host and proxy replacement, and token revocation with a synthetic model
+endpoint. See the [deployment recipe](deployment.md). The separate documentation
+job builds the [site](../site/README.md), checks its Markdown links and retains a
+preview artifact. Neither job publishes a service or certifies a live account.
 
 Default tests use synthetic accounts, API responses, native process fixtures and
 an independent local reference server. They do not run an installed provider

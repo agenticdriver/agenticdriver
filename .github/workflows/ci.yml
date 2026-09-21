@@ -3,6 +3,24 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  documentation:
+    name: Documentation site
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci --prefix site
+      - run: npm run build --prefix site
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agenticdriver-documentation
+          path: site/.vitepress/dist
+          if-no-files-found: error
+          retention-days: 7
   deployment:
     name: Linux containers and verified TLS
     runs-on: ubuntu-24.04

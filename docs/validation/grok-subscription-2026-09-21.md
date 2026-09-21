@@ -23,8 +23,8 @@ The consumer allowance and separate developer-billing pages describe different
 surfaces. We cannot infer that a saved consumer token works at `api.x.ai`, that
 all tiers have the same entitlements, or that an API key consumes included Build
 usage. A future adapter must report its selected native route and leave unknown
-usage unknown. No Grok sign-in, credentials or inference were exercised in this
-review.
+usage unknown. No Grok sign-in, credentials or live inference were exercised in
+the documentation review or the isolated compatibility test below.
 
 Consumer credentials must remain with their owner; the
 [consumer terms](https://x.ai/legal/terms-of-service) restrict sharing accounts.
@@ -94,3 +94,51 @@ and measured or unknown usage. Include expired/missing sign-in, quota and model
 rejection evidence where it can be obtained without destructive account changes.
 Do not close live acceptance using mocked transcripts. Recheck official
 authentication, integration and billing documentation at certification time.
+
+## Native compatibility probe on 2026-09-21
+
+**AD-049 remains open.** The official stable Linux x64 binary reports
+`grok 1.0.40 (eb1a2256660d)`. The downloaded artifact is 165,587,968 bytes with
+SHA256 `92c997dfd109c0672d40d5ae6fbd15835d53ffaf12cf9ea124d22aaef3ff23fc`.
+It came directly from [xAI's release endpoint](https://x.ai/cli/grok-1.0.40-linux-x86_64);
+the installer was not executed and no native credentials were accessed.
+
+The separate [public source export](https://github.com/xai-org/grok-build/blob/4247f661689354b831191f11eeeac8424993fe3d/crates/codegen/xai-grok-shell/src/agent/mvp_agent/mod.rs)
+uses `per_model.or(remote).unwrap_or(600).max(10)` when resolving inference
+inactivity. Its export commit is `4247f661689354b831191f11eeeac8424993fe3d`, with
+source revision `9bb727ccdff0a793ee73bcde4e2e09cbef6b5387`. These are source evidence;
+they are not an assertion that this public commit built the released binary.
+
+The binary ran in a non-root, read-only Docker container with no external
+network or user-account mounts. A temporary native config selected a loopback
+synthetic model endpoint, disabled retries/remote config/telemetry/updates,
+and set both global and per-model `inference_idle_timeout_secs = 0`. The fixture
+sent one text chunk, then stayed silent:
+
+| Observation                                        | Result                                                                      |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Main request                                       | Explicit `sdk-fixture` model; zero tools                                    |
+| Inference connection closed                        | 10,004 ms after the stream began                                            |
+| Native process                                     | Exit 1 after 10,362 ms; `idle_timeout`, stopped responding after 10 seconds |
+| Independent 25-second test watchdog                | Did not fire                                                                |
+| Live provider account, sign-in or billed inference | None                                                                        |
+
+Other controls also need attention. `--tools ""` selects the native default
+tool set. Explicit exclusions need canonical IDs such as `run_terminal_cmd`,
+`kill_task` and `get_task_output`, rather than their renamed wire aliases. With
+those exclusions the fixture verified zero model-request tools. A separate
+`session_title` inference was still attempted with recap, turn summary and title
+refresh disabled; setting `models.session_summary` bound that side call to the
+fixture model, and the local peer rejected it. No tool executed.
+
+A separate no-prompt inspection found that the documented Cursor/Claude scanner
+switches alone do not suppress every ambient plugin/skill surface. No discovered
+hook, MCP server or plugin was executed. The generation probe had no access to
+those host directories.
+
+The adapter still needs a supported disabled-idle contract, control of native
+side work and ambient policy, and packaged conformance. A separately explicit
+native-limit mode would need its own design and must be rejected by default;
+zero must never silently mean a positive SDK timeout. This evidence establishes
+a binary compatibility limit, not account certification. The implementation
+issue retains the [probe record](https://github.com/hashimkarim/agenticdriver/issues/32#issuecomment-5759978439).

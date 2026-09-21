@@ -86,7 +86,8 @@
     "README.md",
     "LICENSE",
     "docs",
-    "examples/javascript"
+    "examples/javascript",
+    "examples/quickstart"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
