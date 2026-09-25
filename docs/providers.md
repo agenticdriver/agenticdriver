@@ -89,8 +89,11 @@ without copying its credentials.
 For Gemini, `accountDirectory` is the home directory containing `.gemini`, as
 used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
 
-- Codex ignores user configuration, disables tools/hooks/apps/MCP, selects the
-  read-only sandbox, and uses an ephemeral session.
+- Codex ignores user `config.toml` and execpolicy rule files, requests strict
+  configuration validation, disables tools/hooks/apps/MCP, selects the read-only
+  sandbox, and uses an ephemeral session. Global `AGENTS.md` instructions and
+  skill descriptions can still enter its prompt; these flags do not isolate all
+  native context. See the [native Codex checks](validation/codex-2026-09-25.md).
 - Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
@@ -118,6 +121,29 @@ native failures remain `CLI_FAILED`. Native stderr is privately inspected only
 on failed exits, bounded to 64 KiB for classification, and is never copied into
 public error messages. CLI JSON result failures are classified before a nonzero
 exit can obscure them. These mappings do not add automatic retries.
+
+Codex's recognized native HTTP 401, rate-limit and missing-model diagnostics map
+to `CLI_AUTH_REQUIRED`, `RATE_LIMITED` and `UNSUPPORTED_MODEL`. Unknown errors
+remain `CLI_FAILED`; native diagnostic bodies and endpoint URLs stay private.
+These mappings and the additional Codex options below are development changes
+after the published 0.1.0 release.
+
+Set `reasoningEffort` on a Codex provider instance (or its host configuration)
+when the application needs an explicit native reasoning setting:
+
+```ts
+codex({
+  id: "selected-codex",
+  models: ["gpt-6-luna"],
+  reasoningEffort: "medium",
+});
+```
+
+The native CLI validates the effort against the selected model. Omitting it
+uses the CLI/model default, not the ignored user configuration. This is a
+host-owned setting; applications select a configured provider instance rather
+than passing arbitrary native configuration in remote requests. Availability
+depends on the account and model; the SDK never substitutes another model.
 
 ## Provider state and usage
 

@@ -50,6 +50,7 @@ import {
   JobWorkerOptionsSchema,
 } from "./job-types.js";
 import { SqliteJobStore } from "./sqlite-job-store.js";
+import { CodexReasoningEffortSchema } from "./providers/local-cli.js";
 export { SecretReferenceSchema, secretResolver } from "./secrets.js";
 export type { SecretReference, SecretResolver } from "./secrets.js";
 
@@ -82,11 +83,15 @@ const api = z
 const cli = z
   .object({
     ...common,
-    kind: z.enum(["codex", "claude-code", "gemini-cli"]),
+    kind: z.enum(["claude-code", "gemini-cli"]),
     accountDirectory: z.string().min(1).optional(),
     binary: z.string().min(1).optional(),
   })
   .strict();
+const codexCli = cli.extend({
+  kind: z.literal("codex"),
+  reasoningEffort: CodexReasoningEffortSchema.optional(),
+});
 export const HostConfigSchema = z
   .object({
     version: z.literal(1),
@@ -110,6 +115,7 @@ export const HostConfigSchema = z
         z.union([
           api,
           cli,
+          codexCli,
           z
             .object({
               ...common,
@@ -470,6 +476,7 @@ export function configuredDriver(
     ]({
       ...shared,
       binary: p.binary,
+      ...(p.kind === "codex" ? { reasoningEffort: p.reasoningEffort } : {}),
       accountDirectory: p.accountDirectory
         ? resolve(directory, p.accountDirectory)
         : undefined,

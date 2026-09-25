@@ -232,10 +232,42 @@
               },
               "kind": {
                 "type": "string",
-                "enum": ["codex", "claude-code", "gemini-cli"]
+                "enum": ["claude-code", "gemini-cli"]
               },
               "accountDirectory": { "type": "string", "minLength": 1 },
               "binary": { "type": "string", "minLength": 1 }
+            },
+            "required": ["id", "models", "kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "accountId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+              },
+              "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "models": {
+                "minItems": 1,
+                "maxItems": 1000,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                }
+              },
+              "kind": { "type": "string", "const": "codex" },
+              "accountDirectory": { "type": "string", "minLength": 1 },
+              "binary": { "type": "string", "minLength": 1 },
+              "reasoningEffort": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+              }
             },
             "required": ["id", "models", "kind"],
             "additionalProperties": false

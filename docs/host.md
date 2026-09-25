@@ -160,6 +160,11 @@ value of at least 32 characters. `init` generates a cryptographically random val
 Clients only see authorized provider instances. Models are an explicit allowlist;
 there is no account, model, or billing fallback.
 
+Development source after SDK 0.1.0 also accepts `"reasoningEffort": "medium"`
+on a Codex instance. Omit this field when using the published 0.1.0 host. Available
+efforts depend on the explicitly selected native model; see
+[Codex configuration and validation](validation/codex-2026-09-25.md).
+
 Optional `limits` cap `maxSteps`, `maxOutputTokens`, `maxAttempts` and
 `idleTimeoutMs`. **There is no total run deadline and no default inactivity
 timeout.** Omitted or zero `idleTimeoutMs` disables inactivity cancellation unless

@@ -6,6 +6,7 @@ import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
+import { codexCliFailure } from "./codex-cli-errors.js";
 import { geminiCliFailure } from "./gemini-cli-errors.js";
 import type {
   ProviderAdapter,
@@ -24,8 +25,18 @@ export interface CliProviderOptions {
 }
 type Vendor = "codex" | "claude-code" | "gemini-cli";
 
-export function codex(options: CliProviderOptions = {}) {
-  return localCli("codex", options);
+export interface CodexProviderOptions extends CliProviderOptions {
+  /** Native model_reasoning_effort. Available values depend on the selected model. */
+  reasoningEffort?: string;
+}
+export const CodexReasoningEffortSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9_-]{0,63}$/);
+
+export function codex(options: CodexProviderOptions = {}) {
+  if (options.reasoningEffort !== undefined)
+    CodexReasoningEffortSchema.parse(options.reasoningEffort);
+  return localCli("codex", options, options.reasoningEffort);
 }
 export function claudeCode(options: CliProviderOptions = {}) {
   return localCli("claude-code", options);
@@ -37,6 +48,7 @@ export function geminiCli(options: CliProviderOptions = {}) {
 function localCli(
   vendor: Vendor,
   options: CliProviderOptions,
+  reasoningEffort?: string,
 ): ProviderAdapter {
   if (options.accountDirectory && !isAbsolute(options.accountDirectory))
     throw new Error("The CLI account directory must be absolute.");
@@ -61,7 +73,14 @@ function localCli(
     );
     const required =
       vendor === "codex"
-        ? ["--ignore-user-config", "--ephemeral", "--sandbox", "--json"]
+        ? [
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--strict-config",
+            "--ephemeral",
+            "--sandbox",
+            "--json",
+          ]
         : vendor === "claude-code"
           ? ["--restricted", "--safe-mode", "--strict-mcp-config", "--tools"]
           : ["--admin-policy", "--output-format", "--extensions"];
@@ -149,7 +168,12 @@ function localCli(
       context.signal.throwIfAborted();
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-"));
       try {
-        const operation = await cliOperation(vendor, request.model, cwd);
+        const operation = await cliOperation(
+          vendor,
+          request.model,
+          cwd,
+          reasoningEffort,
+        );
         context.signal.throwIfAborted();
         const prompt = [
           request.instructions ?? "",
@@ -164,10 +188,12 @@ function localCli(
           signal: context.signal,
           input: prompt,
           onLine: stream.accept,
-          ...(vendor === "gemini-cli"
+          ...(vendor === "gemini-cli" || vendor === "codex"
             ? {
                 classifyExit: (code: number | null, stderr: string) =>
-                  geminiCliFailure(stderr, code),
+                  vendor === "codex"
+                    ? codexCliFailure(stderr)
+                    : geminiCliFailure(stderr, code),
               }
             : {}),
         });
@@ -179,13 +205,20 @@ function localCli(
   };
 }
 
-async function cliOperation(vendor: Vendor, model: string, cwd: string) {
+async function cliOperation(
+  vendor: Vendor,
+  model: string,
+  cwd: string,
+  reasoningEffort?: string,
+) {
   if (vendor === "codex")
     return {
       args: [
         "exec",
         "--json",
         "--ignore-user-config",
+        "--ignore-rules",
+        "--strict-config",
         "--ephemeral",
         "--skip-git-repo-check",
         "--sandbox",
@@ -210,6 +243,12 @@ async function cliOperation(vendor: Vendor, model: string, cwd: string) {
         "mcp_servers={}",
         "--config",
         "project_doc_max_bytes=0",
+        ...(reasoningEffort === undefined
+          ? []
+          : [
+              "--config",
+              `model_reasoning_effort=${JSON.stringify(reasoningEffort)}`,
+            ]),
         "-",
       ],
       env: {},
@@ -507,9 +546,11 @@ export function createCliStream(vendor: Vendor, context: ProviderContext) {
       }
       if (["error", "turn.failed"].includes(String(event.type)))
         throw (
-          (vendor === "gemini-cli"
-            ? geminiCliFailure(event.error ?? event)
-            : undefined) ??
+          (vendor === "codex"
+            ? codexCliFailure(event.error ?? event)
+            : vendor === "gemini-cli"
+              ? geminiCliFailure(event.error ?? event)
+              : undefined) ??
           new DriverError(
             "CLI_FAILED",
             "The CLI failed to complete the request.",
@@ -656,6 +697,8 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
         const event = z
           .object({
             type: z.string(),
+            message: z.string().optional(),
+            error: z.unknown().optional(),
             item: z
               .object({ type: z.string(), text: z.string().optional() })
               .optional(),
@@ -669,9 +712,12 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
           })
           .parse(JSON.parse(line));
         if (["error", "turn.failed"].includes(event.type))
-          throw new DriverError(
-            "CLI_FAILED",
-            "Codex failed to complete the request.",
+          throw (
+            codexCliFailure(event.error ?? event) ??
+            new DriverError(
+              "CLI_FAILED",
+              "Codex failed to complete the request.",
+            )
           );
         if (
           event.item &&
@@ -680,6 +726,7 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
             "file_change",
             "mcp_tool_call",
             "web_search",
+            "collab_tool_call",
           ].includes(event.item.type)
         )
           throw new DriverError(

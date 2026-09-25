@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Codex provider instances accept an explicit native reasoning effort, including
+  host configuration. Required CLI flags now include rule isolation and strict
+  configuration validation.
+- Recognized Codex authentication, rate-limit and missing-model failures produce
+  actionable SDK codes without exposing native diagnostics.
+- Repeatable native Codex fixtures cover synthetic accounts, progress, usage,
+  cancellation and inherited context. Linux CLI 0.157.0 live text and cancellation
+  checks passed with the selected local sign-in and `gpt-6-luna` / medium;
+  [remaining limits](docs/validation/codex-2026-09-25.md) stay explicit.
+
 ## 0.1.0 candidate — unreleased
 
 This first working SDK candidate uses wire protocol 1.0. It is not a registry

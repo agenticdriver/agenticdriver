@@ -85,6 +85,12 @@ CLI or use its sign-in. Native binaries are opt-in, such as the
 [no-prompt Antigravity readiness command](validation/antigravity-2026-09-21.md).
 An account/model must be explicitly selected for inference certification.
 
+The opt-in [native Codex fixture](validation/codex-2026-09-25.md) runs the actual
+Linux CLI against a loopback-only Responses service in a separate network
+namespace. It checks synthetic account selection, reasoning effort, progress,
+usage, error codes, cancellation and process cleanup without using a real sign-in.
+It records inherited native context separately from passing execution checks.
+
 ## Failure coverage
 
 `tests/network-faults.test.ts` puts a real HTTP proxy between the client and host:

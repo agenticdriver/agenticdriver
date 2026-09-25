@@ -413,7 +413,7 @@ const args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify(args)+'\\n');
 const account = process.env.CODEX_HOME || process.env.CLAUDE_CONFIG_DIR || '';
 if (args.includes('--help')) {
-  console.log(account.endsWith('old') ? 'old version' : '--ignore-user-config --ephemeral --sandbox --json --restricted --safe-mode --strict-mcp-config --tools --admin-policy --output-format --extensions');
+  console.log(account.endsWith('old') ? 'old version' : '--ignore-user-config --ignore-rules --strict-config --ephemeral --sandbox --json --restricted --safe-mode --strict-mcp-config --tools --admin-policy --output-format --extensions');
 } else if (args[1] === 'status' && ['login', 'auth'].includes(args[0])) {
   console.log('private-account@example.com secret-key');
   process.exitCode = account.endsWith('logged-out') ? 1 : 0;

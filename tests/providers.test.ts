@@ -421,14 +421,15 @@ test(
       `#!${process.execPath}
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
-  process.stdout.write('--ignore-user-config --ephemeral --sandbox --json');
+  process.stdout.write('--ignore-user-config --ignore-rules --strict-config --ephemeral --sandbox --json');
 } else {
   let input = '';
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', chunk => { input += chunk; });
   process.stdin.on('end', () => {
-    const text = JSON.stringify({ input, restricted: args.includes('--ignore-user-config') && args.includes('--ephemeral') && args[args.indexOf('--sandbox') + 1] === 'read-only',
+    const text = JSON.stringify({ input, restricted: ['--ignore-user-config','--ignore-rules','--strict-config','--ephemeral'].every(flag => args.includes(flag)) && args[args.indexOf('--sandbox') + 1] === 'read-only',
       account: process.env.CODEX_HOME, privateCwd: process.cwd() !== process.env.CODEX_HOME,
+      reasoningEffort: args.includes('model_reasoning_effort="medium"'),
       leakedKey: ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'XAI_API_KEY', 'AGENTICDRIVER_TOKEN'].some(key => key in process.env) });
     process.stdout.write(JSON.stringify({ type: 'item.completed', item: { id: 'answer', type: 'agent_message', text } }) + '\\n');
     process.stdout.write(JSON.stringify({ type: 'turn.completed' }));
@@ -438,7 +439,11 @@ if (args.includes('--help')) {
       { mode: 0o700 },
     );
     try {
-      const provider = codex({ binary, accountDirectory: directory });
+      const provider = codex({
+        binary,
+        accountDirectory: directory,
+        reasoningEffort: "medium",
+      });
       const input = "Literal $(echo should-not-execute) and 🌍";
       const result = await new AgenticDriver({ providers: [provider] }).run({
         provider: "codex",
@@ -451,6 +456,7 @@ if (args.includes('--help')) {
       assert.equal(output.privateCwd, true);
       assert.equal(output.account, directory);
       assert.equal(output.leakedKey, false);
+      assert.equal(output.reasoningEffort, true);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
