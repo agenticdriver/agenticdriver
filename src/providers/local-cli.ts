@@ -1,8 +1,9 @@
-import { spawn } from "node:child_process";
+import { cliEnvironment, runProcess } from "./cli-process.js";
+export { runProcess } from "./cli-process.js";
+import { codexAppServer } from "./codex-app-server.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
-import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
@@ -36,7 +37,7 @@ export const CodexReasoningEffortSchema = z
 export function codex(options: CodexProviderOptions = {}) {
   if (options.reasoningEffort !== undefined)
     CodexReasoningEffortSchema.parse(options.reasoningEffort);
-  return localCli("codex", options, options.reasoningEffort);
+  return codexAppServer(options);
 }
 export function claudeCode(options: CliProviderOptions = {}) {
   return localCli("claude-code", options);
@@ -46,9 +47,8 @@ export function geminiCli(options: CliProviderOptions = {}) {
 }
 
 function localCli(
-  vendor: Vendor,
+  vendor: Exclude<Vendor, "codex">,
   options: CliProviderOptions,
-  reasoningEffort?: string,
 ): ProviderAdapter {
   if (options.accountDirectory && !isAbsolute(options.accountDirectory))
     throw new Error("The CLI account directory must be absolute.");
@@ -66,24 +66,16 @@ function localCli(
     ] = options.accountDirectory;
   let checked: Promise<void> | undefined;
   const checkFeatures = async (signal: AbortSignal, cwd?: string) => {
-    const help = await runProcess(
-      binary,
-      vendor === "codex" ? ["exec", "--help"] : ["--help"],
-      { env, cwd, signal, includeStderr: true },
-    );
+    const help = await runProcess(binary, ["--help"], {
+      env,
+      cwd,
+      signal,
+      includeStderr: true,
+    });
     const required =
-      vendor === "codex"
-        ? [
-            "--ignore-user-config",
-            "--ignore-rules",
-            "--strict-config",
-            "--ephemeral",
-            "--sandbox",
-            "--json",
-          ]
-        : vendor === "claude-code"
-          ? ["--restricted", "--safe-mode", "--strict-mcp-config", "--tools"]
-          : ["--admin-policy", "--output-format", "--extensions"];
+      vendor === "claude-code"
+        ? ["--restricted", "--safe-mode", "--strict-mcp-config", "--tools"]
+        : ["--admin-policy", "--output-format", "--extensions"];
     if (!required.every((flag) => help.includes(flag)))
       throw new DriverError(
         "CLI_UPGRADE_REQUIRED",
@@ -110,7 +102,7 @@ function localCli(
       authMode: "cli-session",
       capabilities: {
         tools: false,
-        textStreaming: vendor !== "codex",
+        textStreaming: true,
         historyContinuation: true,
         nativeContinuation: false,
       },
@@ -128,19 +120,15 @@ function localCli(
         if (vendor === "gemini-cli") return { code: "CLI_STATUS_UNKNOWN" };
         let exitCode: number | null = null;
         // Output can contain account identifiers or masked keys. Retain nothing in the result.
-        await runProcess(
-          binary,
-          vendor === "codex" ? ["login", "status"] : ["auth", "status"],
-          {
-            env,
-            cwd,
-            signal,
-            acceptedExitCodes: [0, 1],
-            onExit: (code) => {
-              exitCode = code;
-            },
+        await runProcess(binary, ["auth", "status"], {
+          env,
+          cwd,
+          signal,
+          acceptedExitCodes: [0, 1],
+          onExit: (code) => {
+            exitCode = code;
           },
-        );
+        });
         return {
           code: exitCode === 0 ? "CLI_SESSION_PRESENT" : "CLI_AUTH_REQUIRED",
         };
@@ -168,12 +156,7 @@ function localCli(
       context.signal.throwIfAborted();
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-"));
       try {
-        const operation = await cliOperation(
-          vendor,
-          request.model,
-          cwd,
-          reasoningEffort,
-        );
+        const operation = await cliOperation(vendor, request.model, cwd);
         context.signal.throwIfAborted();
         const prompt = [
           request.instructions ?? "",
@@ -188,12 +171,10 @@ function localCli(
           signal: context.signal,
           input: prompt,
           onLine: stream.accept,
-          ...(vendor === "gemini-cli" || vendor === "codex"
+          ...(vendor === "gemini-cli"
             ? {
                 classifyExit: (code: number | null, stderr: string) =>
-                  vendor === "codex"
-                    ? codexCliFailure(stderr)
-                    : geminiCliFailure(stderr, code),
+                  geminiCliFailure(stderr, code),
               }
             : {}),
         });
@@ -206,53 +187,10 @@ function localCli(
 }
 
 async function cliOperation(
-  vendor: Vendor,
+  vendor: Exclude<Vendor, "codex">,
   model: string,
   cwd: string,
-  reasoningEffort?: string,
 ) {
-  if (vendor === "codex")
-    return {
-      args: [
-        "exec",
-        "--json",
-        "--ignore-user-config",
-        "--ignore-rules",
-        "--strict-config",
-        "--ephemeral",
-        "--skip-git-repo-check",
-        "--sandbox",
-        "read-only",
-        "--model",
-        model,
-        "--config",
-        'approval_policy="never"',
-        "--config",
-        "features.shell_tool=false",
-        "--config",
-        "features.unified_exec=false",
-        "--config",
-        "features.hooks=false",
-        "--config",
-        "features.apps=false",
-        "--config",
-        "features.multi_agent=false",
-        "--config",
-        'web_search="disabled"',
-        "--config",
-        "mcp_servers={}",
-        "--config",
-        "project_doc_max_bytes=0",
-        ...(reasoningEffort === undefined
-          ? []
-          : [
-              "--config",
-              `model_reasoning_effort=${JSON.stringify(reasoningEffort)}`,
-            ]),
-        "-",
-      ],
-      env: {},
-    };
   if (vendor === "claude-code")
     return {
       args: [
@@ -331,182 +269,6 @@ async function cliOperation(
     ],
     env: { GEMINI_CLI_SYSTEM_SETTINGS_PATH: settings },
   };
-}
-
-function cliEnvironment(): NodeJS.ProcessEnv {
-  const keys = [
-    "PATH",
-    "HOME",
-    "USER",
-    "LOGNAME",
-    "LANG",
-    "LC_ALL",
-    "TMPDIR",
-    "TMP",
-    "TEMP",
-    "XDG_RUNTIME_DIR",
-    "XDG_CONFIG_HOME",
-    "XDG_DATA_HOME",
-    "XDG_CACHE_HOME",
-    "DBUS_SESSION_BUS_ADDRESS",
-    "APPDATA",
-    "LOCALAPPDATA",
-    "USERPROFILE",
-    "SystemRoot",
-    "SYSTEMROOT",
-    "WINDIR",
-    "COMSPEC",
-    "PATHEXT",
-    "CODEX_HOME",
-    "CLAUDE_CONFIG_DIR",
-    "GEMINI_CLI_HOME",
-    "SSL_CERT_FILE",
-    "NODE_EXTRA_CA_CERTS",
-    "CODEX_CA_CERTIFICATE",
-  ];
-  return Object.fromEntries(
-    keys.flatMap((key) =>
-      process.env[key] === undefined ? [] : [[key, process.env[key]]],
-    ),
-  );
-}
-
-/** No shell interpolation; bound output and terminate the process group on cancellation. */
-export function runProcess(
-  binary: string,
-  args: string[],
-  options: {
-    cwd?: string;
-    env: NodeJS.ProcessEnv;
-    signal: AbortSignal;
-    input?: string;
-    includeStderr?: boolean;
-    onLine?: (line: string) => void;
-    acceptedExitCodes?: number[];
-    onExit?: (code: number | null) => void;
-    /** Trusted diagnostic classifier. Raw stderr is never included in public errors. */
-    classifyExit?: (
-      code: number | null,
-      stderr: string,
-    ) => DriverError | undefined;
-  },
-): Promise<string> {
-  options.signal.throwIfAborted();
-  return new Promise((resolve, reject) => {
-    const child = spawn(binary, args, {
-      cwd: options.cwd,
-      env: options.env,
-      shell: false,
-      detached: process.platform !== "win32",
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
-    const chunks: Buffer[] = [];
-    const diagnostic: Buffer[] = [];
-    let diagnosticBytes = 0;
-    const decoder = new StringDecoder("utf8");
-    let pendingLine = "";
-    const acceptText = (text: string, end = false) => {
-      if (!options.onLine || failure) return;
-      pendingLine += text;
-      const lines = pendingLine.split(/\r?\n/);
-      pendingLine = end ? "" : lines.pop()!;
-      for (const line of lines) if (line.trim()) options.onLine(line);
-    };
-    let bytes = 0,
-      failure: unknown,
-      killTimer: ReturnType<typeof setTimeout> | undefined;
-    const terminate = (signal: NodeJS.Signals) => {
-      try {
-        if (process.platform !== "win32" && child.pid)
-          process.kill(-child.pid, signal);
-        else child.kill(signal);
-      } catch {
-        /* Already exited. */
-      }
-    };
-    const stop = () => {
-      terminate("SIGTERM");
-      killTimer ??= setTimeout(() => terminate("SIGKILL"), 1000);
-      killTimer.unref();
-    };
-    const abort = () => {
-      failure =
-        options.signal.reason instanceof DriverError
-          ? options.signal.reason
-          : new DriverError(
-              options.signal.reason?.name === "TimeoutError"
-                ? "TIMEOUT"
-                : "CANCELLED",
-              "The CLI operation was interrupted.",
-            );
-      stop();
-    };
-    const receive = (chunk: Buffer, retain: boolean) => {
-      bytes += chunk.length;
-      if (bytes > 2_000_000) {
-        failure = new DriverError(
-          "CLI_OUTPUT_LIMIT",
-          "The CLI exceeded its output limit.",
-        );
-        stop();
-      } else if (retain) chunks.push(chunk);
-    };
-    child.stdout.on("data", (chunk: Buffer) => {
-      receive(chunk, true);
-      try {
-        acceptText(decoder.write(chunk));
-      } catch (error) {
-        failure = error;
-        stop();
-      }
-    });
-    child.stderr.on("data", (chunk: Buffer) => {
-      receive(chunk, options.includeStderr ?? false);
-      if (options.classifyExit && diagnosticBytes < 65_536) {
-        const part = chunk.subarray(0, 65_536 - diagnosticBytes);
-        diagnostic.push(part);
-        diagnosticBytes += part.length;
-      }
-    });
-    child.stdin.on("error", () => {});
-    child.once("error", () => {
-      failure = new DriverError(
-        "CLI_UNAVAILABLE",
-        "The CLI executable could not be started.",
-      );
-    });
-    options.signal.addEventListener("abort", abort, { once: true });
-    if (options.signal.aborted) abort();
-    child.once("close", (code) => {
-      options.onExit?.(code);
-      options.signal.removeEventListener("abort", abort);
-      if (killTimer) clearTimeout(killTimer);
-      terminate("SIGKILL");
-      try {
-        acceptText(decoder.end(), true);
-      } catch (error) {
-        failure = error;
-      }
-      if (failure) reject(failure);
-      else if (
-        code === null ||
-        !(options.acceptedExitCodes ?? [0]).includes(code)
-      )
-        reject(
-          options.classifyExit?.(
-            code,
-            Buffer.concat(diagnostic).toString("utf8"),
-          ) ??
-            new DriverError(
-              "CLI_FAILED",
-              "The CLI failed. Check its installed version, sign-in, and model access.",
-            ),
-        );
-      else resolve(Buffer.concat(chunks).toString("utf8"));
-    });
-    child.stdin.end(options.input ?? "");
-  });
 }
 
 /** CLI JSONL progress is parsed as it arrives. Stderr and startup notices never refresh idle timeouts. */

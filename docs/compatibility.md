@@ -89,7 +89,9 @@ The opt-in [native Codex fixture](validation/codex-2026-09-25.md) runs the actua
 Linux CLI against a loopback-only Responses service in a separate network
 namespace. It checks synthetic account selection, reasoning effort, progress,
 usage, managed-session refresh/expiry, error codes, cancellation and process
-cleanup without using a real sign-in.
+cleanup without using a real sign-in. It inspects Responses Lite `additional_tools`
+catalogs and attempts denied native operations, including filesystem access and
+network fetches from the code runtime.
 It records inherited native context separately from passing execution checks.
 
 ## Failure coverage

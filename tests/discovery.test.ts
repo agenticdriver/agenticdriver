@@ -412,7 +412,9 @@ const fs = require('node:fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify(args)+'\\n');
 const account = process.env.CODEX_HOME || process.env.CLAUDE_CONFIG_DIR || '';
-if (args.includes('--help')) {
+if (args.includes('--version')) {
+  console.log(account.endsWith('old') ? 'codex-cli 0.156.0' : 'codex-cli 0.157.0');
+} else if (args.includes('--help')) {
   console.log(account.endsWith('old') ? 'old version' : '--ignore-user-config --ignore-rules --strict-config --ephemeral --sandbox --json --restricted --safe-mode --strict-mcp-config --tools --admin-policy --output-format --extensions');
 } else if (args[1] === 'status' && ['login', 'auth'].includes(args[0])) {
   console.log('private-account@example.com secret-key');
@@ -466,7 +468,12 @@ if (args.includes('--help')) {
         .map((line) => JSON.parse(line) as string[]);
       assert.equal(calls.length, 6);
       assert(
-        calls.every((args) => args.includes("--help") || args[1] === "status"),
+        calls.every(
+          (args) =>
+            args.includes("--help") ||
+            args.includes("--version") ||
+            args[1] === "status",
+        ),
       );
     } finally {
       await rm(dir, { recursive: true, force: true });

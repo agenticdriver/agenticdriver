@@ -2,19 +2,20 @@
 
 ## Unreleased
 
-- Codex provider instances accept an explicit native reasoning effort, including
-  host configuration. Required CLI flags now include rule isolation and strict
-  configuration validation.
-- Recognized Codex authentication, rate-limit and missing-model failures produce
-  actionable SDK codes without exposing native diagnostics.
-- Native managed-session expiry, reused refresh tokens and revoked refresh tokens
-  return `CLI_AUTH_REQUIRED`. Isolated native fixtures verify successful refresh,
-  credential persistence, redaction and native attempt counts without touching a
-  real sign-in.
-- Repeatable native Codex fixtures cover synthetic accounts, progress, usage,
-  cancellation and inherited context. Linux CLI 0.157.0 live text and cancellation
-  checks passed with the selected local sign-in and `gpt-6-luna` / medium;
-  [remaining limits](docs/validation/codex-2026-09-25.md) stay explicit.
+- Codex now uses the official app-server protocol with environment access disabled,
+  explicit native policy controls, inherited MCP servers disabled, and a pinned
+  CLI 0.157.0 version check. The earlier exec adapter's zero-tools assertion
+  missed Responses Lite tool catalogs and is withdrawn. Native utilities and
+  inherited context are documented in the [corrected validation report](docs/validation/codex-2026-09-25.md).
+- Native fixtures inspect the effective tool catalog and exercise denied shell,
+  file, image, agent, MCP, goal, import and network operations. The sandboxed code
+  runtime exposes only the clock tool and no system globals in the tested model.
+- Codex provider instances accept explicit reasoning effort, including host
+  configuration. Authentication, rate-limit and model errors retain actionable
+  codes without exposing native diagnostics. Managed-session tests cover refresh,
+  permanent expiry and one bounded policy reload before any prompt is submitted.
+- Application tools remain unsupported on the Codex text route; no default run
+  deadline or inactivity timeout is introduced.
 
 ## 0.1.0 — 2026-09-21
 

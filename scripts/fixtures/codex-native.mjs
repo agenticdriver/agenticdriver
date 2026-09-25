@@ -84,10 +84,119 @@ let cancel;
 let resolveClosed;
 let activeResponse;
 let sessionAccessToken;
+let sessionRefreshedToken;
+let sessionIdToken;
 const requests = [];
 const refreshRequests = [];
 const cases = [];
 let serverFailure;
+let scenarioRequests = 0;
+const nativeTools = (request) => {
+  const flatten = (tools, namespace = "") =>
+    tools.flatMap((tool) =>
+      tool.type === "namespace"
+        ? flatten(tool.tools, `${namespace}${tool.name}.`)
+        : [
+            {
+              type: tool.type,
+              name: `${namespace}${tool.name}`,
+              declarations: [
+                ...(tool.description ?? "").matchAll(/^### `([^`]+)`/gm),
+              ].map((match) => match[1]),
+            },
+          ],
+    );
+  return flatten([
+    ...(request.tools ?? []),
+    ...(request.input ?? [])
+      .filter((item) => item.type === "additional_tools")
+      .flatMap((item) => item.tools),
+  ]);
+};
+const expectedTools = [
+  {
+    type: "custom",
+    name: "functions.exec",
+    declarations: ["clock__curr_time"],
+  },
+  { type: "function", name: "functions.wait", declarations: [] },
+  {
+    type: "function",
+    name: "functions.request_user_input_async",
+    declarations: [],
+  },
+];
+const forbiddenCalls = {
+  shell: {
+    type: "function_call",
+    name: "exec_command",
+    arguments: JSON.stringify({
+      cmd: "/tmp/fixture-node -e \"require('node:fs').writeFileSync('/tmp/fixture-work/forbidden-created','unexpected')\"",
+    }),
+  },
+  patch: {
+    type: "custom_tool_call",
+    name: "apply_patch",
+    input:
+      "*** Begin Patch\n*** Add File: /tmp/fixture-work/forbidden-created\n+unexpected\n*** End Patch",
+  },
+  image: {
+    type: "function_call",
+    name: "view_image",
+    arguments: JSON.stringify({ path: `${root}/private-source.png` }),
+  },
+  spawn: {
+    type: "function_call",
+    namespace: "collaboration",
+    name: "spawn_agent",
+    arguments: JSON.stringify({
+      task_name: "forbidden",
+      message: "Return forbidden.",
+    }),
+  },
+  nestedShell: {
+    type: "custom_tool_call",
+    namespace: "functions",
+    name: "exec",
+    input:
+      "text(await tools.exec_command({cmd: \"/tmp/fixture-node -e \\\"require('node:fs').writeFileSync('/tmp/fixture-work/forbidden-created','unexpected')\\\"\"}));",
+  },
+  import: {
+    type: "custom_tool_call",
+    namespace: "functions",
+    name: "exec",
+    input:
+      "text((await import('node:fs')).readFileSync('/tmp/fixture-work/private-context.txt','utf8'));",
+  },
+  fetch: {
+    type: "custom_tool_call",
+    namespace: "functions",
+    name: "exec",
+    input:
+      "text(await fetch('http://127.0.0.1:FIXTURE_PORT/forbidden-network'));",
+  },
+  mcp: { type: "function_call", name: "mcp__fixture__read", arguments: "{}" },
+  goal: {
+    type: "function_call",
+    name: "create_goal",
+    arguments: '{"objective":"Unrequested fixture goal"}',
+  },
+};
+const registryCall = {
+  type: "custom_tool_call",
+  namespace: "functions",
+  name: "exec",
+  input:
+    "text({tools:ALL_TOOLS.map(tool=>tool.name),fetch:typeof fetch,process:typeof process,require:typeof require,Deno:typeof Deno});",
+};
+await writeFile(`${root}/private-context.txt`, "FORBIDDEN_CONTEXT_MARKER");
+await writeFile(
+  `${root}/private-source.png`,
+  Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlS8AAAAASUVORK5CYII=",
+    "base64",
+  ),
+);
 
 const server = createServer(async (req, res) => {
   try {
@@ -110,7 +219,8 @@ const server = createServer(async (req, res) => {
         JSON.stringify(
           scenario === "session-refresh"
             ? {
-                access_token: "fixture-session-refreshed",
+                access_token: sessionRefreshedToken,
+                id_token: sessionIdToken,
                 refresh_token: "fixture-session-rotated",
               }
             : {
@@ -127,19 +237,22 @@ const server = createServer(async (req, res) => {
     assert.equal(
       req.headers.authorization,
       scenario.startsWith("session-")
-        ? `Bearer ${scenario === "session-refresh" ? "fixture-session-refreshed" : sessionAccessToken}`
+        ? `Bearer ${scenario === "session-refresh" ? sessionRefreshedToken : sessionAccessToken}`
         : `Bearer fixture-account-${selectedAccount}`,
       `scenario ${scenario}; refresh requests ${refreshRequests.length}`,
     );
     const body = JSON.parse(raw);
     requests.push(body);
+    scenarioRequests++;
     assert.equal(body.model, model);
     assert.equal(body.reasoning?.effort, reasoningEffort);
-    assert.deepEqual(body.tools ?? [], []);
+    // Responses Lite puts tools in additional_tools input items, not body.tools.
+    assert.deepEqual(nativeTools(body), expectedTools);
     const content = JSON.stringify(body);
     assert.ok(content.includes("Supplied application context."));
     assert.ok(!content.includes(markers.userConfiguration));
     assert.ok(!content.includes(markers.parentInstructions));
+    assert.ok(!content.includes("FORBIDDEN_CONTEXT_MARKER"));
     if (scenario.startsWith("session-") && scenario !== "session-refresh") {
       res.writeHead(401, { "content-type": "application/json" });
       res.end(
@@ -170,13 +283,32 @@ const server = createServer(async (req, res) => {
       );
       return;
     }
-    const item = {
-      id: "message-fixture",
-      type: "message",
-      role: "assistant",
-      status: "completed",
-      content: [{ type: "output_text", text: answer, annotations: [] }],
-    };
+    const rejectedTool =
+      forbiddenCalls[scenario.slice("forbidden-".length)] ?? registryCall;
+    const item =
+      (scenario.startsWith("forbidden-") || scenario === "registry") &&
+      scenarioRequests === 1
+        ? {
+            ...rejectedTool,
+            ...(rejectedTool.input
+              ? {
+                  input: rejectedTool.input.replace(
+                    "FIXTURE_PORT",
+                    String(port),
+                  ),
+                }
+              : {}),
+            id: "tool-fixture",
+            call_id: "forbidden-call",
+            status: "completed",
+          }
+        : {
+            id: "message-fixture",
+            type: "message",
+            role: "assistant",
+            status: "completed",
+            content: [{ type: "output_text", text: answer, annotations: [] }],
+          };
     const response = {
       id: "response-fixture",
       object: "response",
@@ -208,15 +340,23 @@ const server = createServer(async (req, res) => {
       {
         type: "response.output_item.added",
         output_index: 0,
-        item: { ...item, status: "in_progress", content: [] },
+        item: {
+          ...item,
+          status: "in_progress",
+          ...(item.type === "message" ? { content: [] } : {}),
+        },
       },
-      {
-        type: "response.output_text.delta",
-        item_id: item.id,
-        output_index: 0,
-        content_index: 0,
-        delta: answer,
-      },
+      ...(item.type === "message"
+        ? [
+            {
+              type: "response.output_text.delta",
+              item_id: item.id,
+              output_index: 0,
+              content_index: 0,
+              delta: answer,
+            },
+          ]
+        : []),
       { type: "response.output_item.done", output_index: 0, item },
       { type: "response.completed", response },
     ])
@@ -247,7 +387,9 @@ const fs=require('node:fs');
 const args=process.argv.slice(2);
 const extra=${JSON.stringify(overrides)}.flatMap(value=>['--config',value]);
 const child=spawn('/tmp/fixture-codex',[...args,...extra],{stdio:'pipe',env:{...process.env,CODEX_REFRESH_TOKEN_URL_OVERRIDE:'http://127.0.0.1:${port}/oauth/token'}});
-fs.appendFileSync('${root}/native-pids.jsonl',JSON.stringify({pid:child.pid,execution:args[0]==='exec'&&args.includes('--json')})+'\\n');
+child.stdout.on('data',chunk=>fs.appendFileSync('${root}/native-wire.jsonl',chunk));
+child.stderr.on('data',chunk=>fs.appendFileSync('${root}/native-stderr.txt',chunk));
+fs.appendFileSync('${root}/native-pids.jsonl',JSON.stringify({pid:child.pid,execution:args[0]==='app-server'&&args.includes('--stdio')})+'\\n');
 process.stdin.pipe(child.stdin);
 child.stdout.pipe(process.stdout);
 child.stderr.pipe(process.stderr);
@@ -291,12 +433,33 @@ try {
       events.push(event);
     if (serverFailure) throw serverFailure;
     const terminal = events.at(-1);
-    assert.equal(terminal.type, "run.completed");
+    if (terminal.type === "run.failed") {
+      const wire = await readFile(`${root}/native-wire.jsonl`, "utf8");
+      console.error(
+        wire
+          .split("\n")
+          .filter((line) => {
+            try {
+              return JSON.parse(line).error;
+            } catch {
+              return false;
+            }
+          })
+          .join("\n"),
+      );
+      console.error(
+        (
+          await readFile(`${root}/native-stderr.txt`, "utf8").catch(() => "")
+        ).slice(-1500),
+      );
+    }
+    assert.equal(terminal.type, "run.completed", JSON.stringify(terminal));
     assert.equal(terminal.result.text, answer);
     assert.deepEqual(terminal.result.usage, {
       inputTokens: 11,
       outputTokens: 5,
       cachedInputTokens: 0,
+      reasoningTokens: 0,
     });
     assert.equal(
       events
@@ -390,6 +553,14 @@ try {
       last_refresh: "2020-01-01T00:00:00Z",
     };
     sessionAccessToken = original.tokens.access_token;
+    sessionIdToken = original.tokens.id_token;
+    sessionRefreshedToken = jwt({
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      "https://api.openai.com/auth": {
+        chatgpt_account_id: "fixture-session-account",
+        chatgpt_plan_type: "plus",
+      },
+    });
     await writeFile(`${sessionDirectory}/auth.json`, JSON.stringify(original), {
       mode: 0o600,
     });
@@ -406,7 +577,7 @@ try {
       const stored = JSON.parse(
         await readFile(`${sessionDirectory}/auth.json`, "utf8"),
       );
-      assert.equal(stored.tokens.access_token, "fixture-session-refreshed");
+      assert.equal(stored.tokens.access_token, sessionRefreshedToken);
       assert.equal(stored.tokens.refresh_token, "fixture-session-rotated");
       assert.ok(
         Date.parse(stored.last_refresh) > Date.parse(original.last_refresh),
@@ -432,7 +603,10 @@ try {
       assert.equal(stored.last_refresh, original.last_refresh);
     }
     if (serverFailure) throw serverFailure;
-    assert.equal((await executionCount()) - beforeExecutions, 1);
+    assert.equal(
+      (await executionCount()) - beforeExecutions,
+      name === "refresh" ? 2 : 1,
+    );
     const refreshAttempts = refreshRequests.length - beforeRefresh;
     assert.ok(refreshAttempts > 0 && refreshAttempts <= 10);
     cases.push({
@@ -440,9 +614,74 @@ try {
       status: "passed",
       refreshAttempts,
       modelRequests: requests.length - before,
-      nativeExecutions: 1,
+      nativeExecutions: (await executionCount()) - beforeExecutions,
     });
   }
+  for (const name of Object.keys(forbiddenCalls)) {
+    scenario = `forbidden-${name}`;
+    scenarioRequests = 0;
+    selectedAccount = 0;
+    const before = requests.length;
+    let sdkRejected = false;
+    try {
+      await driver.run(request(), { signal: watch() });
+    } catch (error) {
+      assert.equal(
+        error.code,
+        "CLI_POLICY_VIOLATION",
+        `${name}: ${error.code}`,
+      );
+      sdkRejected = true;
+    }
+    if (serverFailure) throw serverFailure;
+    const toolOutputs = requests
+      .slice(before)
+      .flatMap((request) => request.input ?? [])
+      .filter((item) =>
+        ["function_call_output", "custom_tool_call_output"].includes(item.type),
+      );
+    if (!sdkRejected) {
+      assert.equal(toolOutputs.length, 1, name);
+      assert.match(
+        JSON.stringify(toolOutputs[0].output),
+        /unsupported call|unsupported custom tool|not a function|unsupported import in exec|not defined/i,
+        JSON.stringify(toolOutputs[0]),
+      );
+    }
+    assert.ok(
+      !JSON.stringify(toolOutputs).includes("FORBIDDEN_CONTEXT_MARKER"),
+    );
+    assert.ok(!JSON.stringify(toolOutputs).includes("iVBORw0KGgo"));
+    await assert.rejects(access(`${root}/forbidden-created`), {
+      code: "ENOENT",
+    });
+    cases.push({
+      name: `reject-native-${name}`,
+      status: "passed",
+      sdkRejected,
+      nativeRejections: toolOutputs.map((item) => item.output),
+    });
+  }
+  scenario = "registry";
+  scenarioRequests = 0;
+  const beforeRegistry = requests.length;
+  await driver.run(request(), { signal: watch() });
+  if (serverFailure) throw serverFailure;
+  const registryOutput = requests
+    .slice(beforeRegistry)
+    .flatMap((request) => request.input ?? [])
+    .find((item) => item.type === "custom_tool_call_output");
+  assert.ok(registryOutput);
+  const registryText = registryOutput.output
+    .map((part) => part.text ?? "")
+    .join("\n");
+  assert.match(registryText, /"tools":\["clock__curr_time"\]/);
+  for (const key of ["fetch", "process", "require", "Deno"])
+    assert.ok(registryText.includes(`"${key}":"undefined"`));
+  cases.push({
+    name: "native-code-registry-has-only-clock-and-no-system-globals",
+    status: "passed",
+  });
   scenario = "cancel";
   const controller = new AbortController();
   cancel = () => controller.abort();
@@ -518,7 +757,7 @@ try {
     "Bundled native helpers must not survive their run.",
   );
   cases.push({
-    name: "no-advertised-tools-hooks-or-mcp-processes",
+    name: "restricted-native-tools-hooks-and-mcp-processes",
     status: "passed",
   });
   cases.push({ name: "native-process-cleanup", status: "passed" });
@@ -528,6 +767,7 @@ try {
       version,
       model,
       reasoningEffort,
+      effectiveToolCatalog: nativeTools(requests[0]),
       cases,
       ambientContextObserved: Object.fromEntries(
         Object.entries(markers).map(([name, marker]) => [
@@ -538,6 +778,30 @@ try {
       tokenStreaming: false,
     }),
   );
+} catch (error) {
+  console.error(
+    "Native fixture diagnostics:",
+    (await readFile(`${root}/native-stderr.txt`, "utf8").catch(() => "")).slice(
+      -3000,
+    ),
+  );
+  const wire = await readFile(`${root}/native-wire.jsonl`, "utf8");
+  console.error(
+    wire
+      .split("\n")
+      .filter((line) => {
+        try {
+          const x = JSON.parse(line);
+          return x.error || x.method === "error";
+        } catch {
+          return false;
+        }
+      })
+      .slice(-5)
+      .join("\n"),
+  );
+  if (serverFailure) console.error("Fixture endpoint:", serverFailure);
+  throw error;
 } finally {
   activeResponse?.destroy();
   server.closeAllConnections();

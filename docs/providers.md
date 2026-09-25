@@ -36,9 +36,11 @@ fixture checks without changes to the runtime or language clients.
 
 Codex supports a ChatGPT sign-in as well as API-key authentication, and OpenAI
 documents programmatic SDK integrations. The Codex adapter runs the official
-`codex exec --json` command and leaves authentication to that CLI.
+`codex app-server --stdio` protocol and leaves authentication to that CLI.
+Development source requires the qualified CLI 0.157.0 protocol; the published
+0.1.0 package still contains the older exec adapter.
 [Codex authentication](https://learn.chatgpt.com/docs/auth),
-[Codex SDK](https://learn.chatgpt.com/docs/codex-sdk).
+[Codex app server](https://learn.chatgpt.com/docs/app-server).
 
 Claude Code can run as an unmodified binary with the end user's own sign-in.
 Anthropic's documentation distinguishes this from offering Claude.ai sign-in in
@@ -89,11 +91,16 @@ without copying its credentials.
 For Gemini, `accountDirectory` is the home directory containing `.gemini`, as
 used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
 
-- Codex ignores user `config.toml` and execpolicy rule files, requests strict
-  configuration validation, disables tools/hooks/apps/MCP, selects the read-only
-  sandbox, and uses an ephemeral session. Global `AGENTS.md` instructions and
-  skill descriptions can still enter its prompt; these flags do not isolate all
-  native context. See the [native Codex checks](validation/codex-2026-09-25.md).
+- Codex starts an ephemeral app-server thread and turn with `environments: []`,
+  a read-only sandbox and no application tools or capability roots. It disables
+  agents, goals, hooks, plugins, apps and web search, and explicitly disables
+  every inherited MCP server before creating the thread. Ambiguous MCP names
+  fail before the prompt is sent. The native model still advertises sandboxed
+  JavaScript, a clock and an asynchronous question utility; the SDK rejects
+  client-side authority requests and does not expose an application tool bridge.
+  Native shell, file, image, agent, MCP and goal operations are unavailable in
+  the audited registry. Global `AGENTS.md` and skill descriptions still enter
+  the prompt. See the [native evidence and limits](validation/codex-2026-09-25.md).
 - Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
@@ -108,8 +115,8 @@ and disabled by default for both CLI and API providers.
 
 API adapters request SSE and forward text deltas before a turn completes. Claude
 Code runs with `stream-json` and partial messages; Gemini CLI uses `stream-json`.
-Codex's `exec --json` progress is item-based, so its capability still advertises
-`textStreaming: false` for token streaming. Quiet native reasoning is observable
+The Codex adapter emits completed message items and uses native deltas for
+progress, so it conservatively advertises `textStreaming: false`. Quiet native reasoning is observable
 only when the CLI emits an event. A provider that returns JSON instead of SSE
 remains usable, with progress visible only when that response completes.
 
@@ -127,7 +134,11 @@ rate-limit and missing-model diagnostics map
 to `CLI_AUTH_REQUIRED`, `RATE_LIMITED` and `UNSUPPORTED_MODEL`. Unknown errors
 remain `CLI_FAILED`; native diagnostic bodies and endpoint URLs stay private.
 The native CLI owns credential refresh. Its auth recovery can make multiple
-HTTP attempts within one execution; the SDK does not restart that execution.
+HTTP attempts within one execution. If startup refresh invalidates native network
+policy before initialization replies, the adapter can reopen the process once
+under freshly loaded native policy, before sending any thread or prompt. It never
+replays a submitted prompt through that recovery path. A repeated policy change
+returns `CLI_POLICY_CHANGED`; no native permission is bypassed.
 These mappings and the additional Codex options below are development changes
 after the published 0.1.0 release.
 
@@ -143,7 +154,8 @@ codex({
 ```
 
 The native CLI validates the effort against the selected model. Omitting it
-uses the CLI/model default, not the ignored user configuration. This is a
+uses the native CLI/model configuration. Set it explicitly when the application
+requires a particular effort. This is a
 host-owned setting; applications select a configured provider instance rather
 than passing arbitrary native configuration in remote requests. Availability
 depends on the account and model; the SDK never substitutes another model.

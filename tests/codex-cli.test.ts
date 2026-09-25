@@ -1,6 +1,7 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AgenticDriver } from "../src/driver.js";
@@ -112,7 +113,7 @@ test("Codex reasoning effort is validated only for Codex host instances", () => 
 });
 
 test(
-  "Codex subprocess reports native failures before exit handling and rejects missing isolation flags",
+  "Codex subprocess reports native failures before exit handling and rejects unqualified native versions",
   { skip: process.platform === "win32" },
   async () => {
     const directory = await mkdtemp(
@@ -124,28 +125,7 @@ test(
       await writeFile(
         binary,
         `#!${process.execPath}
-const fs = require('node:fs');
-const args = process.argv.slice(2);
-if (args.includes('--help')) {
-  const flags = ['--ignore-user-config','--ignore-rules','--strict-config','--ephemeral','--sandbox','--json'];
-  console.log(flags.filter(flag => !process.env.CODEX_HOME.endsWith(flag)).join(' '));
-} else {
-  fs.writeFileSync(${JSON.stringify(invoked)}, 'started');
-  let input = '';
-  process.stdin.on('data', chunk => input += chunk);
-  process.stdin.on('end', () => {
-    const [channel, message] = JSON.parse(input.slice(input.indexOf('user: ') + 6));
-    if (channel === 'config') {
-      console.log(JSON.stringify({type:'item.completed',item:{type:'agent_message',text:args.find(value=>value.startsWith('model_reasoning_effort='))??'unset'}}));
-      console.log(JSON.stringify({type:'turn.completed'}));
-      return;
-    }
-    if (channel === 'stderr') process.stderr.write(message);
-    else if (channel === 'error') console.log(JSON.stringify({ type: 'error', message }));
-    else console.log(JSON.stringify({ type: 'turn.failed', error: { message } }));
-    process.exitCode = 1;
-  });
-}
+require(${JSON.stringify(fileURLToPath(new URL("./fixtures/codex-app-server.cjs", import.meta.url)))});
 `,
         { mode: 0o700 },
       );
@@ -199,10 +179,10 @@ if (args.includes('--help')) {
             input: JSON.stringify(["config", ""]),
           })
         ).text,
-        'model_reasoning_effort="medium"',
+        "medium",
       );
       await rm(invoked);
-      for (const missing of ["--ignore-rules", "--strict-config"]) {
+      for (const missing of ["old"]) {
         const outdated = new AgenticDriver({
           providers: [
             codex({ binary, accountDirectory: join(directory, missing) }),
@@ -217,6 +197,122 @@ if (args.includes('--help')) {
           { code: "CLI_UPGRADE_REQUIRED" },
         );
         await assert.rejects(readFile(invoked), { code: "ENOENT" });
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "Codex rejects native authority requests and invalid stream boundaries",
+  { skip: process.platform === "win32" },
+  async () => {
+    const directory = await mkdtemp(
+      join(tmpdir(), "agenticdriver-codex-authority-"),
+    );
+    const binary = join(directory, "codex-fixture");
+    try {
+      await writeFile(
+        binary,
+        `#!${process.execPath}\nrequire(${JSON.stringify(fileURLToPath(new URL("./fixtures/codex-app-server.cjs", import.meta.url)))});\n`,
+        { mode: 0o700 },
+      );
+      const driver = new AgenticDriver({
+        providers: [codex({ binary, accountDirectory: directory })],
+      });
+      const cases = [
+        ...[
+          "item/tool/call",
+          "item/tool/requestUserInput",
+          "item/commandExecution/requestApproval",
+          "item/fileChange/requestApproval",
+          "item/permissions/requestApproval",
+          "account/chatgptAuthTokens/refresh",
+          "mcpServer/elicitation/request",
+          "new/unrecognizedAuthority",
+        ].map((method) => ["request", method, "CLI_POLICY_VIOLATION"]),
+        ...[
+          "commandExecution",
+          "fileChange",
+          "mcpToolCall",
+          "collabAgentToolCall",
+          "functionCallOutput",
+          "unknownFutureTool",
+        ].map((type) => ["item", type, "CLI_POLICY_VIOLATION"]),
+        ["wrong-thread", "", "INVALID_CLI_OUTPUT"],
+        ["truncated", "", "INCOMPLETE_STREAM"],
+      ];
+      for (const [channel, value, code] of cases) {
+        await assert.rejects(
+          driver.run({
+            provider: "codex",
+            model: "fixture",
+            input: JSON.stringify([channel, value]),
+          }),
+          { code },
+        );
+      }
+      const before = (await readFile(join(directory, "starts"), "utf8"))
+        .trim()
+        .split("\n").length;
+      await assert.rejects(
+        driver.run({
+          provider: "codex",
+          model: "fixture",
+          input: JSON.stringify([
+            "stderr",
+            "application network permission was revoked",
+          ]),
+        }),
+        { code: "CLI_POLICY_CHANGED" },
+      );
+      assert.equal(
+        (await readFile(join(directory, "starts"), "utf8")).trim().split("\n")
+          .length,
+        before + 1,
+        "A submitted prompt must never be retried as startup recovery.",
+      );
+      for (const account of [
+        "bootstrap-once",
+        "bootstrap-always",
+        "ambiguous-mcp",
+      ]) {
+        const selected = join(directory, account);
+        await mkdir(selected);
+        const isolated = new AgenticDriver({
+          providers: [codex({ binary, accountDirectory: selected })],
+        });
+        const run = isolated.run({
+          provider: "codex",
+          model: "fixture",
+          input: "Synthetic context",
+        });
+        if (account === "bootstrap-once") {
+          await run;
+          assert.equal(
+            (await readFile(join(selected, "starts"), "utf8"))
+              .trim()
+              .split("\n").length,
+            2,
+          );
+        } else {
+          await assert.rejects(run, {
+            code:
+              account === "bootstrap-always"
+                ? "CLI_POLICY_CHANGED"
+                : "CLI_POLICY_VIOLATION",
+          });
+          await assert.rejects(readFile(join(selected, "thread-started")), {
+            code: "ENOENT",
+          });
+          assert.equal(
+            (await readFile(join(selected, "starts"), "utf8"))
+              .trim()
+              .split("\n").length,
+            account === "bootstrap-always" ? 2 : 1,
+          );
+        }
       }
     } finally {
       await rm(directory, { recursive: true, force: true });

@@ -75,7 +75,8 @@ def main():
         "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "binarySha256": digest(binary),
         "codeModeHostSha256": digest(code_mode_host),
-        "adapterSha256": digest(ROOT / "dist/providers/local-cli.js"),
+        "adapterSha256": digest(ROOT / "dist/providers/codex-app-server.js"),
+        "processRunnerSha256": digest(ROOT / "dist/providers/cli-process.js"),
         "classifierSha256": digest(ROOT / "dist/providers/codex-cli-errors.js"),
         "sourceCommit": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),

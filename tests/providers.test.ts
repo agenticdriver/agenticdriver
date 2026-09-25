@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
@@ -419,22 +420,7 @@ test(
     await writeFile(
       binary,
       `#!${process.execPath}
-const args = process.argv.slice(2);
-if (args.includes('--help')) {
-  process.stdout.write('--ignore-user-config --ignore-rules --strict-config --ephemeral --sandbox --json');
-} else {
-  let input = '';
-  process.stdin.setEncoding('utf8');
-  process.stdin.on('data', chunk => { input += chunk; });
-  process.stdin.on('end', () => {
-    const text = JSON.stringify({ input, restricted: ['--ignore-user-config','--ignore-rules','--strict-config','--ephemeral'].every(flag => args.includes(flag)) && args[args.indexOf('--sandbox') + 1] === 'read-only',
-      account: process.env.CODEX_HOME, privateCwd: process.cwd() !== process.env.CODEX_HOME,
-      reasoningEffort: args.includes('model_reasoning_effort="medium"'),
-      leakedKey: ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'XAI_API_KEY', 'AGENTICDRIVER_TOKEN'].some(key => key in process.env) });
-    process.stdout.write(JSON.stringify({ type: 'item.completed', item: { id: 'answer', type: 'agent_message', text } }) + '\\n');
-    process.stdout.write(JSON.stringify({ type: 'turn.completed' }));
-  });
-}
+require(${JSON.stringify(fileURLToPath(new URL("./fixtures/codex-app-server.cjs", import.meta.url)))});
 `,
       { mode: 0o700 },
     );
