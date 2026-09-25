@@ -74,6 +74,8 @@ This registration is not an organization runner and cannot serve another repo.
 Do not start multiple stacks against the same runner/work/Docker volumes.
 
 To inspect health, use `docker compose ps` and `docker compose logs --tail 80`.
+The runner forwards stop signals to its listener with `RUNNER_MANUALLY_TRAP_SIG`
+and allows two minutes for shutdown, preserving normal session cleanup.
 To suspend acceptance of new jobs, stop the runner while idle with
 `docker compose stop runner`; this preserves registration and caches. An offline
 runner leaves jobs queued; it never causes a hosted fallback. Rebuild/recreate

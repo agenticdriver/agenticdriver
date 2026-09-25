@@ -28,6 +28,9 @@ services:
     image: agenticdriver-ci-runner:2.337.0
     restart: unless-stopped
     init: true
+    stop_grace_period: 2m
+    environment:
+      RUNNER_MANUALLY_TRAP_SIG: "1"
     network_mode: service:docker
     depends_on:
       docker: {condition: service_healthy}
