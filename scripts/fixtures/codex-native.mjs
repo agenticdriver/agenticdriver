@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { setTimeout as delay } from "node:timers/promises";
 import { AgenticDriver } from "/tmp/fixture-sdk/dist/index.js";
@@ -481,12 +481,41 @@ try {
         return false;
       }
     });
-  for (let attempt = 0; attempt < 100 && running().length; attempt++)
+  const bundleProcesses = async () => {
+    const pids = (await readdir("/proc")).filter((name) => /^\d+$/.test(name));
+    const found = await Promise.all(
+      pids.map(async (pid) => {
+        try {
+          const command = (
+            await readFile(`/proc/${pid}/cmdline`, "utf8")
+          ).split("\0")[0];
+          return ["/tmp/fixture-codex", "/tmp/codex-code-mode-host"].includes(
+            command,
+          )
+            ? Number(pid)
+            : undefined;
+        } catch (error) {
+          if (!["ENOENT", "ESRCH"].includes(error.code)) throw error;
+        }
+      }),
+    );
+    return found.filter((pid) => pid !== undefined);
+  };
+  for (
+    let attempt = 0;
+    attempt < 100 && (running().length || (await bundleProcesses()).length);
+    attempt++
+  )
     await delay(20);
   assert.deepEqual(
     running(),
     [],
     "Native processes must be reaped after cancellation.",
+  );
+  assert.deepEqual(
+    await bundleProcesses(),
+    [],
+    "Bundled native helpers must not survive their run.",
   );
   cases.push({
     name: "no-advertised-tools-hooks-or-mcp-processes",

@@ -33,6 +33,9 @@ def main():
     if not args.binary.is_absolute() or not args.binary.is_file():
         parser.error("--binary must be an existing absolute native binary path.")
     binary = args.binary.resolve()
+    code_mode_host = binary.with_name("codex-code-mode-host")
+    if not code_mode_host.is_file():
+        parser.error("Use the complete native installation, including its adjacent codex-code-mode-host executable.")
     with binary.open("rb") as stream:
         if stream.read(4) != b"\x7fELF":
             parser.error("Pass the native ELF executable; npm launchers are not accepted.")
@@ -53,6 +56,7 @@ def main():
                    "--bind", work, "/tmp/fixture-work",
                    "--ro-bind", str(ROOT), "/tmp/fixture-sdk",
                    "--ro-bind", str(binary), "/tmp/fixture-codex",
+                   "--ro-bind", str(code_mode_host), "/tmp/codex-code-mode-host",
                    "--ro-bind", str(Path(node).resolve()), "/tmp/fixture-node",
                    "--chdir", "/tmp/fixture-work", "--", "/tmp/fixture-node",
                    "/tmp/fixture-sdk/scripts/fixtures/codex-native.mjs"]
@@ -70,6 +74,7 @@ def main():
     result.update({
         "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "binarySha256": digest(binary),
+        "codeModeHostSha256": digest(code_mode_host),
         "adapterSha256": digest(ROOT / "dist/providers/local-cli.js"),
         "classifierSha256": digest(ROOT / "dist/providers/codex-cli-errors.js"),
         "sourceCommit": subprocess.check_output(
