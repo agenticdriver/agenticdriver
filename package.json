@@ -84,6 +84,10 @@
     "./ingestion": {
       "types": "./dist/ingestion.d.ts",
       "import": "./dist/ingestion.js"
+    },
+    "./management": {
+      "types": "./dist/management.d.ts",
+      "import": "./dist/management.js"
     }
   },
   "files": [

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "supportedKinds": [
+    "mock",
+    "openai"
+  ],
+  "providers": [
+    {
+      "kind": "mock",
+      "id": "unrestricted",
+      "accountId": "one"
+    },
+    {
+      "kind": "mock",
+      "id": "denied",
+      "models": []
+    },
+    {
+      "kind": "mock",
+      "id": "restricted",
+      "models": [
+        "explicit"
+      ]
+    }
+  ]
+}

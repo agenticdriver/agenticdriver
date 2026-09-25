@@ -164,6 +164,21 @@ impl AgenticClient {
         }
         Ok(info)
     }
+    pub fn management(&self) -> Result<crate::ManagementSnapshot> {
+        let value: Value = read_json(self.request("v1/management", None, false)?)?;
+        crate::management::snapshot(value, None)
+    }
+    pub fn configure_provider(
+        &self,
+        input: &crate::ConfigureProvider,
+    ) -> Result<crate::ManagementSnapshot> {
+        let value: Value = read_json(self.request(
+            "v1/management/providers",
+            Some(&serde_json::to_value(input)?),
+            false,
+        )?)?;
+        crate::management::snapshot(value, Some(&input.provider.id))
+    }
     pub fn providers(&self) -> Result<Vec<Provider>> {
         self.provider_catalog(false)
     }

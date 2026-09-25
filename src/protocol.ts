@@ -29,6 +29,7 @@ export interface ProtocolInfo {
 
 export function protocolInfo(
   options: {
+    providerManagement?: boolean;
     jobs?: boolean;
     sessions?: boolean;
     applicationTools?: boolean;
@@ -45,6 +46,7 @@ export function protocolInfo(
     supportedVersions: [PROTOCOL_VERSION],
     features: [
       "json-results",
+      ...(options.providerManagement ? ["provider-management"] : []),
       ...(options.jobs ? ["durable-jobs"] : []),
       ...(options.sessions ? ["conversation-sessions"] : []),
       ...(options.applicationTools ? ["application-tools"] : []),

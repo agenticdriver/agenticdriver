@@ -63,6 +63,7 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-client-test-") as directo
         try:
             hosts = json.loads(server.stdout.readline())
             url = hosts["url"]
+            env["AGENTICDRIVER_TEST_MANAGEMENT_URL"] = hosts["managementUrl"]
             env.update(AGENTICDRIVER_TEST_URL=url, AGENTICDRIVER_TEST_TOKEN=token, AGENTICDRIVER_TEST_REFERENCE_URL=hosts["referenceUrl"])
             if secure:
                 env["AGENTICDRIVER_TEST_CA"] = ca

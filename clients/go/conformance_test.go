@@ -523,3 +523,35 @@ func TestConversationSessions(t *testing.T) {
 		}
 	}
 }
+
+func TestManagementRoundtrip(t *testing.T) {
+	url := os.Getenv("AGENTICDRIVER_TEST_MANAGEMENT_URL")
+	if url == "" {
+		t.Skip("requires reference host")
+	}
+	manager := conformanceClient(t, url, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	before, err := manager.Management(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	empty := []string{}
+	input := ConfigureProvider{Revision: before.Revision, Provider: ProviderConfiguration{ID: "go-fixture", Kind: "mock", Models: &empty}}
+	next, err := manager.ConfigureProvider(context.Background(), input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, p := range next.Providers {
+		if p.ID == "go-fixture" {
+			found = p.Models != nil && len(*p.Models) == 0
+		}
+	}
+	if !found {
+		t.Fatal("deny-all override changed in transport")
+	}
+	_, err = manager.ConfigureProvider(context.Background(), input)
+	var failure *Error
+	if !errors.As(err, &failure) || failure.Code != "CONFIG_CONFLICT" {
+		t.Fatal("stale settings accepted")
+	}
+}

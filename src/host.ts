@@ -50,50 +50,11 @@ import {
   JobWorkerOptionsSchema,
 } from "./job-types.js";
 import { SqliteJobStore } from "./sqlite-job-store.js";
-import { CodexReasoningEffortSchema } from "./providers/local-cli.js";
+import { HostProviderConfigSchema } from "./provider-config.js";
+const instance = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
 export { SecretReferenceSchema, secretResolver } from "./secrets.js";
 export type { SecretReference, SecretResolver } from "./secrets.js";
 
-const instance = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
-const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
-const modelAllowlist = z.array(model).max(1000);
-const common = {
-  id: instance,
-  accountId: UsageIdSchema.optional(),
-  name: z.string().min(1).max(100).optional(),
-  /** Optional per-connection override. Omitted permits any explicitly selected model; empty denies all. */
-  models: modelAllowlist.optional(),
-};
-const api = z
-  .object({
-    ...common,
-    kind: z.enum([
-      "openai",
-      "anthropic",
-      "gemini",
-      "xai",
-      "xai-responses",
-      "openai-compatible",
-    ]),
-    apiKeyRef: SecretReferenceSchema,
-    inputMediaTypes: z
-      .record(model, z.array(ContextMediaTypeSchema).max(6))
-      .optional(),
-    baseUrl: z.string().url().optional(),
-  })
-  .strict();
-const cli = z
-  .object({
-    ...common,
-    kind: z.enum(["claude-code", "gemini-cli"]),
-    accountDirectory: z.string().min(1).optional(),
-    binary: z.string().min(1).optional(),
-  })
-  .strict();
-const codexCli = cli.extend({
-  kind: z.literal("codex"),
-  reasoningEffort: CodexReasoningEffortSchema.optional(),
-});
 export const HostConfigSchema = z
   .object({
     version: z.literal(1),
@@ -112,35 +73,14 @@ export const HostConfigSchema = z
       .object({ certFile: z.string().min(1), keyRef: SecretReferenceSchema })
       .strict()
       .optional(),
-    providers: z
-      .array(
-        z.union([
-          api,
-          cli,
-          codexCli,
-          z
-            .object({
-              ...common,
-              kind: z.literal("extension"),
-              // The versioned extension construction contract requires a model.
-              models: modelAllowlist.min(1),
-              extensionId: instance,
-              extensionVersion: z.string().min(1).max(100),
-              settings: z.record(z.string(), z.json()).default({}),
-              secretRefs: z.record(instance, SecretReferenceSchema).default({}),
-            })
-            .strict(),
-          z.object({ ...common, kind: z.literal("mock") }).strict(),
-        ]),
-      )
-      .min(1)
-      .max(32),
+    providers: z.array(HostProviderConfigSchema).min(1).max(32),
     tokens: z
       .array(
         z
           .object({
             id: instance,
             subject: z.string().min(1).max(128),
+            manageProviders: z.boolean().optional(),
             tokenRef: SecretReferenceSchema,
             retrieval: z
               .object({
@@ -390,32 +330,33 @@ export async function readHostConfig(path: string): Promise<HostConfig> {
   }
 }
 
-export function configuredDriver(
+export type ConfiguredDriverOptions = {
+  diagnostics?: DriverOptions["diagnostics"];
+  /** Statically imported, operator-approved implementations. No dynamic module/path loading. */
+  extensions?: ReadonlyMap<string, ProviderExtension>;
+  secrets?: SecretResolver;
+  tools?: DriverOptions["tools"];
+  approve?: DriverOptions["approve"];
+  onApprovalAudit?: NonNullable<DriverOptions["approvals"]>["onAudit"];
+  onTelemetryError?: DriverOptions["onTelemetryError"];
+  resourceAdmission?: DriverOptions["resourceAdmission"];
+  context?: DriverOptions["context"];
+  retrieval?: DriverOptions["retrieval"];
+  ingestion?: DriverOptions["ingestion"];
+};
+
+export function configuredProviders(
   config: HostConfig,
   configPath: string,
-  options: {
-    diagnostics?: DriverOptions["diagnostics"];
-    /** Statically imported, operator-approved implementations. No dynamic module/path loading. */
-    extensions?: ReadonlyMap<string, ProviderExtension>;
-    secrets?: SecretResolver;
-    tools?: DriverOptions["tools"];
-    approve?: DriverOptions["approve"];
-    onApprovalAudit?: NonNullable<DriverOptions["approvals"]>["onAudit"];
-    onTelemetryError?: DriverOptions["onTelemetryError"];
-    resourceAdmission?: DriverOptions["resourceAdmission"];
-    context?: DriverOptions["context"];
-    retrieval?: DriverOptions["retrieval"];
-    ingestion?: DriverOptions["ingestion"];
-  } = {},
-): AgenticDriver {
-  config = validateHostConfig(config);
+  options: Pick<ConfiguredDriverOptions, "extensions" | "secrets"> = {},
+): ProviderAdapter[] {
   const directory = dirname(resolve(configPath)),
     secrets = options.secrets ?? secretResolver(directory);
-  const providers = config.providers.map((p): ProviderAdapter => {
+  return config.providers.map((p): ProviderAdapter => {
     const shared = {
       id: p.id,
       name: p.name,
-      models: p.models ? [...p.models] : undefined,
+      models: p.enabled === false ? [] : p.models ? [...p.models] : undefined,
     };
     if (p.kind === "extension") {
       const extension = options.extensions?.get(p.extensionId);
@@ -432,7 +373,7 @@ export function configuredDriver(
           "PROVIDER_EXTENSION_UNAVAILABLE",
           "The host has not registered the exact configured provider extension and adapter contract version.",
         );
-      return extension.create({
+      const adapter = extension.create({
         ...shared,
         models: [...p.models],
         settings: p.settings,
@@ -449,6 +390,9 @@ export function configuredDriver(
           );
         },
       });
+      return p.enabled === false
+        ? { ...adapter, info: { ...adapter.info, models: [] } }
+        : adapter;
     }
     if (p.kind === "mock") {
       const adapter = mockProvider();
@@ -491,6 +435,17 @@ export function configuredDriver(
         : undefined,
     });
   });
+}
+
+export function configuredDriver(
+  config: HostConfig,
+  configPath: string,
+  options: ConfiguredDriverOptions = {},
+): AgenticDriver {
+  config = validateHostConfig(config);
+  const directory = dirname(resolve(configPath)),
+    secrets = options.secrets ?? secretResolver(directory);
+  const providers = configuredProviders(config, configPath, options);
   const usagePath = config.usageLog
     ? resolve(directory, config.usageLog)
     : undefined;
@@ -582,6 +537,7 @@ export async function configuredServer(
     config.tokens.map(async (entry) => ({
       token: await singleLineSecret(secrets, entry.tokenRef, 32),
       subject: entry.subject,
+      manageProviders: entry.manageProviders,
       providers: entry.providers,
       tools: entry.tools,
       approveTools: entry.approveTools,

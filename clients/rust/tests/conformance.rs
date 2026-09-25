@@ -598,3 +598,39 @@ fn conversation_sessions() {
         );
     }
 }
+
+#[test]
+fn provider_management_roundtrip() {
+    let Ok(url) = std::env::var("AGENTICDRIVER_TEST_MANAGEMENT_URL") else {
+        return;
+    };
+    let manager = client(
+        &url,
+        &std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap(),
+        true,
+    );
+    let before = manager.management().unwrap();
+    let provider = agenticdriver::ProviderConfiguration {
+        id: "rust-blocking".into(),
+        kind: "mock".into(),
+        models: Some(vec![]),
+        ..Default::default()
+    };
+    let input = agenticdriver::ConfigureProvider {
+        revision: before.revision,
+        provider,
+        api_key: None,
+    };
+    let next = manager.configure_provider(&input).unwrap();
+    assert!(next
+        .providers
+        .iter()
+        .find(|p| p.id == "rust-blocking")
+        .unwrap()
+        .models
+        .as_ref()
+        .unwrap()
+        .is_empty());
+    let error = manager.configure_provider(&input).err().unwrap();
+    assert_eq!(code(&error), Some("CONFIG_CONFLICT"));
+}

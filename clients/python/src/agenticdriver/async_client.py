@@ -12,6 +12,7 @@ from typing_extensions import Unpack
 if TYPE_CHECKING:
     import httpx
 
+from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from ._errors import DriverError
 from ._protocol import (
     EventDecoder,
@@ -330,6 +331,14 @@ class AsyncAgenticClient:
             if not valid_session_delete(result, request):
                 raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
             return cast(SessionDeleteResult, result)
+
+    async def management(self) -> ManagementSnapshot:
+        async with self._request("v1/management") as response:
+            return management_snapshot(await self._json(response))
+
+    async def configure_provider(self, request: ConfigureProvider) -> ManagementSnapshot:
+        async with self._request("v1/management/providers", request) as response:
+            return management_snapshot(await self._json(response), request["provider"]["id"])
 
     async def providers(self, *, refresh: bool = False) -> list[ProviderInfo]:
         async with self._request(

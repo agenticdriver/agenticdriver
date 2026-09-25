@@ -30,9 +30,8 @@ export interface CodexProviderOptions extends CliProviderOptions {
   /** Native model_reasoning_effort. Available values depend on the selected model. */
   reasoningEffort?: string;
 }
-export const CodexReasoningEffortSchema = z
-  .string()
-  .regex(/^[a-z][a-z0-9_-]{0,63}$/);
+import { CodexReasoningEffortSchema } from "../provider-config.js";
+export { CodexReasoningEffortSchema } from "../provider-config.js";
 
 export function codex(options: CodexProviderOptions = {}) {
   if (options.reasoningEffort !== undefined)

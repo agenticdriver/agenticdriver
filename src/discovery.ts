@@ -107,8 +107,11 @@ type Snapshot = Pick<ProviderInfo, "health" | "modelCatalog">;
 
 /** One cache per driver and instance. Callers must filter authorization before invoking it. */
 export class ProviderDiscovery {
-  private readonly cache = new Map<string, { at: number; value: Snapshot }>();
-  private readonly pending = new Map<string, Promise<Snapshot>>();
+  private readonly cache = new WeakMap<
+    ProviderAdapter,
+    { at: number; value: Snapshot }
+  >();
+  private readonly pending = new WeakMap<ProviderAdapter, Promise<Snapshot>>();
   private readonly ttl: number;
   private readonly timeout: number;
   private readonly minimum: number;
@@ -128,22 +131,21 @@ export class ProviderDiscovery {
     provider: ProviderAdapter,
     refresh: boolean,
   ): Promise<ProviderInfo> {
-    const id = provider.info.id,
-      cached = this.cache.get(id);
+    const cached = this.cache.get(provider);
     const age = cached ? Date.now() - cached.at : Infinity;
     let snapshot: Snapshot;
     if (cached && age < Math.max(refresh ? 0 : this.ttl, this.minimum))
       snapshot = cached.value;
     else {
-      let pending = this.pending.get(id);
+      let pending = this.pending.get(provider);
       if (!pending) {
         pending = this.probe(provider)
           .then((value) => {
-            this.cache.set(id, { at: Date.now(), value });
+            this.cache.set(provider, { at: Date.now(), value });
             return value;
           })
-          .finally(() => this.pending.delete(id));
-        this.pending.set(id, pending);
+          .finally(() => this.pending.delete(provider));
+        this.pending.set(provider, pending);
       }
       snapshot = await pending;
     }

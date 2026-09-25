@@ -106,6 +106,7 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "enabled": { "type": "boolean" },
               "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
@@ -215,6 +216,7 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "enabled": { "type": "boolean" },
               "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
@@ -245,6 +247,7 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "enabled": { "type": "boolean" },
               "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
@@ -276,6 +279,7 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "enabled": { "type": "boolean" },
               "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
@@ -382,6 +386,7 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
               },
+              "enabled": { "type": "boolean" },
               "accountId": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
@@ -415,6 +420,7 @@
             "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
           },
           "subject": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "manageProviders": { "type": "boolean" },
           "tokenRef": {
             "anyOf": [
               {

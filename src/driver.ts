@@ -137,7 +137,7 @@ export class AgenticDriver {
   private readonly discovery: ProviderDiscovery;
   private readonly approvals: ApprovalManager;
   private readonly applicationTools: ApplicationToolManager;
-  private readonly usagePolicy: UsagePolicy;
+  private usagePolicy: UsagePolicy;
   private readonly contextOptions: ReturnType<typeof contextPolicy>;
   private readonly ingestionOptions: ReturnType<typeof ingestionPolicy>;
   private readonly activeOperations = new Set<string>();
@@ -212,6 +212,26 @@ export class AgenticDriver {
 
   listProviders() {
     return structuredClone([...this.providers.values()].map((p) => p.info));
+  }
+
+  /** Trusted host management only. Active runs retain their adapter and metering snapshot. */
+  configureProviders(
+    providers: readonly ProviderAdapter[],
+    accounts: Record<string, string> = {},
+  ): void {
+    if (new Set(providers.map((p) => p.info.id)).size !== providers.length)
+      throw new DriverError(
+        "INVALID_CONFIG",
+        "Provider instance IDs must be unique.",
+      );
+    const policy = new UsagePolicy(
+      { ...this.options.usage, hostId: this.usagePolicy.hostId, accounts },
+      providers,
+    );
+    this.providers.clear();
+    for (const provider of providers)
+      this.providers.set(provider.info.id, provider);
+    this.usagePolicy = policy;
   }
 
   get supportsApplicationTools(): boolean {
@@ -633,6 +653,8 @@ export class AgenticDriver {
     options: RunOptions = {},
   ): AsyncGenerator<RunEvent> {
     const request = this.validate(input);
+    const provider = this.providers.get(request.provider)!;
+    const usagePolicy = this.usagePolicy;
     const runId = options.runId ?? randomUUID();
     if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(runId))
       throw new DriverError(
@@ -640,7 +662,7 @@ export class AgenticDriver {
         "A trusted run identity must be a UUID.",
       );
     if (!request.idempotencyKey) {
-      yield* this.execute(request, options, runId);
+      yield* this.execute(request, options, runId, provider, usagePolicy);
       return;
     }
     if (options.signal?.aborted)
@@ -708,7 +730,13 @@ export class AgenticDriver {
     let terminal = false,
       last: RunEvent | undefined;
     try {
-      for await (const event of this.execute(request, options, runId)) {
+      for await (const event of this.execute(
+        request,
+        options,
+        runId,
+        provider,
+        usagePolicy,
+      )) {
         await claim.writer.append(event);
         last = event;
         terminal = ["run.completed", "run.failed", "run.cancelled"].includes(
@@ -809,10 +837,11 @@ export class AgenticDriver {
     request: RunRequest,
     options: RunOptions,
     runId: string,
+    provider: ProviderAdapter,
+    usagePolicy: UsagePolicy,
   ): AsyncGenerator<RunEvent> {
-    const provider = this.providers.get(request.provider)!;
     const selectedTools = this.selectedTools(request, options);
-    const resourceIdentity = this.usageIdentity(
+    const resourceIdentity = usagePolicy.identity(
       request.provider,
       options.subject ?? "local",
     );
@@ -1373,7 +1402,7 @@ export class AgenticDriver {
       await resolved?.release();
       try {
         // Keep telemetry optional and bounded; a failed sink must not replay a successful run.
-        const record = this.usagePolicy.record({
+        const record = usagePolicy.record({
           runId,
           subject: context.subject,
           provider: request.provider,

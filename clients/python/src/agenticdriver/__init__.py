@@ -175,3 +175,6 @@ __all__ += [
 
 from .models import SessionMode, SessionIdentity, SessionHandle, SessionCreate, SessionInfo, SessionSnapshot, SessionDeleteResult
 __all__ += ['SessionMode', 'SessionIdentity', 'SessionHandle', 'SessionCreate', 'SessionInfo', 'SessionSnapshot', 'SessionDeleteResult']
+
+from .management import ProviderConfiguration, ConfigureProvider, ManagementSnapshot
+__all__ += ["ProviderConfiguration", "ConfigureProvider", "ManagementSnapshot"]

@@ -1,5 +1,6 @@
+import { managedHost } from "../src/management.js";
 /** Test-only reference peer. Never loads a real provider or account credentials. */
-import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { writeFile, readFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { SqliteJobStore } from "../src/jobs.js";
@@ -414,9 +415,28 @@ await once(reference, "listening");
 const address = reference.address();
 if (!address || typeof address === "string")
   throw new Error("No reference listener.");
+const managementDirectory = await mkdtemp(
+  join(tmpdir(), "driver-management-wire-"),
+);
+const managementPath = join(managementDirectory, "config.json");
+await writeFile(
+  managementPath,
+  JSON.stringify({ version: 1, providers: [{ kind: "mock", id: "fixture" }] }),
+  { mode: 0o600 },
+);
+const managementHost = await managedHost(managementPath);
+const managementServer = await serve(managementHost.driver, {
+  port: 0,
+  tls,
+  tokens: [
+    { token, subject: "test-operator", providers: [], manageProviders: true },
+  ],
+  management: managementHost.management,
+});
 console.log(
   JSON.stringify({
     url: driver.url,
+    managementUrl: managementServer.url,
     referenceUrl: `${tls ? "https" : "http"}://127.0.0.1:${address.port}`,
   }),
 );
@@ -424,8 +444,8 @@ process.once("SIGTERM", () => {
   for (const response of pending) response.destroy();
   reference.closeAllConnections();
   reference.close();
-  void driver
-    .close()
+  void Promise.all([driver.close(), managementServer.close()])
+    .then(() => rm(managementDirectory, { recursive: true, force: true }))
     .then(() => jobStore.close())
     .then(() => rm(jobDirectory, { recursive: true, force: true }));
 });

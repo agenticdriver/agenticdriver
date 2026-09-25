@@ -1,3 +1,4 @@
+import type { ProviderManagement } from "./management-types.js";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { once } from "node:events";
 import {
@@ -59,6 +60,8 @@ export type {
 } from "./authorization.js";
 
 export interface AccessToken {
+  /** Host administration. Never inferred from ordinary provider/run access. */
+  manageProviders?: boolean;
   jobs?: JobOperation[];
   sessions?: SessionOperation[];
   /** Use at least 32 random characters. Authentication compares SHA-256 token digests. */
@@ -73,6 +76,7 @@ export interface AccessToken {
   retrieval?: Partial<Record<RetrievalOperation, string[]>>;
 }
 export interface ServerOptions {
+  management?: ProviderManagement;
   /** Opt-in to opaque AgenticDriver-Request-Id UUID and W3C traceparent headers. No baggage. */
   diagnosticHeaders?: boolean;
   /** Explicit store and current token policy; accepted work survives HTTP disconnects. */
@@ -283,6 +287,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            providerManagement:
+              options.management !== undefined &&
+              principal.manageProviders === true,
             jobs: jobs !== undefined,
             sessions: driver.supportsSessions,
             applicationTools: driver.supportsApplicationTools,
@@ -296,13 +303,43 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         return;
       }
       if (
+        req.url === "/v1/management" ||
+        req.url === "/v1/management/providers"
+      ) {
+        if (!options.management || principal.manageProviders !== true)
+          throw new DriverError(
+            "FORBIDDEN",
+            "This credential cannot manage provider settings.",
+          );
+        if (req.url === "/v1/management" && req.method === "GET")
+          json(res, 200, await options.management.snapshot());
+        else if (
+          req.url === "/v1/management/providers" &&
+          req.method === "POST"
+        )
+          json(
+            res,
+            200,
+            await options.management.configure(await readRequest(req)),
+          );
+        else
+          throw new DriverError(
+            "INVALID_REQUEST",
+            "Unsupported management operation.",
+          );
+        return;
+      }
+      if (
         (req.url === "/v1/providers" ||
           req.url === "/v1/providers?refresh=true") &&
         req.method === "GET"
       ) {
         json(res, 200, {
           providers: await driver.discoverProviders({
-            providers: principal.providers,
+            providers:
+              principal.manageProviders === true
+                ? undefined
+                : principal.providers,
             refresh: req.url.endsWith("?refresh=true"),
           }),
         });
@@ -718,6 +755,15 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (
+    ["CONFIG_CONFLICT", "CONFIG_BUSY", "PROVIDER_IDENTITY_CHANGED"].includes(
+      code,
+    )
+  )
+    return 409;
+  if (["INVALID_CONFIG", "UNSUPPORTED_CONFIGURATION"].includes(code))
+    return 400;
+  if (code === "CONFIG_WRITE_FAILED") return 503;
   if (code === "JOB_NOT_FOUND") return 404;
   if (code === "JOB_EXPIRED") return 410;
   if (["JOB_STORE_FULL", "JOB_WORKER_BUSY"].includes(code)) return 429;

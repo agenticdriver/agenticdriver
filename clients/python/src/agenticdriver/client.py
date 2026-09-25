@@ -9,6 +9,7 @@ from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 from typing_extensions import Unpack
 
+from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from ._errors import DriverError
 from ._protocol import (
     EventDecoder,
@@ -307,6 +308,14 @@ class AgenticClient:
             if not valid_session_delete(result, request):
                 raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
             return cast(SessionDeleteResult, result)
+
+    def management(self) -> ManagementSnapshot:
+        with self._request("v1/management") as response:
+            return management_snapshot(self._json(response))
+
+    def configure_provider(self, request: ConfigureProvider) -> ManagementSnapshot:
+        with self._request("v1/management/providers", request) as response:
+            return management_snapshot(self._json(response), request["provider"]["id"])
 
     def providers(self, *, refresh: bool = False) -> list[ProviderInfo]:
         with self._request(

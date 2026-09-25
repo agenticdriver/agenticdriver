@@ -384,3 +384,26 @@ for (const mode of ["history", "native"] as const) {
     code: "SESSION_NOT_FOUND",
   });
 }
+
+if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
+  const manager = new AgenticClient({
+    url: process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL,
+    token,
+  });
+  const before = await manager.management();
+  const next = await manager.configureProvider({
+    revision: before.revision,
+    provider: { id: "typescript-fixture", kind: "mock", models: [] },
+  });
+  assert.deepEqual(
+    next.providers.find((p) => p.id === "typescript-fixture")!.models,
+    [],
+  );
+  await assert.rejects(
+    manager.configureProvider({
+      revision: before.revision,
+      provider: { id: "typescript-fixture", kind: "mock" },
+    }),
+    { code: "CONFIG_CONFLICT" },
+  );
+}

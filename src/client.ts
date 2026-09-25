@@ -1,3 +1,10 @@
+import {
+  ManagementSnapshotSchema,
+  ConfigureProviderSchema,
+  type ConfigureProvider,
+  type ManagementSnapshot,
+} from "./management-types.js";
+export type * from "./management-types.js";
 import { z } from "zod";
 import {
   SessionInfoSchema,
@@ -214,6 +221,7 @@ export class AgenticClient {
   private async request(
     path: string,
     body?:
+      | ConfigureProvider
       | RunRequest
       | RetrievalSearch
       | RetrievalIndexRequest
@@ -294,6 +302,50 @@ export class AgenticClient {
       throw error;
     }
     return response;
+  }
+  async management(
+    options: ClientRequestOptions = {},
+  ): Promise<ManagementSnapshot> {
+    const parsed = ManagementSnapshotSchema.safeParse(
+      await readResponseJson(
+        await this.request("v1/management", undefined, options.signal),
+      ),
+    );
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid provider settings.",
+      );
+    return parsed.data;
+  }
+  async configureProvider(
+    input: ConfigureProvider,
+    options: ClientRequestOptions = {},
+  ): Promise<ManagementSnapshot> {
+    const request = ConfigureProviderSchema.safeParse(input);
+    if (!request.success)
+      throw new DriverError(
+        "INVALID_CONFIG",
+        "Provider settings do not match the management schema.",
+      );
+    const parsed = ManagementSnapshotSchema.safeParse(
+      await readResponseJson(
+        await this.request(
+          "v1/management/providers",
+          request.data,
+          options.signal,
+        ),
+      ),
+    );
+    if (
+      !parsed.success ||
+      !parsed.data.providers.some((p) => p.id === input.provider.id)
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid or mismatched provider settings. Refresh before retrying.",
+      );
+    return parsed.data;
   }
   private async retrievalRequest<T extends z.ZodType>(
     path: string,

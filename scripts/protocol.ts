@@ -1,3 +1,7 @@
+import {
+  ConfigureProviderSchema,
+  ManagementSnapshotSchema,
+} from "../src/management-types.js";
 import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
@@ -71,6 +75,8 @@ const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
   ...Object.fromEntries(
     Object.entries({
+      ConfigureProvider: ConfigureProviderSchema,
+      ManagementSnapshot: ManagementSnapshotSchema,
       JobSubmit: JobSubmitSchema,
       JobIdentity: JobIdentitySchema,
       JobInfo: JobInfoSchema,
@@ -591,6 +597,38 @@ const document = {
             },
           },
           default: errorResponse,
+        },
+      },
+    },
+    "/v1/management": {
+      get: {
+        summary: "Read host provider settings (manageProviders grant required)",
+        responses: {
+          "200": {
+            description: "Versioned provider settings",
+            content: {
+              "application/json": { schema: ref("ManagementSnapshot") },
+            },
+          },
+        },
+      },
+    },
+    "/v1/management/providers": {
+      post: {
+        summary:
+          "Add or replace provider settings with an optimistic revision check",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("ConfigureProvider") } },
+        },
+        responses: {
+          "200": {
+            description: "Committed settings; secrets omitted",
+            content: {
+              "application/json": { schema: ref("ManagementSnapshot") },
+            },
+          },
+          "409": { description: "Settings changed; refresh before retrying" },
         },
       },
     },

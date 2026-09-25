@@ -13,6 +13,7 @@ import {
   type HostConfig,
 } from "./host.js";
 import { DriverError, publicError } from "./errors.js";
+import { managedHost } from "./management.js";
 import { serve } from "./server.js";
 
 const help = `AgenticDriver — local and secure remote execution host
@@ -298,10 +299,11 @@ async function main(): Promise<number> {
         port: numberArgument(values, "port") ?? config.listen.port,
       },
     });
-    const server = await serve(
-      configuredDriver(config, path),
-      await configuredServer(config, path),
-    );
+    const runtime = await managedHost(path);
+    const server = await serve(runtime.driver, {
+      ...(await configuredServer(config, path)),
+      management: runtime.management,
+    });
     print(
       {
         event: "listening",

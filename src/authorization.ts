@@ -8,6 +8,7 @@ import { RetrievalIdSchema } from "./retrieval-types.js";
 const names = z.array(z.string().min(1).max(256)).max(256);
 export const AccessPolicySchema = z
   .object({
+    manageProviders: z.boolean().optional(),
     subject: z.string().min(1).max(128),
     providers: names,
     tools: names.default([]),

@@ -183,6 +183,25 @@ impl AsyncAgenticClient {
         }
         Ok(info)
     }
+    pub async fn management(&self) -> Result<crate::ManagementSnapshot> {
+        let value: Value = read_json(self.request("v1/management", None, false).await?).await?;
+        crate::management::snapshot(value, None)
+    }
+    pub async fn configure_provider(
+        &self,
+        input: &crate::ConfigureProvider,
+    ) -> Result<crate::ManagementSnapshot> {
+        let value: Value = read_json(
+            self.request(
+                "v1/management/providers",
+                Some(&serde_json::to_value(input)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::management::snapshot(value, Some(&input.provider.id))
+    }
     pub async fn providers(&self) -> Result<Vec<Provider>> {
         self.provider_catalog(false).await
     }

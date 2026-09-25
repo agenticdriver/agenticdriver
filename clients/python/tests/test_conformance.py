@@ -11,6 +11,15 @@ class ClientConformance(unittest.TestCase):
     def client(self, url=None, token=None, ca=True):
         return AgenticClient(url or os.environ["AGENTICDRIVER_TEST_URL"], token or os.environ["AGENTICDRIVER_TEST_TOKEN"], ca_file=os.environ.get("AGENTICDRIVER_TEST_CA") if ca else None)
 
+    def test_provider_management_roundtrip(self):
+        with self.client(os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]) as client:
+            before = client.management()
+            next_state = client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync", "models": []}})
+            self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-sync")["models"], [])
+            with self.assertRaises(DriverError) as failure:
+                client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync"}})
+            self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
+
     def test_wire_cases(self):
         fixture = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/conformance.json").read_text(encoding="utf-8"))
         for case in fixture["cases"]:

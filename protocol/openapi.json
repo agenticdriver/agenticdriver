@@ -710,6 +710,57 @@
         }
       }
     },
+    "/v1/management": {
+      "get": {
+        "summary": "Read host provider settings (manageProviders grant required)",
+        "responses": {
+          "200": {
+            "description": "Versioned provider settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ManagementSnapshot" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/management/providers": {
+      "post": {
+        "summary": "Add or replace provider settings with an optimistic revision check",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ConfigureProvider" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed settings; secrets omitted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ManagementSnapshot" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "409": { "description": "Settings changed; refresh before retrying" }
+        }
+      }
+    },
     "/v1/protocol": {
       "get": {
         "operationId": "getProtocol",
@@ -874,6 +925,749 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "ConfigureProvider": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "revision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    }
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "openai",
+                      "anthropic",
+                      "gemini",
+                      "xai",
+                      "xai-responses",
+                      "openai-compatible"
+                    ]
+                  },
+                  "apiKeyRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "env": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                          }
+                        },
+                        "required": ["env"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "required": ["file"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "keychain": {
+                            "type": "object",
+                            "properties": {
+                              "service": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "account": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              }
+                            },
+                            "required": ["service", "account"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["keychain"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "inputMediaTypes": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    },
+                    "additionalProperties": {
+                      "maxItems": 6,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "text/plain",
+                          "text/markdown",
+                          "image/png",
+                          "image/jpeg",
+                          "image/webp",
+                          "application/pdf"
+                        ]
+                      }
+                    }
+                  },
+                  "baseUrl": { "type": "string", "format": "uri" }
+                },
+                "required": ["id", "kind", "apiKeyRef"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    }
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": ["claude-code", "gemini-cli"]
+                  },
+                  "accountDirectory": { "type": "string", "minLength": 1 },
+                  "binary": { "type": "string", "minLength": 1 }
+                },
+                "required": ["id", "kind"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    }
+                  },
+                  "kind": { "type": "string", "const": "codex" },
+                  "accountDirectory": { "type": "string", "minLength": 1 },
+                  "binary": { "type": "string", "minLength": 1 },
+                  "reasoningEffort": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                  }
+                },
+                "required": ["id", "kind"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    }
+                  },
+                  "kind": { "type": "string", "const": "extension" },
+                  "extensionId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "extensionVersion": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "settings": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": { "type": "string" },
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/ConfigureProvider/$defs/__schema0"
+                    }
+                  },
+                  "secretRefs": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "env": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                            }
+                          },
+                          "required": ["env"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 4096
+                            }
+                          },
+                          "required": ["file"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "keychain": {
+                              "type": "object",
+                              "properties": {
+                                "service": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                }
+                              },
+                              "required": ["service", "account"],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["keychain"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "models",
+                  "kind",
+                  "extensionId",
+                  "extensionVersion"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                    }
+                  },
+                  "kind": { "type": "string", "const": "mock" }
+                },
+                "required": ["id", "kind"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "apiKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\s\\0]+$"
+          }
+        },
+        "required": ["revision", "provider"],
+        "additionalProperties": false,
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ConfigureProvider/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ConfigureProvider/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ManagementSnapshot": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "version": { "type": "number", "const": 1 },
+          "revision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "providers": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      }
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "openai",
+                        "anthropic",
+                        "gemini",
+                        "xai",
+                        "xai-responses",
+                        "openai-compatible"
+                      ]
+                    },
+                    "apiKeyRef": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "env": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                            }
+                          },
+                          "required": ["env"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 4096
+                            }
+                          },
+                          "required": ["file"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "keychain": {
+                              "type": "object",
+                              "properties": {
+                                "service": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                }
+                              },
+                              "required": ["service", "account"],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["keychain"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "inputMediaTypes": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      },
+                      "additionalProperties": {
+                        "maxItems": 6,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "text/plain",
+                            "text/markdown",
+                            "image/png",
+                            "image/jpeg",
+                            "image/webp",
+                            "application/pdf"
+                          ]
+                        }
+                      }
+                    },
+                    "baseUrl": { "type": "string", "format": "uri" }
+                  },
+                  "required": ["id", "kind", "apiKeyRef"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      }
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": ["claude-code", "gemini-cli"]
+                    },
+                    "accountDirectory": { "type": "string", "minLength": 1 },
+                    "binary": { "type": "string", "minLength": 1 }
+                  },
+                  "required": ["id", "kind"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      }
+                    },
+                    "kind": { "type": "string", "const": "codex" },
+                    "accountDirectory": { "type": "string", "minLength": 1 },
+                    "binary": { "type": "string", "minLength": 1 },
+                    "reasoningEffort": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                    }
+                  },
+                  "required": ["id", "kind"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "minItems": 1,
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      }
+                    },
+                    "kind": { "type": "string", "const": "extension" },
+                    "extensionId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "extensionVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "settings": {
+                      "default": {},
+                      "type": "object",
+                      "propertyNames": { "type": "string" },
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/ManagementSnapshot/$defs/__schema0"
+                      }
+                    },
+                    "secretRefs": {
+                      "default": {},
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                      },
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "env": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                              }
+                            },
+                            "required": ["env"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "file": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 4096
+                              }
+                            },
+                            "required": ["file"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "keychain": {
+                                "type": "object",
+                                "properties": {
+                                  "service": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                  },
+                                  "account": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 128
+                                  }
+                                },
+                                "required": ["service", "account"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": ["keychain"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "models",
+                    "kind",
+                    "extensionId",
+                    "extensionVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      }
+                    },
+                    "kind": { "type": "string", "const": "mock" }
+                  },
+                  "required": ["id", "kind"],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "supportedKinds": {
+            "maxItems": 32,
+            "type": "array",
+            "items": { "type": "string", "minLength": 1, "maxLength": 80 }
+          }
+        },
+        "required": ["version", "revision", "providers", "supportedKinds"],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "null" },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ManagementSnapshot/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": { "type": "string" },
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ManagementSnapshot/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
       "JobSubmit": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",

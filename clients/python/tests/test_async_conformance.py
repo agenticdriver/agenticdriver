@@ -18,6 +18,15 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
             ca_file=os.environ.get("AGENTICDRIVER_TEST_CA") if ca else None,
         )
 
+    async def test_provider_management_roundtrip(self):
+        async with self.client(os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]) as client:
+            before = await client.management()
+            next_state = await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async", "models": []}})
+            self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-async")["models"], [])
+            with self.assertRaises(DriverError) as failure:
+                await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async"}})
+            self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
+
     async def test_wire_cases(self):
         fixture = json.loads(
             (
