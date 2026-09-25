@@ -27,9 +27,13 @@ features:
 
 ## Build with a tested foundation
 
-The v0.1 SDK is available as locally built package artifacts. Registry releases
-and live provider/account certification remain pending. Synthetic examples and
-container/client tests are clearly labeled throughout these guides.
+SDK 0.1.0 is available on npm, crates.io and the public Go module proxy. Python
+archives are available from the GitHub release while PyPI organization approval
+is pending. See the [release inventory](releases.md) for immutable artifacts and
+the distinction between published packages and newer development source.
+The selected local Codex route passed [live checks](validation/codex-2026-09-25.md);
+other provider and full application qualifications remain pending. Synthetic
+examples and container/client tests are labeled throughout these guides.
 
 There is no default run deadline or inactivity timeout. Applications can opt into
 an inactivity timeout that resets on real model or tool progress, and can cancel

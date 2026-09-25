@@ -12,10 +12,12 @@
   checks passed with the selected local sign-in and `gpt-6-luna` / medium;
   [remaining limits](docs/validation/codex-2026-09-25.md) stay explicit.
 
-## 0.1.0 candidate — unreleased
+## 0.1.0 — 2026-09-21
 
-This first working SDK candidate uses wire protocol 1.0. It is not a registry
-release or provider-account certification. See the [release inventory](docs/releases.md).
+The first SDK release uses wire protocol 1.0. npm, crates.io and the public Go
+module are published; Python archives are available from the GitHub release
+while PyPI organization approval is pending. Package publication does not imply
+provider-account certification. See the [release inventory](docs/releases.md).
 
 - TypeScript/JavaScript runtime and clients, typed Python sync/async clients,
   Go client and Rust blocking/async clients share a versioned protocol.
@@ -32,4 +34,4 @@ release or provider-account certification. See the [release inventory](docs/rele
 
 No SDK run deadline or inactivity timeout is enabled by default. The native
 limitations in [provider setup](docs/providers.md), pending live application
-checks, private source access and unpublished registries remain explicit.
+checks and the unpublished PyPI channel remain explicit.

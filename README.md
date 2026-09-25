@@ -9,10 +9,14 @@ AgenticDriver is an **SDK**. Applications own their data, workflows, tools, user
 interface, and approval decisions. The SDK owns provider execution, the API tool
 loop, normalized events, cancellation, transport, and usage reporting.
 
-**Status: working v0.1 foundation, not yet published to package registries.**
-The TypeScript runtime, four language clients, three application examples, and
-integration tests run from this checkout. Provider requests are tested against
-protocol fixtures; real paid/account-backed inference has not been certified.
+**Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
+The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
+PyPI organization approval is still pending. This branch also contains unreleased
+development changes; see the [release inventory](docs/releases.md).
+The TypeScript runtime, four language clients and three application examples have
+fixture coverage. The selected local Codex route has passed
+[live text and cancellation checks](docs/validation/codex-2026-09-25.md);
+other provider and full application qualifications remain separate work.
 
 ## What works
 
@@ -85,15 +89,14 @@ AGENTICDRIVER_PROVIDER=codex AGENTICDRIVER_MODEL=YOUR_MODEL npm run demo
 
 ## Embed in TypeScript
 
-Install a reviewed built archive in your application:
+Install the published SDK in your application:
 
 ```bash
-# SDK checkout: build an artifact, then transfer it to the application machine.
-npm ci
-npm pack --pack-destination /path/to/artifacts
-# Application:
-npm install /path/to/artifacts/agenticdriver-sdk-0.1.0.tgz
+npm install --save-exact @agenticdriver/sdk@0.1.0
 ```
+
+For unreleased source changes, build and verify a development archive using the
+[package guide](docs/packages.md); its digest differs from the published 0.1.0 package.
 
 ```ts
 import { AgenticDriver } from "@agenticdriver/sdk";

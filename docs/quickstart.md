@@ -1,15 +1,25 @@
 # Install and connect
 
 Start with a synthetic workflow, then select a live provider deliberately.
-AgenticDriver is a working **v0.1 SDK**, with protocol **1.0**. Registry packages
-are not published yet. The commands below install built archives or an explicit
-pushed Go revision; applications do not need a sibling SDK checkout at runtime.
-The source repository is public. A registry release is a separate step; build the
-development archives from the reviewed source while publication is pending.
+AgenticDriver **0.1.0** uses protocol **1.0** and is published on npm, crates.io
+and the public Go module proxy. The Python wheel is available from the GitHub
+release while PyPI organization approval is pending. Applications do not need a
+sibling SDK checkout at runtime. The source repository is public and includes
+newer, unreleased changes; the [release inventory](releases.md) identifies the
+immutable published artifacts.
 
 ## 1. Obtain the packages
 
-Build from a reviewed SDK commit on a development machine:
+The examples below use these published package identities:
+
+| Language              | Package                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| JavaScript/TypeScript | `@agenticdriver/sdk@0.1.0` on npm                              |
+| Python                | `agenticdriver-0.1.0-py3-none-any.whl` from the GitHub release |
+| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.1.0`     |
+| Rust                  | `agenticdriver = "=0.1.0"` on crates.io                        |
+
+For unreleased development changes, build from a reviewed SDK commit instead:
 
 ```sh
 npm ci
@@ -22,17 +32,18 @@ cargo package --locked --manifest-path clients/rust/Cargo.toml
 
 Keep the npm archive, Python wheel and Rust crate with their source revision and
 checksums. Transfer those artifacts to the application machine. Their current
-versions are `0.1.0`; a local archive with that version is not a registry release.
+versions are still `0.1.0`; a newly built archive has different contents from the
+published release and must retain its source revision and checksums.
 The [compatibility matrix](compatibility.md) lists supported runtimes and tested
 platforms. Read [migration notes](migrations.md) when updating a package or host.
 
 ## 2. Try a local mock
 
-In a fresh application directory, install the npm archive:
+In a fresh application directory, install the published npm package:
 
 ```sh
 npm init -y
-npm install /absolute/path/to/agenticdriver-sdk-0.1.0.tgz
+npm install --save-exact @agenticdriver/sdk@0.1.0
 npx --no-install agenticdriver init --config ./driver/config.json
 npx --no-install agenticdriver serve --config ./driver/config.json
 ```
@@ -83,7 +94,7 @@ against the local mock when you explicitly set `mock` and `demo`.
 
 ### JavaScript and TypeScript
 
-Requires Node 22.13+. Install the archive as above. Save the following as
+Requires Node 22.13+. Install the package as above. Save the following as
 `client.mjs` and run `node client.mjs`. For a private CA, set
 `NODE_EXTRA_CA_CERTS` to its certificate path **before starting Node**.
 TypeScript imports the same `AgenticClient`; see its [full guide](javascript.md).
@@ -94,7 +105,10 @@ TypeScript imports the same `AgenticClient`; see its [full guide](javascript.md)
 
 ### Python
 
-Requires Python 3.10+. Install into the application's own environment:
+Requires Python 3.10+. Download the reviewed wheel from the
+[0.1.0 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0),
+verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.1.0/ASSET-SHA256SUMS), and install it into
+the application's own environment:
 
 ```sh
 python3 -m venv .venv
@@ -113,18 +127,15 @@ Install the wheel with `[async]` to use `AsyncAgenticClient`.
 
 ### Go
 
-Requires Go 1.22+. Until a release tag is chosen, this explicit pushed SDK
-revision contains the client. Replace `REVIEWED_COMMIT` with a reviewed commit
-after the organization module-path migration. This is source-module installation, not a claim
-that a semantic-version release has been published:
+Requires Go 1.22+. Install the published version:
 
 ```sh
 go mod init example.test/my-driver-client
-go get github.com/agenticdriver/agenticdriver/clients/go@REVIEWED_COMMIT
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.1.0
 go run .
 ```
 
-This public revision installs through the ordinary Go module proxy and checksum
+This public version installs through the ordinary Go module proxy and checksum
 database without GitHub credentials. CI also verifies a locally packed Go module
 archive without `replace` directives.
 Save the following as `main.go`. Ctrl+C cancels its context without imposing a
@@ -137,13 +148,11 @@ run deadline.
 
 ### Rust
 
-Requires Rust 1.89+. Extract the built
-`clients/rust/target/package/agenticdriver-0.1.0.crate` into the application's
-`vendor/` directory, then use its **packaged** source:
+Requires Rust 1.89+. Use the published crate:
 
 ```toml
 [dependencies]
-agenticdriver = { path = "vendor/agenticdriver-0.1.0" }
+agenticdriver = "=0.1.0"
 ```
 
 Save the following as `src/main.rs` in a `cargo new` application and run
