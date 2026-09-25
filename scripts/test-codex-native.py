@@ -27,6 +27,8 @@ def main():
     parser.add_argument("--binary", required=True, type=Path,
                         help="Absolute path to the native Linux ELF binary, not its npm launcher")
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--suite", choices=("adapter", "tools"), default="adapter",
+                        help="Production adapter checks or an offline native tool protocol audit")
     args = parser.parse_args()
     if sys.platform != "linux":
         parser.error("Native Codex fixtures currently require Linux and bubblewrap.")
@@ -59,7 +61,8 @@ def main():
                    "--ro-bind", str(code_mode_host), "/tmp/codex-code-mode-host",
                    "--ro-bind", str(Path(node).resolve()), "/tmp/fixture-node",
                    "--chdir", "/tmp/fixture-work", "--", "/tmp/fixture-node",
-                   "/tmp/fixture-sdk/scripts/fixtures/codex-native.mjs"]
+                   "/tmp/fixture-sdk/scripts/fixtures/" +
+                   ("codex-native.mjs" if args.suite == "adapter" else "codex-tools-native.mjs")]
         # This is a fixture watchdog, never an SDK run/inactivity default.
         try:
             completed = subprocess.run(command, env=env, capture_output=True, text=True,
@@ -79,9 +82,14 @@ def main():
         "processRunnerSha256": digest(ROOT / "dist/providers/cli-process.js"),
         "classifierSha256": digest(ROOT / "dist/providers/codex-cli-errors.js"),
         "sourceCommit": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+            ["git", "-c", f"safe.directory={ROOT}", "rev-parse", "HEAD"],
+            cwd=ROOT, text=True).strip(),
         "sourceDirty": bool(subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
+            ["git", "-c", f"safe.directory={ROOT}", "status", "--porcelain"],
+            cwd=ROOT, text=True).strip()),
+        "suite": args.suite,
+        "fixtureSha256": digest(ROOT / "scripts/fixtures" /
+                                ("codex-native.mjs" if args.suite == "adapter" else "codex-tools-native.mjs")),
         "fixtureOnly": True,
         "externalNetwork": False,
         "realAccountUsed": False,

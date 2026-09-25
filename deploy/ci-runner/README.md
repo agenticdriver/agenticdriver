@@ -87,6 +87,14 @@ Do not print or copy `.credentials*` from the runner volume.
 
 The SDK workflow runs three Linux runtime combinations, documentation,
 container/TLS deployment fixtures and exact release-artifact installation.
+It also runs the pinned real Codex binary against offline synthetic fixtures.
+`codex-native.Dockerfile` verifies both native executable hashes. Its test
+container has no external network and receives only the checkout and receipt
+directory. `SYS_ADMIN`, `NET_ADMIN` and an unconfined seccomp profile let
+bubblewrap create the inner test namespaces and their isolated loopback inside
+the separate CI Docker daemon; these options
+are not added to the runner or a production SDK host. The fixtures do not use
+provider credentials and their watchdogs are not SDK timeout defaults.
 It uploads the same candidate manifests and checksums as before. A successful
 run validates its exact commit, not a package publication or production deploy.
 macOS and Windows checks are paused until compatible self-hosted capacity exists;
