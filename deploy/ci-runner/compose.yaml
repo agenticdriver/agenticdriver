@@ -1,0 +1,51 @@
+# One repository, one serial runner, a private Docker daemon. No host socket,
+# host networking, SSH keys, provider sessions, or registry login is mounted.
+name: agenticdriver-ci
+services:
+  docker:
+    image: docker:29.5.3-dind
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    command: [dockerd, --host=tcp://127.0.0.1:2375, --host=unix:///var/run/docker.sock]
+    cpus: 6
+    mem_limit: 4g
+    volumes:
+      - docker-data:/var/lib/docker
+      - work:/work
+      - temporary:/tmp
+    healthcheck:
+      test: [CMD, docker, --host=unix:///var/run/docker.sock, info]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  runner:
+    build: .
+    image: agenticdriver-ci-runner:2.337.0
+    restart: unless-stopped
+    init: true
+    network_mode: service:docker
+    depends_on:
+      docker: {condition: service_healthy}
+    cpus: 8
+    mem_limit: 8g
+    volumes:
+      - runner:/runner
+      - home:/home/runner
+      - tools:/opt/hostedtoolcache
+      - work:/work
+      - temporary:/tmp
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+volumes:
+  runner:
+  home:
+  tools:
+  work:
+  temporary:
+  docker-data:

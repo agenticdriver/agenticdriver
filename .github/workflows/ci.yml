@@ -1,116 +1,106 @@
 name: SDK checks
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [sdk-roadmap]
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: sdk-checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   release-candidate:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     uses: ./.github/workflows/release-candidate.yml
   documentation:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     name: Documentation site
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: site/package-lock.json
       - run: npm ci --prefix site
       - run: npm run build --prefix site
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: agenticdriver-documentation
           path: site/.vitepress/dist
           if-no-files-found: error
           retention-days: 7
   deployment:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     name: Linux containers and verified TLS
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: stable
           cache: false
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
           toolchain: "1.89.0"
       - run: npm ci
       - run: npm run test:deployment
   verify:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     name: ${{ matrix.label }}
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
     strategy:
       fail-fast: false
       matrix:
         include:
           - label: Linux minimum runtimes
-            os: ubuntu-24.04
             node: 22.13.0
             python: "3.10"
             go: "1.22"
             rust: "1.89.0"
           - label: Linux LTS and current clients
-            os: ubuntu-24.04
             node: "24"
             python: "3.14"
             go: stable
             rust: stable
           - label: Linux current Node
-            os: ubuntu-24.04
             node: "26"
             python: "3.14"
             go: stable
             rust: stable
-          - label: macOS arm64
-            os: macos-15
-            node: "24"
-            python: "3.14"
-            go: stable
-            rust: "1.89.0"
-          - label: Windows clients and programmatic host
-            os: windows-2022
-            node: "24"
-            python: "3.14"
-            go: "1.22"
-            rust: "1.89.0"
     env:
       AGENTICDRIVER_TEST_RUST_TOOLCHAIN: ${{ matrix.rust }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: ${{ matrix.go }}
           cache: false
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
           toolchain: ${{ matrix.rust }}
-      - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y poppler-utils
-      - if: runner.os == 'macOS'
-        run: |
-          brew install poppler openssl@3
-          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
-      - if: runner.os == 'Windows'
-        run: |
-          choco install poppler --no-progress -y
-          $poppler = Get-ChildItem C:\ProgramData\chocolatey\lib\poppler -Recurse -Filter pdftotext.exe | Select-Object -First 1
-          if (-not $poppler) { throw "Poppler installation did not provide pdftotext" }
-          $poppler.DirectoryName >> $env:GITHUB_PATH
+      - run: python -m unittest discover -s tests -p ci_runner_test.py -v
       - run: npm ci
       - run: npm run check
       - if: matrix.node != '22.13.0'
@@ -118,8 +108,5 @@ jobs:
       - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json
       - run: npm run test:clients
       - run: python scripts/test-go-install.py --local-archive
-      - if: runner.os != 'Windows'
-        run: npm run test:install
-      - if: runner.os == 'Windows'
-        run: npm run test:install -- --package-only
+      - run: npm run test:install
       - run: npm run test:package

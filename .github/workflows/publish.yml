@@ -21,9 +21,17 @@ concurrency:
   group: sdk-publication-${{ inputs.registry }}
   cancel-in-progress: false
 jobs:
+  npm-unavailable:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'npm'
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
+    steps:
+      - name: Explain the registry limitation without uploading
+        run: |
+          echo '::error::npm trusted publishing requires a hosted runner. Hosted compute is disabled. Publish the reviewed artifact through the authorized local CLI, or wait for supported self-hosted OIDC; no token fallback is configured.'
+          exit 1
   package:
-    if: github.ref == 'refs/heads/sdk-roadmap' && inputs.registry != 'go'
-    runs-on: ubuntu-24.04
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (inputs.registry == 'python' || inputs.registry == 'rust')
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: ${{ inputs.registry }}
     permissions:
       contents: read
@@ -45,10 +53,6 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
-      - if: inputs.registry == 'npm'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "24"
       - if: inputs.registry == 'rust'
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
@@ -60,11 +64,6 @@ jobs:
           CI_RUN: ${{ inputs.ci_run }}
           REGISTRY: ${{ inputs.registry }}
         run: python scripts/publish.py prepare --run-id "$CI_RUN" --registry "$REGISTRY" --output "$RUNNER_TEMP/release"
-      - name: Publish npm through the configured trusted publisher
-        if: inputs.registry == 'npm' && steps.prepare.outputs.pending == 'true'
-        env:
-          ARCHIVE: ${{ steps.prepare.outputs.npm_archive }}
-        run: npm publish "$ARCHIVE" --ignore-scripts --access public --tag latest
       - name: Publish missing Python artifacts through the configured trusted publisher
         if: inputs.registry == 'python' && steps.prepare.outputs.pending == 'true'
         env:
@@ -99,8 +98,8 @@ jobs:
           REGISTRY: ${{ inputs.registry }}
         run: python scripts/publish.py verify --bundle "$BUNDLE" --registry "$REGISTRY"
   go:
-    if: github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'go'
-    runs-on: ubuntu-24.04
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'go'
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: go
     permissions:
       contents: write

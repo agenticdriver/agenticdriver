@@ -103,6 +103,15 @@ repository permissions with no registry-upload step or publishing secrets.
 
 ## Prepare publication
 
+All active workflow jobs use [Prometheus](../deploy/ci-runner/README.md), including
+exact candidate builds and Python/Rust/Go publication preparation. There is no
+GitHub-hosted fallback. This does not certify a new registry upload: PyPI's
+organization setup is still pending, and future OIDC uploads need live verification.
+The npm option now fails explicitly because npm's trusted publisher currently
+requires hosted compute. Authorized local CLI publication of the reviewed archive
+remains available; no replacement npm token has been installed on Prometheus.
+
+
 AD-042 remains open until registry installation and all three app migrations
 are verified. The selected release target is 0.1.0 under `agenticdriver`, with public
 source and public packages. Authenticate the selected registry identities and

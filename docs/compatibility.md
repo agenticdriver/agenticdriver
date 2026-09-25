@@ -1,17 +1,27 @@
 # Compatibility and fault testing
 
-The [SDK checks workflow](../.github/workflows/ci.yml) declares these combinations.
-A green run validates its exact dependency resolutions and hosted runner image;
-it does not certify other OS releases or vendor accounts. Minimum versions are
-compatibility targets; upstream maintained releases remain the deployment choices.
+The [SDK checks workflow](../.github/workflows/ci.yml) runs on the repository's
+Prometheus Linux x64 runner, using an Ubuntu 24.04 container userspace and the
+Fedora host kernel. GitHub-hosted compute is disabled as of 2026-09-25. See the
+[runner operations guide](../deploy/ci-runner/README.md) for its trust boundary,
+registration, prerequisites and recovery. A green run validates its exact
+commit/dependency resolutions, not other OS releases or vendor accounts.
+Minimum versions are compatibility targets; upstream maintained releases remain
+the deployment choices.
 
-| Runner                  | Node.js    | Python | Go     | Rust   | Installation and execution checks                             |
-| ----------------------- | ---------- | ------ | ------ | ------ | ------------------------------------------------------------- |
-| Ubuntu 24.04 x64        | 22.13.0    | 3.10   | 1.22   | 1.89.0 | Complete host/package suite and all four clients              |
-| Ubuntu 24.04 x64        | 24 LTS     | 3.14   | stable | stable | Complete host/package suite and all four clients              |
-| Ubuntu 24.04 x64        | 26 Current | 3.14   | stable | stable | Complete host/package suite and all four clients              |
-| macOS 15 arm64          | 24 LTS     | 3.14   | stable | 1.89.0 | Complete host/package suite and all four clients              |
-| Windows Server 2022 x64 | 24 LTS     | 3.14   | 1.22   | 1.89.0 | Programmatic runtime, installed packages and all four clients |
+| Status | Runner | Node.js | Python | Go | Rust | Checks |
+| --- | --- | --- | --- | --- | --- | --- |
+| Active | Prometheus Linux x64 | 22.13.0 | 3.10 | 1.22 | 1.89.0 | Complete host/package suite and all four clients |
+| Active | Prometheus Linux x64 | 24 LTS | 3.14 | stable | stable | Complete host/package suite and all four clients |
+| Active | Prometheus Linux x64 | 26 Current | 3.14 | stable | stable | Complete host/package suite and all four clients |
+| Paused | macOS 15 arm64 | 24 LTS | 3.14 | stable | 1.89.0 | Historical hosted coverage; no compatible self-hosted runner |
+| Paused | Windows Server 2022 x64 | 24 LTS | 3.14 | 1.22 | 1.89.0 | Historical hosted coverage; no compatible self-hosted runner |
+
+The last full hosted run before this migration passed at
+[`dd16f2f`](https://github.com/agenticdriver/agenticdriver/actions/runs/36162484839).
+The hosted run for `6f72acc` was cancelled on the user's compute instruction;
+it is not successful CI evidence. Linux success on Prometheus does not renew
+macOS/Windows certification. No PR code runs on this persistent runner.
 
 Node 22.13.0 is the package minimum, including the optional SQLite-backed
 services exposed by the main entry. Python requires 3.10, Go 1.22 and Rust 1.89.
@@ -30,8 +40,8 @@ extracted into external applications. The Go archive check does not publish a
 version or require repository credentials. A separately authorized published
 revision can still be checked with `scripts/test-go-install.py COMMIT_OR_TAG`.
 
-The TypeScript runtime, HTTP host and API adapter fixtures run on each row. The
-Windows package check uses `--package-only`: it runs the installed programmatic
+The TypeScript runtime, HTTP host and API adapter fixtures run on each active row.
+The historical Windows package check uses `--package-only`: it runs the installed programmatic
 host, browser/client, provider-extension, jobs and diagnostics examples, but
 does not claim the service CLI's POSIX signal shutdown/restart behavior. Its
 fixture host shuts down through a test-only IPC channel. Windows process-tree
@@ -41,8 +51,8 @@ fixtures are identified explicitly where they are unavailable on Windows.
 
 The matrix is based on the [Node release schedule](https://nodejs.org/en/about/previous-releases),
 [Python releases](https://www.python.org/downloads/), [Go releases](https://go.dev/dl/)
-and [GitHub runner images](https://github.com/actions/runner-images). Named OS
-labels avoid silently following `*-latest` migrations. Node 26 is a Current
+and [GitHub runner images](https://github.com/actions/runner-images). The former named hosted OS
+labels remain historical references while their rows are paused. Node 26 is a Current
 compatibility row, not an assertion of upstream LTS status.
 
 ## Reproduce the checks
