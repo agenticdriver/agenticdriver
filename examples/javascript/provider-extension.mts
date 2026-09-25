@@ -156,7 +156,10 @@ try {
     const client = new AgenticClient({ url: host.url, token });
     const discovery = await client.providers();
     assert.deepEqual(discovery[0]!.models, [model]);
-    assert.deepEqual(discovery[0]!.modelCatalog!.models, [model]);
+    assert.deepEqual(discovery[0]!.modelCatalog!.models, [
+      model,
+      "not-enabled-on-host",
+    ]);
     assert.equal(
       (
         await client.run({
