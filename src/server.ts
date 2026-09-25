@@ -374,16 +374,18 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             "This credential cannot manage provider settings.",
           );
         if (req.url === "/v1/management" && req.method === "GET")
-          json(res, 200, await options.management.snapshot());
+          json(res, 200, {
+            ...(await options.management.snapshot()),
+            executionProviders: principal.providers,
+          });
         else if (
           req.url === "/v1/management/providers" &&
           req.method === "POST"
         )
-          json(
-            res,
-            200,
-            await options.management.configure(await readRequest(req)),
-          );
+          json(res, 200, {
+            ...(await options.management.configure(await readRequest(req))),
+            executionProviders: principal.providers,
+          });
         else
           throw new DriverError(
             "INVALID_REQUEST",

@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 from python_package import prepare_python
 from rust_package import prepare_rust, TOOLCHAIN
 from tls_fixture import create_tls_fixture
+from panel_examples import check_panel_examples
 
 ROOT = Path(__file__).resolve().parent.parent
 PYTHON_ONLY = "--python-only" in sys.argv[1:]
@@ -36,6 +37,15 @@ def check_clients(url, token, ca, env, python, application, rust_application, ru
         if result.returncode:
             failures.append(command)
     assert not failures, f"Client checks failed: {failures}"
+    panels = []
+    if not RUST_ONLY:
+        panels.append(("Python", [python, str(ROOT / "clients/python/examples/provider_panel.py")], ROOT))
+    if not PYTHON_ONLY and not RUST_ONLY:
+        panels.append(("Go", ["go", "run", "./examples/provider-panel"], ROOT / "clients/go"))
+    if not PYTHON_ONLY:
+        panels.append(("Rust", ["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet", "--example", "provider_panel"], ROOT / "clients/rust"))
+    check_panel_examples(panels, env)
+
     expected_cancellations = 2 if PYTHON_ONLY or RUST_ONLY else 6
     for attempt in range(50):
         request = Request(env["AGENTICDRIVER_TEST_REFERENCE_URL"] + "/metrics", headers={"Authorization": "Bearer " + token})

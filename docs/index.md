@@ -49,3 +49,5 @@ work explicitly. Read the [compatibility matrix](compatibility.md) and
 The [three recipes](applications.md) use the same SDK and run from its installed
 package. Start with synthetic data, then deliberately select a provider instance,
 account and model that your host is authorized to use.
+
+The [provider settings component](provider-panel.md) embeds provider/model management and guided connection setup in TypeScript, Python, Go and Rust applications. It is available in development source after 0.1.0.

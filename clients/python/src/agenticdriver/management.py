@@ -27,6 +27,7 @@ class ManagementSnapshot(TypedDict):
     revision: str
     providers: list[ProviderConfiguration]
     supportedKinds: list[str]
+    executionProviders: NotRequired[list[str]]
 
 class ConfigureProvider(TypedDict):
     revision: str
@@ -41,6 +42,7 @@ def snapshot(value: Any, provider_id: str | None = None) -> ManagementSnapshot:
         and isinstance(value.get("providers"), list) and len(value["providers"]) <= 32
         and isinstance(value.get("supportedKinds"), list)
         and all(isinstance(k, str) and k for k in value["supportedKinds"])
+        and ("executionProviders" not in value or (isinstance(value["executionProviders"], list) and all(isinstance(p, str) and p for p in value["executionProviders"])))
     )
     if valid:
         ids = []

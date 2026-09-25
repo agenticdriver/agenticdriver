@@ -1,3 +1,4 @@
+from agenticdriver.panel import AsyncProviderPanel
 import asyncio
 import json
 import os
@@ -21,7 +22,11 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
     async def test_provider_management_roundtrip(self):
         async with self.client(os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]) as client:
             before = await client.management()
-            next_state = await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async", "models": []}})
+            panel = AsyncProviderPanel(lambda: client)
+            panel_state = await panel.handle({"action": "configure", "change": {"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async", "models": []}}})
+            next_state = panel_state["management"]
+            self.assertEqual(next(p for p in panel_state["providers"] if p["id"] == "python-async")["models"], [])
+            self.assertIsInstance(next_state["executionProviders"], list)
             self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-async")["models"], [])
             with self.assertRaises(DriverError) as failure:
                 await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async"}})

@@ -46,8 +46,10 @@ pub struct ManagementSnapshot {
     pub revision: String,
     pub providers: Vec<ProviderConfiguration>,
     pub supported_kinds: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub execution_providers: Option<Vec<String>>,
 }
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigureProvider {
     pub revision: String,

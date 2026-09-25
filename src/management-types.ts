@@ -10,6 +10,8 @@ export const ManagementSnapshotSchema = z.object({
   revision: z.string().regex(/^[a-f0-9]{64}$/),
   providers: z.array(HostProviderConfigSchema).max(32),
   supportedKinds: z.array(z.string().min(1).max(80)).max(32),
+  /** Caller-specific execution grants. Management access alone grants no inference. */
+  executionProviders: z.array(z.string().min(1).max(256)).max(256).optional(),
 });
 export type ManagementSnapshot = z.infer<typeof ManagementSnapshotSchema>;
 export const ConfigureProviderSchema = z

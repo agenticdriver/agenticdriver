@@ -1,3 +1,4 @@
+from agenticdriver.panel import ProviderPanel
 import json
 import os
 import unittest
@@ -14,7 +15,11 @@ class ClientConformance(unittest.TestCase):
     def test_provider_management_roundtrip(self):
         with self.client(os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]) as client:
             before = client.management()
-            next_state = client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync", "models": []}})
+            panel = ProviderPanel(lambda: client)
+            panel_state = panel.handle({"action": "configure", "change": {"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync", "models": []}}})
+            next_state = panel_state["management"]
+            self.assertEqual(next(p for p in panel_state["providers"] if p["id"] == "python-sync")["models"], [])
+            self.assertIsInstance(next_state["executionProviders"], list)
             self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-sync")["models"], [])
             with self.assertRaises(DriverError) as failure:
                 client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync"}})

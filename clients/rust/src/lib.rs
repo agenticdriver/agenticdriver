@@ -20,6 +20,7 @@ pub use ingestion::{
     IngestionDocument, IngestionManifest,
 };
 pub mod connections;
+pub mod panel;
 pub use connections::{
     ConnectionCredentials, ConnectionGrant, ConnectionInfo, ConnectionInvitation, ConnectionList,
     CreateInvitation,
@@ -220,7 +221,7 @@ pub struct RunResult {
     pub steps: u32,
     pub finish_reason: String,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Capabilities {
     #[serde(default)]
@@ -230,24 +231,29 @@ pub struct Capabilities {
     pub tools: bool,
     pub text_streaming: bool,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Provider {
     #[serde(default, deserialize_with = "context::optional_media")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub input_media_types: Option<BTreeMap<String, Vec<String>>>,
     pub id: String,
     pub name: String,
     pub vendor: String,
     pub auth_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub models: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub usage_stat_id: Option<String>,
     pub capabilities: Capabilities,
     #[serde(default, deserialize_with = "validation::optional_health")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub health: Option<ProviderHealth>,
     #[serde(default, deserialize_with = "validation::optional_catalog")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub model_catalog: Option<ModelCatalog>,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProviderHealth {
     pub status: String,
@@ -255,7 +261,7 @@ pub struct ProviderHealth {
     pub message: String,
     pub checked_at: String,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ModelCatalog {
     pub source: String,
     pub models: Vec<String>,

@@ -321,3 +321,7 @@ provider; see the documented [support matrix](docs/providers.md).
 MIT. Vendor names and icon references identify their respective providers.
 
 Opt-in [conversation sessions](docs/sessions.md) support explicit continuation, revision checks and deletion. Visible history can be exported; provider state stays bound to its account. Idle retention never limits an active run.
+
+## Provider settings component
+
+The [provider and connection panel](docs/provider-panel.md) supplies provider/model settings, remote management and local/remote setup through the existing SDK client. TypeScript, Python, Go and Rust packages share the same embeddable browser component and provide native backend bindings. These additions are available on `sdk-roadmap` and are not in the published 0.1.0 packages.

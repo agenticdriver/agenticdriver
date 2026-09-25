@@ -14,7 +14,7 @@ pub struct ConnectionGrant {
     #[serde(flatten)]
     pub permissions: BTreeMap<String, Value>,
 }
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateInvitation {
     pub grant: ConnectionGrant,

@@ -26,10 +26,11 @@ type ProviderConfiguration struct {
 	SecretRefs       map[string]any      `json:"secretRefs,omitempty"`
 }
 type ManagementSnapshot struct {
-	Version        int                     `json:"version"`
-	Revision       string                  `json:"revision"`
-	Providers      []ProviderConfiguration `json:"providers"`
-	SupportedKinds []string                `json:"supportedKinds"`
+	Version            int                     `json:"version"`
+	Revision           string                  `json:"revision"`
+	Providers          []ProviderConfiguration `json:"providers"`
+	SupportedKinds     []string                `json:"supportedKinds"`
+	ExecutionProviders *[]string               `json:"executionProviders,omitempty"`
 }
 type ConfigureProvider struct {
 	Revision string                `json:"revision"`

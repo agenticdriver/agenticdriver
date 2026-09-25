@@ -667,7 +667,30 @@ async fn provider_management_roundtrip() {
         provider,
         api_key: None,
     };
-    let next = manager.configure_provider(&input).await.unwrap();
+    struct Backend<'a>(&'a agenticdriver::AsyncAgenticClient);
+    impl agenticdriver::panel::AsyncPanelBackend for Backend<'_> {
+        fn client(&self) -> Option<&agenticdriver::AsyncAgenticClient> {
+            Some(self.0)
+        }
+    }
+    let panel = agenticdriver::panel::handle_provider_panel_async(
+        &mut Backend(&manager),
+        &serde_json::json!({"action":"configure","change": input}),
+    )
+    .await
+    .unwrap();
+    let next: agenticdriver::ManagementSnapshot =
+        serde_json::from_value(panel["management"].clone()).unwrap();
+    assert!(next.execution_providers.is_some());
+    assert_eq!(
+        panel["providers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["id"] == input.provider.id)
+            .unwrap()["models"],
+        serde_json::json!([])
+    );
     assert!(next
         .providers
         .iter()

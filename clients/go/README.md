@@ -119,3 +119,7 @@ require an explicitly created conversation with exported visible history.
 Host opt-in, account binding and per-operation token grants are required. Idle
 retention pauses during active work; no default execution deadline is introduced.
 See the [session contract and binding examples](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/sessions.md).
+
+## Provider settings component
+
+The [provider and connection panel](../../docs/provider-panel.md) supplies provider/model settings, remote management and local/remote setup through the existing SDK client. TypeScript, Python, Go and Rust packages share the same embeddable browser component and provide native backend bindings. These additions are available on `sdk-roadmap` and are not in the published 0.1.0 packages.

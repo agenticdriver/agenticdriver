@@ -73,6 +73,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         "examples/jobs.mts",
         "examples/provider-extension.mts",
         "examples/diagnostics.mts",
+        "examples/provider-panel.mts",
         "examples/auth.mts",
         "examples/brandstorm.mts",
         "examples/literature-review.mts",
@@ -96,6 +97,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
         "browser-types.ts",
         "browser-catalog.ts",
         "browser-pairing.ts",
+        "browser-panel.ts",
       ],
     }),
   );
@@ -157,6 +159,16 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   `,
   );
   await writeFile(
+    join(app, "browser-panel.ts"),
+    `
+    import {providerPanelHtml, registerProviderPanel, type ProviderPanelElement} from "@agenticdriver/sdk/ui";
+    const html = providerPanelHtml({apiPath:"/api/provider-settings"});
+    if(!html.includes("agenticdriver-providers")) throw new Error("Missing provider panel");
+    export function mount(element: ProviderPanelElement) {registerProviderPanel(); return element.refresh();}
+    console.log("Installed provider panel browser bundle passed");
+  `,
+  );
+  await writeFile(
     join(app, "browser-catalog.ts"),
     `
     import {providerPresentation,quotaPresentation,type UsageStatProvider,type UsageStatQuotaIdentity} from "@agenticdriver/sdk/catalog";
@@ -198,6 +210,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     entryPoints: {
       browser: "examples/browser.ts",
       catalog: "browser-catalog.ts",
+      panel: "browser-panel.ts",
       pairing: "browser-pairing.ts",
     },
     bundle: true,
@@ -210,6 +223,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   });
   const safeModules = new Set([
     "client.js",
+    "ui.js",
     "management-types.js",
     "connection-types.js",
     "authorization.js",
@@ -356,6 +370,14 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
       import assert from "node:assert/strict";
       import {AgenticClient,DriverError,PROTOCOL_VERSION} from "@agenticdriver/sdk/client";
       for(const path of ${JSON.stringify(Object.keys(pkg.exports).map((key) => (key === "." ? "@agenticdriver/sdk" : `@agenticdriver/sdk/${key.slice(2)}`)))}) await import(path);
+      const {serveProviderPanel} = await import("@agenticdriver/sdk/panel-server");
+      const panel = await serveProviderPanel({connectionPath:${JSON.stringify(join(app, "private-panel-profile.json"))},port:0});
+      try {
+        assert.match(await (await fetch(panel.url+"/assets/agenticdriver-panel.js")).text(), /agenticdriver-providers/);
+        assert.equal((await fetch(panel.url+"/api/agenticdriver-panel", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"snapshot"})})).status,401);
+        const response = await fetch(panel.url+"/api/agenticdriver-panel", {method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+new URL(panel.launchUrl).hash.slice(7)},body:JSON.stringify({action:"snapshot"})});
+        assert.equal((await response.json()).connected,false);
+      } finally {await panel.close();}
       const client = new AgenticClient({url:process.env.AGENTICDRIVER_URL,token:process.env.AGENTICDRIVER_TOKEN});
       assert.equal(PROTOCOL_VERSION,"1.0");
       await assert.rejects(client.run({provider:"forbidden",model:"demo",input:"hello"}),(e)=>e instanceof DriverError && e.code==="UNKNOWN_PROVIDER");

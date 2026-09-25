@@ -181,3 +181,6 @@ __all__ += ["ProviderConfiguration", "ConfigureProvider", "ManagementSnapshot"]
 
 from .connections import ConnectionGrant, CreateInvitation, ConnectionInfo, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_target
 __all__ += ["ConnectionGrant", "CreateInvitation", "ConnectionInfo", "ConnectionInvitation", "ConnectionCredentials", "ConnectionList", "connection_target"]
+
+from .panel import ProviderPanel, AsyncProviderPanel, provider_panel_html, provider_panel_script
+__all__ += ["ProviderPanel", "AsyncProviderPanel", "provider_panel_html", "provider_panel_script"]

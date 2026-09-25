@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { withConnections, connectionInvitation } from "./connections.js";
+import { serveProviderPanel } from "./panel-server.js";
 import { isLoopback } from "./security.js";
 import { connectClient } from "./connection-profile.js";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -24,6 +25,7 @@ const help = `AgenticDriver — local and secure remote execution host
   agenticdriver setup --provider KIND [--config PATH] [--manage]
   agenticdriver pair [--config PATH] [--subject APP] [--manage] [--provider-ids IDS]
   agenticdriver connect --invite-file PATH --connection PATH
+  agenticdriver panel --connection PATH [--port 7444]
   agenticdriver init [--config PATH] [--provider KIND] [--model ID | --catalog-only]
   agenticdriver serve [--config PATH] [--host HOST] [--port PORT] [--json]
   agenticdriver status [--config PATH] [--url URL] [--token-id ID] [--refresh] [--json]
@@ -96,6 +98,8 @@ function commandOptions(command: string) {
         "port",
       ]),
     };
+  if (command === "panel")
+    return { ...common, ...strings(["connection", "port", "host"]) };
   if (command === "pair")
     return {
       ...common,
@@ -389,6 +393,40 @@ async function main(): Promise<number> {
       },
       json,
     );
+    return 0;
+  }
+  if (command === "panel") {
+    const connectionPath = argument(values, "connection");
+    if (!connectionPath)
+      throw new DriverError(
+        "INVALID_ARGUMENT",
+        "Supply a private --connection profile path. It can be created through the panel.",
+      );
+    const panel = await serveProviderPanel({
+      connectionPath,
+      port: numberArgument(values, "port"),
+      host: argument(values, "host"),
+    });
+    print(
+      {
+        event: "listening",
+        url: panel.launchUrl,
+        connectionPath: resolve(connectionPath),
+      },
+      json,
+    );
+    await new Promise<void>((done, reject) => {
+      let closing = false;
+      const stop = () => {
+        if (closing) return;
+        closing = true;
+        process.off("SIGINT", stop);
+        process.off("SIGTERM", stop);
+        void panel.close().then(done, reject);
+      };
+      process.on("SIGINT", stop);
+      process.on("SIGTERM", stop);
+    });
     return 0;
   }
   if (command === "setup")

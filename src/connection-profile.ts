@@ -23,9 +23,9 @@ const ProfileSchema = z
   .strict();
 export type ConnectionProfile = z.infer<typeof ProfileSchema>;
 
-export async function connectedClient(
+export async function readConnectionProfile(
   profilePath: string,
-): Promise<AgenticClient> {
+): Promise<ConnectionProfile> {
   const path = resolve(profilePath);
   const secrets = secretResolver(dirname(path));
   let profile: ConnectionProfile;
@@ -37,6 +37,16 @@ export async function connectedClient(
       "Choose a private connection profile created by agenticdriver connect.",
     );
   }
+  secureBaseUrl(profile.url);
+  return profile;
+}
+
+export async function connectedClient(
+  profilePath: string,
+): Promise<AgenticClient> {
+  const path = resolve(profilePath),
+    secrets = secretResolver(dirname(path));
+  const profile = await readConnectionProfile(path);
   secureBaseUrl(profile.url);
   if (Date.parse(profile.expiresAt) <= Date.now())
     throw new DriverError(

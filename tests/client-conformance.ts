@@ -1,3 +1,4 @@
+import { providerPanel, type ProviderPanelState } from "../src/panel.js";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { AgenticClient } from "../src/client.js";
@@ -390,11 +391,22 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
     url: process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL,
     token,
   });
-  const before = await manager.management();
-  const next = await manager.configureProvider({
-    revision: before.revision,
-    provider: { id: "typescript-fixture", kind: "mock", models: [] },
-  });
+  const panel = providerPanel({ client: () => manager });
+  const before = ((await panel({ action: "snapshot" })) as ProviderPanelState)
+    .management!;
+  const panelState = (await panel({
+    action: "configure",
+    change: {
+      revision: before.revision,
+      provider: { id: "typescript-fixture", kind: "mock", models: [] },
+    },
+  })) as ProviderPanelState;
+  const next = panelState.management!;
+  assert.deepEqual(
+    panelState.providers.find((p) => p.id === "typescript-fixture")!.models,
+    [],
+  );
+  assert.ok(Array.isArray(next.executionProviders));
   assert.deepEqual(
     next.providers.find((p) => p.id === "typescript-fixture")!.models,
     [],

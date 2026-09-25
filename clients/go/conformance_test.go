@@ -536,7 +536,22 @@ func TestManagementRoundtrip(t *testing.T) {
 	}
 	empty := []string{}
 	input := ConfigureProvider{Revision: before.Revision, Provider: ProviderConfiguration{ID: "go-fixture", Kind: "mock", Models: &empty}}
-	next, err := manager.ConfigureProvider(context.Background(), input)
+	panel := ProviderPanel{Client: func(context.Context) (*Client, error) { return manager, nil }}
+	request, _ := json.Marshal(map[string]any{"action": "configure", "change": input})
+	panelResult, err := panel.Handle(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	panelState := panelResult.(map[string]any)
+	next := panelState["management"].(ManagementSnapshot)
+	if next.ExecutionProviders == nil {
+		t.Fatal("missing execution grant metadata")
+	}
+	for _, p := range panelState["providers"].([]map[string]any) {
+		if p["id"] == "go-fixture" && len(p["models"].([]string)) != 0 {
+			t.Fatal("panel broadened deny-all access")
+		}
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

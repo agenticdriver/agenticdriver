@@ -52,6 +52,7 @@ export default defineConfig({
           { text: "JavaScript and TypeScript", link: "/javascript" },
           { text: "Three application recipes", link: "/applications" },
           { text: "Provider and account setup", link: "/providers" },
+          { text: "Provider settings component", link: "/provider-panel" },
           { text: "Troubleshooting", link: "/troubleshooting" },
         ],
       },
@@ -59,6 +60,8 @@ export default defineConfig({
         text: "Connect and authorize",
         items: [
           { text: "Local execution host", link: "/host" },
+          { text: "Pair local and remote clients", link: "/connections" },
+          { text: "Remote provider management", link: "/provider-management" },
           { text: "Better Auth and AuthYard", link: "/authentication" },
           { text: "Remote deployment", link: "/deployment" },
           { text: "Discovery", link: "/discovery" },
