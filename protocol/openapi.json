@@ -710,6 +710,125 @@
         }
       }
     },
+    "/v1/management/invitations": {
+      "post": {
+        "summary": "Create a one-use scoped connection invitation (operator grant required)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInvitation" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secret invitation code; display only once",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionInvitation"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/connections/exchange": {
+      "post": {
+        "summary": "Exchange the one-use invitation bearer for a scoped connection credential",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "additionalProperties": false }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Private connection credential; never put in browser storage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionCredentials"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "401": {
+            "description": "Invitation expired, consumed, revoked or invalid"
+          }
+        }
+      }
+    },
+    "/v1/management/connections": {
+      "get": {
+        "summary": "List active connection grants without credentials",
+        "responses": {
+          "200": {
+            "description": "Active grants and invitations",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConnectionList" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/management/connections/revoke": {
+      "post": {
+        "summary": "Revoke an explicit connection or invitation ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RevokeConnection" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Revocation receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["revoked"],
+                  "properties": { "revoked": { "type": "boolean" } }
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/management": {
       "get": {
         "summary": "Read host provider settings (manageProviders grant required)",
@@ -925,6 +1044,639 @@
     },
     "securitySchemes": { "bearerAuth": { "type": "http", "scheme": "bearer" } },
     "schemas": {
+      "CreateInvitation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "grant": {
+            "type": "object",
+            "properties": {
+              "manageProviders": { "type": "boolean" },
+              "subject": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "providers": {
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "tools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "approveTools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "applicationTools": {
+                "default": [],
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                    },
+                    "requiresApproval": { "type": "boolean" }
+                  },
+                  "required": ["name"],
+                  "additionalProperties": false
+                }
+              },
+              "jobs": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["submit", "read", "cancel"]
+                }
+              },
+              "sessions": {
+                "default": [],
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["create", "read", "continue", "delete"]
+                }
+              },
+              "retrieval": {
+                "default": { "search": [], "index": [], "delete": [] },
+                "type": "object",
+                "properties": {
+                  "search": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "index": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["subject", "providers"]
+          },
+          "expiresInSeconds": {
+            "default": 600,
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 3600
+          },
+          "connectionLifetimeSeconds": {
+            "default": 2592000,
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 7776000
+          }
+        },
+        "required": ["grant"],
+        "additionalProperties": false
+      },
+      "ConnectionInvitation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "grant": {
+            "type": "object",
+            "properties": {
+              "manageProviders": { "type": "boolean" },
+              "subject": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "providers": {
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "tools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "approveTools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "applicationTools": {
+                "default": [],
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                    },
+                    "requiresApproval": { "type": "boolean" }
+                  },
+                  "required": ["name"],
+                  "additionalProperties": false
+                }
+              },
+              "jobs": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["submit", "read", "cancel"]
+                }
+              },
+              "sessions": {
+                "default": [],
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["create", "read", "continue", "delete"]
+                }
+              },
+              "retrieval": {
+                "default": { "search": [], "index": [], "delete": [] },
+                "type": "object",
+                "properties": {
+                  "search": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "index": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["subject", "providers"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "code": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" }
+        },
+        "required": ["id", "grant", "createdAt", "expiresAt", "code"]
+      },
+      "ConnectionCredentials": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "grant": {
+            "type": "object",
+            "properties": {
+              "manageProviders": { "type": "boolean" },
+              "subject": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "providers": {
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "tools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "approveTools": {
+                "default": [],
+                "maxItems": 256,
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+              },
+              "applicationTools": {
+                "default": [],
+                "maxItems": 32,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                    },
+                    "requiresApproval": { "type": "boolean" }
+                  },
+                  "required": ["name"],
+                  "additionalProperties": false
+                }
+              },
+              "jobs": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["submit", "read", "cancel"]
+                }
+              },
+              "sessions": {
+                "default": [],
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["create", "read", "continue", "delete"]
+                }
+              },
+              "retrieval": {
+                "default": { "search": [], "index": [], "delete": [] },
+                "type": "object",
+                "properties": {
+                  "search": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "index": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["subject", "providers"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" }
+        },
+        "required": ["id", "grant", "createdAt", "expiresAt", "token"]
+      },
+      "ConnectionList": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "invitations": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grant": {
+                  "type": "object",
+                  "properties": {
+                    "manageProviders": { "type": "boolean" },
+                    "subject": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "providers": {
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "tools": {
+                      "default": [],
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "approveTools": {
+                      "default": [],
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "applicationTools": {
+                      "default": [],
+                      "maxItems": 32,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                          },
+                          "requiresApproval": { "type": "boolean" }
+                        },
+                        "required": ["name"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "jobs": {
+                      "default": [],
+                      "maxItems": 3,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["submit", "read", "cancel"]
+                      }
+                    },
+                    "sessions": {
+                      "default": [],
+                      "maxItems": 4,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["create", "read", "continue", "delete"]
+                      }
+                    },
+                    "retrieval": {
+                      "default": { "search": [], "index": [], "delete": [] },
+                      "type": "object",
+                      "properties": {
+                        "search": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "index": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "delete": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": ["subject", "providers"]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                }
+              },
+              "required": ["id", "grant", "createdAt", "expiresAt"]
+            }
+          },
+          "connections": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "grant": {
+                  "type": "object",
+                  "properties": {
+                    "manageProviders": { "type": "boolean" },
+                    "subject": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "providers": {
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "tools": {
+                      "default": [],
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "approveTools": {
+                      "default": [],
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "applicationTools": {
+                      "default": [],
+                      "maxItems": 32,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$"
+                          },
+                          "requiresApproval": { "type": "boolean" }
+                        },
+                        "required": ["name"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "jobs": {
+                      "default": [],
+                      "maxItems": 3,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["submit", "read", "cancel"]
+                      }
+                    },
+                    "sessions": {
+                      "default": [],
+                      "maxItems": 4,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["create", "read", "continue", "delete"]
+                      }
+                    },
+                    "retrieval": {
+                      "default": { "search": [], "index": [], "delete": [] },
+                      "type": "object",
+                      "properties": {
+                        "search": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "index": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "delete": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": ["subject", "providers"]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                }
+              },
+              "required": ["id", "grant", "createdAt", "expiresAt"]
+            }
+          }
+        },
+        "required": ["invitations", "connections"]
+      },
+      "RevokeConnection": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": false
+      },
       "ConfigureProvider": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",

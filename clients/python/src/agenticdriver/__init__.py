@@ -178,3 +178,6 @@ __all__ += ['SessionMode', 'SessionIdentity', 'SessionHandle', 'SessionCreate', 
 
 from .management import ProviderConfiguration, ConfigureProvider, ManagementSnapshot
 __all__ += ["ProviderConfiguration", "ConfigureProvider", "ManagementSnapshot"]
+
+from .connections import ConnectionGrant, CreateInvitation, ConnectionInfo, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_target
+__all__ += ["ConnectionGrant", "CreateInvitation", "ConnectionInfo", "ConnectionInvitation", "ConnectionCredentials", "ConnectionList", "connection_target"]

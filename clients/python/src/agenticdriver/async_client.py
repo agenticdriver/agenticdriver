@@ -12,6 +12,7 @@ from typing_extensions import Unpack
 if TYPE_CHECKING:
     import httpx
 
+from .connections import CreateInvitation, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_value
 from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from ._errors import DriverError
 from ._protocol import (
@@ -331,6 +332,22 @@ class AsyncAgenticClient:
             if not valid_session_delete(result, request):
                 raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
             return cast(SessionDeleteResult, result)
+
+    async def create_invitation(self, request: CreateInvitation) -> ConnectionInvitation:
+        async with self._request("v1/management/invitations", request) as response:
+            return cast(ConnectionInvitation, connection_value(await self._json(response), "code"))
+
+    async def exchange_connection(self) -> ConnectionCredentials:
+        async with self._request("v1/connections/exchange", {}) as response:
+            return cast(ConnectionCredentials, connection_value(await self._json(response), "token"))
+
+    async def connections(self) -> ConnectionList:
+        async with self._request("v1/management/connections") as response:
+            return cast(ConnectionList, connection_value(await self._json(response), "list"))
+
+    async def revoke_connection(self, connection_id: str) -> bool:
+        async with self._request("v1/management/connections/revoke", {"id": connection_id}) as response:
+            return bool(connection_value(await self._json(response), "revoke")["revoked"])
 
     async def management(self) -> ManagementSnapshot:
         async with self._request("v1/management") as response:

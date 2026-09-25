@@ -1,4 +1,11 @@
 import {
+  CreateInvitationSchema,
+  ConnectionInvitationSchema,
+  ConnectionCredentialsSchema,
+  ConnectionListSchema,
+  RevokeConnectionSchema,
+} from "../src/connection-types.js";
+import {
   ConfigureProviderSchema,
   ManagementSnapshotSchema,
 } from "../src/management-types.js";
@@ -75,6 +82,11 @@ const { $schema: _schema, ...requestSchema } = request;
 const schemas = {
   ...Object.fromEntries(
     Object.entries({
+      CreateInvitation: CreateInvitationSchema,
+      ConnectionInvitation: ConnectionInvitationSchema,
+      ConnectionCredentials: ConnectionCredentialsSchema,
+      ConnectionList: ConnectionListSchema,
+      RevokeConnection: RevokeConnectionSchema,
       ConfigureProvider: ConfigureProviderSchema,
       ManagementSnapshot: ManagementSnapshotSchema,
       JobSubmit: JobSubmitSchema,
@@ -597,6 +609,84 @@ const document = {
             },
           },
           default: errorResponse,
+        },
+      },
+    },
+    "/v1/management/invitations": {
+      post: {
+        summary:
+          "Create a one-use scoped connection invitation (operator grant required)",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("CreateInvitation") } },
+        },
+        responses: {
+          "200": {
+            description: "Secret invitation code; display only once",
+            content: {
+              "application/json": { schema: ref("ConnectionInvitation") },
+            },
+          },
+        },
+      },
+    },
+    "/v1/connections/exchange": {
+      post: {
+        summary:
+          "Exchange the one-use invitation bearer for a scoped connection credential",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", additionalProperties: false },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description:
+              "Private connection credential; never put in browser storage",
+            content: {
+              "application/json": { schema: ref("ConnectionCredentials") },
+            },
+          },
+          "401": {
+            description: "Invitation expired, consumed, revoked or invalid",
+          },
+        },
+      },
+    },
+    "/v1/management/connections": {
+      get: {
+        summary: "List active connection grants without credentials",
+        responses: {
+          "200": {
+            description: "Active grants and invitations",
+            content: { "application/json": { schema: ref("ConnectionList") } },
+          },
+        },
+      },
+    },
+    "/v1/management/connections/revoke": {
+      post: {
+        summary: "Revoke an explicit connection or invitation ID",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("RevokeConnection") } },
+        },
+        responses: {
+          "200": {
+            description: "Revocation receipt",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["revoked"],
+                  properties: { revoked: { type: "boolean" } },
+                },
+              },
+            },
+          },
         },
       },
     },

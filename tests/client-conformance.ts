@@ -406,4 +406,23 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
     }),
     { code: "CONFIG_CONFLICT" },
   );
+  const invitation = await manager.createInvitation({
+    grant: { subject: "typescript-pairing", providers: ["fixture"] },
+  });
+  const pairing = new AgenticClient({
+    url: process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL!,
+    token: invitation.code,
+  });
+  const credential = await pairing.exchangeConnection();
+  const connected = new AgenticClient({
+    url: process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL!,
+    token: credential.token,
+  });
+  assert.equal((await connected.providers())[0]!.id, "fixture");
+  await assert.rejects(connected.management(), { code: "FORBIDDEN" });
+  await assert.rejects(pairing.exchangeConnection(), {
+    code: "INVITATION_REJECTED",
+  });
+  assert.equal((await manager.revokeConnection(credential.id)).revoked, true);
+  await assert.rejects(connected.providers(), { code: "UNAUTHORIZED" });
 }

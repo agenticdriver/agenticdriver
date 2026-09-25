@@ -27,6 +27,25 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                 await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async"}})
             self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
 
+    async def test_connection_pairing(self):
+        url = os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]
+        async with self.client(url) as manager:
+            invitation = await manager.create_invitation({"grant": {"subject": "python-pairing", "providers": ["fixture"]}})
+            async with self.client(url, token=invitation["code"]) as pairing:
+                credential = await pairing.exchange_connection()
+                with self.assertRaises(DriverError) as rejected:
+                    await pairing.exchange_connection()
+                self.assertEqual(rejected.exception.code, "INVITATION_REJECTED")
+            async with self.client(url, token=credential["token"]) as connected:
+                self.assertEqual((await connected.providers())[0]["id"], "fixture")
+                with self.assertRaises(DriverError) as forbidden:
+                    await connected.management()
+                self.assertEqual(forbidden.exception.code, "FORBIDDEN")
+                self.assertTrue(await manager.revoke_connection(credential["id"]))
+                with self.assertRaises(DriverError) as revoked:
+                    await connected.providers()
+                self.assertEqual(revoked.exception.code, "UNAUTHORIZED")
+
     async def test_wire_cases(self):
         fixture = json.loads(
             (

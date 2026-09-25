@@ -9,6 +9,7 @@ from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 from typing_extensions import Unpack
 
+from .connections import CreateInvitation, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_value
 from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from ._errors import DriverError
 from ._protocol import (
@@ -308,6 +309,22 @@ class AgenticClient:
             if not valid_session_delete(result, request):
                 raise DriverError("INVALID_RESPONSE", "The conversation response does not match its request.")
             return cast(SessionDeleteResult, result)
+
+    def create_invitation(self, request: CreateInvitation) -> ConnectionInvitation:
+        with self._request("v1/management/invitations", request) as response:
+            return cast(ConnectionInvitation, connection_value(self._json(response), "code"))
+
+    def exchange_connection(self) -> ConnectionCredentials:
+        with self._request("v1/connections/exchange", {}) as response:
+            return cast(ConnectionCredentials, connection_value(self._json(response), "token"))
+
+    def connections(self) -> ConnectionList:
+        with self._request("v1/management/connections") as response:
+            return cast(ConnectionList, connection_value(self._json(response), "list"))
+
+    def revoke_connection(self, connection_id: str) -> bool:
+        with self._request("v1/management/connections/revoke", {"id": connection_id}) as response:
+            return bool(connection_value(self._json(response), "revoke")["revoked"])
 
     def management(self) -> ManagementSnapshot:
         with self._request("v1/management") as response:

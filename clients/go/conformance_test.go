@@ -555,3 +555,42 @@ func TestManagementRoundtrip(t *testing.T) {
 		t.Fatal("stale settings accepted")
 	}
 }
+
+func TestConnectionPairing(t *testing.T) {
+	url := os.Getenv("AGENTICDRIVER_TEST_MANAGEMENT_URL")
+	if url == "" {
+		t.Skip("requires reference host")
+	}
+	manager := conformanceClient(t, url, os.Getenv("AGENTICDRIVER_TEST_TOKEN"), true)
+	invitation, err := manager.CreateInvitation(context.Background(), CreateInvitation{Grant: ConnectionGrant{Subject: "go-pairing", Providers: []string{"fixture"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pairing := conformanceClient(t, url, invitation.Code, true)
+	credential, err := pairing.ExchangeConnection(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = pairing.ExchangeConnection(context.Background())
+	var failure *Error
+	if !errors.As(err, &failure) || failure.Code != "INVITATION_REJECTED" {
+		t.Fatal("invitation replay accepted")
+	}
+	connected := conformanceClient(t, url, credential.Token, true)
+	providers, err := connected.Providers(context.Background())
+	if err != nil || len(providers) != 1 || providers[0].ID != "fixture" {
+		t.Fatal("wrong connection scope", err)
+	}
+	_, err = connected.Management(context.Background())
+	if !errors.As(err, &failure) || failure.Code != "FORBIDDEN" {
+		t.Fatal("scope elevation accepted")
+	}
+	revoked, err := manager.RevokeConnection(context.Background(), credential.ID)
+	if err != nil || !revoked {
+		t.Fatal("revocation failed", err)
+	}
+	_, err = connected.Providers(context.Background())
+	if !errors.As(err, &failure) || failure.Code != "UNAUTHORIZED" {
+		t.Fatal("revoked credential accepted")
+	}
+}

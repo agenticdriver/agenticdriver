@@ -19,6 +19,11 @@ pub use ingestion::{
     ChunkingOptions, EmailMessage, ExtractionIdentity, IngestRequest, IngestResult,
     IngestionDocument, IngestionManifest,
 };
+pub mod connections;
+pub use connections::{
+    ConnectionCredentials, ConnectionGrant, ConnectionInfo, ConnectionInvitation, ConnectionList,
+    CreateInvitation,
+};
 pub mod management;
 pub use management::{ConfigureProvider, ManagementSnapshot, ProviderConfiguration};
 pub mod jobs;

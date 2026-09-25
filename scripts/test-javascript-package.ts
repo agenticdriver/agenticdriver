@@ -211,6 +211,8 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
   const safeModules = new Set([
     "client.js",
     "management-types.js",
+    "connection-types.js",
+    "authorization.js",
     "provider-config.js",
     "secret-types.js",
     "pairing.js",

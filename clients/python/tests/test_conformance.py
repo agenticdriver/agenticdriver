@@ -20,6 +20,25 @@ class ClientConformance(unittest.TestCase):
                 client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync"}})
             self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
 
+    def test_connection_pairing(self):
+        url = os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]
+        with self.client(url) as manager:
+            invitation = manager.create_invitation({"grant": {"subject": "python-pairing", "providers": ["fixture"]}})
+            with self.client(url, token=invitation["code"]) as pairing:
+                credential = pairing.exchange_connection()
+                with self.assertRaises(DriverError) as rejected:
+                    pairing.exchange_connection()
+                self.assertEqual(rejected.exception.code, "INVITATION_REJECTED")
+            with self.client(url, token=credential["token"]) as connected:
+                self.assertEqual((connected.providers())[0]["id"], "fixture")
+                with self.assertRaises(DriverError) as forbidden:
+                    connected.management()
+                self.assertEqual(forbidden.exception.code, "FORBIDDEN")
+                self.assertTrue(manager.revoke_connection(credential["id"]))
+                with self.assertRaises(DriverError) as revoked:
+                    connected.providers()
+                self.assertEqual(revoked.exception.code, "UNAUTHORIZED")
+
     def test_wire_cases(self):
         fixture = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/conformance.json").read_text(encoding="utf-8"))
         for case in fixture["cases"]:

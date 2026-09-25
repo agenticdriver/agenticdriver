@@ -634,3 +634,43 @@ fn provider_management_roundtrip() {
     let error = manager.configure_provider(&input).err().unwrap();
     assert_eq!(code(&error), Some("CONFIG_CONFLICT"));
 }
+
+#[test]
+fn connection_pairing() {
+    let Ok(url) = std::env::var("AGENTICDRIVER_TEST_MANAGEMENT_URL") else {
+        return;
+    };
+    let manager = client(
+        &url,
+        &std::env::var("AGENTICDRIVER_TEST_TOKEN").unwrap(),
+        true,
+    );
+    let invitation = manager
+        .create_invitation(&agenticdriver::CreateInvitation {
+            grant: agenticdriver::ConnectionGrant {
+                subject: "rust-pairing".into(),
+                providers: vec!["fixture".into()],
+                ..Default::default()
+            },
+            expires_in_seconds: None,
+            connection_lifetime_seconds: None,
+        })
+        .unwrap();
+    let pairing = client(&url, &invitation.code, true);
+    let credential = pairing.exchange_connection().unwrap();
+    assert_eq!(
+        code(&pairing.exchange_connection().err().unwrap()),
+        Some("INVITATION_REJECTED")
+    );
+    let connected = client(&url, &credential.token, true);
+    assert_eq!(connected.providers().unwrap()[0].id, "fixture");
+    assert_eq!(
+        code(&connected.management().err().unwrap()),
+        Some("FORBIDDEN")
+    );
+    assert!(manager.revoke_connection(&credential.info.id).unwrap());
+    assert_eq!(
+        code(&connected.providers().err().unwrap()),
+        Some("UNAUTHORIZED")
+    );
+}

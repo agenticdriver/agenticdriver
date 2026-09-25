@@ -88,6 +88,10 @@
     "./management": {
       "types": "./dist/management.d.ts",
       "import": "./dist/management.js"
+    },
+    "./connections": {
+      "types": "./dist/connections.d.ts",
+      "import": "./dist/connections.js"
     }
   },
   "files": [

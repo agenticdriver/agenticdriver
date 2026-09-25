@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { withConnections, connectionInvitation } from "./connections.js";
+import { isLoopback } from "./security.js";
+import { connectClient } from "./connection-profile.js";
 import { randomBytes, randomUUID } from "node:crypto";
 import { link, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
@@ -18,6 +21,9 @@ import { serve } from "./server.js";
 
 const help = `AgenticDriver — local and secure remote execution host
 
+  agenticdriver setup --provider KIND [--config PATH] [--manage]
+  agenticdriver pair [--config PATH] [--subject APP] [--manage] [--provider-ids IDS]
+  agenticdriver connect --invite-file PATH --connection PATH
   agenticdriver init [--config PATH] [--provider KIND] [--model ID | --catalog-only]
   agenticdriver serve [--config PATH] [--host HOST] [--port PORT] [--json]
   agenticdriver status [--config PATH] [--url URL] [--token-id ID] [--refresh] [--json]
@@ -37,7 +43,12 @@ claude-code and gemini-cli.
 
 --config overrides AGENTICDRIVER_CONFIG and the OS user configuration directory.
 --help shows this help; --version shows the installed package version.
-Credentials are referenced by configuration, never printed by diagnostics.
+setup initializes and serves a new host, printing a one-use invitation (10 minutes).
+pair prints another invitation; --manage explicitly grants provider/connection administration.
+connect consumes an invitation from a private file and saves a private client profile.
+Remote setup uses --host, --tls-cert-file, --tls-key-file and --client-url (HTTPS).
+Invitations are credentials: paste them only into the intended application.
+Provider credentials are referenced by configuration, never printed by diagnostics.
 `;
 type Values = Record<string, string | boolean | undefined>;
 function argument(values: Values, name: string): string | undefined {
@@ -62,11 +73,18 @@ function commandOptions(command: string) {
     config: { type: "string" as const },
     json: { type: "boolean" as const },
   };
-  if (command === "init")
+  if (command === "init" || command === "setup")
     return {
       ...common,
       "catalog-only": { type: "boolean" as const },
+      manage: { type: "boolean" as const },
+      management: { type: "boolean" as const },
       ...strings([
+        "host",
+        "tls-cert-file",
+        "tls-key-file",
+        "client-url",
+        "subject",
         "provider",
         "provider-id",
         "account-id",
@@ -78,6 +96,14 @@ function commandOptions(command: string) {
         "port",
       ]),
     };
+  if (command === "pair")
+    return {
+      ...common,
+      manage: { type: "boolean" as const },
+      ...strings(["subject", "provider-ids", "url", "token-id", "expires-in"]),
+    };
+  if (command === "connect")
+    return { ...common, ...strings(["invite-file", "connection"]) };
   if (command === "serve") return { ...common, ...strings(["host", "port"]) };
   if (command === "doctor") return common;
   if (command === "status")
@@ -102,7 +128,7 @@ function commandOptions(command: string) {
     };
   throw new DriverError(
     "INVALID_ARGUMENT",
-    "Choose init, serve, status, doctor or run. Use --help for command options.",
+    "Choose setup, pair, connect, init, serve, status, doctor or run. Use --help for command options.",
   );
 }
 async function initialize(path: string, values: Values) {
@@ -165,10 +191,37 @@ async function initialize(path: string, values: Values) {
         }
       : {}),
   };
+  if (
+    !isLoopback(argument(values, "host") ?? "127.0.0.1") &&
+    !values["client-url"]
+  )
+    throw new DriverError(
+      "INVALID_ARGUMENT",
+      "Remote setup requires an explicit HTTPS --client-url reachable by the connecting application.",
+    );
+  const management = values.management === true;
+  const operatorRef = join("credentials", `operator-${randomUUID()}.token`);
+  if (Boolean(values["tls-cert-file"]) !== Boolean(values["tls-key-file"]))
+    throw new DriverError(
+      "INVALID_TLS",
+      "Supply both --tls-cert-file and --tls-key-file.",
+    );
   const config = validateHostConfig({
     version: 1,
     usage: { hostId: randomUUID() },
-    listen: { host: "127.0.0.1", port: numberArgument(values, "port") ?? 7433 },
+    listen: {
+      host: argument(values, "host") ?? "127.0.0.1",
+      port: numberArgument(values, "port") ?? 7433,
+    },
+    clientUrl: argument(values, "client-url"),
+    ...(values["tls-cert-file"]
+      ? {
+          tls: {
+            certFile: resolve(argument(values, "tls-cert-file")!),
+            keyRef: { file: resolve(argument(values, "tls-key-file")!) },
+          },
+        }
+      : {}),
     providers: [provider],
     tokens: [
       {
@@ -178,14 +231,26 @@ async function initialize(path: string, values: Values) {
         providers: [id],
         tools: [],
       },
+      ...(management
+        ? [
+            {
+              id: "operator",
+              subject: "host-operator",
+              tokenRef: { file: operatorRef },
+              providers: [],
+              tools: [],
+              manageProviders: true,
+            },
+          ]
+        : []),
     ],
     operations: { directory: "state/operations" },
   });
   const directory = dirname(path),
     credential = join(directory, tokenRef),
     temporary = join(directory, `.${basename(path)}-${randomUUID()}.tmp`);
-  let credentialCreated = false,
-    published = false;
+  const created: string[] = [];
+  let published = false;
   try {
     await mkdir(join(directory, "credentials"), {
       recursive: true,
@@ -195,7 +260,16 @@ async function initialize(path: string, values: Values) {
       flag: "wx",
       mode: 0o600,
     });
-    credentialCreated = true;
+    created.push(credential);
+    if (management) {
+      const operatorPath = join(directory, operatorRef);
+      await writeFile(
+        operatorPath,
+        randomBytes(32).toString("base64url") + "\n",
+        { flag: "wx", mode: 0o600 },
+      );
+      created.push(operatorPath);
+    }
     await writeFile(temporary, JSON.stringify(config, null, 2) + "\n", {
       flag: "wx",
       mode: 0o600,
@@ -211,8 +285,9 @@ async function initialize(path: string, values: Values) {
     );
   } finally {
     await rm(temporary, { force: true }).catch(() => {});
-    if (credentialCreated && !published)
-      await rm(credential, { force: true }).catch(() => {});
+    if (!published)
+      for (const file of created)
+        await rm(file, { force: true }).catch(() => {});
   }
   return {
     configPath: path,
@@ -221,6 +296,7 @@ async function initialize(path: string, values: Values) {
     modelAccess: catalogOnly ? "denied" : model ? "allowlist" : "unrestricted",
     ...(catalogOnly ? { catalogOnly: true } : {}),
     tokenFile: credential,
+    ...(management ? { operatorTokenFile: join(directory, operatorRef) } : {}),
     next: catalogOnly
       ? "Run serve, then status --refresh. Model execution remains denied until the host allowlist is explicitly configured."
       : "Run serve, then status or an explicit run command using this configuration.",
@@ -290,8 +366,35 @@ async function main(): Promise<number> {
     print(await initialize(path, values), json);
     return 0;
   }
+  if (command === "connect") {
+    const invitationFile = argument(values, "invite-file"),
+      profilePath = argument(values, "connection");
+    if (!invitationFile || !profilePath)
+      throw new DriverError(
+        "INVALID_ARGUMENT",
+        "Supply --invite-file and --connection paths.",
+      );
+    const contents = await readFile(invitationFile, "utf8");
+    if (contents.length > 16_384)
+      throw new DriverError(
+        "INVALID_INVITATION",
+        "The invitation file is too large.",
+      );
+    const profile = await connectClient(contents.trim(), profilePath);
+    print(
+      {
+        ...profile,
+        connectionPath: resolve(profilePath),
+        tokenFile: resolve(dirname(profilePath), profile.tokenFile),
+      },
+      json,
+    );
+    return 0;
+  }
+  if (command === "setup")
+    print(await initialize(path, { ...values, management: true }), json);
   let config: HostConfig = await readHostConfig(path);
-  if (command === "serve") {
+  if (command === "serve" || command === "setup") {
     config = validateHostConfig({
       ...config,
       listen: {
@@ -300,10 +403,16 @@ async function main(): Promise<number> {
       },
     });
     const runtime = await managedHost(path);
-    const server = await serve(runtime.driver, {
-      ...(await configuredServer(config, path)),
-      management: runtime.management,
-    });
+    const server = await serve(
+      runtime.driver,
+      withConnections(
+        {
+          ...(await configuredServer(config, path)),
+          management: runtime.management,
+        },
+        runtime.connections,
+      ),
+    );
     print(
       {
         event: "listening",
@@ -313,6 +422,27 @@ async function main(): Promise<number> {
       },
       json,
     );
+    if (command === "setup") {
+      const invitation = await runtime.connections.create({
+        grant: {
+          subject: argument(values, "subject") ?? "connected-app",
+          providers: config.providers.map((p) => p.id),
+          ...(values.manage === true ? { manageProviders: true } : {}),
+        },
+      });
+      print(
+        {
+          event: "invitation",
+          invitation: connectionInvitation(
+            config.clientUrl ?? server.url,
+            invitation.code,
+          ),
+          expiresAt: invitation.expiresAt,
+          grant: invitation.grant,
+        },
+        json,
+      );
+    }
     let closing = false;
     await new Promise<void>((resolve, reject) => {
       const stop = () => {
@@ -349,6 +479,36 @@ async function main(): Promise<number> {
       json,
     );
     return ok ? 0 : 1;
+  }
+  if (command === "pair") {
+    const operator = await configuredClient(config, path, {
+      tokenId: argument(values, "token-id") ?? "operator",
+      url: argument(values, "url"),
+    });
+    const providers =
+      argument(values, "provider-ids")?.split(",") ??
+      config.providers.map((p) => p.id);
+    const invitation = await operator.createInvitation({
+      grant: {
+        subject: argument(values, "subject") ?? "connected-app",
+        providers,
+        ...(values.manage === true ? { manageProviders: true } : {}),
+      },
+      expiresInSeconds: numberArgument(values, "expires-in"),
+    });
+    const url =
+      argument(values, "url") ??
+      config.clientUrl ??
+      `${config.tls ? "https" : "http"}://${config.listen.host.includes(":") ? `[${config.listen.host}]` : config.listen.host}:${config.listen.port}`;
+    print(
+      {
+        invitation: connectionInvitation(url, invitation.code),
+        expiresAt: invitation.expiresAt,
+        grant: invitation.grant,
+      },
+      json,
+    );
+    return 0;
   }
   const client = await configuredClient(config, path, {
     url: argument(values, "url"),

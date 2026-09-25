@@ -1,4 +1,17 @@
 import {
+  ConnectionInvitationSchema,
+  ConnectionCredentialsSchema,
+  ConnectionListSchema,
+  CreateInvitationSchema,
+  RevokeConnectionSchema,
+  type CreateInvitation,
+  type ConnectionInvitation,
+  type ConnectionCredentials,
+  type ConnectionList,
+} from "./connection-types.js";
+export { connectionInvitation, connectionTarget } from "./connection-types.js";
+export type * from "./connection-types.js";
+import {
   ManagementSnapshotSchema,
   ConfigureProviderSchema,
   type ConfigureProvider,
@@ -221,6 +234,9 @@ export class AgenticClient {
   private async request(
     path: string,
     body?:
+      | CreateInvitation
+      | { id: string }
+      | Record<string, never>
       | ConfigureProvider
       | RunRequest
       | RetrievalSearch
@@ -302,6 +318,77 @@ export class AgenticClient {
       throw error;
     }
     return response;
+  }
+  private async connectionRequest<T extends z.ZodType>(
+    path: string,
+    body: CreateInvitation | { id: string } | Record<string, never> | undefined,
+    schema: T,
+    options: ClientRequestOptions,
+  ): Promise<z.infer<T>> {
+    const parsed = schema.safeParse(
+      await readResponseJson(await this.request(path, body, options.signal)),
+    );
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid connection metadata. Reconcile before retrying.",
+      );
+    return parsed.data;
+  }
+  async createInvitation(
+    input: CreateInvitation,
+    options: ClientRequestOptions = {},
+  ): Promise<ConnectionInvitation> {
+    const parsed = CreateInvitationSchema.safeParse(input);
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_INVITATION",
+        "Select an explicit connection grant and bounded lifetime.",
+      );
+    return this.connectionRequest(
+      "v1/management/invitations",
+      parsed.data,
+      ConnectionInvitationSchema,
+      options,
+    );
+  }
+  /** Construct this client with the one-use invitation code as its token, then save the returned credential privately. */
+  async exchangeConnection(
+    options: ClientRequestOptions = {},
+  ): Promise<ConnectionCredentials> {
+    return this.connectionRequest(
+      "v1/connections/exchange",
+      {},
+      ConnectionCredentialsSchema,
+      options,
+    );
+  }
+  async connections(
+    options: ClientRequestOptions = {},
+  ): Promise<ConnectionList> {
+    return this.connectionRequest(
+      "v1/management/connections",
+      undefined,
+      ConnectionListSchema,
+      options,
+    );
+  }
+  async revokeConnection(
+    id: string,
+    options: ClientRequestOptions = {},
+  ): Promise<{ revoked: boolean }> {
+    const parsed = RevokeConnectionSchema.safeParse({ id });
+    if (!parsed.success)
+      throw new DriverError(
+        "INVALID_INVITATION",
+        "Use an explicit connection ID.",
+      );
+    return this.connectionRequest(
+      "v1/management/connections/revoke",
+      parsed.data,
+      z.object({ revoked: z.boolean() }),
+      options,
+    );
   }
   async management(
     options: ClientRequestOptions = {},

@@ -1,3 +1,4 @@
+import { hostConnections } from "./connections.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -161,8 +162,13 @@ export async function managedHost(
     queue = operation.catch(() => {});
     return operation;
   };
+  const connections = await hostConnections(
+    join(directory, "state", "connections.json"),
+    { providers: () => driver.listProviders().map((p) => p.id) },
+  );
   return {
     driver,
+    connections,
     management: { snapshot, configure } satisfies ProviderManagement,
     config: () => structuredClone(config),
   };

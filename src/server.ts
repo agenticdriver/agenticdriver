@@ -1,3 +1,4 @@
+import type { HostConnections } from "./connections.js";
 import type { ProviderManagement } from "./management-types.js";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { once } from "node:events";
@@ -77,6 +78,7 @@ export interface AccessToken {
 }
 export interface ServerOptions {
   management?: ProviderManagement;
+  connections?: HostConnections;
   /** Opt-in to opaque AgenticDriver-Request-Id UUID and W3C traceparent headers. No baggage. */
   diagnosticHeaders?: boolean;
   /** Explicit store and current token policy; accepted work survives HTTP disconnects. */
@@ -270,6 +272,28 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       }
       const auth = req.headers.authorization;
       const bearer = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+      if (
+        req.url === "/v1/connections/exchange" &&
+        req.method === "POST" &&
+        options.connections
+      ) {
+        negotiateProtocolVersion(
+          req.headers[PROTOCOL_VERSION_HEADER.toLowerCase()],
+        );
+        const input = await readRequest(req);
+        if (
+          !input ||
+          typeof input !== "object" ||
+          Array.isArray(input) ||
+          Object.keys(input).length
+        )
+          throw new DriverError(
+            "INVALID_INVITATION",
+            "Connection exchange accepts only the invitation bearer code.",
+          );
+        json(res, 200, await options.connections.exchange(bearer));
+        return;
+      }
       const principal =
         bearer.length > 0 && bearer.length <= 4096 && !/[\s\0]/.test(bearer)
           ? await authenticate(bearer, authSignal)
@@ -287,6 +311,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           res,
           200,
           protocolInfo({
+            clientPairing: options.connections !== undefined,
             providerManagement:
               options.management !== undefined &&
               principal.manageProviders === true,
@@ -300,6 +325,43 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             pdfIngestion: driver.supportsPdfIngestion,
           }),
         );
+        return;
+      }
+      if (
+        req.url === "/v1/management/invitations" ||
+        req.url === "/v1/management/connections" ||
+        req.url === "/v1/management/connections/revoke"
+      ) {
+        if (!options.connections || principal.manageProviders !== true)
+          throw new DriverError(
+            "FORBIDDEN",
+            "This credential cannot manage host connections.",
+          );
+        if (req.url === "/v1/management/invitations" && req.method === "POST")
+          json(
+            res,
+            200,
+            await options.connections.create(await readRequest(req)),
+          );
+        else if (
+          req.url === "/v1/management/connections" &&
+          req.method === "GET"
+        )
+          json(res, 200, await options.connections.list());
+        else if (
+          req.url === "/v1/management/connections/revoke" &&
+          req.method === "POST"
+        )
+          json(
+            res,
+            200,
+            await options.connections.revoke(await readRequest(req)),
+          );
+        else
+          throw new DriverError(
+            "INVALID_REQUEST",
+            "Unsupported connection operation.",
+          );
         return;
       }
       if (
@@ -755,6 +817,11 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (code === "INVITATION_REJECTED") return 401;
+  if (code === "INVALID_INVITATION") return 400;
+  if (code === "CONNECTION_CAPACITY") return 429;
+  if (["CONNECTION_STORE_BUSY", "CONNECTION_STORE_UNAVAILABLE"].includes(code))
+    return 503;
   if (
     ["CONFIG_CONFLICT", "CONFIG_BUSY", "PROVIDER_IDENTITY_CHANGED"].includes(
       code,

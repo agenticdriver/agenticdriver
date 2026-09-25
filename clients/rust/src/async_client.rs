@@ -183,6 +183,56 @@ impl AsyncAgenticClient {
         }
         Ok(info)
     }
+    pub async fn create_invitation(
+        &self,
+        input: &crate::CreateInvitation,
+    ) -> Result<crate::ConnectionInvitation> {
+        let value: Value = read_json(
+            self.request(
+                "v1/management/invitations",
+                Some(&serde_json::to_value(input)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::connections::invitation(value)
+    }
+    pub async fn exchange_connection(&self) -> Result<crate::ConnectionCredentials> {
+        let value: Value = read_json(
+            self.request(
+                "v1/connections/exchange",
+                Some(&serde_json::json!({})),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        crate::connections::credentials(value)
+    }
+    pub async fn connections(&self) -> Result<crate::ConnectionList> {
+        let value: Value = read_json(
+            self.request("v1/management/connections", None, false)
+                .await?,
+        )
+        .await?;
+        crate::connections::list(value)
+    }
+    pub async fn revoke_connection(&self, id: &str) -> Result<bool> {
+        let value: Value = read_json(
+            self.request(
+                "v1/management/connections/revoke",
+                Some(&serde_json::json!({"id": id})),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        value
+            .get("revoked")
+            .and_then(Value::as_bool)
+            .ok_or(crate::connections::invalid())
+    }
     pub async fn management(&self) -> Result<crate::ManagementSnapshot> {
         let value: Value = read_json(self.request("v1/management", None, false).await?).await?;
         crate::management::snapshot(value, None)

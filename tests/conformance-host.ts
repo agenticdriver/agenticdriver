@@ -1,3 +1,4 @@
+import { withConnections } from "../src/connections.js";
 import { managedHost } from "../src/management.js";
 /** Test-only reference peer. Never loads a real provider or account credentials. */
 import { writeFile, readFile, mkdtemp, rm } from "node:fs/promises";
@@ -425,14 +426,26 @@ await writeFile(
   { mode: 0o600 },
 );
 const managementHost = await managedHost(managementPath);
-const managementServer = await serve(managementHost.driver, {
-  port: 0,
-  tls,
-  tokens: [
-    { token, subject: "test-operator", providers: [], manageProviders: true },
-  ],
-  management: managementHost.management,
-});
+const managementServer = await serve(
+  managementHost.driver,
+  withConnections(
+    {
+      port: 0,
+      tls,
+      tokens: [
+        {
+          token,
+          subject: "test-operator",
+          providers: [],
+          manageProviders: true,
+        },
+      ],
+      management: managementHost.management,
+    },
+    managementHost.connections,
+  ),
+);
+
 console.log(
   JSON.stringify({
     url: driver.url,
