@@ -102,7 +102,11 @@ used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
   the audited registry. Global `AGENTS.md` and skill descriptions still enter
   the prompt. See the [native evidence and limits](validation/codex-2026-09-25.md).
 - Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
-  configuration, no session persistence, and noninteractive permissions.
+  configuration, no session persistence, and noninteractive permissions. Development
+  source explicitly disables fallback chains and switching models after a flagged
+  response; a refusal remains a refusal on the selected model. Its separately
+  qualified [metadata probe](validation/claude-catalog-2026-09-26.md) does not submit
+  a prompt.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
   disabled hooks/extensions/MCP/skills/agents/auto-memory, an empty context configuration, and a
   supplemental deny-tools policy. Host administrators' policies still apply.

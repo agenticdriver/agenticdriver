@@ -70,7 +70,7 @@ async function inspectModels(
     data: z
       .array(
         z.object({
-          model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
+          model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/),
         }),
       )
       .max(1000),

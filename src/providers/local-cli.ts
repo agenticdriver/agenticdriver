@@ -1,6 +1,7 @@
 import { cliEnvironment, runProcess } from "./cli-process.js";
 export { runProcess } from "./cli-process.js";
 import { codexAppServer } from "./codex-app-server.js";
+import { claudeCatalog } from "./claude-catalog.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
@@ -128,6 +129,14 @@ function localCli(
             exitCode = code;
           },
         });
+        if (exitCode === 0) {
+          const catalog = await claudeCatalog(binary, claudeArguments(), {
+            env,
+            cwd,
+            signal,
+          });
+          if (catalog) return { code: "CLI_CATALOG_AVAILABLE", ...catalog };
+        }
         return {
           code: exitCode === 0 ? "CLI_SESSION_PRESENT" : "CLI_AUTH_REQUIRED",
         };
@@ -136,7 +145,8 @@ function localCli(
         if (
           error instanceof DriverError &&
           (error.code === "CLI_UNAVAILABLE" ||
-            error.code === "CLI_UPGRADE_REQUIRED")
+            error.code === "CLI_UPGRADE_REQUIRED" ||
+            error.code === "INVALID_DISCOVERY_RESPONSE")
         )
           return { code: error.code };
         return { code: "CLI_STATUS_UNKNOWN" };
@@ -185,6 +195,34 @@ function localCli(
   };
 }
 
+function claudeArguments(model?: string): string[] {
+  return [
+    "--print",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--include-partial-messages",
+    "--restricted",
+    "--safe-mode",
+    "--tools",
+    "",
+    "--strict-mcp-config",
+    "--mcp-config",
+    '{"mcpServers":{}}',
+    "--no-session-persistence",
+    "--permission-mode",
+    "dontAsk",
+    "--settings",
+    JSON.stringify({
+      disableAllHooks: true,
+      autoMemoryEnabled: false,
+      fallbackModel: [],
+      switchModelsOnFlag: false,
+    }),
+    ...(model === undefined ? [] : ["--model", model]),
+  ];
+}
+
 async function cliOperation(
   vendor: Exclude<Vendor, "codex">,
   model: string,
@@ -192,25 +230,7 @@ async function cliOperation(
 ) {
   if (vendor === "claude-code")
     return {
-      args: [
-        "--print",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--restricted",
-        "--safe-mode",
-        "--tools",
-        "",
-        "--strict-mcp-config",
-        "--mcp-config",
-        '{"mcpServers":{}}',
-        "--no-session-persistence",
-        "--permission-mode",
-        "dontAsk",
-        "--model",
-        model,
-      ],
+      args: claudeArguments(model),
       env: {},
     };
   const settings = join(cwd, "settings.json"),

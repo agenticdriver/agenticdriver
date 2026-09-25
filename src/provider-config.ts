@@ -5,7 +5,7 @@ export const CodexReasoningEffortSchema = z
   .string()
   .regex(/^[a-z][a-z0-9_-]{0,63}$/);
 const instance = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
-const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
+const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/);
 const modelAllowlist = z.array(model).max(1000);
 const common = {
   id: instance,

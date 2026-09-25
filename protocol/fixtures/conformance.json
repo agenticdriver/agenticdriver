@@ -7087,6 +7087,33 @@
       "expectedError": "INVALID_RESPONSE"
     },
     {
+      "id": "session-create-context-model",
+      "operation": "session-create",
+      "sessionCreate": {
+        "provider": "mock",
+        "model": "native-model[1m]",
+        "mode": "history",
+        "history": []
+      },
+      "sessionIdentity": {
+        "id": "12345678-1234-4234-8234-123456789abc"
+      },
+      "json": {
+        "session": {
+          "id": "12345678-1234-4234-8234-123456789abc",
+          "revision": 0,
+          "provider": "mock",
+          "model": "native-model[1m]",
+          "mode": "history",
+          "state": "ready",
+          "createdAt": "2026-09-21T00:00:00.000Z",
+          "updatedAt": "2026-09-21T00:00:00.000Z",
+          "expiresAt": "2026-09-21T01:00:00.000Z"
+        },
+        "history": []
+      }
+    },
+    {
       "id": "session-create-valid",
       "operation": "session-create",
       "sessionCreate": {

@@ -14,7 +14,7 @@ def valid_session_info(value, timestamp):
     canonical = lambda text: isinstance(text, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z", text) is not None and timestamp(text)
     valid = (session_id(value.get("id")) and type(value.get("revision")) is int and 0 <= value["revision"] <= 9_007_199_254_740_991 and
              isinstance(value.get("provider"), str) and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}", value["provider"]) is not None and
-             isinstance(value.get("model"), str) and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}", value["model"]) is not None and
+             isinstance(value.get("model"), str) and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}", value["model"]) is not None and
              value.get("mode") in ("history", "native") and value.get("state") in ("ready", "running", "interrupted") and
              canonical(value.get("createdAt")) and canonical(value.get("updatedAt")))
     if not valid:

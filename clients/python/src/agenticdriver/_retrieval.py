@@ -10,7 +10,7 @@ def valid_retrieval(value, request=None):
     if (not isinstance(index, dict) or not all(_id(index.get(k)) for k in ("providerId", "vendor", "accountId", "version")) or
             index.get("authMode") not in ("api-key", "none") or index.get("metric") != "cosine" or
             type(index.get("dimensions")) is not int or not 1 <= index["dimensions"] <= 4096 or
-            not isinstance(index.get("model"), str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}", index["model"]) or
+            not isinstance(index.get("model"), str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}", index["model"]) or
             not isinstance(hits, list) or len(hits) > 16):
         return False
     ids, size = set(), 0

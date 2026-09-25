@@ -16,7 +16,7 @@ export const EmbeddingIdentitySchema = z
     vendor: RetrievalIdSchema,
     accountId: RetrievalIdSchema,
     authMode: z.enum(["api-key", "none"]),
-    model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
+    model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/),
     dimensions: z.number().int().min(1).max(4096),
   })
   .strict();

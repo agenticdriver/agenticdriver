@@ -45,7 +45,7 @@ type SessionDeleteResult struct {
 var sessionDate = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$`)
 var sessionID = regexp.MustCompile(`(?i)^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$`)
 var sessionProvider = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`)
-var sessionModel = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$`)
+var sessionModel = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$`)
 
 // encoding/json matches struct fields without case sensitivity. Decode only
 // exact wire keys so additive fields cannot replace an identity or its state.

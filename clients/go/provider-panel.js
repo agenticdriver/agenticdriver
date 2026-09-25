@@ -362,7 +362,7 @@ export function registerProviderPanel(registry = customElements) {
             if (action === "custom" && this.draft) {
                 const input = this.root.querySelector("[data-field=custom]");
                 const model = input.value.trim();
-                if (!/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/.test(model))
+                if (!/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/.test(model))
                     throw new Error("Enter a valid explicit model ID.");
                 return this.save({
                     ...this.draft,

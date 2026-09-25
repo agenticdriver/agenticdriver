@@ -117,7 +117,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
               "kind": {
@@ -186,7 +186,7 @@
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 },
                 "additionalProperties": {
                   "maxItems": 6,
@@ -227,7 +227,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
               "kind": {
@@ -258,7 +258,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
               "kind": { "type": "string", "const": "codex" },
@@ -291,7 +291,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
               "kind": { "type": "string", "const": "extension" },
@@ -397,7 +397,7 @@
                 "type": "array",
                 "items": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
               "kind": { "type": "string", "const": "mock" }

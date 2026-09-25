@@ -1706,7 +1706,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
                   "kind": {
@@ -1775,7 +1775,7 @@
                     "type": "object",
                     "propertyNames": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     },
                     "additionalProperties": {
                       "maxItems": 6,
@@ -1820,7 +1820,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
                   "kind": {
@@ -1855,7 +1855,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
                   "kind": { "type": "string", "const": "codex" },
@@ -1892,7 +1892,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
                   "kind": { "type": "string", "const": "extension" },
@@ -2004,7 +2004,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
                   "kind": { "type": "string", "const": "mock" }
@@ -2080,7 +2080,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       }
                     },
                     "kind": {
@@ -2149,7 +2149,7 @@
                       "type": "object",
                       "propertyNames": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       },
                       "additionalProperties": {
                         "maxItems": 6,
@@ -2194,7 +2194,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       }
                     },
                     "kind": {
@@ -2229,7 +2229,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       }
                     },
                     "kind": { "type": "string", "const": "codex" },
@@ -2266,7 +2266,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       }
                     },
                     "kind": { "type": "string", "const": "extension" },
@@ -2378,7 +2378,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                       }
                     },
                     "kind": { "type": "string", "const": "mock" }
@@ -2442,7 +2442,7 @@
               },
               "model": {
                 "type": "string",
-                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
               },
               "input": {
                 "type": "string",
@@ -3026,7 +3026,7 @@
           },
           "model": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
           },
           "mode": { "type": "string", "enum": ["history", "native"] },
           "history": {
@@ -3095,7 +3095,7 @@
           },
           "model": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
           },
           "mode": { "type": "string", "enum": ["history", "native"] },
           "state": {
@@ -3151,7 +3151,7 @@
               },
               "model": {
                 "type": "string",
-                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
               },
               "mode": { "type": "string", "enum": ["history", "native"] },
               "state": {
@@ -4430,7 +4430,7 @@
               "authMode": { "type": "string", "enum": ["api-key", "none"] },
               "model": {
                 "type": "string",
-                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
               },
               "dimensions": {
                 "type": "integer",
@@ -4905,7 +4905,7 @@
           },
           "model": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$"
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
           },
           "input": { "type": "string", "minLength": 1, "maxLength": 100000 },
           "attachments": {

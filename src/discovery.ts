@@ -93,7 +93,7 @@ const inspectionSchema = z
       ],
     ),
     models: z
-      .array(z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/))
+      .array(z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/))
       .max(1000)
       .optional(),
     complete: z.boolean().optional(),

@@ -47,7 +47,7 @@ export type RetryPolicy = z.infer<typeof RetryPolicySchema>;
 export const RunRequestSchema = z
   .object({
     provider: id,
-    model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
+    model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/),
     input: z.string().min(1).max(100_000),
     attachments: z.array(ContextInputSchema).max(16).optional(),
     retrieval: RetrievalRequestSchema.optional(),

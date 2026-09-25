@@ -126,7 +126,7 @@ pub(crate) fn valid(value: &Value) -> bool {
         || !model.as_bytes()[0].is_ascii_alphanumeric()
         || !model
             .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b"._:/-".contains(&b))
+            .all(|b| b.is_ascii_alphanumeric() || b"._:/[]-".contains(&b))
     {
         return false;
     }

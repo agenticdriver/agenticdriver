@@ -72,7 +72,7 @@ type RetrievalDeleteResult struct {
 	Deleted bool `json:"deleted"`
 }
 
-var embeddingModelPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$`)
+var embeddingModelPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$`)
 
 func retrievalValid(data []byte) bool {
 	value, ok := object(data)

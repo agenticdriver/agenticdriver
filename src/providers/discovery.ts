@@ -3,7 +3,7 @@ import { readLimited, secureBaseUrl } from "../security.js";
 import type { ProviderInspection } from "../types.js";
 import type { ApiProviderOptions } from "./http.js";
 
-const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
+const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/);
 const dataPage = z.object({ data: z.array(z.object({ id })).max(10_000) });
 const anthropicPage = dataPage.extend({
   has_more: z.boolean(),

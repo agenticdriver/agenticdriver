@@ -93,7 +93,7 @@ fn name_valid(value: &str, model: bool) -> bool {
             .next()
             .is_some_and(|b| b.is_ascii_alphanumeric())
         && value.bytes().all(|b| {
-            b.is_ascii_alphanumeric() || b"._-".contains(&b) || (model && b":/".contains(&b))
+            b.is_ascii_alphanumeric() || b"._-".contains(&b) || (model && b":/[]".contains(&b))
         })
 }
 fn date_valid(value: &str) -> bool {

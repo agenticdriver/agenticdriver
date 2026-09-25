@@ -134,8 +134,17 @@ model access is established. `complete` describes pagination completeness, not
 fresh account verification. A failed catalog probe retains the honest local
 login/configured-inventory result. Credentials stay inside the official CLI.
 
-Claude Code and Gemini CLI currently have no SDK catalog probe; their configured
-IDs remain explicitly incomplete. Antigravity and Grok Build native adapters
+Claude Code 2.1.282 uses the official SDK initialization response in another
+restricted process after its saved-login check. No user message is sent. Both
+reported aliases and their optional `resolvedModel` IDs are retained, including
+context-window suffixes such as `[1m]`. The response is bounded to 1,000 unique
+IDs; truncation sets `complete: false`. As with Codex, health remains **unknown**:
+the native list can be bundled/cached and is not proof of entitlement. Other
+Claude versions retain the configured, incomplete inventory until qualified.
+Malformed replies and native authority requests cannot turn into model runs.
+See the [native Claude metadata evidence](validation/claude-catalog-2026-09-26.md).
+
+Gemini CLI's configured IDs remain explicitly incomplete. Antigravity and Grok Build native adapters
 remain pending. SDK follow-up must qualify each official metadata interface
 without inference before exposing its native inventory. API modes already have
 independent catalog probes. No static guessed model list, consumer-subscription

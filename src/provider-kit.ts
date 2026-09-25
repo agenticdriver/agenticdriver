@@ -13,7 +13,7 @@ import {
 /** Host-side adapter ABI, independent from the HTTP wire version and package release. */
 export const PROVIDER_CONTRACT_VERSION = "1.0" as const;
 const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
-const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
+const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$/);
 const version = z
   .string()
   .regex(

@@ -129,6 +129,7 @@
     "test:install": "tsx scripts/test-install.ts",
     "test:package": "tsx scripts/test-package.ts",
     "test:codex-native": "npm run build && python3 scripts/test-codex-native.py",
+    "test:claude-catalog-native": "npm run build && python3 scripts/test-claude-catalog-native.py",
     "test:auth": "npm run build && npm ci --prefix integrations/better-auth && npm test --prefix integrations/better-auth",
     "test:deployment": "python3 scripts/test-deployment.py",
     "test:usagestat": "tsx scripts/test-usagestat.ts",
