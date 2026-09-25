@@ -6,6 +6,8 @@
 !LICENSE
 !src
 !src/**
+!scripts
+!scripts/build-panel.mjs
 !deploy
 !deploy/remote-host.mjs
 !Dockerfile
