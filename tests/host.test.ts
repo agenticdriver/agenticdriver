@@ -142,6 +142,35 @@ test("private file references are bounded, validated and distinct from configura
   }
 });
 
+test("provider connections default to unrestricted explicit model selection with optional allowlist overrides", async () => {
+  for (const models of [undefined, [], ["selected-model"]]) {
+    const cfg = validateHostConfig({
+      ...config(),
+      providers: [
+        {
+          kind: "mock",
+          id: "connection",
+          ...(models === undefined ? {} : { models }),
+        },
+      ],
+      tokens: [{ ...config().tokens[0], providers: ["connection"] }],
+    });
+    const driver = configuredDriver(cfg, "/unused/config.json");
+    const [info] = await driver.discoverProviders();
+    assert.deepEqual(info!.models, models);
+    for (const model of ["selected-model", "another-explicit-model"]) {
+      const result = driver.run({
+        provider: "connection",
+        model,
+        input: "Fixture",
+      });
+      if (models === undefined || models.includes(model))
+        assert.equal((await result).text, "AgenticDriver is connected.");
+      else await assert.rejects(result, { code: "UNSUPPORTED_MODEL" });
+    }
+  }
+});
+
 test("supplied secret stores resolve scoped host and client credentials without embedding them", async () => {
   const cfg = validateHostConfig(config());
   let reads = 0;
@@ -263,6 +292,8 @@ test("init creates private credentials without replacement and mock CLI commands
     assert.equal(initialized.code, 0, initialized.stderr);
     const cfg = await readHostConfig(path);
     assert.equal(cfg.providers[0]!.kind, "mock");
+    assert.equal(cfg.providers[0]!.models, undefined);
+    assert.equal(JSON.parse(initialized.stdout).modelAccess, "unrestricted");
     const credentials = await readdir(join(directory, "credentials"));
     assert.equal(credentials.length, 1);
     const secret = (
@@ -385,6 +416,28 @@ test("catalog-only initialization denies execution and rejects a simultaneous mo
     assert.match(run.stderr + run.stdout, /UNSUPPORTED_MODEL/);
   } finally {
     await server?.stop();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("initializing a real provider no longer requires restricting it to one model", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "agenticdriver-all-models-"));
+  const path = join(directory, "config.json");
+  try {
+    const initialized = await new CliProcess(entry, [
+      "init",
+      "--config",
+      path,
+      "--provider",
+      "openai",
+      "--json",
+    ]).finished;
+    assert.equal(initialized.code, 0, initialized.stderr);
+    assert.equal(JSON.parse(initialized.stdout).modelAccess, "unrestricted");
+    const cfg = await readHostConfig(path);
+    assert.equal(cfg.providers[0]!.kind, "openai");
+    assert.equal(cfg.providers[0]!.models, undefined);
+  } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });

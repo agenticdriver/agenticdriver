@@ -56,12 +56,13 @@ export type { SecretReference, SecretResolver } from "./secrets.js";
 
 const instance = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$/);
 const model = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/);
+const modelAllowlist = z.array(model).max(1000);
 const common = {
   id: instance,
   accountId: UsageIdSchema.optional(),
   name: z.string().min(1).max(100).optional(),
-  /** Explicit execution allowlist. Empty enables catalog-only provisioning. */
-  models: z.array(model).max(1000),
+  /** Optional per-connection override. Omitted permits any explicitly selected model; empty denies all. */
+  models: modelAllowlist.optional(),
 };
 const api = z
   .object({
@@ -122,7 +123,7 @@ export const HostConfigSchema = z
               ...common,
               kind: z.literal("extension"),
               // The versioned extension construction contract requires a model.
-              models: common.models.min(1),
+              models: modelAllowlist.min(1),
               extensionId: instance,
               extensionVersion: z.string().min(1).max(100),
               settings: z.record(z.string(), z.json()).default({}),
@@ -411,7 +412,11 @@ export function configuredDriver(
   const directory = dirname(resolve(configPath)),
     secrets = options.secrets ?? secretResolver(directory);
   const providers = config.providers.map((p): ProviderAdapter => {
-    const shared = { id: p.id, name: p.name, models: [...p.models] };
+    const shared = {
+      id: p.id,
+      name: p.name,
+      models: p.models ? [...p.models] : undefined,
+    };
     if (p.kind === "extension") {
       const extension = options.extensions?.get(p.extensionId);
       const manifest = ProviderExtensionManifestSchema.safeParse(
@@ -429,6 +434,7 @@ export function configuredDriver(
         );
       return extension.create({
         ...shared,
+        models: [...p.models],
         settings: p.settings,
         getSecret: async (alias, signal) => {
           signal.throwIfAborted();
@@ -451,7 +457,7 @@ export function configuredDriver(
         info: { ...adapter.info, ...shared, name: p.name ?? adapter.info.name },
         inspect: async () => ({
           code: "CATALOG_AVAILABLE",
-          models: [...p.models],
+          models: [...(p.models ?? adapter.info.models ?? [])],
           complete: true,
         }),
       };

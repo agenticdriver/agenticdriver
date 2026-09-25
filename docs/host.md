@@ -50,17 +50,25 @@ and protocol evidence; real account certification is tracked separately.
 
 ## Select a provider explicitly
 
-Create an API host configuration with a model supported by your account:
+Create an API host configuration for your account. All reported models are
+exposed by default, and the connection adds no model restriction:
 
 ```bash
 npx --no-install agenticdriver init --config ./driver/config.json \
-  --provider openai --provider-id company-api --model YOUR_MODEL \
+  --provider openai --provider-id company-api \
   --api-key-env OPENAI_API_KEY
 npx --no-install agenticdriver doctor --config ./driver/config.json
 npx --no-install agenticdriver serve --config ./driver/config.json
 ```
 
 Supply `OPENAI_API_KEY` to the host through your environment or secret manager.
+Every run still selects its provider and model explicitly. To restrict this
+connection, add `--model YOUR_MODEL` during initialization or set `models` to an
+explicit allowlist in its configuration. `models: []` denies every run;
+omitting `models` restores unrestricted explicit model selection. These are
+per-provider/account connection overrides, independent of application enablement
+and whether discovery or live qualification succeeded. The versioned extension
+construction contract still requires its own explicit model list.
 The configuration contains its environment variable name, never its value. API
 kinds are `openai`, `anthropic`, `gemini`, `xai`, and `openai-compatible`. The last
 requires `--base-url`; HTTPS is required except for loopback development endpoints.
@@ -95,7 +103,8 @@ A standalone desktop/web management client is not required: the host CLI serves
 the protocol consumed by an application's backend and Settings UI. This SDK
 does not currently ship a provider-management GUI.
 
-When execution scope has not been selected, use a new configuration and token:
+When an operator specifically wants metadata without execution, use a new
+configuration and token with the optional `--catalog-only` override:
 
 ```bash
 agenticdriver init --config ./litagent/config.json --provider codex \

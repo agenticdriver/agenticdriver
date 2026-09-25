@@ -205,7 +205,7 @@
               },
               "baseUrl": { "type": "string", "format": "uri" }
             },
-            "required": ["id", "models", "kind", "apiKeyRef"],
+            "required": ["id", "kind", "apiKeyRef"],
             "additionalProperties": false
           },
           {
@@ -235,7 +235,7 @@
               "accountDirectory": { "type": "string", "minLength": 1 },
               "binary": { "type": "string", "minLength": 1 }
             },
-            "required": ["id", "models", "kind"],
+            "required": ["id", "kind"],
             "additionalProperties": false
           },
           {
@@ -266,7 +266,7 @@
                 "pattern": "^[a-z][a-z0-9_-]{0,63}$"
               }
             },
-            "required": ["id", "models", "kind"],
+            "required": ["id", "kind"],
             "additionalProperties": false
           },
           {
@@ -397,7 +397,7 @@
               },
               "kind": { "type": "string", "const": "mock" }
             },
-            "required": ["id", "models", "kind"],
+            "required": ["id", "kind"],
             "additionalProperties": false
           }
         ]

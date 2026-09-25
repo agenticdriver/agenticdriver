@@ -25,7 +25,8 @@ const help = `AgenticDriver — local and secure remote execution host
 
 init also accepts --provider-id, --account-id, --api-key-env, --base-url, --account-directory,
 --binary and --port. It creates a mock configuration unless a provider is selected.
---catalog-only creates an empty execution allowlist; discovery does not enable models.
+All reported models are exposed by default. --model restricts this connection;
+--catalog-only denies execution. Each run still requires an explicit model.
 run reads stdin when --input is omitted, and accepts --url, --token-id,
 --idempotency-key, --idle-timeout-ms and --max-attempts. Run inactivity timeouts
 and provider retries are disabled by default. --json streams JSONL events for run.
@@ -112,14 +113,7 @@ async function initialize(path: string, values: Values) {
       "INVALID_ARGUMENT",
       "Choose --catalog-only or --model, not both.",
     );
-  const model =
-    argument(values, "model") ??
-    (kind === "mock" && !catalogOnly ? "demo" : undefined);
-  if (!model && !catalogOnly)
-    throw new DriverError(
-      "MODEL_REQUIRED",
-      "Select an explicit model with --model, or choose --catalog-only to deny execution.",
-    );
+  const model = argument(values, "model");
   const api = [
     "openai",
     "anthropic",
@@ -143,7 +137,7 @@ async function initialize(path: string, values: Values) {
     kind,
     id,
     accountId: argument(values, "account-id"),
-    models: model ? [model] : [],
+    ...(catalogOnly ? { models: [] } : model ? { models: [model] } : {}),
     ...(api
       ? {
           apiKeyRef: {
@@ -223,6 +217,7 @@ async function initialize(path: string, values: Values) {
     configPath: path,
     provider: id,
     model,
+    modelAccess: catalogOnly ? "denied" : model ? "allowlist" : "unrestricted",
     ...(catalogOnly ? { catalogOnly: true } : {}),
     tokenFile: credential,
     next: catalogOnly
