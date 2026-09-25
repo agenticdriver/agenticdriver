@@ -17,7 +17,7 @@ import { serve } from "./server.js";
 
 const help = `AgenticDriver — local and secure remote execution host
 
-  agenticdriver init [--config PATH] [--provider KIND --model ID]
+  agenticdriver init [--config PATH] [--provider KIND] [--model ID | --catalog-only]
   agenticdriver serve [--config PATH] [--host HOST] [--port PORT] [--json]
   agenticdriver status [--config PATH] [--url URL] [--token-id ID] [--refresh] [--json]
   agenticdriver doctor [--config PATH] [--json]
@@ -25,6 +25,7 @@ const help = `AgenticDriver — local and secure remote execution host
 
 init also accepts --provider-id, --account-id, --api-key-env, --base-url, --account-directory,
 --binary and --port. It creates a mock configuration unless a provider is selected.
+--catalog-only creates an empty execution allowlist; discovery does not enable models.
 run reads stdin when --input is omitted, and accepts --url, --token-id,
 --idempotency-key, --idle-timeout-ms and --max-attempts. Run inactivity timeouts
 and provider retries are disabled by default. --json streams JSONL events for run.
@@ -62,6 +63,7 @@ function commandOptions(command: string) {
   if (command === "init")
     return {
       ...common,
+      "catalog-only": { type: "boolean" as const },
       ...strings([
         "provider",
         "provider-id",
@@ -104,12 +106,19 @@ function commandOptions(command: string) {
 async function initialize(path: string, values: Values) {
   const kind = argument(values, "provider") ?? "mock";
   const id = argument(values, "provider-id") ?? kind;
+  const catalogOnly = values["catalog-only"] === true;
+  if (catalogOnly && values.model !== undefined)
+    throw new DriverError(
+      "INVALID_ARGUMENT",
+      "Choose --catalog-only or --model, not both.",
+    );
   const model =
-    argument(values, "model") ?? (kind === "mock" ? "demo" : undefined);
-  if (!model)
+    argument(values, "model") ??
+    (kind === "mock" && !catalogOnly ? "demo" : undefined);
+  if (!model && !catalogOnly)
     throw new DriverError(
       "MODEL_REQUIRED",
-      "Select an explicit model with --model when initializing a provider.",
+      "Select an explicit model with --model, or choose --catalog-only to deny execution.",
     );
   const api = [
     "openai",
@@ -134,7 +143,7 @@ async function initialize(path: string, values: Values) {
     kind,
     id,
     accountId: argument(values, "account-id"),
-    models: [model],
+    models: model ? [model] : [],
     ...(api
       ? {
           apiKeyRef: {
@@ -214,8 +223,11 @@ async function initialize(path: string, values: Values) {
     configPath: path,
     provider: id,
     model,
+    ...(catalogOnly ? { catalogOnly: true } : {}),
     tokenFile: credential,
-    next: "Run serve, then status or an explicit run command using this configuration.",
+    next: catalogOnly
+      ? "Run serve, then status --refresh. Model execution remains denied until the host allowlist is explicitly configured."
+      : "Run serve, then status or an explicit run command using this configuration.",
   };
 }
 async function inputText(value?: string): Promise<string> {

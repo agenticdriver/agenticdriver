@@ -85,7 +85,7 @@ test("remote discovery filters accounts before probing, refreshes credentials an
     assert.deepEqual(refreshed.models, ["alias", "available"]);
     assert.deepEqual(refreshed.modelCatalog, {
       source: "provider",
-      models: ["available"],
+      models: ["available", "private-model"],
       complete: true,
     });
     assert.equal(queries, 2);
@@ -112,6 +112,52 @@ test("remote discovery filters accounts before probing, refreshes credentials an
     assert.equal(hiddenQueries, 1);
   } finally {
     await server.close();
+  }
+});
+
+test("catalog refresh and its cancellation never cancel an active generation", async () => {
+  let started!: () => void, finish!: () => void;
+  const active = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const release = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  let generationSignal: AbortSignal | undefined;
+  const adapter: ProviderAdapter = {
+    ...mockProvider(async (_request, context) => {
+      generationSignal = context.signal;
+      started();
+      await release;
+      context.signal.throwIfAborted();
+      return { text: "Original run completed." };
+    }),
+    inspect: async ({ signal }) => {
+      await delay(100, undefined, { signal });
+      return { code: "CATALOG_AVAILABLE", models: ["new-model"] };
+    },
+  };
+  const driver = new AgenticDriver({
+    providers: [adapter],
+    discovery: { timeoutMs: 25, minRefreshMs: 0 },
+  });
+  const run = driver.run({ provider: "mock", model: "demo", input: "Fixture" });
+  try {
+    await active;
+    const reader = new AbortController();
+    const cancelled = driver.discoverProviders({
+      refresh: true,
+      signal: reader.signal,
+    });
+    const observer = driver.discoverProviders({ refresh: true });
+    reader.abort();
+    await assert.rejects(cancelled);
+    assert.equal((await observer)[0]!.health?.code, "DISCOVERY_TIMEOUT");
+    assert.equal(generationSignal?.aborted, false);
+    assert.deepEqual(adapter.info.models, ["demo"]);
+  } finally {
+    finish();
+    assert.equal((await run).text, "Original run completed.");
   }
 });
 
@@ -294,7 +340,7 @@ test("API probes use documented GET routes, host keys and bounded pagination", a
     }).discoverProviders();
     assert.deepEqual(info!.modelCatalog, {
       source: "provider",
-      models: ["a", "b"],
+      models: vendor === "gemini" ? ["a", "embed", "b"] : ["a", "b"],
       complete: true,
     });
     assert.equal(
@@ -466,14 +512,120 @@ if (args.includes('--version')) {
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line) as string[]);
-      assert.equal(calls.length, 6);
+      assert.equal(calls.length, 7);
       assert(
         calls.every(
           (args) =>
             args.includes("--help") ||
             args.includes("--version") ||
+            args[0] === "app-server" ||
             args[1] === "status",
         ),
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "Codex catalogs include hidden models, paginate and preserve execution scope without starting turns",
+  {
+    skip: process.platform === "win32",
+  },
+  async () => {
+    const dir = await mkdtemp(join(tmpdir(), "agenticdriver-catalog-test-"));
+    const binary = join(dir, "fake-codex");
+    const log = join(dir, "rpc.jsonl");
+    try {
+      await writeFile(
+        binary,
+        `#!/usr/bin/env node
+const fs = require('node:fs');
+const readline = require('node:readline');
+const mode = require('node:path').basename(process.env.CODEX_HOME);
+const args = process.argv.slice(2);
+if (args[0] === '--version') console.log('codex-cli 0.157.0');
+else if (args[0] === 'login' && args[1] === 'status') process.exitCode = 0;
+else if (args[0] === 'app-server') {
+  let page = 0;
+  const send = value => console.log(JSON.stringify(value));
+  readline.createInterface({ input: process.stdin }).on('line', line => {
+    const message = JSON.parse(line);
+    fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify({ mode, ...message })+'\\n');
+    if (message.method === 'initialize') send({ id: message.id, result: {} });
+    else if (message.method === 'initialized') {}
+    else if (message.method === 'model/list') {
+      if (message.params.includeHidden !== true || message.params.limit !== 100) process.exit(9);
+      if (mode === 'authority') return send({ id: 42, method: 'item/tool/call', params: {} });
+      if (mode === 'malformed') return send({ id: message.id, result: { data: [{ model: 'invalid model' }], nextCursor: null } });
+      if (mode === 'loop') return send({ id: message.id, result: { data: [], nextCursor: 'same' } });
+      if (mode === 'capped') return send({ id: message.id, result: { data: [{ model: 'model-'+ ++page }], nextCursor: 'page-'+page } });
+      if (page++ === 0) send({ id: message.id, result: { data: [{ model: 'permitted' }, { model: 'hidden', hidden: true }], nextCursor: 'second' } });
+      else {
+        if (message.params.cursor !== 'second') process.exit(9);
+        send({ id: message.id, result: { data: [{ model: 'hidden' }, { model: 'additional' }], nextCursor: null } });
+      }
+    } else process.exit(9);
+  });
+} else process.exitCode = 9;
+`,
+        { mode: 0o700 },
+      );
+      const adapters = ["good", "malformed", "loop", "authority", "capped"].map(
+        (id) =>
+          codex({
+            id,
+            binary,
+            accountDirectory: join(dir, id),
+            models: ["permitted"],
+          }),
+      );
+      const driver = new AgenticDriver({ providers: adapters });
+      const [good, malformed, loop, authority, capped] =
+        await driver.discoverProviders();
+      assert.deepEqual(good!.modelCatalog, {
+        source: "provider",
+        models: ["permitted", "hidden", "additional"],
+        complete: true,
+      });
+      assert.equal(good!.health?.code, "CLI_CATALOG_AVAILABLE");
+      assert.equal(good!.health?.status, "unknown");
+      assert.match(good!.health!.message, /cached or bundled/);
+      assert.deepEqual(good!.models, ["permitted"]);
+      for (const value of [malformed, loop, authority]) {
+        assert.equal(value!.health?.code, "CLI_SESSION_PRESENT");
+        assert.deepEqual(value!.modelCatalog, {
+          source: "configured",
+          models: ["permitted"],
+          complete: false,
+        });
+      }
+      assert.equal(capped!.modelCatalog?.complete, false);
+      assert.equal(capped!.modelCatalog?.models.length, 20);
+      await assert.rejects(
+        driver.run({
+          provider: "good",
+          model: "hidden",
+          input: "Must not run",
+        }),
+        { code: "UNSUPPORTED_MODEL" },
+      );
+      const messages = (await readFile(log, "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      assert.ok(
+        messages.every((message) =>
+          ["initialize", "initialized", "model/list"].includes(message.method),
+        ),
+      );
+      assert.equal(
+        messages.filter(
+          (message) =>
+            message.mode === "good" && message.method === "model/list",
+        ).length,
+        2,
       );
     } finally {
       await rm(dir, { recursive: true, force: true });

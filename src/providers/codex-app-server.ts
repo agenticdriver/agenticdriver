@@ -59,6 +59,103 @@ const counts = z.object({
   reasoningOutputTokens: z.number().int().nonnegative().optional(),
 });
 
+/** Read native catalog metadata in a separate process; never start a thread or turn. */
+async function inspectModels(
+  binary: string,
+  env: NodeJS.ProcessEnv,
+  cwd: string,
+  signal: AbortSignal,
+) {
+  const pageSchema = z.object({
+    data: z
+      .array(
+        z.object({
+          model: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/),
+        }),
+      )
+      .max(1000),
+    nextCursor: z.string().min(1).max(4096).nullable(),
+  });
+  const models = new Set<string>();
+  const cursors = new Set<string>();
+  let requestId = 1,
+    pages = 0;
+  let result: { models: string[]; complete: boolean } | undefined;
+  let send: (message: unknown) => void, end: () => void;
+  const page = (cursor?: string) =>
+    send({
+      id: ++requestId,
+      method: "model/list",
+      params: {
+        limit: 100,
+        includeHidden: true,
+        ...(cursor ? { cursor } : {}),
+      },
+    });
+  await runProcess(
+    binary,
+    [
+      "app-server",
+      "--stdio",
+      "--strict-config",
+      ...restrictions.flatMap((value) => ["--config", value]),
+    ],
+    {
+      env,
+      cwd,
+      signal,
+      retainOutput: false,
+      onStart(write, close) {
+        send = (value) => write(JSON.stringify(value) + "\n");
+        end = close;
+        send({
+          id: requestId,
+          method: "initialize",
+          params: {
+            clientInfo: { name: "agenticdriver_catalog", version: "0.1.0" },
+          },
+        });
+      },
+      onLine(line) {
+        const message = object.parse(JSON.parse(line));
+        if (message.method !== undefined) {
+          // Initialization may send status notices; it cannot request any authority.
+          if (typeof message.method !== "string" || message.id !== undefined)
+            throw policy();
+          if (message.method === "error")
+            throw failure(object.parse(message.params).error);
+          return;
+        }
+        if (result || message.id !== requestId) throw invalid();
+        if (message.error !== undefined) throw failure(message.error);
+        if (requestId === 1) {
+          object.parse(message.result);
+          send({ method: "initialized" });
+          page();
+          return;
+        }
+        const current = pageSchema.parse(message.result);
+        pages++;
+        for (const item of current.data) models.add(item.model);
+        if (current.nextCursor && cursors.has(current.nextCursor))
+          throw invalid();
+        if (!current.nextCursor || models.size >= 1000 || pages >= 20) {
+          result = {
+            models: [...models].slice(0, 1000),
+            complete: !current.nextCursor && models.size <= 1000,
+          };
+          end();
+        } else {
+          cursors.add(current.nextCursor);
+          page(current.nextCursor);
+        }
+      },
+    },
+  );
+  if (!result) throw invalid();
+  return result;
+}
+
 /** Native sign-in stays entirely inside Codex. No credential file is read by the SDK. */
 export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
   if (options.accountDirectory && !isAbsolute(options.accountDirectory))
@@ -109,9 +206,16 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
             code = value;
           },
         });
-        return {
-          code: code === 0 ? "CLI_SESSION_PRESENT" : "CLI_AUTH_REQUIRED",
-        };
+        if (code !== 0) return { code: "CLI_AUTH_REQUIRED" };
+        try {
+          const catalog = await inspectModels(binary, env, cwd, signal);
+          return { code: "CLI_CATALOG_AVAILABLE", ...catalog };
+        } catch {
+          signal.throwIfAborted();
+          // A saved login still does not prove fresh account access. Keep configured
+          // aliases distinct from an inventory when the native catalog is unavailable.
+          return { code: "CLI_SESSION_PRESENT" };
+        }
       } catch (error) {
         signal.throwIfAborted();
         if (

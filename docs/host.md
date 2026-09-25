@@ -13,8 +13,8 @@ CLI still requires at least one token and never starts without authentication.
 
 ## Install and run a mock workflow
 
-This checkout has not been published to npm. Build a local package and install
-the resulting archive, without depending on a sibling source checkout:
+The published package is `@agenticdriver/sdk@0.1.0`. To use the development host
+features described below, build and install an archive from the tested source:
 
 ```bash
 # In the SDK checkout
@@ -88,6 +88,49 @@ Existing configurations can set each provider's `accountId` together with
 policy. See [account-scoped usage](usage.md) before sending records to shared storage.
 
 ## Commands and configuration paths
+
+### Provision a separate catalog-only connection
+
+A standalone desktop/web management client is not required: the host CLI serves
+the protocol consumed by an application's backend and Settings UI. This SDK
+does not currently ship a provider-management GUI.
+
+When execution scope has not been selected, use a new configuration and token:
+
+```bash
+agenticdriver init --config ./litagent/config.json --provider codex \
+  --provider-id local-codex --account-id YOUR_OPAQUE_ACCOUNT_ID \
+  --binary /absolute/path/to/qualified/codex --catalog-only
+agenticdriver serve --config ./litagent/config.json
+agenticdriver status --config ./litagent/config.json --refresh
+```
+
+`--catalog-only` writes `models: []`; every run is rejected before provider
+execution. It cannot be combined with `--model`. Discovery may expose additional
+reported models, but enabling one requires an explicit host configuration edit
+and restart, as well as the application's own enablement. Keep model selection
+explicit; do not copy all discovered IDs into the allowlist automatically.
+
+Give each application a distinct token ID/subject and private token file, with
+only its provider grants. This is transport authorization, not an application
+auth-stack requirement. New normal use should have its own config, token,
+operations/usage paths and service, rather than reuse a synthetic-validation
+credential. The generated static token has no automatic expiry: rotate or revoke
+it in the host configuration and restart the service. Never send token contents
+in a handoff; pass the private local file path to the backend.
+
+`serve` runs in the foreground until stopped. A systemd user unit or equivalent
+supervisor can start its installed CLI with the absolute `--config` path; use
+absolute native binary/account paths and keep credentials readable only by the
+service user. A loopback URL works only when the application backend can reach
+that machine/network namespace. Remote deployments require the supported TLS
+configuration and their own scoped credentials.
+
+See [discovery](discovery.md) for inventory, permissions and qualification as
+separate concepts. Current 0.1.0 application clients can use these wire fields;
+they do not need a new provider runtime or an auth migration.
+
+### CLI reference
 
 | Command  | Behavior                                                                                           |
 | -------- | -------------------------------------------------------------------------------------------------- |

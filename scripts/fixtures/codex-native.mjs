@@ -421,6 +421,27 @@ const executionCount = async () =>
     .map((line) => JSON.parse(line))
     .filter((entry) => entry.execution).length;
 try {
+  const beforeCatalog = requests.length;
+  const catalog = await providers[0].inspect({ signal: watch() });
+  assert.equal(catalog.code, "CLI_CATALOG_AVAILABLE");
+  assert.ok(catalog.models.length > 0);
+  assert.equal(catalog.complete, true);
+  assert.equal(
+    requests.length,
+    beforeCatalog,
+    "Catalog inspection must not generate.",
+  );
+  const catalogWire = await readFile(`${root}/native-wire.jsonl`, "utf8");
+  assert.doesNotMatch(
+    catalogWire,
+    /"method":"(?:thread\/started|turn\/started)"/,
+  );
+  await assert.rejects(access(`${root}/mcp-started`), { code: "ENOENT" });
+  cases.push({
+    name: "native-catalog-without-generation",
+    status: "passed",
+    reportedModels: catalog.models.length,
+  });
   for (
     selectedAccount = 0;
     selectedAccount < accounts.length;

@@ -347,6 +347,48 @@ test("init creates private credentials without replacement and mock CLI commands
   }
 });
 
+test("catalog-only initialization denies execution and rejects a simultaneous model grant", async () => {
+  const directory = await mkdtemp(
+    join(tmpdir(), "agenticdriver-catalog-host-"),
+  );
+  const path = join(directory, "config.json");
+  const cli = (args: string[]) =>
+    new CliProcess(entry, [...args, "--config", path, "--json"]);
+  let server: CliProcess | undefined;
+  try {
+    const conflict = await cli(["init", "--catalog-only", "--model", "demo"])
+      .finished;
+    assert.equal(conflict.code, 1);
+    assert.equal(JSON.parse(conflict.stderr).error.code, "INVALID_ARGUMENT");
+    assert.deepEqual(await readdir(directory), []);
+    const initialized = await cli(["init", "--catalog-only"]).finished;
+    assert.equal(initialized.code, 0, initialized.stderr);
+    assert.equal(JSON.parse(initialized.stdout).catalogOnly, true);
+    const cfg = await readHostConfig(path);
+    assert.deepEqual(cfg.providers[0]!.models, []);
+    server = cli(["serve", "--port", "0"]);
+    const url = await server.listening();
+    const status = await cli(["status", "--url", url, "--refresh"]).finished;
+    assert.equal(status.code, 0, status.stderr);
+    const run = await cli([
+      "run",
+      "--url",
+      url,
+      "--provider",
+      "mock",
+      "--model",
+      "demo",
+      "--input",
+      "Never execute",
+    ]).finished;
+    assert.equal(run.code, 1);
+    assert.match(run.stderr + run.stdout, /UNSUPPORTED_MODEL/);
+  } finally {
+    await server?.stop();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("CLI diagnostics discover only the selected API account and redact rejected provider bodies", async () => {
   const directory = await mkdtemp(join(tmpdir(), "agenticdriver-doctor-"));
   const path = join(directory, "config.json");

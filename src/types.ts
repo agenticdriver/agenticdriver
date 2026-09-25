@@ -191,6 +191,7 @@ export type ProviderInspectionCode =
   | "CLI_UNAVAILABLE"
   | "CLI_UPGRADE_REQUIRED"
   | "CLI_SESSION_PRESENT"
+  | "CLI_CATALOG_AVAILABLE"
   | "CLI_AUTH_REQUIRED"
   | "CLI_STATUS_UNKNOWN"
   | "DISCOVERY_TIMEOUT"
@@ -210,7 +211,7 @@ export interface ProviderInfo {
     textStreaming: boolean;
     [capability: string]: boolean;
   };
-  /** A server-owned allowlist. Omit to accept any explicit model ID. */
+  /** A server-owned execution allowlist. Empty denies all; omit to accept any explicit model ID. */
   models?: string[];
   /** Explicit model-specific media allowlists. Text context works with every text adapter. */
   inputMediaTypes?: Record<string, ContextMediaType[]>;

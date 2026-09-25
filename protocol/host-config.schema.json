@@ -112,7 +112,6 @@
               },
               "name": { "type": "string", "minLength": 1, "maxLength": 100 },
               "models": {
-                "minItems": 1,
                 "maxItems": 1000,
                 "type": "array",
                 "items": {
@@ -222,7 +221,6 @@
               },
               "name": { "type": "string", "minLength": 1, "maxLength": 100 },
               "models": {
-                "minItems": 1,
                 "maxItems": 1000,
                 "type": "array",
                 "items": {
@@ -253,7 +251,6 @@
               },
               "name": { "type": "string", "minLength": 1, "maxLength": 100 },
               "models": {
-                "minItems": 1,
                 "maxItems": 1000,
                 "type": "array",
                 "items": {
@@ -391,7 +388,6 @@
               },
               "name": { "type": "string", "minLength": 1, "maxLength": 100 },
               "models": {
-                "minItems": 1,
                 "maxItems": 1000,
                 "type": "array",
                 "items": {

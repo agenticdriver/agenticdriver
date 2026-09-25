@@ -96,11 +96,9 @@ export function apiInspection(
         let ids: string[], next: string | undefined;
         if (auth === "google") {
           const value = googlePage.parse(raw);
-          ids = (value.models ?? [])
-            .filter((model) =>
-              model.supportedGenerationMethods?.includes("generateContent"),
-            )
-            .map((model) => model.name.replace(/^models\//, ""));
+          ids = (value.models ?? []).map((model) =>
+            model.name.replace(/^models\//, ""),
+          );
           next = value.nextPageToken || undefined;
         } else if (auth === "anthropic") {
           const value = anthropicPage.parse(raw);

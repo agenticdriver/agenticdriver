@@ -63,6 +63,10 @@ const messages: Record<
     "unknown",
     "The CLI reports a saved login. Credential freshness, model access and quota have not been verified.",
   ],
+  CLI_CATALOG_AVAILABLE: [
+    "unknown",
+    "The signed-in CLI supplied a model catalog, which may include cached or bundled entries. Account entitlement, model execution and quota have not been verified.",
+  ],
   CLI_AUTH_REQUIRED: [
     "unauthenticated",
     "The CLI reports no login. Sign in using the official CLI in this instance's account directory.",
@@ -95,7 +99,9 @@ const inspectionSchema = z
     complete: z.boolean().optional(),
   })
   .refine(
-    (value) => value.code !== "CATALOG_AVAILABLE" || value.models !== undefined,
+    (value) =>
+      !["CATALOG_AVAILABLE", "CLI_CATALOG_AVAILABLE"].includes(value.code) ||
+      value.models !== undefined,
   );
 type Snapshot = Pick<ProviderInfo, "health" | "modelCatalog">;
 
@@ -169,13 +175,14 @@ export class ProviderDiscovery {
           checkedAt: new Date().toISOString(),
         },
         modelCatalog:
-          result.code === "CATALOG_AVAILABLE" && result.models
+          (result.code === "CATALOG_AVAILABLE" ||
+            result.code === "CLI_CATALOG_AVAILABLE") &&
+          result.models
             ? {
                 source: "provider",
-                models: [...new Set(result.models)].filter(
-                  (id) =>
-                    !provider.info.models || provider.info.models.includes(id),
-                ),
+                // Inventory is metadata, never an execution grant. The separate
+                // provider.models allowlist still gates every run in the driver.
+                models: [...new Set(result.models)],
                 complete: result.complete ?? false,
               }
             : {

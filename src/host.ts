@@ -60,7 +60,8 @@ const common = {
   id: instance,
   accountId: UsageIdSchema.optional(),
   name: z.string().min(1).max(100).optional(),
-  models: z.array(model).min(1).max(1000),
+  /** Explicit execution allowlist. Empty enables catalog-only provisioning. */
+  models: z.array(model).max(1000),
 };
 const api = z
   .object({
@@ -120,6 +121,8 @@ export const HostConfigSchema = z
             .object({
               ...common,
               kind: z.literal("extension"),
+              // The versioned extension construction contract requires a model.
+              models: common.models.min(1),
               extensionId: instance,
               extensionVersion: z.string().min(1).max(100),
               settings: z.record(z.string(), z.json()).default({}),
