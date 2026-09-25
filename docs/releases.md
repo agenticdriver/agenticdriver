@@ -62,6 +62,10 @@ pseudoversions remain historical artifacts, not aliases for the new module.
 
 ## Build and verify
 
+For the separately runnable JavaScript archive, exports, declaration and scoped
+retrieval checks, use `npm run test:package`. Its [package contract](packages.md)
+records the exact archive digest and verifies an isolated installed consumer.
+
 Use a clean checkout of the intended commit, Node 24/npm, Python 3.12+, Go 1.22+
 and Rust 1.89 through rustup. OpenSSL 3 is needed for the installation check:
 
