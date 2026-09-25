@@ -122,9 +122,12 @@ on failed exits, bounded to 64 KiB for classification, and is never copied into
 public error messages. CLI JSON result failures are classified before a nonzero
 exit can obscure them. These mappings do not add automatic retries.
 
-Codex's recognized native HTTP 401, rate-limit and missing-model diagnostics map
+Codex's recognized native HTTP 401 and permanent session-refresh failures,
+rate-limit and missing-model diagnostics map
 to `CLI_AUTH_REQUIRED`, `RATE_LIMITED` and `UNSUPPORTED_MODEL`. Unknown errors
 remain `CLI_FAILED`; native diagnostic bodies and endpoint URLs stay private.
+The native CLI owns credential refresh. Its auth recovery can make multiple
+HTTP attempts within one execution; the SDK does not restart that execution.
 These mappings and the additional Codex options below are development changes
 after the published 0.1.0 release.
 

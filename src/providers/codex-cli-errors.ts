@@ -14,7 +14,12 @@ export function codexCliFailure(input: unknown): DriverError | undefined {
         : "";
   // These prefixes are emitted by the native CLI, not arbitrary model output.
   // A number or an error phrase embedded in an unknown diagnostic is insufficient.
-  if (/^unexpected status 401\b/i.test(message))
+  if (
+    /^unexpected status 401\b/i.test(message) ||
+    /^Your access token could not be refreshed(?: because your refresh token (?:has expired|was already used|was revoked))?\. Please log out and sign in again\.$/.test(
+      message,
+    )
+  )
     return new DriverError(
       "CLI_AUTH_REQUIRED",
       "Codex CLI needs a valid sign-in for the selected account. Reauthenticate through the official CLI before retrying.",

@@ -7,6 +7,10 @@
   configuration validation.
 - Recognized Codex authentication, rate-limit and missing-model failures produce
   actionable SDK codes without exposing native diagnostics.
+- Native managed-session expiry, reused refresh tokens and revoked refresh tokens
+  return `CLI_AUTH_REQUIRED`. Isolated native fixtures verify successful refresh,
+  credential persistence, redaction and native attempt counts without touching a
+  real sign-in.
 - Repeatable native Codex fixtures cover synthetic accounts, progress, usage,
   cancellation and inherited context. Linux CLI 0.157.0 live text and cancellation
   checks passed with the selected local sign-in and `gpt-6-luna` / medium;

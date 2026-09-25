@@ -10,6 +10,18 @@ import { configuredDriver, validateHostConfig } from "../src/host.js";
 
 // Native 0.157.0 diagnostics from synthetic HTTP responses; never account data.
 const failures = [
+  ...[
+    "",
+    " because your refresh token has expired",
+    " because your refresh token was already used",
+    " because your refresh token was revoked",
+  ].map(
+    (reason) =>
+      [
+        `Your access token could not be refreshed${reason}. Please log out and sign in again.`,
+        "CLI_AUTH_REQUIRED",
+      ] as const,
+  ),
   [
     "unexpected status 401 Unauthorized: Your authentication token is expired. Please try signing in again. private-marker, url: http://fixture.invalid/v1/responses",
     "CLI_AUTH_REQUIRED",
@@ -47,6 +59,8 @@ test("Codex native failure codes preserve actionable meaning without diagnostics
     {},
     { message: 401 },
     "unknown failure containing 401 and private-marker",
+    "unknown failure: Your access token could not be refreshed because your refresh token has expired. Please log out and sign in again.",
+    "Your access token could not be refreshed because the server is unavailable.",
     "unexpected status 404 Not Found: Endpoint does not exist",
     "unexpected status 403 Forbidden: private-marker",
     "unexpected status 503 Service Unavailable: private-marker",

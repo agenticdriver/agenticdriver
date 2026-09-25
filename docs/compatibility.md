@@ -88,7 +88,8 @@ An account/model must be explicitly selected for inference certification.
 The opt-in [native Codex fixture](validation/codex-2026-09-25.md) runs the actual
 Linux CLI against a loopback-only Responses service in a separate network
 namespace. It checks synthetic account selection, reasoning effort, progress,
-usage, error codes, cancellation and process cleanup without using a real sign-in.
+usage, managed-session refresh/expiry, error codes, cancellation and process
+cleanup without using a real sign-in.
 It records inherited native context separately from passing execution checks.
 
 ## Failure coverage

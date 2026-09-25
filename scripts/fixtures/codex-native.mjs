@@ -83,7 +83,9 @@ let selectedAccount = 0;
 let cancel;
 let resolveClosed;
 let activeResponse;
+let sessionAccessToken;
 const requests = [];
+const refreshRequests = [];
 const cases = [];
 let serverFailure;
 
@@ -91,10 +93,43 @@ const server = createServer(async (req, res) => {
   try {
     let raw = "";
     for await (const data of req) raw += data;
+    if (req.url.startsWith("/v1/models?")) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ models: [] }));
+      return;
+    }
+    if (req.url === "/oauth/token") {
+      const body = JSON.parse(raw);
+      assert.equal(body.grant_type, "refresh_token");
+      assert.equal(body.refresh_token, "fixture-session-refresh");
+      refreshRequests.push({ scenario });
+      res.writeHead(scenario === "session-refresh" ? 200 : 401, {
+        "content-type": "application/json",
+      });
+      res.end(
+        JSON.stringify(
+          scenario === "session-refresh"
+            ? {
+                access_token: "fixture-session-refreshed",
+                refresh_token: "fixture-session-rotated",
+              }
+            : {
+                error: {
+                  code: `refresh_token_${scenario.slice("session-".length)}`,
+                  message: secret,
+                },
+              },
+        ),
+      );
+      return;
+    }
     assert.equal(req.url, "/v1/responses");
     assert.equal(
       req.headers.authorization,
-      `Bearer fixture-account-${selectedAccount}`,
+      scenario.startsWith("session-")
+        ? `Bearer ${scenario === "session-refresh" ? "fixture-session-refreshed" : sessionAccessToken}`
+        : `Bearer fixture-account-${selectedAccount}`,
+      `scenario ${scenario}; refresh requests ${refreshRequests.length}`,
     );
     const body = JSON.parse(raw);
     requests.push(body);
@@ -105,6 +140,13 @@ const server = createServer(async (req, res) => {
     assert.ok(content.includes("Supplied application context."));
     assert.ok(!content.includes(markers.userConfiguration));
     assert.ok(!content.includes(markers.parentInstructions));
+    if (scenario.startsWith("session-") && scenario !== "session-refresh") {
+      res.writeHead(401, { "content-type": "application/json" });
+      res.end(
+        JSON.stringify({ error: { code: "token_expired", message: secret } }),
+      );
+      return;
+    }
     if (["auth", "rate", "model", "unavailable"].includes(scenario)) {
       const [status, code, message] = {
         auth: [
@@ -194,7 +236,7 @@ const overrides = [
   "analytics.enabled=false",
   "feedback.enabled=false",
 ];
-// The wrapper adds only fixture endpoint/credential-store/telemetry settings.
+// The wrapper adds only fixture endpoints/credential-store/telemetry settings.
 // All execution-policy flags come from the actual SDK adapter under test.
 const wrapper = `${root}/codex-fixture`;
 await writeFile(
@@ -204,8 +246,8 @@ const {spawn}=require('node:child_process');
 const fs=require('node:fs');
 const args=process.argv.slice(2);
 const extra=${JSON.stringify(overrides)}.flatMap(value=>['--config',value]);
-const child=spawn('/tmp/fixture-codex',[...args,...extra],{stdio:'pipe',env:process.env});
-fs.appendFileSync('${root}/native-pids.jsonl',JSON.stringify({pid:child.pid})+'\\n');
+const child=spawn('/tmp/fixture-codex',[...args,...extra],{stdio:'pipe',env:{...process.env,CODEX_REFRESH_TOKEN_URL_OVERRIDE:'http://127.0.0.1:${port}/oauth/token'}});
+fs.appendFileSync('${root}/native-pids.jsonl',JSON.stringify({pid:child.pid,execution:args[0]==='exec'&&args.includes('--json')})+'\\n');
 process.stdin.pipe(child.stdin);
 child.stdout.pipe(process.stdout);
 child.stderr.pipe(process.stderr);
@@ -230,6 +272,12 @@ const request = () => ({
   input: "Supplied application context.",
 });
 const watch = () => AbortSignal.timeout(20_000); // Fixture watchdog only.
+const executionCount = async () =>
+  (await readFile(`${root}/native-pids.jsonl`, "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line))
+    .filter((entry) => entry.execution).length;
 try {
   for (
     selectedAccount = 0;
@@ -292,6 +340,108 @@ try {
     );
     assert.equal(requests.length - before, 1);
     cases.push({ name: `${name}-error`, status: "passed" });
+  }
+  const sessionDirectory = `${root}/account-session`;
+  await mkdir(sessionDirectory);
+  const sessionDriver = new AgenticDriver({
+    providers: [
+      codex({
+        id: "session",
+        binary: wrapper,
+        accountDirectory: sessionDirectory,
+        reasoningEffort,
+      }),
+    ],
+  });
+  assert.equal(
+    (
+      await codex({
+        binary: wrapper,
+        accountDirectory: sessionDirectory,
+      }).inspect({ signal: watch() })
+    ).code,
+    "CLI_AUTH_REQUIRED",
+  );
+  cases.push({ name: "missing-native-session-discovery", status: "passed" });
+  const jwt = (body) =>
+    [{ alg: "none", typ: "JWT" }, body, "synthetic-signature"]
+      .map((part) =>
+        Buffer.from(
+          typeof part === "string" ? part : JSON.stringify(part),
+        ).toString("base64url"),
+      )
+      .join(".");
+  for (const name of ["refresh", "expired", "reused", "invalidated"]) {
+    scenario = `session-${name}`;
+    const original = {
+      auth_mode: "chatgpt",
+      OPENAI_API_KEY: null,
+      tokens: {
+        id_token: jwt({
+          "https://api.openai.com/auth": {
+            chatgpt_account_id: "fixture-session-account",
+            chatgpt_plan_type: "plus",
+          },
+        }),
+        access_token: jwt({ exp: 1 }),
+        refresh_token: "fixture-session-refresh",
+        account_id: "fixture-session-account",
+      },
+      last_refresh: "2020-01-01T00:00:00Z",
+    };
+    sessionAccessToken = original.tokens.access_token;
+    await writeFile(`${sessionDirectory}/auth.json`, JSON.stringify(original), {
+      mode: 0o600,
+    });
+    const before = requests.length;
+    const beforeRefresh = refreshRequests.length;
+    const beforeExecutions = await executionCount();
+    const call = sessionDriver.run(
+      { provider: "session", model, input: "Supplied application context." },
+      { signal: watch() },
+    );
+    if (name === "refresh") {
+      assert.equal((await call).text, answer);
+      assert.equal(requests.length - before, 1);
+      const stored = JSON.parse(
+        await readFile(`${sessionDirectory}/auth.json`, "utf8"),
+      );
+      assert.equal(stored.tokens.access_token, "fixture-session-refreshed");
+      assert.equal(stored.tokens.refresh_token, "fixture-session-rotated");
+      assert.ok(
+        Date.parse(stored.last_refresh) > Date.parse(original.last_refresh),
+      );
+    } else {
+      await assert.rejects(call, (error) => {
+        if (serverFailure) throw serverFailure;
+        assert.equal(error.code, "CLI_AUTH_REQUIRED");
+        assert.equal(error.retryable, false);
+        assert.doesNotMatch(
+          JSON.stringify(error),
+          /PRIVATE_NATIVE_DIAGNOSTIC|fixture-session|127\.0\.0\.1/,
+        );
+        return true;
+      });
+      // Native managed-auth recovery retries the rejected Responses request
+      // once after reloading auth; the SDK itself does not restart the run.
+      assert.equal(requests.length - before, 2);
+      const stored = JSON.parse(
+        await readFile(`${sessionDirectory}/auth.json`, "utf8"),
+      );
+      assert.deepEqual(stored.tokens, original.tokens);
+      assert.equal(stored.last_refresh, original.last_refresh);
+    }
+    if (serverFailure) throw serverFailure;
+    assert.equal((await executionCount()) - beforeExecutions, 1);
+    const refreshAttempts = refreshRequests.length - beforeRefresh;
+    assert.ok(refreshAttempts > 0 && refreshAttempts <= 10);
+    cases.push({
+      name: `managed-${scenario}`,
+      status: "passed",
+      refreshAttempts,
+      modelRequests: requests.length - before,
+      nativeExecutions: 1,
+    });
   }
   scenario = "cancel";
   const controller = new AbortController();
