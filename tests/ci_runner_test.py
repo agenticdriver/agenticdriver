@@ -3,7 +3,6 @@ import json
 import tempfile
 from pathlib import Path
 import subprocess
-import sys
 import unittest
 
 HOOK = Path(__file__).resolve().parents[1] / "deploy/ci-runner/job-started.py"
@@ -18,7 +17,9 @@ class RunnerBoundaryTests(unittest.TestCase):
             script.write_bytes(HOOK.read_bytes())
             script.with_name("policy.json").write_text(json.dumps(policy if policy is not None else {
                 "repository": "agenticdriver/agenticdriver", "ref": "refs/heads/sdk-roadmap"}))
-            return subprocess.run([sys.executable, str(script)], env=env, capture_output=True).returncode
+            wrapper = script.with_suffix(".sh")
+            wrapper.write_bytes(HOOK.with_suffix(".sh").read_bytes())
+            return subprocess.run(["/bin/sh", str(wrapper)], env=env, capture_output=True).returncode
 
     def test_trusted_push_and_dispatch(self):
         for event in ("push", "workflow_dispatch"):

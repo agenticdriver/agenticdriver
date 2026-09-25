@@ -18,11 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && chown -R runner:runner /runner /work /opt/hostedtoolcache
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker /usr/local/libexec/docker/cli-plugins /usr/local/libexec/docker/cli-plugins
-COPY --chmod=755 job-started.py register.sh /opt/ci/
+COPY --chmod=755 job-started.py job-started.sh register.sh /opt/ci/
 COPY --chmod=644 policy.json /opt/ci/
 ENV RUNNER_TOOL_CACHE=/opt/hostedtoolcache \
     AGENT_TOOLSDIRECTORY=/opt/hostedtoolcache \
-    ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/ci/job-started.py \
+    ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/ci/job-started.sh \
     DOCKER_HOST=tcp://127.0.0.1:2375
 USER runner
 WORKDIR /runner
