@@ -121,8 +121,10 @@ report local login state. A zero exit status alone becomes `CLI_SESSION_PRESENT`
 with unknown health; it does not prove that a saved credential is unexpired. A login
 failure is actionable through the CLI's official sign-in flow. Gemini's documented
 [`/auth` command](https://geminicli.com/docs/reference/commands/#auth) opens an
-interactive dialog, so this adapter reports `CLI_STATUS_UNKNOWN` after checking
-features. It does not scrape credentials or start an interactive session.
+interactive dialog. Its ACP startup also enters authorization when OAuth
+credentials are missing, before accepting protocol input, so this adapter retains
+`CLI_STATUS_UNKNOWN` after checking features. It does not scrape credentials or
+start that interactive flow during discovery.
 
 For qualified Codex CLI 0.157.0, a saved login also enables the official
 [`model/list` app-server request](https://learn.chatgpt.com/docs/app-server#models).
@@ -144,9 +146,15 @@ Claude versions retain the configured, incomplete inventory until qualified.
 Malformed replies and native authority requests cannot turn into model runs.
 See the [native Claude metadata evidence](validation/claude-catalog-2026-09-26.md).
 
-Gemini CLI's configured IDs remain explicitly incomplete. Antigravity and Grok Build native adapters
-remain pending. SDK follow-up must qualify each official metadata interface
-without inference before exposing its native inventory. API modes already have
+Gemini CLI's configured IDs remain explicitly incomplete. Its official ACP
+`session/new` reply contains a catalog, but an isolated 0.58.0 fixture confirms
+that missing OAuth credentials start interactive authorization even with browser
+launch disabled. See the [reproduction and remaining qualification](validation/gemini-catalog-2026-09-26.md),
+tracked in [#23](https://github.com/agenticdriver/agenticdriver/issues/23).
+Antigravity ([#47](https://github.com/agenticdriver/agenticdriver/issues/47)) and
+Grok Build ([#32](https://github.com/agenticdriver/agenticdriver/issues/32)) native
+adapters remain pending; their metadata routes must qualify together with effective
+native controls. API modes already have
 independent catalog probes. No static guessed model list, consumer-subscription
 to API switch, or credential/account fallback fills these gaps.
 
