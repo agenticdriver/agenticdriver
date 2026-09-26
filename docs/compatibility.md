@@ -104,6 +104,13 @@ catalogs and attempts denied native operations, including filesystem access and
 network fetches from the code runtime.
 It records inherited native context separately from passing execution checks.
 
+The [Claude native qualification](validation/claude-2026-09-26.md) covers Linux
+x64 CLI 2.1.282: offline streaming/cancellation, empty tools, ambient-context
+isolation, model refusal without fallback and native catalog discovery. Its
+separate Prometheus job runs without external networking or real accounts.
+The dated report records two selected local Haiku 4.5 calls and Usagestat capture;
+it does not certify every discovered model or a hosted consumer-auth deployment.
+
 ## Failure coverage
 
 `tests/network-faults.test.ts` puts a real HTTP proxy between the client and host:

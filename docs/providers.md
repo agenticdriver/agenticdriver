@@ -108,7 +108,9 @@ used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
   source explicitly disables fallback chains and switching models after a flagged
   response; a refusal remains a refusal on the selected model. Its separately
   qualified [metadata probe](validation/claude-catalog-2026-09-26.md) does not submit
-  a prompt.
+  a prompt. The [dated execution qualification](validation/claude-2026-09-26.md)
+  covers native Linux 2.1.282 and two inexpensive live Haiku 4.5 checks, including
+  cancellation, Usagestat capture and provider-specific billing/deployment limits.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
   disabled hooks/extensions/MCP/skills/agents/auto-memory, an empty context configuration, and a
   supplemental deny-tools policy. Host administrators' policies still apply.

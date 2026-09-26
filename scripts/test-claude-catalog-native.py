@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Qualify native Claude metadata using synthetic credentials and no external network."""
+"""Qualify native Claude contracts using synthetic credentials and no external network."""
 import argparse
 import datetime
 import hashlib
@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--suite", choices=["catalog", "adapter"], default="catalog")
     args = parser.parse_args()
     binary = args.binary.resolve()
     node, bubblewrap = shutil.which("node"), shutil.which("bwrap")
@@ -39,19 +40,21 @@ def main():
                    "--ro-bind", str(binary), "/tmp/fixture-claude",
                    "--ro-bind", str(Path(node).resolve()), "/tmp/fixture-node",
                    "--chdir", "/tmp/fixture-work", "--", "/tmp/fixture-node",
-                   "/tmp/fixture-sdk/scripts/fixtures/claude-catalog-native.mjs"]
-        # Bounds fixture housekeeping only; no model run is submitted.
-        completed = subprocess.run(command, env=env, text=True, capture_output=True, timeout=35)
+                   f"/tmp/fixture-sdk/scripts/fixtures/claude-{args.suite}-native.mjs"]
+        # Bounds offline fixture housekeeping only; no external inference is submitted.
+        completed = subprocess.run(command, env=env, text=True, capture_output=True, timeout=90)
         if completed.returncode:
             print(completed.stdout, end="", file=sys.stderr)
             print(completed.stderr, end="", file=sys.stderr)
-            raise SystemExit("Native metadata fixture failed; no real account was used.")
+            raise SystemExit("Native fixture failed; no real account was used.")
         result = json.loads(completed.stdout)
     result.update({
         "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "binarySha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
         "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "sourceDirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
+        "suite": args.suite,
+        "adapterSha256": hashlib.sha256((ROOT / "dist/providers/local-cli.js").read_bytes()).hexdigest(),
     })
     if args.receipt:
         args.receipt.write_text(json.dumps(result, indent=2) + "\n")

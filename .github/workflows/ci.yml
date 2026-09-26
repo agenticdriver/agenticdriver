@@ -67,6 +67,38 @@ jobs:
           path: ${{ runner.temp }}/codex-native-receipts/*.json
           if-no-files-found: error
           retention-days: 7
+  claude-native:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    name: Offline native Claude contracts
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci && npm run build
+      - run: docker build -f deploy/ci-runner/claude-native.Dockerfile -t agenticdriver-claude-audit:2.1.282 deploy/ci-runner
+      - name: Native catalog and restricted streaming contracts
+        env:
+          TASK_SOURCE: ${{ github.workspace }}
+          TASK_RECEIPTS: ${{ runner.temp }}/claude-native-receipts
+        run: |
+          mkdir -p "$TASK_RECEIPTS"
+          for suite in catalog adapter; do
+            docker run --rm --network none --cap-add SYS_ADMIN --cap-add NET_ADMIN --security-opt seccomp=unconfined \
+              --mount "type=bind,source=$TASK_SOURCE,target=/work,readonly" \
+              --mount "type=bind,source=$TASK_RECEIPTS,target=/receipts" \
+              agenticdriver-claude-audit:2.1.282 --suite "$suite" --receipt "/receipts/$suite.json"
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: claude-native-contract-receipts
+          path: ${{ runner.temp }}/claude-native-receipts/*.json
+          if-no-files-found: error
+          retention-days: 7
   release-candidate:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     uses: ./.github/workflows/release-candidate.yml
