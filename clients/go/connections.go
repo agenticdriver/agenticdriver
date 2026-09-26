@@ -25,10 +25,12 @@ type CreateInvitation struct {
 	ConnectionLifetimeSeconds int             `json:"connectionLifetimeSeconds,omitempty"`
 }
 type ConnectionInfo struct {
-	ID        string          `json:"id"`
-	Grant     ConnectionGrant `json:"grant"`
-	CreatedAt string          `json:"createdAt"`
-	ExpiresAt string          `json:"expiresAt"`
+	ID             string          `json:"id"`
+	Grant          ConnectionGrant `json:"grant"`
+	CreatedAt      string          `json:"createdAt"`
+	ExpiresAt      string          `json:"expiresAt"`
+	LastSeenAt     string          `json:"lastSeenAt,omitempty"`
+	ActiveRequests *uint64         `json:"activeRequests,omitempty"`
 }
 type ConnectionInvitation struct {
 	ConnectionInfo
@@ -68,6 +70,14 @@ func ParseConnectionInvitation(invitation string) (ConnectionTarget, error) {
 func validConnection(info ConnectionInfo) bool {
 	_, start := time.Parse(time.RFC3339Nano, info.CreatedAt)
 	_, expiry := time.Parse(time.RFC3339Nano, info.ExpiresAt)
+	if info.LastSeenAt != "" {
+		if _, err := time.Parse(time.RFC3339Nano, info.LastSeenAt); err != nil {
+			return false
+		}
+	}
+	if info.ActiveRequests != nil && *info.ActiveRequests > 9007199254740991 {
+		return false
+	}
 	return len(info.ID) == 36 && info.Grant.Subject != "" && info.Grant.Providers != nil && start == nil && expiry == nil
 }
 func (c *Client) CreateInvitation(ctx context.Context, input CreateInvitation) (ConnectionInvitation, error) {

@@ -61,6 +61,66 @@ async function fixture() {
   };
 }
 
+test("empty management hosts support onboarding without a demo account or implicit execution grants", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "driver-empty-host-"));
+  const path = join(directory, "config.json");
+  let server: Awaited<ReturnType<typeof serve>> | undefined;
+  try {
+    await writeFile(
+      path,
+      JSON.stringify({
+        version: 1,
+        listen: { port: 0 },
+        providers: [],
+        tokens: [
+          {
+            id: "operator",
+            subject: "operator",
+            providers: [],
+            manageProviders: true,
+            tokenRef: { env: "ADMIN" },
+          },
+        ],
+      }),
+      { mode: 0o600 },
+    );
+    const host = await managedHost(path);
+    server = await serve(host.driver, {
+      ...(await configuredServer(host.config(), path, async () => admin)),
+      management: host.management,
+    });
+    const operator = new AgenticClient({ url: server.url, token: admin });
+    assert.deepEqual(await operator.providers(), []);
+    const before = await operator.management();
+    assert.deepEqual(before.providers, []);
+    assert.ok(before.providerDefinitions!.length > 0);
+    await assert.rejects(
+      host.connections.create({
+        grant: { subject: "app", providers: ["missing"] },
+      }),
+      { code: "INVALID_INVITATION" },
+    );
+    const after = await operator.configureProvider({
+      revision: before.revision,
+      provider: { id: "added", kind: "mock" },
+    });
+    assert.equal(after.providers.length, 1);
+    assert.equal(after.providers[0]!.models, undefined);
+    assert.deepEqual(after.executionProviders, []);
+    await assert.rejects(
+      operator.run({ provider: "added", model: "demo", input: "synthetic" }),
+      { code: "FORBIDDEN" },
+    );
+    const invite = await host.connections.create({
+      grant: { subject: "app", providers: ["added"] },
+    });
+    assert.deepEqual(invite.grant.providers, ["added"]);
+  } finally {
+    await server?.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("management requires its own grant and revision, persists overrides, and keeps scoped run access", async () => {
   const f = await fixture();
   try {

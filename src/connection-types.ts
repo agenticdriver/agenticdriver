@@ -22,6 +22,14 @@ export const ConnectionInfoSchema = z.object({
   grant: AccessPolicySchema,
   createdAt: z.iso.datetime({ offset: true }),
   expiresAt: z.iso.datetime({ offset: true }),
+  /** Optional observations since this host process started, not a persistent online status. */
+  lastSeenAt: z.iso.datetime({ offset: true }).optional(),
+  activeRequests: z
+    .number()
+    .int()
+    .nonnegative()
+    .max(Number.MAX_SAFE_INTEGER)
+    .optional(),
 });
 export const ConnectionInvitationSchema = ConnectionInfoSchema.extend({
   code: opaque,

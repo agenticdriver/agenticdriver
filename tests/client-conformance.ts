@@ -441,6 +441,11 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
   await assert.rejects(pairing.exchangeConnection(), {
     code: "INVITATION_REJECTED",
   });
+  const activity = (await manager.connections()).connections.find(
+    (c) => c.id === credential.id,
+  )!;
+  assert.ok(activity.lastSeenAt);
+  assert.equal(activity.activeRequests, 0);
   assert.equal((await manager.revokeConnection(credential.id)).revoked, true);
   await assert.rejects(connected.providers(), { code: "UNAUTHORIZED" });
 }

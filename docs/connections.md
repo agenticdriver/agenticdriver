@@ -93,3 +93,26 @@ If an exchange loses its response, do not automatically repeat it. Use the
 operator's connection list to revoke the uncertain new grant, then issue a fresh
 invitation. File writes use exclusive locks and atomic replacement. After a host
 crash during a write, reconcile state before removing its stale `.lock` file.
+
+## Connection activity
+
+Management-authorized `connections()` responses can include `lastSeenAt` and
+`activeRequests` for paired clients. The host records when an authenticated
+request started and counts requests until they finish, fail, disconnect or the
+host shuts down. A streamed run counts as one request throughout its lifetime.
+These fields describe HTTP activity observed by the current host process, not a
+persistent socket, online status, model-call count or usage accounting. Metadata
+requests also count. Unobserved connections and older hosts omit both fields;
+zero means no request is currently in progress. Static application credentials
+are outside the pairing store and do not appear in this list.
+
+Activity is not persisted, is cleared on process restart and is removed from the
+list when a connection expires or is revoked. Provider credentials and long-lived
+transport tokens are never returned by this inspection operation. The TypeScript,
+Python, Go and Rust clients preserve these optional fields.
+
+An operator can provision a management host with `providers: []` and a separate
+`manageProviders: true` credential whose provider grant is also empty. This starts
+onboarding without a demo provider or model account. Adding a provider does not
+expand existing execution grants: create an explicit invitation for the selected
+provider instances when connecting an application.

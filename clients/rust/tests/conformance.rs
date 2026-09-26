@@ -702,6 +702,14 @@ fn connection_pairing() {
         code(&connected.management().err().unwrap()),
         Some("FORBIDDEN")
     );
+    let links = manager.connections().unwrap();
+    let activity = links
+        .connections
+        .iter()
+        .find(|c| c.id == credential.info.id)
+        .unwrap();
+    assert!(activity.last_seen_at.is_some());
+    assert_eq!(activity.active_requests, Some(0));
     assert!(manager.revoke_connection(&credential.info.id).unwrap());
     assert_eq!(
         code(&connected.providers().err().unwrap()),

@@ -29,7 +29,10 @@ const digest = (secret: string) =>
   createHash("sha256").update(secret).digest("hex");
 const matches = (value: string, hash: string) =>
   timingSafeEqual(Buffer.from(digest(value), "hex"), Buffer.from(hash, "hex"));
-const RecordSchema = ConnectionInfoSchema.extend({
+const RecordSchema = ConnectionInfoSchema.omit({
+  lastSeenAt: true,
+  activeRequests: true,
+}).extend({
   digest: z.string().regex(/^[a-f0-9]{64}$/),
   lifetime: z.number().int().min(60).max(7_776_000).optional(),
 });
@@ -53,6 +56,8 @@ export interface HostConnections {
   revoke(input: unknown): Promise<{ revoked: boolean }>;
   authenticate(token: string): Promise<AuthenticatedPrincipal | undefined>;
   resolve(id: string): Promise<AuthenticatedPrincipal | undefined>;
+  /** Called by the host for an authenticated request; release exactly once on completion. */
+  observeRequest?(principalId: string): () => void;
 }
 
 /** Private transport grants. These records contain no provider credentials or application identities. */
@@ -62,6 +67,10 @@ export async function hostConnections(
 ): Promise<HostConnections> {
   const path = resolve(file),
     now = options.now ?? Date.now;
+  const activity = new Map<
+    string,
+    { lastSeenAt: string; activeRequests: number }
+  >();
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   async function read(): Promise<State> {
     let handle;
@@ -230,9 +239,39 @@ export async function hostConnections(
       }),
     list: async () => {
       const state = current(await read());
+      const currentIds = new Set(
+        state.connections.map((c) => `connection:${c.id}`),
+      );
+      for (const id of activity.keys())
+        if (!currentIds.has(id)) activity.delete(id);
       return {
         invitations: state.invitations.map(publicInfo),
-        connections: state.connections.map(publicInfo),
+        connections: state.connections.map((c) => ({
+          ...publicInfo(c),
+          ...activity.get(`connection:${c.id}`),
+        })),
+      };
+    },
+    observeRequest: (id) => {
+      // Static/application credentials are outside this store. Observations are
+      // bounded, ephemeral and never written into the private credential file.
+      if (!/^connection:[a-f0-9-]{36}$/.test(id)) return () => {};
+      let entry = activity.get(id);
+      if (!entry) {
+        if (activity.size >= 1000) return () => {};
+        entry = {
+          lastSeenAt: new Date(now()).toISOString(),
+          activeRequests: 0,
+        };
+        activity.set(id, entry);
+      }
+      entry.lastSeenAt = new Date(now()).toISOString();
+      entry.activeRequests++;
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        entry.activeRequests--;
       };
     },
     revoke: (input) =>

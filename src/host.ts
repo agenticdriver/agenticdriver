@@ -73,7 +73,7 @@ export const HostConfigSchema = z
       .object({ certFile: z.string().min(1), keyRef: SecretReferenceSchema })
       .strict()
       .optional(),
-    providers: z.array(HostProviderConfigSchema).min(1).max(32),
+    providers: z.array(HostProviderConfigSchema).max(32),
     tokens: z
       .array(
         z

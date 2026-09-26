@@ -30,6 +30,10 @@ pub struct ConnectionInfo {
     pub grant: ConnectionGrant,
     pub created_at: String,
     pub expires_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_seen_at: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_requests: Option<u64>,
 }
 #[derive(Deserialize)]
 pub struct ConnectionInvitation {
@@ -54,6 +58,10 @@ pub(crate) fn valid(info: &ConnectionInfo) -> bool {
         && !info.grant.subject.is_empty()
         && !info.created_at.is_empty()
         && !info.expires_at.is_empty()
+        && info.last_seen_at.as_ref().is_none_or(|s| !s.is_empty())
+        && info
+            .active_requests
+            .is_none_or(|n| n <= 9_007_199_254_740_991)
 }
 pub(crate) fn opaque(s: &str) -> bool {
     s.len() == 43

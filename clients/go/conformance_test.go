@@ -603,6 +603,22 @@ func TestConnectionPairing(t *testing.T) {
 	if !errors.As(err, &failure) || failure.Code != "FORBIDDEN" {
 		t.Fatal("scope elevation accepted")
 	}
+	links, err := manager.Connections(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, link := range links.Connections {
+		if link.ID == credential.ID {
+			found = true
+			if link.LastSeenAt == "" || link.ActiveRequests == nil || *link.ActiveRequests != 0 {
+				t.Fatal("connection activity was lost")
+			}
+		}
+	}
+	if !found {
+		t.Fatal("paired connection missing")
+	}
 	revoked, err := manager.RevokeConnection(context.Background(), credential.ID)
 	if err != nil || !revoked {
 		t.Fatal("revocation failed", err)

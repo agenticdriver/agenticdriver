@@ -27,6 +27,8 @@ class ConnectionInfo(TypedDict):
     grant: ConnectionGrant
     createdAt: str
     expiresAt: str
+    lastSeenAt: NotRequired[str]
+    activeRequests: NotRequired[int]
 
 class ConnectionInvitation(ConnectionInfo):
     code: str
@@ -53,6 +55,8 @@ def connection_value(value: Any, kind: str) -> Any:
     def info(item: Any) -> bool:
         return (isinstance(item, dict) and isinstance(item.get("id"), str) and re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", item["id"]) is not None
                 and valid_timestamp(item.get("createdAt")) and valid_timestamp(item.get("expiresAt"))
+                and ("lastSeenAt" not in item or valid_timestamp(item["lastSeenAt"]))
+                and ("activeRequests" not in item or (type(item["activeRequests"]) is int and 0 <= item["activeRequests"] <= 9007199254740991))
                 and isinstance(item.get("grant"), dict) and isinstance(item["grant"].get("subject"), str)
                 and isinstance(item["grant"].get("providers"), list) and all(isinstance(p, str) for p in item["grant"]["providers"]))
     if kind == "list":

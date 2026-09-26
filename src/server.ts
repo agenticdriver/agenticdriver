@@ -225,6 +225,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     if (options.tls)
       res.setHeader("Strict-Transport-Security", "max-age=31536000");
     let release: (() => void) | undefined;
+    let releaseConnection: (() => void) | undefined;
     const disconnected = new AbortController();
     const stopAuthentication = () => disconnected.abort();
     res.once("close", stopAuthentication);
@@ -303,6 +304,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "UNAUTHORIZED",
           "A valid driver bearer token is required.",
         );
+      releaseConnection = options.connections?.observeRequest?.(principal.id);
       negotiateProtocolVersion(
         req.headers[PROTOCOL_VERSION_HEADER.toLowerCase()],
       );
@@ -713,6 +715,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       res.off("close", stopAuthentication);
       disconnected.abort();
       release?.();
+      releaseConnection?.();
       driver.diagnostics?.host(
         diagnosticOperation(req.url),
         observedAt,

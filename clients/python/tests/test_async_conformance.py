@@ -48,6 +48,9 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(DriverError) as forbidden:
                     await connected.management()
                 self.assertEqual(forbidden.exception.code, "FORBIDDEN")
+                activity = next(c for c in (await manager.connections())["connections"] if c["id"] == credential["id"])
+                self.assertIsInstance(activity["lastSeenAt"], str)
+                self.assertEqual(activity["activeRequests"], 0)
                 self.assertTrue(await manager.revoke_connection(credential["id"]))
                 with self.assertRaises(DriverError) as revoked:
                     await connected.providers()

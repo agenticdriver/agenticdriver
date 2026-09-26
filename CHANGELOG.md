@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Empty management hosts support first-run onboarding. Paired clients expose optional process-local last-request and in-flight-request metadata in all four SDK languages.
+
 - Provider management reports a setup catalog shared by TypeScript, Python, Go
   and Rust. The component has a searchable picker, host/account context, guided
   API and compatible-endpoint setup, and official native sign-in instructions.

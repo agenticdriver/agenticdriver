@@ -41,6 +41,9 @@ class ClientConformance(unittest.TestCase):
                 with self.assertRaises(DriverError) as forbidden:
                     connected.management()
                 self.assertEqual(forbidden.exception.code, "FORBIDDEN")
+                activity = next(c for c in (manager.connections())["connections"] if c["id"] == credential["id"])
+                self.assertIsInstance(activity["lastSeenAt"], str)
+                self.assertEqual(activity["activeRequests"], 0)
                 self.assertTrue(manager.revoke_connection(credential["id"]))
                 with self.assertRaises(DriverError) as revoked:
                     connected.providers()
