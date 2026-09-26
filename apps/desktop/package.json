@@ -1,6 +1,6 @@
 {
   "name": "@agenticdriver/desktop",
-  "version": "0.1.0-alpha.2",
+  "version": "0.2.0-alpha.1",
   "private": true,
   "description": "The local AgenticDriver companion",
   "author": "AgenticDriver contributors",

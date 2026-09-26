@@ -5,8 +5,9 @@ connections and local/remote hosts. The first preview is Linux x64. It uses the
 same SDK provider component and backend contracts as TypeScript, Python, Go and
 Rust applications.
 
-This source preview is on `sdk-roadmap`; it is **not** included in registry SDK
-0.1.0. There is no public desktop release or updater yet.
+The desktop is packaged with the [0.2.0 alpha](alpha.md). Its Linux archive and
+checksums are listed on the corresponding GitHub prerelease; the npm package is
+the SDK/host CLI, not a desktop installer. There is no automatic updater yet.
 
 ## Run from source
 
@@ -38,7 +39,7 @@ Launch **AgenticDriver** from the application menu. The installer uses
 `~/.local/share/agenticdriver/desktop` and the user application-menu directory
 (or `XDG_DATA_HOME`), retains previous preview versions, and does not install a
 system service. The archive is
-`apps/desktop/release/AgenticDriver-0.1.0-alpha.2-linux-x64.tar.gz`.
+`apps/desktop/release/AgenticDriver-0.2.0-alpha.1-linux-x64.tar.gz`.
 Extract it and launch `agenticdriver-desktop` for portable use. No sudo or
 `--no-sandbox` option is needed on the qualified Fedora desktop. Distribution
 policies for user namespaces still apply; do not disable the renderer sandbox.

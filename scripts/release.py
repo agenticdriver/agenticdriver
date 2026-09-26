@@ -23,7 +23,39 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
-SEMVER = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\Z")
+BASE_VERSION = r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+SEMVER = re.compile(rf"(?P<base>{BASE_VERSION})(?:-(?P<stage>alpha|beta|rc)\.(?P<number>[1-9][0-9]*))?\Z")
+PYTHON_VERSION = re.compile(rf"(?P<base>{BASE_VERSION})(?:(?P<stage>a|b|rc)(?P<number>[1-9][0-9]*))?\Z")
+
+
+def release_channel(version, registry):
+    """Accept our canonical stable/alpha/beta/rc forms, including PEP 440."""
+    if registry not in {"npm", "python", "rust", "go"}:
+        raise ValueError("Unknown release registry")
+    if registry == "go":
+        if not version.startswith("v"):
+            raise ValueError("Go release versions require the v prefix")
+        version = version[1:]
+    match = (PYTHON_VERSION if registry == "python" else SEMVER).fullmatch(version)
+    if match is None:
+        raise ValueError("Unsupported or noncanonical release version")
+    stage = match["stage"]
+    return {None: "stable", "a": "alpha", "b": "beta"}.get(stage, stage)
+
+
+def validate_channels(packages, channel):
+    if channel not in {"stable", "alpha", "beta", "rc"}:
+        raise ValueError("Unsupported release channel")
+    for registry, package in packages.items():
+        if release_channel(package["version"], registry) != channel:
+            raise ValueError("Package version differs from the selected release channel")
+    return "latest" if channel == "stable" else channel
+
+
+def validate_npm_tag(metadata, channel):
+    expected = "latest" if channel == "stable" else channel
+    if metadata.get("publishConfig", {}).get("tag", "latest") != expected:
+        raise ValueError("npm publishConfig.tag must match the release channel")
 
 
 def run(args, cwd=ROOT, env=None):
@@ -100,6 +132,8 @@ def verify(directory, require_clean=False):
     if (directory / "SHA256SUMS").read_text() != checksums:
         raise ValueError("Checksum index differs from the manifest")
     packages = manifest["packages"]
+    channel = manifest.get("channel", "stable")
+    validate_channels(packages, channel)
     def contents(kind, key):
         file = packages[kind][key]
         if file not in listed:
@@ -107,6 +141,7 @@ def verify(directory, require_clean=False):
         return archive_files(directory / file)
     npm = contents("npm", "archive")
     metadata = json.loads(npm["package/package.json"])
+    validate_npm_tag(metadata, channel)
     assert (metadata["name"], metadata["version"]) == (packages["npm"]["name"], packages["npm"]["version"])
     for required in ["LICENSE", "README.md", "dist/cli.js", "dist/client.js", "examples/quickstart/client.mjs"]:
         assert "package/" + required in npm, required
@@ -183,10 +218,12 @@ def build(output, allow_dirty=False):
         python = tomllib.loads((source / "clients/python/pyproject.toml").read_text())["project"]
         rust = tomllib.loads((source / "clients/rust/Cargo.toml").read_text())["package"]
         for kind, metadata in [("npm", npm), ("python", python), ("rust", rust)]:
-            if metadata["name"] != config["names"][kind] or not SEMVER.fullmatch(metadata["version"]):
+            if metadata["name"] != config["names"][kind]:
                 raise ValueError("Review the package identity/version in release/config.json")
-        if not SEMVER.fullmatch(config["goVersion"]):
-            raise ValueError("An explicit Go module release version is required")
+        channel = config.get("channel", "stable")
+        validate_channels({"npm": npm, "python": python, "rust": rust,
+                           "go": {"version": "v" + config["goVersion"]}}, channel)
+        validate_npm_tag(npm, channel)
         if json.loads((source / "protocol/openapi.json").read_text())["info"]["version"] != config["protocolVersion"] + ".0":
             raise ValueError("Release protocol does not match the generated contract")
         env = {**os.environ, "SOURCE_DATE_EPOCH": str(epoch)}
@@ -235,7 +272,7 @@ def build(output, allow_dirty=False):
                  for path in sorted(output.rglob("*")) if path.is_file()]
         manifest = {"schemaVersion": 1, "repository": config["repository"], "commit": commit,
                     "dirty": dirty, "sourceDateEpoch": epoch, "protocolVersion": config["protocolVersion"],
-                    "packages": packages, "files": files,
+                    "channel": channel, "packages": packages, "files": files,
                     "tools": {"node": run(["node", "--version"]), "npm": run(["npm", "--version"]),
                               "python": sys.version.split()[0], "cargo": run(["cargo", "+1.89.0", "--version"]),
                               "go": run(["go", "version"])}}

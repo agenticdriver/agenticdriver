@@ -11,8 +11,10 @@ loop, normalized events, cancellation, transport, and usage reporting.
 
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
 The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
-PyPI organization approval is still pending. This branch also contains unreleased
-development changes; see the [release inventory](docs/releases.md).
+PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.1` preview**
+adds provider/connection components and the local desktop companion. See
+[alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
+for exact versions, host compatibility and publication status.
 The TypeScript runtime, four language clients and three application examples have
 fixture coverage. The selected local Codex route has passed
 [live text and cancellation checks](docs/validation/codex-2026-09-25.md);
@@ -22,8 +24,8 @@ other provider and full application qualifications remain separate work.
 
 The [desktop preview](docs/desktop.md) manages providers, Usagestat usage,
 application connections and local/remote hosts in a native window. Linux x64
-builds include the SDK runtime. See its setup and lifecycle guide before using
-the source preview; registry SDK 0.1.0 predates it.
+builds include the SDK runtime. See its setup and lifecycle guide and
+[alpha downloads](docs/alpha.md); registry SDK 0.1.0 predates it.
 
 ## What works
 
@@ -333,4 +335,4 @@ Opt-in [conversation sessions](docs/sessions.md) support explicit continuation, 
 
 ## Provider settings component
 
-The [provider and connection panel](docs/provider-panel.md) supplies provider/model settings, remote management and local/remote setup through the existing SDK client. TypeScript, Python, Go and Rust packages share the same embeddable browser component and provide native backend bindings. The host reports supported connection methods for a searchable setup flow; native sign-in, API credentials and compatible endpoints remain explicit. These additions are available on `sdk-roadmap` and are not in the published 0.1.0 packages.
+The [provider and connection panel](docs/provider-panel.md) supplies provider/model settings, remote management and local/remote setup through the existing SDK client. TypeScript, Python, Go and Rust packages share the same embeddable browser component and provide native backend bindings. The host reports supported connection methods for a searchable setup flow; native sign-in, API credentials and compatible endpoints remain explicit. These additions are packaged in the [0.2.0 alpha](docs/alpha.md); 0.1.0 predates them.

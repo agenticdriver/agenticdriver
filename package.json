@@ -1,6 +1,6 @@
 {
   "name": "@agenticdriver/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "Bring-your-own-agent SDK for local and remote applications",
   "type": "module",
   "license": "MIT",
@@ -153,5 +153,9 @@
     "tsx": "^4.20.0",
     "typescript": "^5.9.3"
   },
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  }
 }

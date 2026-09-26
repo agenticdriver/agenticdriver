@@ -1,8 +1,9 @@
 # Versioning and migration notes
 
-Current packages are `0.1.0` development artifacts with wire protocol `1.0`.
-Registry publication is still pending. Preserve each artifact's source commit and
-checksum; the same development version number alone cannot identify its contents.
+Stable packages are `0.1.0`; the [opt-in 0.2.0 alpha](alpha.md) keeps wire protocol
+`1.0` and adds provider/connection management and desktop setup. PyPI organization
+approval remains pending; use the reviewed Python archive. Preserve each
+artifact's source commit and checksum and pin immutable registry versions.
 The host and language packages may receive independent package versions while
 retaining an explicitly compatible protocol.
 

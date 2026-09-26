@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.0-alpha.1 — 2026-09-26
+
+Opt-in application alpha; wire protocol remains 1.0. npm uses the `alpha`
+dist-tag, Rust/Go use `0.2.0-alpha.1`, and Python uses `0.2.0a1`. The Linux
+desktop companion shares the alpha version. See [alpha adoption](docs/alpha.md)
+for installation, host capabilities and publication status.
 
 - Qualified the restricted native Claude 2.1.282 text adapter with offline streaming, cancellation, model refusal and ambient-context checks; added its Prometheus native job. Two inexpensive local Haiku 4.5 checks passed with Usagestat capture. See the [dated account, usage and deployment limits](docs/validation/claude-2026-09-26.md).
 

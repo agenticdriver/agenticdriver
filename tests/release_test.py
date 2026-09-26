@@ -13,7 +13,7 @@ import threading
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-from release import archive_files, safe_path
+from release import archive_files, release_channel, safe_path, validate_channels, validate_npm_tag
 from publish import pending_files, public_read, validate_candidate, validate_ci
 
 
@@ -62,6 +62,50 @@ class ReleaseBoundaryTests(unittest.TestCase):
 
 
 class PublicationBoundaryTests(unittest.TestCase):
+    def test_release_channels_accept_canonical_language_versions(self):
+        for channel, suffix, python_suffix in [("stable", "", ""), ("alpha", "-alpha.1", "a1"),
+                                                ("beta", "-beta.12", "b12"), ("rc", "-rc.2", "rc2")]:
+            packages = {"npm": {"version": "0.2.0" + suffix}, "rust": {"version": "0.2.0" + suffix},
+                        "python": {"version": "0.2.0" + python_suffix}, "go": {"version": "v0.2.0" + suffix}}
+            with self.subTest(channel=channel):
+                tag = validate_channels(packages, channel)
+                self.assertEqual(tag, "latest" if channel == "stable" else channel)
+                validate_npm_tag({"publishConfig": {"tag": tag}}, channel)
+                if channel != "stable":
+                    with self.assertRaises(ValueError):
+                        validate_npm_tag({}, channel)
+                    with self.assertRaises(ValueError):
+                        validate_npm_tag({"publishConfig": {"tag": "latest"}}, channel)
+                    with self.assertRaises(ValueError):
+                        validate_channels(packages, "stable")
+
+    def test_noncanonical_prereleases_and_mixed_channels_are_rejected(self):
+        for registry, versions in {
+            "npm": ["v0.2.0-alpha.1", "0.2.0-alpha.01", "0.2.0-alpha", "0.2.0-alpha.0", "0.2.0a1",
+                    "0.2.0-alpha.1+build", "0.2.0-alpha.1/other", "0.2.0-alpha.1\n", "00.2.0"],
+            "python": ["0.2.0-alpha.1", "0.2.0a01", "0.2.0A1", "0.2.0a1.dev1", "0.2.0.post1"],
+            "go": ["0.2.0-alpha.1", "vv0.2.0-alpha.1", "v0.2.0-alpha.01"],
+        }.items():
+            for version in versions:
+                with self.subTest(registry=registry, version=version), self.assertRaises(ValueError):
+                    release_channel(version, registry)
+        with self.assertRaises(ValueError):
+            validate_channels({"npm": {"version": "0.2.0-alpha.1"}, "python": {"version": "0.2.0"}}, "alpha")
+        with self.assertRaises(ValueError):
+            validate_channels({"npm": {"version": "0.2.0-alpha.1"}}, "latest")
+
+    def test_alpha_candidate_requires_matching_configuration_and_go_tag(self):
+        versions = {"npm": "0.2.0-alpha.1", "python": "0.2.0a1", "rust": "0.2.0-alpha.1", "go": "v0.2.0-alpha.1"}
+        config = {"repository": "owner/sdk", "protocolVersion": "1.0", "channel": "alpha",
+                  "goVersion": "0.2.0-alpha.1", "names": {registry: "sdk" for registry in versions}}
+        manifest = {"repository": "owner/sdk", "commit": "a" * 40, "dirty": False, "protocolVersion": "1.0",
+                    "channel": "alpha", "packages": {registry: {"name": "sdk", "version": version}
+                                                     for registry, version in versions.items()}}
+        validate_candidate(manifest, config, "a" * 40)
+        for change in [{"channel": "stable"}, {"goVersion": "0.2.0-alpha.2"}]:
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                validate_candidate(manifest, {**config, **change}, "a" * 40)
+
     def test_only_successful_same_source_sdk_ci_can_authorize_publication(self):
         record = {"status": "completed", "conclusion": "success", "event": "push",
                   "path": ".github/workflows/ci.yml", "head_sha": "a" * 40,

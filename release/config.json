@@ -7,12 +7,13 @@
     "rust": "github:agenticdriver:maintainers"
   },
   "protocolVersion": "1.0",
-  "goVersion": "0.1.0",
+  "goVersion": "0.2.0-alpha.1",
   "names": {
     "npm": "@agenticdriver/sdk",
     "python": "agenticdriver",
     "rust": "agenticdriver",
     "go": "github.com/agenticdriver/agenticdriver/clients/go"
   },
-  "bootstrapMaintainer": "hashimkarim"
+  "bootstrapMaintainer": "hashimkarim",
+  "channel": "alpha"
 }

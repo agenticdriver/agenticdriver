@@ -17,7 +17,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from release import ROOT, archive_files, run, sha256, verify
+from release import ROOT, archive_files, run, sha256, validate_channels, verify
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -78,13 +78,13 @@ def validate_candidate(manifest, config, commit):
         raise ValueError("Candidate must be clean and belong to the reviewed source commit")
     if manifest["protocolVersion"] != config["protocolVersion"]:
         raise ValueError("Candidate protocol differs from the release configuration")
+    channel = config.get("channel", "stable")
+    if manifest.get("channel", "stable") != channel:
+        raise ValueError("Candidate channel differs from the release configuration")
+    validate_channels(manifest["packages"], channel)
     for registry, name in config["names"].items():
         if manifest["packages"][registry]["name"] != name:
             raise ValueError("Candidate package identity differs from the release configuration")
-        version = manifest["packages"][registry]["version"]
-        expected = ("v" if registry == "go" else "") + r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
-        if re.fullmatch(expected, version) is None:
-            raise ValueError("Unsupported release version")
     if "goVersion" in config and manifest["packages"]["go"]["version"] != "v" + config["goVersion"]:
         raise ValueError("Candidate Go version differs from the release configuration")
 
@@ -183,9 +183,11 @@ def prepare(run_id, registry, output):
     source = prepare_crate(bundle, manifest, output / "cargo") if registry == "rust" and pending else None
     receipt = {"registry": registry, "commit": commit, "ciRun": run_id,
                "pending": pending, "bundle": str(bundle), "upload": str(upload),
-               "cargoSource": str(source) if source else None}
+               "cargoSource": str(source) if source else None,
+               "npmTag": validate_channels(manifest["packages"], manifest.get("channel", "stable"))}
     (output / "publication.json").write_text(json.dumps(receipt, indent=2) + "\n")
     values = {"pending": str(bool(pending)).lower(), "bundle": str(bundle), "upload": str(upload),
+              "npm_tag": receipt["npmTag"],
               "npm_archive": str(bundle / manifest["packages"]["npm"]["archive"]),
               "cargo_source": str(source) if source else "", "epoch": str(manifest["sourceDateEpoch"])}
     if os.environ.get("GITHUB_OUTPUT"):

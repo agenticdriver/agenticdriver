@@ -7,6 +7,13 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
+The next opt-in release is **0.2.0-alpha.1** (Python **0.2.0a1**), including the
+Linux desktop companion. See [alpha adoption](alpha.md) for the exact package
+pins and [the prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.1)
+for per-channel publication status. npm uses `alpha`, preserving stable `latest`.
+The candidate's channel and npm `publishConfig.tag` are validated before upload;
+authorized local publication must also pass `--tag alpha` explicitly.
+
 ## Distribution inventory
 
 The user selected organization ownership before the first upload. The source

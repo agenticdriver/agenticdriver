@@ -2,7 +2,7 @@
 
 AgenticDriver includes one framework-neutral web component, `<agenticdriver-providers>`, with backend bindings for TypeScript, Python (sync and async), Go, and Rust (blocking and async). Each language package contains the same browser module. Web apps and desktop webviews can embed it without installing a second provider runtime or a JavaScript framework.
 
-These additions are on `sdk-roadmap`; the published 0.1.0 packages predate them. Use a built checkout or the tested release artifact until the next registry release.
+These additions are packaged in the [0.2.0 alpha](alpha.md); the published 0.1.0 packages predate them. Pin the exact alpha and check host capabilities before enabling management controls.
 
 ## Try the complete setup flow
 
