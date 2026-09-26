@@ -15,7 +15,7 @@ From the SDK repository root:
 ```sh
 npm ci
 npm run build
-npm ci --prefix apps/desktop
+npm ci --install-links --prefix apps/desktop
 npm run prepare:runtime --prefix apps/desktop
 npm start --prefix apps/desktop
 ```
@@ -24,6 +24,8 @@ Preparation downloads Electron 44.4.5 and the official Node 24.21.0 Linux x64
 runtime, with the Node archive checked against its pinned SHA256. The packaged
 app includes both runtimes and does not require a system Node installation.
 Native provider CLIs and Usagestat remain separately installed dependencies.
+The `--install-links` option installs a copy of the local SDK dependency for
+packaging, instead of a link back into the source checkout.
 
 ## Build and install locally
 

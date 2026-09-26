@@ -23,7 +23,7 @@ jobs:
           cache: npm
           cache-dependency-path: apps/desktop/package-lock.json
       - run: npm ci && npm run build
-      - run: npm ci --prefix apps/desktop
+      - run: npm ci --install-links --prefix apps/desktop
       - run: npm test --prefix apps/desktop
       - run: npm run package:linux --prefix apps/desktop
       - run: docker build -f apps/desktop/Dockerfile -t agenticdriver-desktop-smoke:local apps/desktop
