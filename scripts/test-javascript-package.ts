@@ -225,6 +225,7 @@ export async function checkJavaScriptPackage(app: string): Promise<void> {
     "client.js",
     "ui.js",
     "management-types.js",
+    "setup-types.js",
     "connection-types.js",
     "authorization.js",
     "provider-config.js",
