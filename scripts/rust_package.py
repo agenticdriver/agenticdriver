@@ -16,11 +16,17 @@ def prepare_rust(directory: Path) -> tuple[Path, dict[str, str]]:
     target = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "clients/rust/target")).resolve()
     env = {**os.environ, "CARGO_TARGET_DIR": str(target)}
     command = ["cargo", f"+{TOOLCHAIN}"]
+    metadata = json.loads(subprocess.run(
+        [*command, "metadata", "--locked", "--no-deps", "--format-version", "1"],
+        cwd=ROOT / "clients/rust", env=env, check=True, capture_output=True, text=True, timeout=30,
+    ).stdout)
+    crate = next(package for package in metadata["packages"] if package["name"] == "agenticdriver")
+    package_name = f"{crate['name']}-{crate['version']}"
     subprocess.run(
         [*command, "package", "--locked", "--allow-dirty"],
         cwd=ROOT / "clients/rust", env=env, check=True, timeout=300,
     )
-    archive = target / "package/agenticdriver-0.1.0.crate"
+    archive = target / "package" / f"{package_name}.crate"
     package_root = directory / "rust-package"
     package_root.mkdir()
     with tarfile.open(archive, "r:gz") as bundle:
@@ -31,11 +37,11 @@ def prepare_rust(directory: Path) -> tuple[Path, dict[str, str]]:
             assert not relative.is_absolute() and ".." not in relative.parts
             assert member.isfile() or member.isdir(), member.name
             assert not any(part in {"target", "tests", ".git"} for part in relative.parts)
-        assert all(f"agenticdriver-0.1.0/{name}" in names for name in [
+        assert all(f"{package_name}/{name}" in names for name in [
             "LICENSE", "README.md", "src/lib.rs", "src/async_client.rs", "src/blocking.rs",
         ])
         bundle.extractall(package_root, filter="data")
-    package = package_root / "agenticdriver-0.1.0"
+    package = package_root / package_name
     application = directory / "rust-application"
     (application / "src").mkdir(parents=True)
     (application / "Cargo.toml").write_text(f'''[package]
