@@ -1,0 +1,6 @@
+**
+!release/
+!release/linux-unpacked/
+!release/linux-unpacked/**
+!scripts/
+!scripts/native-smoke.mjs

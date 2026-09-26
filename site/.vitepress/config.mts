@@ -53,6 +53,7 @@ export default defineConfig({
           { text: "Three application recipes", link: "/applications" },
           { text: "Provider and account setup", link: "/providers" },
           { text: "Provider settings component", link: "/provider-panel" },
+          { text: "Desktop companion", link: "/desktop" },
           { text: "Connection design", link: "/provider-connection-design" },
           { text: "Troubleshooting", link: "/troubleshooting" },
         ],

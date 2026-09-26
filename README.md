@@ -18,6 +18,13 @@ fixture coverage. The selected local Codex route has passed
 [live text and cancellation checks](docs/validation/codex-2026-09-25.md);
 other provider and full application qualifications remain separate work.
 
+## Local desktop companion
+
+The [desktop preview](docs/desktop.md) manages providers, Usagestat usage,
+application connections and local/remote hosts in a native window. Linux x64
+builds include the SDK runtime. See its setup and lifecycle guide before using
+the source preview; registry SDK 0.1.0 predates it.
+
 ## What works
 
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.

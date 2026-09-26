@@ -1,0 +1,57 @@
+{
+  "name": "@agenticdriver/desktop",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "description": "The local AgenticDriver companion",
+  "author": "AgenticDriver contributors",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/main.mjs",
+  "scripts": {
+    "prepare:runtime": "node scripts/prepare.mjs && install-electron",
+    "start": "node scripts/start.mjs",
+    "test": "node --test --test-timeout=30000 tests/*.test.mjs",
+    "test:native": "node scripts/native-smoke.mjs",
+    "preview": "node scripts/preview.mjs",
+    "package:linux": "npm run prepare:runtime && electron-builder --linux tar.gz --x64 --publish never",
+    "test:usagestat": "node scripts/test-usagestat.mjs"
+  },
+  "dependencies": {
+    "@agenticdriver/sdk": "file:../..",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "dev.agenticdriver.desktop",
+    "productName": "AgenticDriver",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**",
+      "renderer/**",
+      "runtime/**",
+      "package.json",
+      "!**/node_modules/@agenticdriver/sdk/node_modules/**",
+      "!**/node_modules/@agenticdriver/sdk/apps/**",
+      "!**/node_modules/@agenticdriver/sdk/.git/**",
+      "assets/**",
+      "LICENSE"
+    ],
+    "linux": {
+      "category": "Development",
+      "executableName": "agenticdriver-desktop",
+      "target": [
+        "tar.gz"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "artifactName": "AgenticDriver-${version}-${os}-${arch}.${ext}",
+    "compression": "normal",
+    "afterPack": "scripts/after-pack.mjs"
+  }
+}

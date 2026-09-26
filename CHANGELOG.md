@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the Linux desktop companion under `apps/desktop`: provider management, Usagestat snapshots, scoped application invitations and activity, durable local host management, and remote host profiles.
+
 - Empty management hosts support first-run onboarding. Paired clients expose optional process-local last-request and in-flight-request metadata in all four SDK languages.
 
 - Provider management reports a setup catalog shared by TypeScript, Python, Go
