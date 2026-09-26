@@ -585,6 +585,36 @@ try {
       request: { action: "snapshot" },
     });
     check(!removed.providers.some((p) => p.id === "desktop-smoke"));
+    check(
+      liveRoot.querySelector("h3").textContent === "No providers configured",
+    );
+    check(
+      liveRoot.textContent.includes("You have management access to this host."),
+    );
+    check(Boolean(liveRoot.querySelector('[data-action="add"]')));
+    const emptyReadonly = document.createElement("agenticdriver-providers");
+    emptyReadonly.transport = async () => ({
+      connected: true,
+      providers: [],
+      canInvite: false,
+      canDisconnect: false,
+    });
+    document.body.append(emptyReadonly);
+    try {
+      await until(() => emptyReadonly.shadowRoot.querySelector("h3"));
+      check(
+        emptyReadonly.shadowRoot.querySelector("h3").textContent ===
+          "No providers granted",
+      );
+      check(!emptyReadonly.shadowRoot.querySelector('[data-action="add"]'));
+      check(
+        !emptyReadonly.shadowRoot.textContent.includes(
+          "You have management access",
+        ),
+      );
+    } finally {
+      emptyReadonly.remove();
+    }
     check(styleViolations.length === 0);
     await api.reportSmoke({
       providerSetupUi: true,

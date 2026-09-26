@@ -2,6 +2,9 @@
 
 ## 0.2.0-alpha.2 — 2026-09-26
 
+- Empty management hosts show onboarding guidance; read-only connections retain
+  provider-grant guidance. Removing the last provider returns to onboarding.
+
 - Fixed `managedHost().management` composition with `serve()` and
   `withConnections()` under TypeScript `exactOptionalPropertyTypes`. Absent
   provider setup is omitted; installed-package checks now enforce strict
