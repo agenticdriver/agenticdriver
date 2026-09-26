@@ -197,6 +197,7 @@ try {
         module: "NodeNext",
         moduleResolution: "NodeNext",
         strict: true,
+        exactOptionalPropertyTypes: true,
         noUncheckedIndexedAccess: true,
         skipLibCheck: false,
         outDir: "build",

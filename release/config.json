@@ -7,7 +7,7 @@
     "rust": "github:agenticdriver:maintainers"
   },
   "protocolVersion": "1.0",
-  "goVersion": "0.2.0-alpha.1",
+  "goVersion": "0.2.0-alpha.2",
   "names": {
     "npm": "@agenticdriver/sdk",
     "python": "agenticdriver",

@@ -21,6 +21,11 @@ import {
 export type * from "./management-types.js";
 export type * from "./setup-types.js";
 
+/** Built-in host snapshots are synchronous; custom management can also be asynchronous. */
+export interface ManagedProviderManagement extends ProviderManagement {
+  snapshot(): ManagementSnapshot;
+}
+
 const revision = (config: HostConfig) =>
   createHash("sha256").update(JSON.stringify(config)).digest("hex");
 const accounts = (config: HostConfig) =>
@@ -204,10 +209,15 @@ export async function managedHost(
         },
       })
     : undefined;
+  const management: ManagedProviderManagement = {
+    snapshot,
+    configure,
+    ...(setup ? { setup } : {}),
+  };
   return {
     driver,
     connections,
-    management: { snapshot, configure, setup } satisfies ProviderManagement,
+    management,
     config: () => structuredClone(config),
   };
 }

@@ -39,7 +39,7 @@ Launch **AgenticDriver** from the application menu. The installer uses
 `~/.local/share/agenticdriver/desktop` and the user application-menu directory
 (or `XDG_DATA_HOME`), retains previous preview versions, and does not install a
 system service. The archive is
-`apps/desktop/release/AgenticDriver-0.2.0-alpha.1-linux-x64.tar.gz`.
+`apps/desktop/release/AgenticDriver-0.2.0-alpha.2-linux-x64.tar.gz`.
 Extract it and launch `agenticdriver-desktop` for portable use. No sudo or
 `--no-sandbox` option is needed on the qualified Fedora desktop. Distribution
 policies for user namespaces still apply; do not disable the renderer sandbox.

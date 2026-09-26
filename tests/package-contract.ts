@@ -11,6 +11,9 @@ import { AgenticDriver, type RunRequest } from "@agenticdriver/sdk";
 import { AgenticClient } from "@agenticdriver/sdk/client";
 import { serve } from "@agenticdriver/sdk/server";
 import { HostConfigSchema } from "@agenticdriver/sdk/host";
+import { managedHost } from "@agenticdriver/sdk/management";
+import { connectClient, readConnectionProfile, withConnections } from "@agenticdriver/sdk/connections";
+import { connectionInvitation } from "@agenticdriver/sdk/client";
 import { mockProvider } from "@agenticdriver/sdk/providers";
 import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 import { providerPresentation, quotaPresentation, type UsageStatProvider } from "@agenticdriver/sdk/catalog";
@@ -44,6 +47,36 @@ assert.equal(typeof AgenticClient, "function");
 assert.equal(typeof serve, "function");
 assert.equal(typeof HostConfigSchema.parse, "function");
 assert.equal(typeof UsageStatClient, "function");
+
+// Compose the installed host APIs under exactOptionalPropertyTypes, as real apps do.
+const managementDirectory = join(process.cwd(), "managed-host");
+await mkdir(managementDirectory, { mode: 0o700 });
+const managementConfig = join(managementDirectory, "config.json");
+const operatorToken = "synthetic-external-management-credential-32-characters";
+await writeFile(managementConfig, JSON.stringify({
+  version: 1,
+  listen: { host: "127.0.0.1", port: 7432 },
+  providers: [{ kind: "mock", id: "mock" }],
+  tokens: [{ id: "operator", tokenRef: { env: "PACKAGE_CONTRACT_UNUSED_TOKEN" }, subject: "operator", providers: [], manageProviders: true }],
+}), { mode: 0o600 });
+const managed = await managedHost(managementConfig);
+assert.equal(managed.management.snapshot().providers[0]?.id, "mock");
+const managedServer = await serve(managed.driver, withConnections({
+  port: 0,
+  management: managed.management,
+  tokens: [{ token: operatorToken, subject: "operator", providers: [], manageProviders: true }],
+}, managed.connections));
+try {
+  const operator = new AgenticClient({ url: managedServer.url, token: operatorToken });
+  assert.equal((await operator.management()).providers[0]?.id, "mock");
+  assert.equal(Object.hasOwn(managed.management, "setup"), false);
+  const invitation = await operator.createInvitation({ grant: { subject: "app", providers: ["mock"] } });
+  const profilePath = join(managementDirectory, "connection.json");
+  const paired = await connectClient(connectionInvitation(managedServer.url, invitation.code), profilePath);
+  assert.deepEqual(await readConnectionProfile(profilePath), paired);
+} finally {
+  await managedServer.close();
+}
 
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const pluginRoot = join(process.cwd(), "synthetic-provider");

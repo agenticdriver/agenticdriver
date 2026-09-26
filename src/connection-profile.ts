@@ -23,6 +23,7 @@ const ProfileSchema = z
   .strict();
 export type ConnectionProfile = z.infer<typeof ProfileSchema>;
 
+/** Server-only validated metadata. Does not load the bearer token or check host availability. */
 export async function readConnectionProfile(
   profilePath: string,
 ): Promise<ConnectionProfile> {

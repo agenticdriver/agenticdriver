@@ -7,12 +7,16 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The next opt-in release is **0.2.0-alpha.1** (Python **0.2.0a1**), including the
-Linux desktop companion. See [alpha adoption](alpha.md) for the exact package
-pins and [the prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.1)
-for per-channel publication status. npm uses `alpha`, preserving stable `latest`.
-The candidate's channel and npm `publishConfig.tag` are validated before upload;
-authorized local publication must also pass `--tag alpha` explicitly.
+The next opt-in candidate is **0.2.0-alpha.2** (Python **0.2.0a2**), including the
+Linux desktop companion. It fixes the TypeScript host-helper declaration issue
+found by application acceptance checks after alpha.1 publication. Alpha.1's
+GitHub/Rust/Go artifacts remain immutable; its npm upload was held.
+See [alpha adoption](alpha.md) for the candidate package pins,
+[alpha.1 evidence](validation/release-0.2.0-alpha.1.md) for the preceding release,
+and [the alpha.2 prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.2)
+for per-channel publication status once published. npm uses `alpha`, preserving
+stable `latest`. The candidate's channel and npm `publishConfig.tag` are validated
+before upload; authorized local publication must also pass `--tag alpha`.
 
 ## Distribution inventory
 
@@ -112,8 +116,9 @@ repository permissions with no registry-upload step or publishing secrets.
 
 All active workflow jobs use [Prometheus](../deploy/ci-runner/README.md), including
 exact candidate builds and Python/Rust/Go publication preparation. There is no
-GitHub-hosted fallback. This does not certify a new registry upload: PyPI's
-organization setup is still pending, and future OIDC uploads need live verification.
+GitHub-hosted fallback. The 0.2.0-alpha.1 Rust OIDC upload and Go public-proxy installation are verified
+in the alpha publication record. PyPI's organization setup is still pending;
+each subsequent upload requires its own exact artifact verification.
 The npm option now fails explicitly because npm's trusted publisher currently
 requires hosted compute. Authorized local CLI publication of the reviewed archive
 remains available; no replacement npm token has been installed on Prometheus.

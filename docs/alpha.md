@@ -1,10 +1,13 @@
-# 0.2.0-alpha.1 application preview
+# 0.2.0-alpha.2 application preview
 
 This opt-in release packages the provider and connection component, refreshable
 account model catalogs, remote provider management, local/remote pairing, owned
 Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.
 The shared component supports strict style CSP and capability-gated provider removal.
-Check the [GitHub prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.1)
+Alpha.2 fixes host-helper composition with TypeScript `exactOptionalPropertyTypes`
+and exports `readConnectionProfile` for validated backend settings metadata.
+The installed-package check compiles with strict optional-property semantics.
+Check the [GitHub prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.2)
 for the immutable source, publication status, tested archives and checksums.
 The stable npm `latest` tag remains on `0.1.0`.
 
@@ -13,20 +16,20 @@ The stable npm `latest` tag remains on `0.1.0`.
 Once the corresponding channel is listed as published on the release page:
 
 ```sh
-npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.1
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.2
 # The moving preview channel is @agenticdriver/sdk@alpha; applications pin exact versions.
 
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.1
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.2
 ```
 
-For Rust, use `agenticdriver = "=0.2.0-alpha.1"` in `Cargo.toml`.
-Python uses the canonical PEP 440 version **0.2.0a1**. PyPI organization approval
-is still pending; download `agenticdriver-0.2.0a1-py3-none-any.whl` from the
+For Rust, use `agenticdriver = "=0.2.0-alpha.2"` in `Cargo.toml`.
+Python uses the canonical PEP 440 version **0.2.0a2**. PyPI organization approval
+is still pending; download `agenticdriver-0.2.0a2-py3-none-any.whl` from the
 prerelease, verify its SHA-256 against the release manifest, and install it in
-your virtual environment with `python -m pip install ./agenticdriver-0.2.0a1-py3-none-any.whl`.
+your virtual environment with `python -m pip install ./agenticdriver-0.2.0a2-py3-none-any.whl`.
 Do not substitute an unrelated PyPI package or a personal publisher.
 
-The Linux desktop archive is `AgenticDriver-0.2.0-alpha.1-linux-x64.tar.gz`.
+The Linux desktop archive is `AgenticDriver-0.2.0-alpha.2-linux-x64.tar.gz`.
 Extract it and run `agenticdriver-desktop`; Node and Electron are bundled.
 See [desktop setup](desktop.md) for private state, local installation and updating.
 There is no automatic updater, public relay, or Windows/macOS build in this alpha.

@@ -11,7 +11,7 @@ loop, normalized events, cancellation, transport, and usage reporting.
 
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
 The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
-PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.1` preview**
+PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.2` preview**
 adds provider/connection components and the local desktop companion. See
 [alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
 for exact versions, host compatibility and publication status.

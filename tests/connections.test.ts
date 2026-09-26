@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,14 +16,61 @@ import {
   connectionInvitation,
   connectionTarget,
 } from "../src/client.js";
-import { hostConnections, withConnections } from "../src/connections.js";
-import { connectedClient, connectClient } from "../src/connection-profile.js";
+import {
+  connectedClient,
+  connectClient,
+  hostConnections,
+  readConnectionProfile,
+  withConnections,
+} from "../src/connections.js";
 import { AgenticDriver } from "../src/driver.js";
 import { mockProvider } from "../src/providers/mock.js";
 import { serve } from "../src/server.js";
 import { CliProcess } from "./cli-helpers.js";
 
 const admin = "operator-fixture-credential-at-least-32-characters";
+test("public profile metadata reader validates private files without loading credentials or contacting a host", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "driver-profile-metadata-"));
+  const path = join(directory, "connection.json");
+  const profile = {
+    version: 1,
+    url: "http://127.0.0.1:7432/",
+    id: "77262ad0-3571-4bd0-9933-9245d7e85d5c",
+    expiresAt: new Date(Date.now() - 60_000).toISOString(),
+    tokenFile: "connection-a87cbef0-46f9-4c6f-945b-4d9fa6795637.token",
+  };
+  try {
+    // The credential is deliberately absent and the metadata is expired.
+    // Settings can display it without claiming an authenticated connection.
+    await writeFile(path, JSON.stringify(profile), { mode: 0o600 });
+    assert.deepEqual(await readConnectionProfile(path), profile);
+    await assert.rejects(connectedClient(path), { code: "CONNECTION_EXPIRED" });
+    await writeFile(
+      path,
+      JSON.stringify({ ...profile, url: "http://remote.example" }),
+    );
+    await assert.rejects(readConnectionProfile(path), {
+      code: "INSECURE_TRANSPORT",
+    });
+    await writeFile(
+      path,
+      JSON.stringify({ ...profile, tokenFile: "../credential" }),
+    );
+    await assert.rejects(readConnectionProfile(path), {
+      code: "CONNECTION_REQUIRED",
+    });
+    if (process.platform !== "win32") {
+      await writeFile(path, JSON.stringify(profile));
+      await chmod(path, 0o644);
+      await assert.rejects(readConnectionProfile(path), {
+        code: "CONNECTION_REQUIRED",
+      });
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("one-use invitations persist across restart, preserve scope, expire and revoke without changing static credentials", async () => {
   const directory = await mkdtemp(join(tmpdir(), "driver-pairing-"));
   let now = Date.now();

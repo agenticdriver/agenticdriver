@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-alpha.2 — 2026-09-26
+
+- Fixed `managedHost().management` composition with `serve()` and
+  `withConnections()` under TypeScript `exactOptionalPropertyTypes`. Absent
+  provider setup is omitted; installed-package checks now enforce strict
+  optional-property semantics.
+- Exported `readConnectionProfile` from `@agenticdriver/sdk/connections` for
+  validated backend metadata without loading bearer credentials or contacting
+  a host. Expired metadata remains displayable without implying a usable grant.
+- Alpha.1 remains immutable on GitHub, crates.io and Go; its npm upload was
+  held after the application checks found the declaration mismatch. Alpha.2
+  keeps protocol 1.0 and the existing host/account/model access controls.
+
 ## 0.2.0-alpha.1 — 2026-09-26
 
 Opt-in application alpha; wire protocol remains 1.0. npm uses the `alpha`

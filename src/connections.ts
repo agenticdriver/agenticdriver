@@ -369,5 +369,6 @@ export function withConnections(
 export {
   connectClient,
   connectedClient,
+  readConnectionProfile,
   type ConnectionProfile,
 } from "./connection-profile.js";

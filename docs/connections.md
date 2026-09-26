@@ -30,6 +30,14 @@ Use `connectedClient(profilePath)` from `@agenticdriver/sdk/connections` in a No
 backend. Other languages can consume the same private JSON profile and its sibling
 token file, or store exchanged credentials in their existing secret store.
 
+Node settings backends can use `readConnectionProfile(profilePath)` from the same
+export to read validated profile metadata without loading the bearer credential
+or contacting the host. It enforces the private-file format and secure URL rules.
+It can return expired metadata for display; that does not prove the connection is
+usable. `connectedClient` checks expiration before creating a client, and the host
+still authenticates each request. Keep both helpers on the server and return only
+the application-approved display fields to the browser.
+
 To resume the host later or connect another application:
 
 ```sh
