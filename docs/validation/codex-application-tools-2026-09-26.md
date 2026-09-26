@@ -58,3 +58,25 @@ callback returned only synthetic data. Event
 database with 44,615 input, 150 output and 20,992 cached input tokens. The failed
 result is retained; it is not a successful live round trip. History now uses
 native roles and completed calls, and its stronger offline fixture passes.
+
+The corrected live round trip passed at source
+`0db91f73d725187c78dcf71805b3cf96343f96f6` on the same selected native account,
+`gpt-6-luna` and medium effort. Run
+`e36ce234-78e0-41cb-bdfd-e3e3c3adc29d` completed two SDK model steps, one approval
+and one synthetic lookup, then returned the exact sentinel available only in
+that tool result. The SDK reported 33,199 input, 93 output and 9,984 cached input
+tokens, with zero reported reasoning tokens. These are SDK step counts, not a
+claim about the CLI's internal HTTP attempts.
+
+The original usage event was captured automatically and read back from a separate
+Usagestat instance/database using an explicit validation host/account/subject
+binding. The backend dependency is the existing Usagestat build at source
+`80df24132db891b80587c63f07a3016606ccb5d3`; no SDK-owned replacement was introduced.
+The temporary daemon was stopped after verification. No regular/synthetic host
+credential, grant, database or tool enablement changed. Both live attempts used
+synthetic data, one allowed SDK attempt per step, a two-step limit and the same
+selected subscription account/model; no account, model or billing fallback.
+
+This qualifies that selected live round trip and the separately listed offline
+boundaries. It does not claim live qualification for other models, providers,
+platforms or every native utility. The opt-in remains disabled by default.
