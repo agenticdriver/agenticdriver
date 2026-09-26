@@ -267,7 +267,8 @@
               "reasoningEffort": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9_-]{0,63}$"
-              }
+              },
+              "applicationTools": { "type": "string", "const": "mcp" }
             },
             "required": ["id", "kind"],
             "additionalProperties": false

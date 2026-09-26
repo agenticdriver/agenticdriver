@@ -1,5 +1,8 @@
 # Application-owned functions
 
+API adapters support this contract directly. For the opt-in Codex native route,
+configure the host as described in [native application tools](native-tools.md).
+
 An application can run its own functions while a local or remote driver handles
 the model loop. Functions stay in the application process, in any supported
 language. The driver receives a JSON definition, validates model arguments and

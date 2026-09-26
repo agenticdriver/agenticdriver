@@ -30,11 +30,15 @@ type Vendor = "codex" | "claude-code" | "gemini-cli";
 export interface CodexProviderOptions extends CliProviderOptions {
   /** Native model_reasoning_effort. Available values depend on the selected model. */
   reasoningEffort?: string;
+  /** Opt in to the qualified proposal-only native MCP bridge. Default: text only. */
+  applicationTools?: "mcp";
 }
 import { CodexReasoningEffortSchema } from "../provider-config.js";
 export { CodexReasoningEffortSchema } from "../provider-config.js";
 
 export function codex(options: CodexProviderOptions = {}) {
+  if (options.applicationTools !== undefined)
+    z.literal("mcp").parse(options.applicationTools);
   if (options.reasoningEffort !== undefined)
     CodexReasoningEffortSchema.parse(options.reasoningEffort);
   return codexAppServer(options);

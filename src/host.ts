@@ -429,7 +429,12 @@ export function configuredProviders(
     ]({
       ...shared,
       binary: p.binary,
-      ...(p.kind === "codex" ? { reasoningEffort: p.reasoningEffort } : {}),
+      ...(p.kind === "codex"
+        ? {
+            reasoningEffort: p.reasoningEffort,
+            applicationTools: p.applicationTools,
+          }
+        : {}),
       accountDirectory: p.accountDirectory
         ? resolve(directory, p.accountDirectory)
         : undefined,

@@ -9,18 +9,18 @@ This limitation does not require signing in again or switching to API billing.
 Documentation reviewed on 2026-09-21. Model IDs are deliberately supplied by the
 application or host; this SDK does not silently pick a model or change billing modes.
 
-| Factory                                 | Instance default    | Authentication                          | Application tool loop               |
-| --------------------------------------- | ------------------- | --------------------------------------- | ----------------------------------- |
-| `openai({ apiKey })`                    | `openai`            | OpenAI API key; Responses API           | Yes                                 |
-| `anthropic({ apiKey })`                 | `anthropic`         | Anthropic API key; Messages API         | Yes                                 |
-| `gemini({ apiKey })`                    | `gemini`            | Gemini API key; streamGenerateContent   | Yes                                 |
-| `xai({ apiKey })`                       | `xai`               | xAI API key; Chat Completions           | Yes                                 |
-| `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                  | Yes                                 |
-| `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                      | Yes, if endpoint supports functions |
-| `codex()`                               | `codex`             | Official CLI's existing session         | Text only                           |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session         | Text only                           |
-| `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication    | Text only                           |
-| `mockProvider()`                        | `mock`              | None; deterministic development fixture | Yes                                 |
+| Factory                                 | Instance default    | Authentication                          | Application tool loop                                 |
+| --------------------------------------- | ------------------- | --------------------------------------- | ----------------------------------------------------- |
+| `openai({ apiKey })`                    | `openai`            | OpenAI API key; Responses API           | Yes                                                   |
+| `anthropic({ apiKey })`                 | `anthropic`         | Anthropic API key; Messages API         | Yes                                                   |
+| `gemini({ apiKey })`                    | `gemini`            | Gemini API key; streamGenerateContent   | Yes                                                   |
+| `xai({ apiKey })`                       | `xai`               | xAI API key; Chat Completions           | Yes                                                   |
+| `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                  | Yes                                                   |
+| `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                      | Yes, if endpoint supports functions                   |
+| `codex()`                               | `codex`             | Official CLI's existing session         | Text; opt-in application tools on qualified Linux x64 |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session         | Text only                                             |
+| `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication    | Text only                                             |
+| `mockProvider()`                        | `mock`              | None; deterministic development fixture | Yes                                                   |
 
 An API key may be a string or an async credential resolver, so a host can integrate
 a secrets manager. Options also include `id`, `name`, `models`, and an optional
@@ -97,9 +97,11 @@ used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
   every inherited MCP server before creating the thread. Ambiguous MCP names
   fail before the prompt is sent. The native model still advertises sandboxed
   JavaScript, a clock and an asynchronous question utility; the SDK rejects
-  client-side authority requests and does not expose an application tool bridge.
+  client-side authority requests. An explicitly configured
+  [application-tool bridge](native-tools.md) exposes only selected SDK tools
+  through an owned MCP helper; inherited MCP servers stay disabled.
   Native shell, file, image, agent, MCP and goal operations are unavailable in
-  the audited registry. Global `AGENTS.md` and skill descriptions still enter
+  the default text registry. Global `AGENTS.md` and skill descriptions still enter
   the prompt. See the [native evidence and limits](validation/codex-2026-09-25.md).
 - Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions. Development

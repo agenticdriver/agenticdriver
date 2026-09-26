@@ -27,9 +27,11 @@ def main():
     parser.add_argument("--binary", required=True, type=Path,
                         help="Absolute path to the native Linux ELF binary, not its npm launcher")
     parser.add_argument("--receipt", type=Path)
-    parser.add_argument("--suite", choices=("adapter", "tools"), default="adapter",
+    parser.add_argument("--suite", choices=("adapter", "tools", "application-tools"), default="adapter",
                         help="Production adapter checks or an offline native tool protocol audit")
     args = parser.parse_args()
+    fixture = {"adapter": "codex-native.mjs", "tools": "codex-tools-native.mjs",
+               "application-tools": "codex-application-tools-native.mjs"}[args.suite]
     if sys.platform != "linux":
         parser.error("Native Codex fixtures currently require Linux and bubblewrap.")
     if not args.binary.is_absolute() or not args.binary.is_file():
@@ -62,7 +64,7 @@ def main():
                    "--ro-bind", str(Path(node).resolve()), "/tmp/fixture-node",
                    "--chdir", "/tmp/fixture-work", "--", "/tmp/fixture-node",
                    "/tmp/fixture-sdk/scripts/fixtures/" +
-                   ("codex-native.mjs" if args.suite == "adapter" else "codex-tools-native.mjs")]
+                   fixture]
         # This is a fixture watchdog, never an SDK run/inactivity default.
         try:
             completed = subprocess.run(command, env=env, capture_output=True, text=True,
@@ -89,7 +91,7 @@ def main():
             cwd=ROOT, text=True).strip()),
         "suite": args.suite,
         "fixtureSha256": digest(ROOT / "scripts/fixtures" /
-                                ("codex-native.mjs" if args.suite == "adapter" else "codex-tools-native.mjs")),
+                                fixture),
         "fixtureOnly": True,
         "externalNetwork": False,
         "realAccountUsed": False,

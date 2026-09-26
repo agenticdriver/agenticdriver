@@ -29,7 +29,7 @@ jobs:
           TASK_RECEIPTS: ${{ runner.temp }}/codex-native-receipts
         run: |
           mkdir -p "$TASK_RECEIPTS"
-          for suite in adapter tools; do
+          for suite in adapter tools application-tools; do
             docker run --rm --network none --cap-add SYS_ADMIN --cap-add NET_ADMIN --security-opt seccomp=unconfined \
               --mount "type=bind,source=$TASK_SOURCE,target=/work,readonly" \
               --mount "type=bind,source=$TASK_RECEIPTS,target=/receipts" \

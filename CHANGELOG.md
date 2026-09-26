@@ -14,8 +14,11 @@
   configuration. Authentication, rate-limit and model errors retain actionable
   codes without exposing native diagnostics. Managed-session tests cover refresh,
   permanent expiry and one bounded policy reload before any prompt is submitted.
-- Application tools remain unsupported on the Codex text route; no default run
-  deadline or inactivity timeout is introduced.
+- Codex has an opt-in MCP application-tool bridge on qualified Linux x64
+  0.157.0. It closes native execution before SDK batch validation, usage checks,
+  approvals and local or remote callbacks, then supplies structured history on
+  continuation. The default remains text only. No default run deadline or
+  inactivity timeout is introduced. See [native tools](docs/native-tools.md).
 
 ## 0.1.0 — 2026-09-21
 

@@ -23,7 +23,8 @@ other provider and full application qualifications remain separate work.
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
 - A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent local endpoint example and synthetic compatibility checks.
 - Optional [operational diagnostics and OpenTelemetry](docs/diagnostics.md), with content redaction, bounded export and no additional usage backend.
-- Text adapters for installed Codex, Claude Code, and Gemini CLI sessions.
+- Text adapters for installed Codex, Claude Code, and Gemini CLI sessions, plus
+  an opt-in [Codex application-tool bridge](docs/native-tools.md).
 - A bounded model/tool/result loop, tool argument validation, host and interactive application approvals,
   validated JSON output, optional inactivity timeouts, and cancellation.
 - A Node.js execution host with HTTPS, bearer authentication, provider/tool
@@ -311,7 +312,8 @@ usage, and subprocess handling. No live LLM account is needed.
 Runs accept explicit `history`, or applications can opt into scoped sessions and
 durable jobs. Optional idempotency records reconcile accepted operations without
 rerunning effects. Live foreground stream resumption, an outbound device relay
-and native MCP tool bridging remain roadmap work. Remote
+remain roadmap work. Codex has a qualified, opt-in
+[native MCP proposal bridge](docs/native-tools.md); other native providers remain text only. Remote
 applications must be able to reach the execution host through HTTPS or an
 operator-managed tunnel. Native CLI tooling and subscription access differ by
 provider; see the documented [support matrix](docs/providers.md).
