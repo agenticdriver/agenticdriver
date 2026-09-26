@@ -7,14 +7,18 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The next opt-in candidate is **0.2.0-alpha.2** (Python **0.2.0a2**), including the
-Linux desktop companion. It fixes the TypeScript host-helper declaration issue
+The opt-in **0.2.0-alpha.2** preview (Python **0.2.0a2**) is published on GitHub,
+crates.io and the Go module proxy, including the Linux desktop companion. The
+public npm archive is installable while npm member sign-in is pending; Python
+wheel/sdist downloads are available while PyPI organization approval is pending.
+It fixes the TypeScript host-helper declaration issue
 found by application acceptance checks after alpha.1 publication. Alpha.1's
 GitHub/Rust/Go artifacts remain immutable; its npm upload was held.
-See [alpha adoption](alpha.md) for the candidate package pins,
+See [alpha adoption](alpha.md) for exact package pins and archive installation,
+[alpha.2 evidence](validation/release-0.2.0-alpha.2.md) for verified publication,
 [alpha.1 evidence](validation/release-0.2.0-alpha.1.md) for the preceding release,
 and [the alpha.2 prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.2)
-for per-channel publication status once published. npm uses `alpha`, preserving
+for per-channel publication status. npm uses `alpha`, preserving
 stable `latest`. The candidate's channel and npm `publishConfig.tag` are validated
 before upload; authorized local publication must also pass `--tag alpha`.
 

@@ -23,6 +23,20 @@ go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.2
 ```
 
 For Rust, use `agenticdriver = "=0.2.0-alpha.2"` in `Cargo.toml`.
+
+The reviewed JavaScript archive is also available from the public release. This
+works while npm member sign-in is pending:
+
+```sh
+npm install --save-exact https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.2/agenticdriver-sdk-0.2.0-alpha.2.tgz
+```
+
+The package and import name remain `@agenticdriver/sdk`. Commit the public URL and
+the lockfile integrity. The expected archive SHA-256 is
+`a49dcc4c7d146d1f91fae58638d8b901f4ef6f51c873dd227070de54e4c2ebee`.
+After registry publication, the exact semver pin resolves the same reviewed
+archive. See the [publication evidence](validation/release-0.2.0-alpha.2.md).
+
 Python uses the canonical PEP 440 version **0.2.0a2**. PyPI organization approval
 is still pending; download `agenticdriver-0.2.0a2-py3-none-any.whl` from the
 prerelease, verify its SHA-256 against the release manifest, and install it in
@@ -36,7 +50,7 @@ There is no automatic updater, public relay, or Windows/macOS build in this alph
 
 ## Adopt in an existing application
 
-1. Pin the registry package and commit its lockfile. Replace sibling SDK links
+1. Pin the exact registry package or public release archive and commit its lockfile. Replace sibling SDK links
    and unscoped development imports with `@agenticdriver/sdk` and its subpaths.
 2. Keep the application's existing authentication, private credential storage,
    host URL, provider grants and saved model choices. No application auth
