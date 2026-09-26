@@ -41,8 +41,9 @@ to a continuing native model loop. Missing native usage remains unknown and
 stops execution when the host's resource policy requires known usage.
 
 After an approved tool returns, the next model step uses a fresh ephemeral
-native thread and explicit JSON conversation history containing call IDs, tool
-names, arguments and results. This is portable application history, not native
+native thread and the official `thread/inject_items` history interface, retaining
+message roles, call IDs, tool names, arguments and completed tool results. This
+is portable application history, not native
 thread resumption. The native MCP timeout covers proposal transport only;
 application work and human approval happen after that native process has closed.
 There is no default application-tool, approval, run or inactivity deadline.

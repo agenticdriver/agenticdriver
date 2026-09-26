@@ -15,7 +15,10 @@ Application cancellation retains an uncertain-effect outcome.
 
 Native processes and private working directories are gone before approval or
 callback code runs. Continuation preserves each call's name, arguments and ID
-alongside the matching result. Reported token counts accumulate across model
+alongside the matching result through the official
+[`thread/inject_items` interface](https://learn.chatgpt.com/docs/app-server#inject-items-into-a-thread).
+The fixture checks the actual model request for native function-call/result
+pairs and message roles. Reported token counts accumulate across model
 steps; omitted counts do not become zero. The MCP helper never sends an
 application result or waits for a human/callback inside native execution.
 
@@ -45,3 +48,13 @@ LitAgent host's binary path was updated through revision-checked management to
 that same qualified 0.157.0, restoring its nine reported Codex models without
 restarting its service or changing credentials, grants or app selections. That
 host remains text only; its application-tool permissions were not expanded.
+
+An initial live smoke run on the explicitly selected `gpt-6-luna`, medium,
+exposed a history problem in commit `300d740`: history serialized into user text
+passed the protocol fixture, but the model requested the same lookup again.
+The SDK stopped at its two-step limit before a second callback. The one completed
+callback returned only synthetic data. Event
+`3689e621-e8f5-43af-b488-3370aa1c231e` automatically reached a separate Usagestat
+database with 44,615 input, 150 output and 20,992 cached input tokens. The failed
+result is retained; it is not a successful live round trip. History now uses
+native roles and completed calls, and its stronger offline fixture passes.

@@ -69,30 +69,28 @@ const server = createServer(async (req, res) => {
         `Unexpected native continuation for ${scenario}`,
       );
       assert.equal(executions, scenario === "concurrent" ? 2 : 1);
-      const prompt = strings(request.input).find((text) =>
-        text.includes("Continue the following application conversation."),
+      const proposed = request.input.filter(
+        (item) => item.type === "function_call",
       );
-      assert.ok(
-        prompt,
-        "Continuation must carry the structured application history.",
+      const results = request.input.filter(
+        (item) => item.type === "function_call_output",
       );
-      const history = JSON.parse(prompt.split("\n\n").at(-1));
-      const proposed = history.find((message) => message.toolCalls)?.toolCalls;
-      const results = history.filter((message) => message.role === "tool");
       assert.equal(proposed.length, executions);
-      assert.equal(new Set(proposed.map((call) => call.id)).size, executions);
+      assert.equal(
+        new Set(proposed.map((call) => call.call_id)).size,
+        executions,
+      );
       assert.equal(results.length, executions);
       for (const result of results) {
-        assert.equal(result.name, "fixture_read");
         assert.ok(
           proposed.some(
             (call) =>
-              call.id === result.callId &&
-              call.name === result.name &&
-              call.arguments.key === "selected",
+              call.call_id === result.call_id &&
+              /^mcp__agenticdriver_[a-f0-9]+__fixture_read$/.test(call.name) &&
+              JSON.parse(call.arguments).key === "selected",
           ),
         );
-        assert.equal(JSON.parse(result.content).passage, selected);
+        assert.equal(JSON.parse(result.output).passage, selected);
       }
     }
     const expression =
