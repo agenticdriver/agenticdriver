@@ -48,11 +48,15 @@ def main():
             print(completed.stderr, end="", file=sys.stderr)
             raise SystemExit("Native fixture failed; no real account was used.")
         result = json.loads(completed.stdout)
+    # The explicit CI mount may have another UID. Limit Git's trust exception to
+    # this checkout and these read-only provenance commands; do not change config.
     result.update({
         "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "binarySha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
-        "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-        "sourceDirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
+        "sourceCommit": subprocess.check_output(
+            ["git", "-c", f"safe.directory={ROOT}", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "sourceDirty": bool(subprocess.check_output(
+            ["git", "-c", f"safe.directory={ROOT}", "status", "--porcelain"], cwd=ROOT)),
         "suite": args.suite,
         "adapterSha256": hashlib.sha256((ROOT / "dist/providers/local-cli.js").read_bytes()).hexdigest(),
     })
