@@ -124,7 +124,7 @@ export async function serveProviderPanel(options: {
       res.setHeader("X-Content-Type-Options", "nosniff");
       res.setHeader(
         "Content-Security-Policy",
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'",
+        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'",
       );
       const authority = req.headers.host ?? "";
       if (!/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(authority))
@@ -137,7 +137,12 @@ export async function serveProviderPanel(options: {
       if (req.method === "GET" && req.url === "/") {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.end(
-          `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgenticDriver · Providers</title><style>body{margin:0;padding:36px;background:#171c2b}main{max-width:1220px;margin:0 auto}@media(max-width:760px){body{padding:10px}}</style><main><agenticdriver-providers></agenticdriver-providers></main><script type="module" src="/assets/panel-session.js"></script></html>`,
+          `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgenticDriver · Providers</title><link rel="stylesheet" href="/assets/panel-page.css"><main><agenticdriver-providers></agenticdriver-providers></main><script type="module" src="/assets/panel-session.js"></script></html>`,
+        );
+      } else if (req.method === "GET" && req.url === "/assets/panel-page.css") {
+        res.setHeader("Content-Type", "text/css; charset=utf-8");
+        res.end(
+          "body{margin:0;padding:36px;background:#171c2b}main{max-width:1220px;margin:0 auto}@media(max-width:760px){body{padding:10px}}",
         );
       } else if (
         req.method === "GET" &&

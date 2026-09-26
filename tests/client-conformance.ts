@@ -428,6 +428,16 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
     }),
     { code: "CONFIG_CONFLICT" },
   );
+  assert.equal(next.removalSupported, true);
+  const removed = (await panel({
+    action: "configure",
+    change: {
+      revision: next.revision,
+      provider: next.providers.find((p) => p.id === "typescript-fixture")!,
+      remove: true,
+    },
+  })) as ProviderPanelState;
+  assert.ok(!removed.providers.some((p) => p.id === "typescript-fixture"));
   const invitation = await manager.createInvitation({
     grant: { subject: "typescript-pairing", providers: ["fixture"] },
   });

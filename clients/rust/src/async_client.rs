@@ -266,7 +266,7 @@ impl AsyncAgenticClient {
             .await?,
         )
         .await?;
-        crate::management::snapshot(value, Some(&input.provider.id))
+        crate::management::configured_snapshot(value, input)
     }
     pub async fn providers(&self) -> Result<Vec<Provider>> {
         self.provider_catalog(false).await

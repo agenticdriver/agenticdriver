@@ -94,6 +94,8 @@ const emptyPreferences = () => ({
     order: [],
 });
 const css = `
+.invitation-actions{margin-top:14px}.remove-provider{margin-top:22px;padding-top:18px;border-top:1px solid var(--ad-line)}
+
 .setup-attempts{padding:20px;display:grid;gap:16px;border-bottom:1px solid var(--ad-border,#343b52)}.setup-attempts .command{font-size:1.35rem;letter-spacing:.12em;white-space:pre-wrap;overflow-wrap:anywhere}.setup-attempts p{overflow-wrap:anywhere}.setup-attempts h4{margin:12px 0}.setup-attempts a{color:inherit;text-decoration:underline}
 
 :host{--ad-bg:#252a3b;--ad-surface:#2c3245;--ad-field:#222737;--ad-line:#3a4157;--ad-fg:#e9ecf5;--ad-muted:#a6aec4;--ad-accent:#a6b6ff;--ad-good:#9ddbc2;display:block;color:var(--ad-fg);font:14px/1.5 system-ui,sans-serif;color-scheme:dark}
@@ -116,6 +118,8 @@ export function registerProviderPanel(registry = customElements) {
         message = "";
         failure = "";
         adding = false;
+        removalPending = false;
+        stylesInstalled = false;
         providerQuery = "";
         setupMethod = "";
         setupTimer;
@@ -130,6 +134,14 @@ export function registerProviderPanel(registry = customElements) {
         preferenceScope = crypto.randomUUID();
         preferenceCache = new Map();
         connectedCallback() {
+            if (!this.stylesInstalled) {
+                // The module is authorized by script-src. Constructed stylesheets keep
+                // the component self-contained without inline style elements/attributes.
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync(css);
+                this.root.adoptedStyleSheets = [sheet];
+                this.stylesInstalled = true;
+            }
             if (!this.transport && this.hasAttribute("api"))
                 this.transport = createPanelTransport(this.getAttribute("api"));
             if (!this.bound) {
@@ -197,6 +209,7 @@ export function registerProviderPanel(registry = customElements) {
                 this.selected = state.providers[0]?.id ?? "";
             this.draft = structuredClone(state.management?.providers.find((p) => p.id === this.selected));
             this.adding = false;
+            this.removalPending = false;
             this.apiKey = "";
             this.links = undefined;
             this.invite = undefined;
@@ -387,6 +400,33 @@ export function registerProviderPanel(registry = customElements) {
                 this.render();
             }
         }
+        async removeProvider() {
+            const management = this.state?.management;
+            const provider = management?.providers.find((p) => p.id === this.selected);
+            if (!this.removalPending ||
+                !management?.removalSupported ||
+                !provider ||
+                provider.kind === "extension")
+                throw new Error("This connection cannot remove the selected provider.");
+            this.busy = true;
+            this.render();
+            try {
+                this.accept(await this.call({
+                    action: "configure",
+                    change: {
+                        revision: management.revision,
+                        provider,
+                        remove: true,
+                    },
+                }));
+                this.message =
+                    "Provider removed. Active runs keep their original settings; credentials remain on the host.";
+            }
+            finally {
+                this.busy = false;
+                this.render();
+            }
+        }
         input(event) {
             const input = event.target;
             if (input.dataset.field === "provider-query") {
@@ -453,6 +493,24 @@ export function registerProviderPanel(registry = customElements) {
             this.message = "";
             if (action === "refresh")
                 return this.refresh();
+            if (action === "remove-provider") {
+                this.removalPending = true;
+                this.render();
+                this.root
+                    .querySelector('[data-action="cancel-remove"]')
+                    ?.focus();
+                return;
+            }
+            if (action === "cancel-remove") {
+                this.removalPending = false;
+                this.render();
+                this.root
+                    .querySelector('[data-action="remove-provider"]')
+                    ?.focus();
+                return;
+            }
+            if (action === "confirm-remove")
+                return this.removeProvider();
             if ((action === "setup-accept" || action === "setup-cancel") &&
                 button.dataset.id) {
                 return this.setupRequest({
@@ -461,6 +519,7 @@ export function registerProviderPanel(registry = customElements) {
                 });
             }
             if (action === "select") {
+                this.removalPending = false;
                 this.selected = button.dataset.id;
                 this.query = "";
                 this.adding = false;
@@ -475,6 +534,7 @@ export function registerProviderPanel(registry = customElements) {
                 return;
             }
             if (action === "add") {
+                this.removalPending = false;
                 this.adding = true;
                 this.draft = this.state?.management?.providerDefinitions
                     ? undefined
@@ -888,10 +948,21 @@ export function registerProviderPanel(registry = customElements) {
                 .join("") ||
                 '<p class="muted small">No models match this view. Refresh the provider or configure an explicit model ID.</p>'}</div>${canManage ? '<div class="section-label">Add an explicit model to the connection allowlist</div><div class="inline"><input data-field="custom" aria-label="Custom model ID" placeholder="Model ID"><button data-action="custom">Add model</button></div><p class="hint">Adding an ID does not verify availability. This switches all-model access to an explicit allowlist.</p>' : ""}`;
         }
+        removalSection() {
+            const provider = this.state?.management?.providers.find((p) => p.id === this.selected);
+            if (this.adding ||
+                !this.state?.management?.removalSupported ||
+                !provider ||
+                provider.kind === "extension")
+                return "";
+            if (!this.removalPending)
+                return `<section class="remove-provider"><button data-action="remove-provider" ${this.busy ? "disabled" : ""}>Remove provider</button><p class="hint">Remove this instance from the host. Native sign-ins and stored keys stay on this machine.</p></section>`;
+            return `<section class="remove-provider" role="group" aria-label="Confirm provider removal"><strong>Remove ${escape(provider.name ?? provider.id)}?</strong><p class="hint">New runs cannot use this instance. Active runs continue. Existing grants keep their provider ID; explicitly adding that ID again makes it available to those grants.</p><div class="actions"><button data-action="cancel-remove" ${this.busy ? "disabled" : ""}>Keep provider</button><button data-action="confirm-remove" ${this.busy ? "disabled" : ""}>Confirm removal</button></div></section>`;
+        }
         connectionSection() {
             if (!this.state?.canInvite)
                 return "";
-            return `<section class="links"><div class="row"><div><strong>Connect another application</strong><p class="hint">New invitations grant execution access to these provider instances.</p></div><button data-action="connections">Manage connections</button></div><div class="inline" style="margin-top:14px"><input data-field="subject" aria-label="Application name" placeholder="Application name"><button data-action="invite">Create invitation</button></div>${this.invite ? `<label for="new-invite" class="section-label">One-use invitation · expires ${escape(new Date(this.invite.expiresAt).toLocaleTimeString())}</label><textarea id="new-invite" readonly>${escape(this.invite.invitation)}</textarea><button data-action="copy-invite">Copy invitation</button>` : ""}${this.links ? [...this.links.connections, ...this.links.invitations].map((link) => `<div class="connections"><div><strong>${escape(link.grant.subject)}</strong><div class="connection-meta">${escape(link.grant.providers.join(", ") || "Management only")} · expires ${escape(new Date(link.expiresAt).toLocaleDateString())}</div></div><button data-action="revoke" data-id="${escape(link.id)}">Revoke</button></div>`).join("") || '<p class="hint">No active paired connections.</p>' : ""}</section>`;
+            return `<section class="links"><div class="row"><div><strong>Connect another application</strong><p class="hint">New invitations grant execution access to these provider instances.</p></div><button data-action="connections">Manage connections</button></div><div class="inline invitation-actions"><input data-field="subject" aria-label="Application name" placeholder="Application name"><button data-action="invite">Create invitation</button></div>${this.invite ? `<label for="new-invite" class="section-label">One-use invitation · expires ${escape(new Date(this.invite.expiresAt).toLocaleTimeString())}</label><textarea id="new-invite" readonly>${escape(this.invite.invitation)}</textarea><button data-action="copy-invite">Copy invitation</button>` : ""}${this.links ? [...this.links.connections, ...this.links.invitations].map((link) => `<div class="connections"><div><strong>${escape(link.grant.subject)}</strong><div class="connection-meta">${escape(link.grant.providers.join(", ") || "Management only")} · expires ${escape(new Date(link.expiresAt).toLocaleDateString())}</div></div><button data-action="revoke" data-id="${escape(link.id)}">Revoke</button></div>`).join("") || '<p class="hint">No active paired connections.</p>' : ""}</section>`;
         }
         render() {
             const focused = this.root.activeElement, focusField = focused?.dataset.field, selection = focused?.selectionStart;
@@ -925,8 +996,8 @@ export function registerProviderPanel(registry = customElements) {
                     const config = state.management?.providers.find((p) => p.id === provider.id);
                     return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}</strong><small>${config?.enabled === false ? "Disabled" : provider.authMode === "cli-session" ? "Subscription / local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
                 })
-                    .join("")}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? "No providers granted")}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? "Ask the host operator for a provider grant.")}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding ? this.modelList(selected) : this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.connectionSection()}</main></div>`;
-            this.root.innerHTML = `<style>${css}</style><section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
+                    .join("")}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? "No providers granted")}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? "Ask the host operator for a provider grant.")}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding ? this.modelList(selected) : this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.removalSection()}${this.connectionSection()}</main></div>`;
+            this.root.innerHTML = `<section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
             if (focusField === "query" || focusField === "provider-query") {
                 const input = this.root.querySelector(`[data-field="${focusField}"]`);
                 input?.focus();

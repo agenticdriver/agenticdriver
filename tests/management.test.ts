@@ -115,6 +115,13 @@ test("empty management hosts support onboarding without a demo account or implic
       grant: { subject: "app", providers: ["added"] },
     });
     assert.deepEqual(invite.grant.providers, ["added"]);
+    const empty = await operator.configureProvider({
+      revision: after.revision,
+      provider: after.providers[0]!,
+      remove: true,
+    });
+    assert.deepEqual(empty.providers, []);
+    assert.deepEqual(await operator.providers(), []);
   } finally {
     await server?.close();
     await rm(directory, { recursive: true, force: true });
@@ -248,51 +255,135 @@ test("management writes API keys once to private references and never returns cr
   }
 });
 
-test("provider updates preserve an active run's adapter, account and usage snapshot; new runs use new settings", async () => {
-  let finish!: () => void, started!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    finish = resolve;
-  });
-  const ready = new Promise<void>((resolve) => {
-    started = resolve;
-  });
-  const records: UsageRecord[] = [];
-  const old = {
-    ...mockProvider(),
-    info: { ...mockProvider().info, id: "connection" },
-  };
-  const driver = new AgenticDriver({
-    providers: [
-      {
-        ...old,
-        complete: async () => {
-          started();
-          await gate;
-          return { text: "old account", usage: { inputTokens: 1 } };
+for (const removal of [false, true])
+  test(`provider ${removal ? "removal" : "updates"} preserves active adapters and usage; new runs use new settings`, async () => {
+    let finish!: () => void, started!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const ready = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const records: UsageRecord[] = [];
+    const old = {
+      ...mockProvider(),
+      info: { ...mockProvider().info, id: "connection" },
+    };
+    const driver = new AgenticDriver({
+      providers: [
+        {
+          ...old,
+          complete: async () => {
+            started();
+            await gate;
+            return { text: "old account", usage: { inputTokens: 1 } };
+          },
         },
+      ],
+      usage: { hostId: "host", accounts: { connection: "old-account" } },
+      onUsage: (record) => {
+        records.push(record);
       },
-    ],
-    usage: { hostId: "host", accounts: { connection: "old-account" } },
-    onUsage: (record) => {
-      records.push(record);
-    },
+    });
+    const pending = driver.run({
+      provider: "connection",
+      model: "demo",
+      input: "Synthetic",
+    });
+    await ready;
+    driver.configureProviders(
+      removal ? [] : [{ ...old, info: { ...old.info, models: [] } }],
+      removal
+        ? {}
+        : {
+            connection: "new-account",
+          },
+    );
+    await assert.rejects(
+      driver.run({ provider: "connection", model: "demo", input: "Synthetic" }),
+      { code: removal ? "UNKNOWN_PROVIDER" : "UNSUPPORTED_MODEL" },
+    );
+    finish();
+    assert.equal((await pending).text, "old account");
+    assert.equal(records[0]!.accountId, "old-account");
   });
-  const pending = driver.run({
-    provider: "connection",
-    model: "demo",
-    input: "Synthetic",
-  });
-  await ready;
-  driver.configureProviders([{ ...old, info: { ...old.info, models: [] } }], {
-    connection: "new-account",
-  });
-  await assert.rejects(
-    driver.run({ provider: "connection", model: "demo", input: "Synthetic" }),
-    { code: "UNSUPPORTED_MODEL" },
-  );
-  finish();
-  assert.equal((await pending).text, "old account");
-  assert.equal(records[0]!.accountId, "old-account");
+
+test("provider removal is revision checked, manager only, durable, and preserves private keys and grants", async () => {
+  const f = await fixture();
+  try {
+    const initial = await f.operator.management();
+    assert.equal(initial.removalSupported, true);
+    const added = await f.operator.configureProvider({
+      revision: initial.revision,
+      provider: {
+        id: "retire-api",
+        accountId: "retired-account",
+        kind: "openai",
+        apiKeyRef: { env: "UNUSED" },
+      },
+      apiKey: "synthetic-private-key",
+    });
+    const provider = added.providers.find((p) => p.id === "retire-api")!;
+    assert.ok("apiKeyRef" in provider && "file" in provider.apiKeyRef);
+    const before = await readHostConfig(f.path);
+    await assert.rejects(
+      f.client.configureProvider({
+        revision: added.revision,
+        provider,
+        remove: true,
+      }),
+      { code: "FORBIDDEN" },
+    );
+    await assert.rejects(
+      f.operator.configureProvider({
+        revision: initial.revision,
+        provider,
+        remove: true,
+      }),
+      { code: "CONFIG_CONFLICT" },
+    );
+    await assert.rejects(
+      f.operator.configureProvider({
+        revision: added.revision,
+        provider,
+        remove: true,
+        apiKey: "unexpected-new-key",
+      }),
+      { code: "INVALID_CONFIG" },
+    );
+    const removed = await f.operator.configureProvider({
+      revision: added.revision,
+      provider,
+      remove: true,
+    });
+    assert.deepEqual(
+      removed.providers.map((p) => p.id),
+      ["fixture"],
+    );
+    assert.equal(
+      (await readFile(provider.apiKeyRef.file, "utf8")).trim(),
+      "synthetic-private-key",
+    );
+    assert.deepEqual((await readHostConfig(f.path)).tokens, before.tokens);
+    assert.deepEqual(
+      (await managedHost(f.path)).config().providers,
+      removed.providers,
+    );
+    await assert.rejects(
+      f.operator.configureProvider({
+        revision: removed.revision,
+        provider: removed.providers[0]!,
+        remove: true,
+      }),
+      { code: "PROVIDER_IN_USE" },
+    );
+    assert.deepEqual(
+      (await f.client.providers()).map((p) => p.id),
+      ["fixture"],
+    );
+  } finally {
+    await f.close();
+  }
 });
 
 test("catalog refreshes from replaced adapters cannot overwrite the new instance metadata", async () => {

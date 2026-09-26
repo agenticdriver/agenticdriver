@@ -47,6 +47,7 @@ type ProviderDefinition struct {
 	DocsURL      string                     `json:"docsUrl,omitempty"`
 }
 type ManagementSnapshot struct {
+	RemovalSupported    *bool                   `json:"removalSupported,omitempty"`
 	Version             int                     `json:"version"`
 	Revision            string                  `json:"revision"`
 	Providers           []ProviderConfiguration `json:"providers"`
@@ -55,6 +56,8 @@ type ManagementSnapshot struct {
 	ExecutionProviders  *[]string               `json:"executionProviders,omitempty"`
 }
 type ConfigureProvider struct {
+	// Remove this instance from new runs; retain account credentials and grants.
+	Remove   bool                  `json:"remove,omitempty"`
 	Revision string                `json:"revision"`
 	Provider ProviderConfiguration `json:"provider"`
 	// Write only. Never returned by the host.
@@ -131,5 +134,20 @@ func (c *Client) Management(ctx context.Context) (ManagementSnapshot, error) {
 	return c.managementRequest(ctx, "v1/management", nil, "")
 }
 func (c *Client) ConfigureProvider(ctx context.Context, input ConfigureProvider) (ManagementSnapshot, error) {
-	return c.managementRequest(ctx, "v1/management/providers", input, input.Provider.ID)
+	id := input.Provider.ID
+	if input.Remove {
+		id = ""
+	}
+	value, err := c.managementRequest(ctx, "v1/management/providers", input, id)
+	if err != nil {
+		return value, err
+	}
+	if input.Remove {
+		for _, provider := range value.Providers {
+			if provider.ID == input.Provider.ID {
+				return ManagementSnapshot{}, &Error{Code: "INVALID_RESPONSE", Message: "The host did not remove the selected provider. Refresh before retrying."}
+			}
+		}
+	}
+	return value, nil
 }

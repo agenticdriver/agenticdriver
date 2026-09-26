@@ -223,7 +223,7 @@ impl AgenticClient {
             Some(&serde_json::to_value(input)?),
             false,
         )?)?;
-        crate::management::snapshot(value, Some(&input.provider.id))
+        crate::management::configured_snapshot(value, input)
     }
     pub fn providers(&self) -> Result<Vec<Provider>> {
         self.provider_catalog(false)

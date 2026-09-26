@@ -679,6 +679,7 @@ async fn provider_management_roundtrip() {
         ..Default::default()
     };
     let input = agenticdriver::ConfigureProvider {
+        remove: false,
         revision: before.revision,
         provider,
         api_key: None,
@@ -718,6 +719,23 @@ async fn provider_management_roundtrip() {
         .is_empty());
     let error = manager.configure_provider(&input).await.err().unwrap();
     assert_eq!(code(&error), Some("CONFIG_CONFLICT"));
+    assert_eq!(next.removal_supported, Some(true));
+    let removal = agenticdriver::ConfigureProvider {
+        revision: next.revision,
+        remove: true,
+        ..input
+    };
+    let removed = agenticdriver::panel::handle_provider_panel_async(
+        &mut Backend(&manager),
+        &serde_json::json!({"action":"configure","change":removal}),
+    )
+    .await
+    .unwrap();
+    assert!(!removed["providers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|p| p["id"] == removal.provider.id));
 }
 
 #[tokio::test]

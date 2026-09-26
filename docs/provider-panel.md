@@ -4,6 +4,13 @@ AgenticDriver includes one framework-neutral web component, `<agenticdriver-prov
 
 These additions are packaged in the [0.2.0 alpha](alpha.md); the published 0.1.0 packages predate them. Pin the exact alpha and check host capabilities before enabling management controls.
 
+The component uses a constructed shadow stylesheet, with no inline style element
+or style attribute. Modern browsers/webviews with `CSSStyleSheet.replaceSync`
+and `ShadowRoot.adoptedStyleSheets` can embed it under `style-src 'self'` without
+adding `unsafe-inline` or a nonce. Serve its JavaScript from an origin permitted
+by the application's existing script policy. The standalone panel also serves
+its surrounding page CSS as a same-origin asset.
+
 ## Try the complete setup flow
 
 From a built SDK checkout, open the panel:
@@ -49,6 +56,9 @@ The Go and Python examples use their standard HTTP servers. The Rust example use
 - Provider instance list, refresh time, reported health and account identifier.
 - Searchable provider picker and guided connection methods reported by the selected host: existing native sign-in, owned Codex device sign-in, write-only API key, host credential reference and compatible endpoint. Account identity, executable paths and other advanced settings remain available.
 - Revision-checked remote changes to display name, enabled state, native executable/account directory, reasoning effort, API endpoint and credential reference; API keys are write-only.
+- Confirmed removal when `management.removalSupported` is true. Older hosts and
+  read-only connections do not show this control. Removal uses the existing
+  configure operation with the current provider, revision and `remove: true`.
 - Reported model inventory plus explicitly configured IDs, search, optional model allowlists, and all-model access by default.
 - Device-local favorites, visibility and ordering, isolated by connection ID and provider instance.
 - Disconnected setup, pairing hooks, invitation creation and connection revocation for authorized managers.
@@ -56,6 +66,14 @@ The Go and Python examples use their standard HTTP servers. The Rust example use
 The component does not start inference. A model selection emits `agenticdriver:model-selected` with `{ provider, model }`; the application owns subsequent runs. `agenticdriver:preferences-changed` contains `{ provider, favorites, hidden, order }`. Hidden models remain visible but muted in settings so they can be restored.
 
 Inventory, host configuration and execution grants are distinct. An empty model allowlist denies all models; an omitted allowlist permits any explicitly chosen model. A reported model is not marked live-tested. Managers can see all instances; `management.executionProviders` identifies which they can actually run. Management-only connections cannot select models for execution. Hosts predating that field leave management-side selection disabled until their permissions can be determined. Refresh and settings changes do not cancel active runs.
+
+Removal stops new runs on that instance and preserves active runs, native
+sign-ins, private key files and existing grant records. Explicitly adding the
+same instance ID again makes it available to grants that still name it; use a
+new ID for a new account. If static host grants reference the provider, removal
+fails with `PROVIDER_IN_USE`: disable the provider or have the host operator
+update those grants first. Account policies must also remain valid; the panel
+does not silently rewrite operator-owned policy. Extensions remain operator-owned.
 
 Provider-native installation, token exchange, storage and refresh remain with the official runtime on the provider machine. Qualified hosts can guide [Codex device sign-in](provider-sign-in.md) from the component. Extension settings remain host-operator owned. This release does not install native binaries or expose arbitrary process arguments/environment variables. Codex device sign-in opens the official provider page in the user's browser. Supported settings match the SDK's qualified runtime adapters.
 

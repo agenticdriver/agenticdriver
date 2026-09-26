@@ -2093,6 +2093,7 @@
               }
             ]
           },
+          "remove": { "type": "boolean" },
           "apiKey": {
             "type": "string",
             "minLength": 1,
@@ -2560,7 +2561,8 @@
             "maxItems": 256,
             "type": "array",
             "items": { "type": "string", "minLength": 1, "maxLength": 256 }
-          }
+          },
+          "removalSupported": { "type": "boolean" }
         },
         "required": ["version", "revision", "providers", "supportedKinds"],
         "$defs": {

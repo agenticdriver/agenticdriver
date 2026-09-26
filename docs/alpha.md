@@ -3,6 +3,7 @@
 This opt-in release packages the provider and connection component, refreshable
 account model catalogs, remote provider management, local/remote pairing, owned
 Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.
+The shared component supports strict style CSP and capability-gated provider removal.
 Check the [GitHub prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.1)
 for the immutable source, publication status, tested archives and checksums.
 The stable npm `latest` tag remains on `0.1.0`.

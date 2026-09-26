@@ -48,6 +48,7 @@ export async function managedHost(
     providers: structuredClone(config.providers),
     supportedKinds: providerDefinitions().map((p) => p.kind),
     providerDefinitions: providerDefinitions({ ownedSignIn }),
+    removalSupported: true,
   });
   const configure: ProviderManagement["configure"] = (input) => {
     const operation = queue.then(async () => {
@@ -85,6 +86,21 @@ export async function managedHost(
         const previous = config.providers.find(
           (p) => p.id === change.provider.id,
         );
+        if (change.remove && (!previous || change.apiKey !== undefined))
+          throw new DriverError(
+            "INVALID_CONFIG",
+            "Remove an existing provider without supplying a replacement API key.",
+          );
+        if (
+          change.remove &&
+          config.tokens.some((token) =>
+            token.providers.includes(change.provider.id),
+          )
+        )
+          throw new DriverError(
+            "PROVIDER_IN_USE",
+            "Static host grants reference this provider. Disable it, or ask the host operator to update those grants before removing it.",
+          );
         if (
           previous &&
           (previous.kind !== change.provider.kind ||
@@ -123,9 +139,13 @@ export async function managedHost(
         }
         const next = validateHostConfig({
           ...config,
-          providers: previous
-            ? config.providers.map((p) => (p.id === provider.id ? provider : p))
-            : [...config.providers, provider],
+          providers: change.remove
+            ? config.providers.filter((p) => p.id !== provider.id)
+            : previous
+              ? config.providers.map((p) =>
+                  p.id === provider.id ? provider : p,
+                )
+              : [...config.providers, provider],
         });
         const adapters = configuredProviders(next, path, options);
         const file = await open(temporary, "wx", 0o600);

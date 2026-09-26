@@ -7,6 +7,11 @@ dist-tag, Rust/Go use `0.2.0-alpha.1`, and Python uses `0.2.0a1`. The Linux
 desktop companion shares the alpha version. See [alpha adoption](docs/alpha.md)
 for installation, host capabilities and publication status.
 
+- The shared provider component uses constructed stylesheets under strict
+  `style-src 'self'`. Added confirmed, revision-checked provider removal across
+  all four clients, with explicit support detection and protection for static
+  host grants, private credentials and in-flight work.
+
 - Qualified the restricted native Claude 2.1.282 text adapter with offline streaming, cancellation, model refusal and ambient-context checks; added its Prometheus native job. Two inexpensive local Haiku 4.5 checks passed with Usagestat capture. See the [dated account, usage and deployment limits](docs/validation/claude-2026-09-26.md).
 
 - Added caller-bound native Codex device sign-in through the host, all four SDK languages and the shared panel. Desktop preview `0.1.0-alpha.2` exposes the flow. Native verification precedes account confirmation; separate private profiles preserve existing sign-ins and execution grants. See [provider sign-in](docs/provider-sign-in.md).

@@ -575,6 +575,20 @@ func TestManagementRoundtrip(t *testing.T) {
 	if !errors.As(err, &failure) || failure.Code != "CONFIG_CONFLICT" {
 		t.Fatal("stale settings accepted")
 	}
+	if next.RemovalSupported == nil || !*next.RemovalSupported {
+		t.Fatal("missing removal capability")
+	}
+	input.Revision, input.Remove = next.Revision, true
+	request, _ = json.Marshal(map[string]any{"action": "configure", "change": input})
+	removed, err := panel.Handle(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, provider := range removed.(map[string]any)["management"].(ManagementSnapshot).Providers {
+		if provider.ID == input.Provider.ID {
+			t.Fatal("removed provider still present")
+		}
+	}
 }
 
 func TestConnectionPairing(t *testing.T) {

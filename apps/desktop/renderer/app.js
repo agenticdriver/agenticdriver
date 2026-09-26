@@ -394,6 +394,16 @@ try {
   await refreshOverview();
   await show("providers");
   if (api.smoke) {
+    // Apply the consuming app's strict style policy as an additional policy.
+    const stylePolicy = document.createElement("meta");
+    stylePolicy.httpEquiv = "Content-Security-Policy";
+    stylePolicy.content = "style-src 'self'";
+    document.head.append(stylePolicy);
+    const styleViolations = [];
+    document.addEventListener("securitypolicyviolation", (event) => {
+      if (event.effectiveDirective.startsWith("style-src"))
+        styleViolations.push(event.effectiveDirective);
+    });
     const before = await request({
       action: "panel",
       hostId: "local",
@@ -556,8 +566,30 @@ try {
     } finally {
       setupPanel.remove();
     }
+    const livePanel = document.querySelector("agenticdriver-providers");
+    await livePanel.refresh();
+    const liveRoot = livePanel.shadowRoot;
+    check(
+      getComputedStyle(liveRoot.querySelector(".layout")).display === "grid",
+    );
+    liveRoot.querySelector('[data-action="remove-provider"]').click();
+    check(Boolean(liveRoot.querySelector('[data-action="cancel-remove"]')));
+    liveRoot.querySelector('[data-action="cancel-remove"]').click();
+    check(Boolean(liveRoot.querySelector('[data-action="remove-provider"]')));
+    liveRoot.querySelector('[data-action="remove-provider"]').click();
+    liveRoot.querySelector('[data-action="confirm-remove"]').click();
+    await until(() => liveRoot.textContent.includes("Provider removed."));
+    const removed = await request({
+      action: "panel",
+      hostId: "local",
+      request: { action: "snapshot" },
+    });
+    check(!removed.providers.some((p) => p.id === "desktop-smoke"));
+    check(styleViolations.length === 0);
     await api.reportSmoke({
       providerSetupUi: true,
+      providerRemovalUi: true,
+      strictStyleCsp: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&
         typeof window.process === "undefined",

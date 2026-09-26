@@ -131,6 +131,8 @@ else {
             evidence.nodeUnavailable &&
             evidence.providerAdded &&
             evidence.providerSetupUi &&
+            evidence.providerRemovalUi &&
+            evidence.strictStyleCsp &&
             prefs.sandbox &&
             prefs.contextIsolation &&
             !prefs.nodeIntegration &&
@@ -140,6 +142,8 @@ else {
               desktopSmoke: valid ? "passed" : "failed",
               rendererIsolated: Boolean(valid),
               providerSetupUi: evidence.providerSetupUi === true,
+              providerRemovalUi: evidence.providerRemovalUi === true,
+              strictStyleCsp: evidence.strictStyleCsp === true,
               runtime: "v24.21.0",
               ...(evidence.startupError
                 ? { startupError: evidence.startupError }

@@ -337,7 +337,7 @@ class AgenticClient:
 
     def configure_provider(self, request: ConfigureProvider) -> ManagementSnapshot:
         with self._request("v1/management/providers", request) as response:
-            return management_snapshot(self._json(response), request["provider"]["id"])
+            return management_snapshot(self._json(response), request["provider"]["id"], request.get("remove") is True)
 
     def providers(self, *, refresh: bool = False) -> list[ProviderInfo]:
         with self._request(

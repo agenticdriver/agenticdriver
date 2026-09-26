@@ -47,11 +47,13 @@ class ManagementSnapshot(TypedDict):
     supportedKinds: list[str]
     providerDefinitions: NotRequired[list[ProviderDefinition]]
     executionProviders: NotRequired[list[str]]
+    removalSupported: NotRequired[bool]
 
 class ConfigureProvider(TypedDict):
     revision: str
     provider: ProviderConfiguration
     apiKey: NotRequired[str]
+    remove: NotRequired[bool]
 
 def _definition(value: Any) -> bool:
     def text(obj: dict, key: str, limit: int) -> bool:
@@ -69,9 +71,10 @@ def _definition(value: Any) -> bool:
                and text(m, "interaction", 80) and re.fullmatch(r"[a-z][a-z0-9-]{0,79}", m["interaction"]) is not None
                and m.get("credentialOwner") in ("native-runtime", "host", "none") for m in value["methods"])
 
-def snapshot(value: Any, provider_id: str | None = None) -> ManagementSnapshot:
+def snapshot(value: Any, provider_id: str | None = None, removed: bool = False) -> ManagementSnapshot:
     valid = (
         isinstance(value, dict) and value.get("version") == 1
+        and ("removalSupported" not in value or isinstance(value["removalSupported"], bool))
         and isinstance(value.get("revision"), str)
         and re.fullmatch(r"[a-f0-9]{64}", value["revision"]) is not None
         and isinstance(value.get("providers"), list) and len(value["providers"]) <= 32
@@ -90,7 +93,7 @@ def snapshot(value: Any, provider_id: str | None = None) -> ManagementSnapshot:
                 valid = False
                 break
             ids.append(p["id"])
-        valid = valid and len(ids) == len(set(ids)) and (provider_id is None or provider_id in ids)
+        valid = valid and len(ids) == len(set(ids)) and (provider_id is None or ((provider_id in ids) != removed))
     if not valid:
         raise DriverError("INVALID_RESPONSE", "The host returned invalid or mismatched provider settings. Refresh before retrying.")
     return cast(ManagementSnapshot, value)

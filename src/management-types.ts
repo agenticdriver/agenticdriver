@@ -44,12 +44,16 @@ export const ManagementSnapshotSchema = z.object({
   providerDefinitions: z.array(ProviderDefinitionSchema).max(32).optional(),
   /** Caller-specific execution grants. Management access alone grants no inference. */
   executionProviders: z.array(z.string().min(1).max(256)).max(256).optional(),
+  /** Older hosts omit this and reject configure requests with remove. */
+  removalSupported: z.boolean().optional(),
 });
 export type ManagementSnapshot = z.infer<typeof ManagementSnapshotSchema>;
 export const ConfigureProviderSchema = z
   .object({
     revision: z.string().regex(/^[a-f0-9]{64}$/),
     provider: HostProviderConfigSchema,
+    /** Remove this exact instance from new runs; retain account credentials and grants. */
+    remove: z.boolean().optional(),
     /** Write only. Stored in a new private host file; never included in responses. */
     apiKey: z
       .string()

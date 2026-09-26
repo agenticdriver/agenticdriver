@@ -68,6 +68,8 @@ pub struct ProviderDefinition {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManagementSnapshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub removal_supported: Option<bool>,
     pub version: u32,
     pub revision: String,
     pub providers: Vec<ProviderConfiguration>,
@@ -80,6 +82,9 @@ pub struct ManagementSnapshot {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigureProvider {
+    /// Remove this instance from new runs; retain account credentials and grants.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub remove: bool,
     pub revision: String,
     pub provider: ProviderConfiguration,
     /// Write only. Omit when keeping the existing credential reference.
@@ -149,4 +154,27 @@ pub(crate) fn snapshot(value: Value, id: Option<&str>) -> Result<ManagementSnaps
         ));
     }
     Ok(parsed)
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+pub(crate) fn configured_snapshot(
+    value: Value,
+    input: &ConfigureProvider,
+) -> Result<ManagementSnapshot> {
+    let state = snapshot(
+        value,
+        if input.remove {
+            None
+        } else {
+            Some(&input.provider.id)
+        },
+    )?;
+    if input.remove && state.providers.iter().any(|p| p.id == input.provider.id) {
+        return Err(Error::Protocol(
+            "The host did not remove the selected provider. Refresh before retrying.",
+        ));
+    }
+    Ok(state)
 }

@@ -457,7 +457,8 @@ export class AgenticClient {
     );
     if (
       !parsed.success ||
-      !parsed.data.providers.some((p) => p.id === input.provider.id)
+      parsed.data.providers.some((p) => p.id === input.provider.id) ===
+        (input.remove === true)
     )
       throw new DriverError(
         "INVALID_RESPONSE",

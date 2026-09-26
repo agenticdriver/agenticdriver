@@ -26,6 +26,10 @@ class ClientConformance(unittest.TestCase):
             with self.assertRaises(DriverError) as failure:
                 client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync"}})
             self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
+            self.assertTrue(next_state["removalSupported"])
+            removed = panel.handle({"action": "configure", "change": {"revision": next_state["revision"], "provider": next(p for p in next_state["providers"] if p["id"] == "python-sync"), "remove": True}})
+            self.assertFalse(any(p["id"] == "python-sync" for p in removed["providers"]))
+
 
     def test_connection_pairing(self):
         url = os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]

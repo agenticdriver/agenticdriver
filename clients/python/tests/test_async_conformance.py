@@ -33,6 +33,10 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(DriverError) as failure:
                 await client.configure_provider({"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async"}})
             self.assertEqual(failure.exception.code, "CONFIG_CONFLICT")
+            self.assertTrue(next_state["removalSupported"])
+            removed = await panel.handle({"action": "configure", "change": {"revision": next_state["revision"], "provider": next(p for p in next_state["providers"] if p["id"] == "python-async"), "remove": True}})
+            self.assertFalse(any(p["id"] == "python-async" for p in removed["providers"]))
+
 
     async def test_connection_pairing(self):
         url = os.environ["AGENTICDRIVER_TEST_MANAGEMENT_URL"]

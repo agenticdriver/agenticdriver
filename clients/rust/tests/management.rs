@@ -12,6 +12,7 @@ fn provider_settings_preserve_absent_empty_and_explicit_overrides() {
     );
     for provider in state.providers {
         let request = ConfigureProvider {
+            remove: false,
             revision: state.revision.clone(),
             provider: provider.clone(),
             api_key: None,
@@ -43,6 +44,7 @@ fn setup_catalog_and_native_tool_setting_roundtrip() {
     assert_eq!(state.providers[0].application_tools.as_deref(), Some("mcp"));
     assert_eq!(serde_json::to_value(&state).unwrap(), original);
     let input = ConfigureProvider {
+        remove: false,
         revision: state.revision,
         provider: state.providers[0].clone(),
         api_key: None,

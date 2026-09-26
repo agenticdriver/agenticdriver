@@ -360,7 +360,7 @@ class AsyncAgenticClient:
 
     async def configure_provider(self, request: ConfigureProvider) -> ManagementSnapshot:
         async with self._request("v1/management/providers", request) as response:
-            return management_snapshot(await self._json(response), request["provider"]["id"])
+            return management_snapshot(await self._json(response), request["provider"]["id"], request.get("remove") is True)
 
     async def providers(self, *, refresh: bool = False) -> list[ProviderInfo]:
         async with self._request(
