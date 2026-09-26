@@ -25,6 +25,8 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
             panel = AsyncProviderPanel(lambda: client)
             panel_state = await panel.handle({"action": "configure", "change": {"revision": before["revision"], "provider": {"kind": "mock", "id": "python-async", "models": []}}})
             next_state = panel_state["management"]
+            self.assertEqual(next_state["providerDefinitions"], before["providerDefinitions"])
+            self.assertEqual(next(d for d in before["providerDefinitions"] if d["kind"] == "codex")["methods"][0]["interaction"], "external")
             self.assertEqual(next(p for p in panel_state["providers"] if p["id"] == "python-async")["models"], [])
             self.assertIsInstance(next_state["executionProviders"], list)
             self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-async")["models"], [])

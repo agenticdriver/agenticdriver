@@ -18,6 +18,8 @@ class ClientConformance(unittest.TestCase):
             panel = ProviderPanel(lambda: client)
             panel_state = panel.handle({"action": "configure", "change": {"revision": before["revision"], "provider": {"kind": "mock", "id": "python-sync", "models": []}}})
             next_state = panel_state["management"]
+            self.assertEqual(next_state["providerDefinitions"], before["providerDefinitions"])
+            self.assertEqual(next(d for d in before["providerDefinitions"] if d["kind"] == "codex")["methods"][0]["interaction"], "external")
             self.assertEqual(next(p for p in panel_state["providers"] if p["id"] == "python-sync")["models"], [])
             self.assertIsInstance(next_state["executionProviders"], list)
             self.assertEqual(next(p for p in next_state["providers"] if p["id"] == "python-sync")["models"], [])

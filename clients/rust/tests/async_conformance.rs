@@ -656,6 +656,18 @@ async fn provider_management_roundtrip() {
         true,
     );
     let before = manager.management().await.unwrap();
+    assert_eq!(
+        before
+            .provider_definitions
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|d| d.kind == "codex")
+            .unwrap()
+            .methods[0]
+            .interaction,
+        "external"
+    );
     let provider = agenticdriver::ProviderConfiguration {
         id: "rust-async".into(),
         kind: "mock".into(),

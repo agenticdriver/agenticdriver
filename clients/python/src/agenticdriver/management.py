@@ -1,6 +1,6 @@
 """Provider management is a separate host grant, never implied by execution access."""
 import re
-from typing import Any, cast
+from typing import Any, Literal, cast
 from typing_extensions import NotRequired, TypedDict
 from ._errors import DriverError
 
@@ -16,23 +16,58 @@ class ProviderConfiguration(TypedDict):
     binary: NotRequired[str]
     accountDirectory: NotRequired[str]
     reasoningEffort: NotRequired[str]
+    applicationTools: NotRequired[Literal["mcp"]]
     inputMediaTypes: NotRequired[dict[str, list[str]]]
     extensionId: NotRequired[str]
     extensionVersion: NotRequired[str]
     settings: NotRequired[dict[str, Any]]
     secretRefs: NotRequired[dict[str, Any]]
 
+class ProviderConnectionMethod(TypedDict):
+    id: str
+    label: str
+    description: str
+    interaction: str  # Unknown future interactions must remain unavailable for actions.
+    credentialOwner: Literal["native-runtime", "host", "none"]
+
+class ProviderDefinition(TypedDict):
+    kind: str
+    name: str
+    description: str
+    category: Literal["native", "api", "compatible", "fixture"]
+    protocol: str
+    methods: list[ProviderConnectionMethod]
+    requirements: NotRequired[str]
+    docsUrl: NotRequired[str]
+
 class ManagementSnapshot(TypedDict):
     version: int
     revision: str
     providers: list[ProviderConfiguration]
     supportedKinds: list[str]
+    providerDefinitions: NotRequired[list[ProviderDefinition]]
     executionProviders: NotRequired[list[str]]
 
 class ConfigureProvider(TypedDict):
     revision: str
     provider: ProviderConfiguration
     apiKey: NotRequired[str]
+
+def _definition(value: Any) -> bool:
+    def text(obj: dict, key: str, limit: int) -> bool:
+        return isinstance(obj.get(key), str) and 0 < len(obj[key]) <= limit
+    if not isinstance(value, dict) or not all(text(value, key, limit) for key, limit in [("kind", 80), ("name", 100), ("description", 1000), ("protocol", 100)]):
+        return False
+    if value.get("category") not in ("native", "api", "compatible", "fixture") or not isinstance(value.get("methods"), list) or not 1 <= len(value["methods"]) <= 8:
+        return False
+    if "requirements" in value and not text(value, "requirements", 2000):
+        return False
+    if "docsUrl" in value and (not text(value, "docsUrl", 2000) or not value["docsUrl"].startswith("https://")):
+        return False
+    return all(isinstance(m, dict) and text(m, "id", 80) and re.fullmatch(r"[a-z][a-z0-9-]{0,79}", m["id"]) is not None
+               and text(m, "label", 100) and text(m, "description", 1000)
+               and text(m, "interaction", 80) and re.fullmatch(r"[a-z][a-z0-9-]{0,79}", m["interaction"]) is not None
+               and m.get("credentialOwner") in ("native-runtime", "host", "none") for m in value["methods"])
 
 def snapshot(value: Any, provider_id: str | None = None) -> ManagementSnapshot:
     valid = (
@@ -43,6 +78,7 @@ def snapshot(value: Any, provider_id: str | None = None) -> ManagementSnapshot:
         and isinstance(value.get("supportedKinds"), list)
         and all(isinstance(k, str) and k for k in value["supportedKinds"])
         and ("executionProviders" not in value or (isinstance(value["executionProviders"], list) and all(isinstance(p, str) and p for p in value["executionProviders"])))
+        and ("providerDefinitions" not in value or (isinstance(value["providerDefinitions"], list) and len(value["providerDefinitions"]) <= 32 and all(_definition(d) for d in value["providerDefinitions"])))
     )
     if valid:
         ids = []

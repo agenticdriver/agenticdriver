@@ -534,6 +534,9 @@ func TestManagementRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if before.ProviderDefinitions == nil || (*before.ProviderDefinitions)[0].Methods[0].Interaction != "external" {
+		t.Fatal("setup metadata lost")
+	}
 	empty := []string{}
 	input := ConfigureProvider{Revision: before.Revision, Provider: ProviderConfiguration{ID: "go-fixture", Kind: "mock", Models: &empty}}
 	panel := ProviderPanel{Client: func(context.Context) (*Client, error) { return manager, nil }}

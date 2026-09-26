@@ -43,6 +43,41 @@ to load that change. Concurrent writers use an exclusive file lock. If a host
 crashes during a save, its operator must reconcile the configuration before
 removing a stale `.management-lock` file.
 
+### Connection definitions
+
+Newer hosts also return optional `providerDefinitions`, a pure setup catalog for
+the integrations that the host supports. Reading it neither resolves provider
+secrets nor starts native processes, login, model discovery or inference. It is
+protected by the same `manageProviders` grant as settings. It does not claim that
+the runtime is installed, the account is signed in, or a model has passed a test.
+
+Each `ProviderDefinition` contains `kind`, `name`, `description`, `category`
+(`native`, `api`, `compatible` or `fixture`), `protocol`, `methods`, and optional
+`requirements`/HTTPS `docsUrl`. A `ProviderConnectionMethod` contains `id`,
+`label`, `description`, `interaction` and `credentialOwner`:
+
+| Interaction        | Current setup behavior                                            | Credential owner |
+| ------------------ | ----------------------------------------------------------------- | ---------------- |
+| `external`         | Use the official runtime's existing sign-in on the connected host | `native-runtime` |
+| `api-key`          | Supply the write-only `apiKey` when saving a connection           | `host`           |
+| `secret-reference` | Set `apiKeyRef` to an existing host credential                    | `host`           |
+| `none`             | Configure the offline fixture                                     | `none`           |
+
+TypeScript exports both types from `@agenticdriver/sdk/client` and
+`@agenticdriver/sdk/management`; Python, Go and Rust expose the same names.
+Rust uses `provider_definitions`, while the wire, Python and TypeScript use
+`providerDefinitions`; Go uses `ProviderDefinitions`. Absence means an older
+host: retain its `supportedKinds` settings form. An empty list advertises no guided
+setup choices. Check supported kinds and interactions before rendering actions.
+Unknown future interaction strings are retained for display; the panel disables
+them until it supports their flow. Render text as text and accept only safe HTTPS
+documentation links.
+
+These methods do not implement a browser OAuth/device-code lifecycle.
+[AD-054 / #50](https://github.com/agenticdriver/agenticdriver/issues/50) tracks
+owned provider sign-in attempts separately. [The reference review](provider-connection-design.md)
+explains the connection model and gateway/observability boundaries.
+
 ```ts
 const state = await client.management();
 await client.configureProvider({

@@ -394,6 +394,11 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
   const panel = providerPanel({ client: () => manager });
   const before = ((await panel({ action: "snapshot" })) as ProviderPanelState)
     .management!;
+  assert.equal(
+    before.providerDefinitions?.find((d) => d.kind === "codex")?.methods[0]
+      ?.interaction,
+    "external",
+  );
   const panelState = (await panel({
     action: "configure",
     change: {
@@ -402,6 +407,7 @@ if (process.env.AGENTICDRIVER_TEST_MANAGEMENT_URL) {
     },
   })) as ProviderPanelState;
   const next = panelState.management!;
+  assert.deepEqual(next.providerDefinitions, before.providerDefinitions);
   assert.deepEqual(
     panelState.providers.find((p) => p.id === "typescript-fixture")!.models,
     [],

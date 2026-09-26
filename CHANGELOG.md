@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Provider management reports a setup catalog shared by TypeScript, Python, Go
+  and Rust. The component has a searchable picker, host/account context, guided
+  API and compatible-endpoint setup, and official native sign-in instructions.
+  Older hosts retain their settings form. Catalog reads do not start login or
+  inference; all-model defaults and separate execution grants are preserved.
+  Go and Rust configuration round-trips also retain the Codex MCP tool opt-in.
+  See [provider connections](docs/provider-connection-design.md).
 - Codex now uses the official app-server protocol with environment access disabled,
   explicit native policy controls, inherited MCP servers disabled, and a pinned
   CLI 0.157.0 version check. The earlier exec adapter's zero-tools assertion

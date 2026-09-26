@@ -29,6 +29,8 @@ pub struct ProviderConfiguration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reasoning_effort: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub application_tools: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub input_media_types: Option<BTreeMap<String, Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extension_id: Option<String>,
@@ -39,6 +41,30 @@ pub struct ProviderConfiguration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secret_refs: Option<BTreeMap<String, Value>>,
 }
+/// Setup metadata only, not account availability or an execution grant.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderConnectionMethod {
+    pub id: String,
+    pub label: String,
+    pub description: String,
+    pub interaction: String,
+    pub credential_owner: String,
+}
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderDefinition {
+    pub kind: String,
+    pub name: String,
+    pub description: String,
+    pub category: String,
+    pub protocol: String,
+    pub methods: Vec<ProviderConnectionMethod>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub requirements: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub docs_url: Option<String>,
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManagementSnapshot {
@@ -46,6 +72,8 @@ pub struct ManagementSnapshot {
     pub revision: String,
     pub providers: Vec<ProviderConfiguration>,
     pub supported_kinds: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_definitions: Option<Vec<ProviderDefinition>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub execution_providers: Option<Vec<String>>,
 }
@@ -57,6 +85,40 @@ pub struct ConfigureProvider {
     /// Write only. Omit when keeping the existing credential reference.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub api_key: Option<String>,
+}
+fn valid_definition(d: &ProviderDefinition) -> bool {
+    let text = |s: &str, max: usize| !s.is_empty() && s.len() <= max;
+    text(&d.kind, 80)
+        && text(&d.name, 100)
+        && text(&d.description, 1000)
+        && text(&d.protocol, 100)
+        && matches!(
+            d.category.as_str(),
+            "native" | "api" | "compatible" | "fixture"
+        )
+        && (1..=8).contains(&d.methods.len())
+        && d.requirements.as_ref().is_none_or(|s| text(s, 2000))
+        && d.docs_url
+            .as_ref()
+            .is_none_or(|s| text(s, 2000) && s.starts_with("https://"))
+        && d.methods.iter().all(|m| {
+            text(&m.id, 80)
+                && m.id.as_bytes()[0].is_ascii_lowercase()
+                && m.id
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+                && text(&m.label, 100)
+                && text(&m.description, 1000)
+                && text(&m.interaction, 80)
+                && m.interaction.as_bytes()[0].is_ascii_lowercase()
+                && m.interaction
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+                && matches!(
+                    m.credential_owner.as_str(),
+                    "native-runtime" | "host" | "none"
+                )
+        })
 }
 pub(crate) fn snapshot(value: Value, id: Option<&str>) -> Result<ManagementSnapshot> {
     let parsed: ManagementSnapshot = serde_json::from_value(value)
@@ -70,6 +132,12 @@ pub(crate) fn snapshot(value: Value, id: Option<&str>) -> Result<ManagementSnaps
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
         || parsed.providers.len() > 32
         || parsed.supported_kinds.len() > 32
+        || parsed
+            .provider_definitions
+            .as_ref()
+            .is_some_and(|definitions| {
+                definitions.len() > 32 || definitions.iter().any(|d| !valid_definition(d))
+            })
         || parsed
             .providers
             .iter()

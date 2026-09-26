@@ -1,4 +1,5 @@
 import { hostConnections } from "./connections.js";
+import { providerDefinitions } from "./provider-definitions.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -18,18 +19,6 @@ import {
 } from "./management-types.js";
 export type * from "./management-types.js";
 
-const kinds = [
-  "codex",
-  "claude-code",
-  "gemini-cli",
-  "openai",
-  "anthropic",
-  "gemini",
-  "xai",
-  "xai-responses",
-  "openai-compatible",
-  "mock",
-];
 const revision = (config: HostConfig) =>
   createHash("sha256").update(JSON.stringify(config)).digest("hex");
 const accounts = (config: HostConfig) =>
@@ -51,7 +40,8 @@ export async function managedHost(
     version: 1,
     revision: revision(config),
     providers: structuredClone(config.providers),
-    supportedKinds: [...kinds],
+    supportedKinds: providerDefinitions().map((p) => p.kind),
+    providerDefinitions: providerDefinitions(),
   });
   const configure: ProviderManagement["configure"] = (input) => {
     const operation = queue.then(async () => {

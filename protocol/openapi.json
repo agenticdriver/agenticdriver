@@ -2396,6 +2396,88 @@
             "type": "array",
             "items": { "type": "string", "minLength": 1, "maxLength": 80 }
           },
+          "providerDefinitions": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": { "type": "string", "minLength": 1, "maxLength": 80 },
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "category": {
+                  "type": "string",
+                  "enum": ["native", "api", "compatible", "fixture"]
+                },
+                "protocol": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "methods": {
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]{0,79}$"
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000
+                      },
+                      "interaction": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]{0,79}$"
+                      },
+                      "credentialOwner": {
+                        "type": "string",
+                        "enum": ["native-runtime", "host", "none"]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "description",
+                      "interaction",
+                      "credentialOwner"
+                    ]
+                  }
+                },
+                "requirements": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "docsUrl": {
+                  "type": "string",
+                  "maxLength": 2000,
+                  "pattern": "^https:\\/\\/"
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "description",
+                "category",
+                "protocol",
+                "methods"
+              ]
+            }
+          },
           "executionProviders": {
             "maxItems": 256,
             "type": "array",

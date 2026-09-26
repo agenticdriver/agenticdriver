@@ -10,6 +10,16 @@ from agenticdriver.management import snapshot
 FIXTURE = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/management.json").read_text())
 
 class Management(unittest.TestCase):
+    def test_setup_catalog_and_native_tool_roundtrip(self):
+        fixture = json.loads((Path(__file__).resolve().parents[3] / "protocol/fixtures/management-catalog.json").read_text())
+        state = snapshot(fixture)
+        self.assertEqual(state["providerDefinitions"][0]["methods"][0]["credentialOwner"], "native-runtime")
+        self.assertEqual(state["providers"][0]["applicationTools"], "mcp")
+        self.assertEqual(state["providers"][0]["models"], [])
+        self.assertEqual(json.loads(json.dumps(state)), fixture)
+        for definitions in [None, {}, [{**fixture["providerDefinitions"][0], "methods": []}], [{**fixture["providerDefinitions"][0], "docsUrl": "javascript:alert(1)"}]]:
+            with self.assertRaises(DriverError): snapshot({**fixture, "providerDefinitions": definitions})
+
     def test_wire_and_model_overrides(self):
         calls = []
         def open_response(request, timeout):

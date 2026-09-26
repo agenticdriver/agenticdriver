@@ -28,3 +28,26 @@ fn provider_settings_preserve_absent_empty_and_explicit_overrides() {
         }
     }
 }
+
+#[test]
+fn setup_catalog_and_native_tool_setting_roundtrip() {
+    let original: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../protocol/fixtures/management-catalog.json"
+    ))
+    .unwrap();
+    let state: ManagementSnapshot = serde_json::from_value(original.clone()).unwrap();
+    assert_eq!(
+        state.provider_definitions.as_ref().unwrap()[0].methods[0].credential_owner,
+        "native-runtime"
+    );
+    assert_eq!(state.providers[0].application_tools.as_deref(), Some("mcp"));
+    assert_eq!(serde_json::to_value(&state).unwrap(), original);
+    let input = ConfigureProvider {
+        revision: state.revision,
+        provider: state.providers[0].clone(),
+        api_key: None,
+    };
+    let wire = serde_json::to_value(input).unwrap();
+    assert_eq!(wire["provider"]["applicationTools"], "mcp");
+    assert_eq!(wire["provider"]["models"], serde_json::json!([]));
+}

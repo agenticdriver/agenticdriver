@@ -66,6 +66,11 @@ test("management requires its own grant and revision, persists overrides, and ke
   try {
     await assert.rejects(f.client.management(), { code: "FORBIDDEN" });
     const initial = await f.operator.management();
+    assert.ok(initial.providerDefinitions?.some((d) => d.kind === "codex"));
+    assert.deepEqual(
+      initial.providerDefinitions?.map((d) => d.kind),
+      initial.supportedKinds,
+    );
     await assert.rejects(
       f.client.configureProvider({
         revision: initial.revision,

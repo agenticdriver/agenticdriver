@@ -26,7 +26,10 @@ pub use connections::{
     CreateInvitation,
 };
 pub mod management;
-pub use management::{ConfigureProvider, ManagementSnapshot, ProviderConfiguration};
+pub use management::{
+    ConfigureProvider, ManagementSnapshot, ProviderConfiguration, ProviderConnectionMethod,
+    ProviderDefinition,
+};
 pub mod jobs;
 pub mod sessions;
 pub use jobs::{JobEventPage, JobEventsRequest, JobIdentity, JobInfo, JobState, JobSubmit};

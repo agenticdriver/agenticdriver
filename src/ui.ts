@@ -2,6 +2,7 @@ import type { ProviderPanelState, PanelRequest } from "./panel.js";
 import type {
   HostProviderConfig,
   ConfigureProvider,
+  ProviderDefinition,
 } from "./management-types.js";
 import type { ProviderInfo } from "./types.js";
 import type { ConnectionList } from "./connection-types.js";
@@ -83,6 +84,29 @@ const labels: Record<string, string> = {
 };
 const native = (kind: string) =>
   ["codex", "claude-code", "gemini-cli"].includes(kind);
+const categories: Record<string, string> = {
+  native: "Native account",
+  api: "API account",
+  compatible: "Custom endpoint",
+  fixture: "Offline",
+};
+const setupInteractions = new Set([
+  "external",
+  "api-key",
+  "secret-reference",
+  "none",
+]);
+function helpLink(url?: string): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password)
+      return "";
+    return `<a href="${escape(parsed.href)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Official setup documentation ↗</a>`;
+  } catch {
+    return "";
+  }
+}
 const keyEnv: Record<string, string> = {
   openai: "OPENAI_API_KEY",
   anthropic: "ANTHROPIC_API_KEY",
@@ -100,7 +124,8 @@ const css = `
 :host{--ad-bg:#252a3b;--ad-surface:#2c3245;--ad-field:#222737;--ad-line:#3a4157;--ad-fg:#e9ecf5;--ad-muted:#a6aec4;--ad-accent:#a6b6ff;--ad-good:#9ddbc2;display:block;color:var(--ad-fg);font:14px/1.5 system-ui,sans-serif;color-scheme:dark}
 :host([theme=light]){--ad-bg:#fafbff;--ad-surface:#f0f2f9;--ad-field:#fff;--ad-line:#d8deee;--ad-fg:#202839;--ad-muted:#5d6980;--ad-accent:#3e52b6;--ad-good:#237a59;color-scheme:light}
 *{box-sizing:border-box}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}button{color:inherit;border:1px solid var(--ad-line);border-radius:8px;background:transparent;padding:7px 12px}button:hover:enabled{background:var(--ad-surface)}button.primary{background:var(--ad-accent);color:var(--ad-bg);border-color:transparent;font-weight:650}button.primary:hover:enabled{filter:brightness(1.08)}.quiet{border:0;padding:5px 8px}.shell{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:18px;overflow:hidden;min-height:460px;max-width:1320px;margin:auto}.top{padding:22px 26px;display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--ad-line)}.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--ad-muted);text-transform:uppercase}.top h2{font-size:20px;letter-spacing:-.025em;margin:4px 0 0;font-weight:600}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:11px;border:1px solid var(--ad-line);border-radius:20px;padding:3px 9px;color:var(--ad-muted);white-space:nowrap}.live{color:var(--ad-good)}.layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:480px}.sidebar{background:color-mix(in srgb,var(--ad-surface) 45%,transparent);border-right:1px solid var(--ad-line);padding:12px}.side-label{font-size:11px;color:var(--ad-muted);padding:10px 10px 14px;text-transform:uppercase;letter-spacing:.07em}.provider{display:flex;align-items:center;border:1px solid transparent;border-radius:11px;margin:3px 0;padding:5px;gap:3px}.provider.selected{background:var(--ad-surface);border-color:var(--ad-line)}.provider button.select{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-align:left;border:0;padding:10px 6px}.avatar{width:32px;height:32px;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:650;color:var(--ad-accent);background:var(--ad-field);border-radius:9px}.avatar img{width:24px;height:24px;object-fit:contain}.provider-copy{min-width:0}.provider-copy strong{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.provider-copy small{font-size:11px;color:var(--ad-muted);display:block}.switch{width:32px;height:19px;flex:0 0 32px;padding:2px!important;border:0;border-radius:18px;background:var(--ad-line);position:relative}.switch:before{content:"";width:15px;height:15px;display:block;border-radius:50%;background:var(--ad-muted)}.switch[aria-checked=true]{background:var(--ad-accent)}.switch[aria-checked=true]:before{background:var(--ad-bg);margin-left:13px}.detail{padding:26px 30px;min-width:0}.detail-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.detail-head>div{min-width:0;overflow-wrap:anywhere}.detail-head h3{font-size:19px;margin:0;font-weight:600}.muted{color:var(--ad-muted)}.small{font-size:12px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ad-line);margin:22px 0}.tabs button{border:0;border-radius:0;padding:10px 16px;color:var(--ad-muted);border-bottom:2px solid transparent}.tabs button[aria-selected=true]{color:var(--ad-accent);border-bottom-color:var(--ad-accent)}.group{border:1px solid var(--ad-line);border-radius:12px;overflow:hidden;margin:14px 0}.field{display:grid;grid-template-columns:minmax(130px,1fr) minmax(160px,1fr);gap:20px;padding:16px 18px;align-items:center}.field+.field{border-top:1px solid var(--ad-line)}.field label{font-weight:550;display:block}.hint{color:var(--ad-muted);font-size:12px;font-weight:400;margin:4px 0 0}input,select,textarea{border:1px solid var(--ad-line);border-radius:8px;padding:8px 10px;background:var(--ad-field);color:var(--ad-fg);width:100%;min-width:0}input:disabled{opacity:.65}input[type=checkbox]{width:16px;height:16px;accent-color:var(--ad-accent)}textarea{resize:vertical;min-height:90px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.model-access{flex-wrap:wrap}.model-access .inline{white-space:nowrap}.model-toolbar{margin-bottom:12px;display:flex;gap:14px;align-items:center}.model-toolbar input{max-width:260px}.models{border-top:1px solid var(--ad-line);margin-top:14px}.model{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--ad-line)}.model.hidden-model{opacity:.65}.model .model-name{flex:1;min-width:0;text-align:left;border:0;font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;padding:4px}.model .star{font-size:18px;width:27px;padding:2px;border:0}.star.favorite{color:#e9c979}.icon-button{font-size:12px;padding:3px 6px}.section-label{font-size:12px;color:var(--ad-muted);margin:22px 0 10px}.notice{border:1px solid var(--ad-line);border-radius:10px;padding:12px 15px;color:var(--ad-muted);font-size:12px;margin:12px 0}.error{border-color:#b5727c;color:#f2b7bf;margin:16px 24px}.success{color:var(--ad-good)}.empty{max-width:840px;margin:auto;padding:40px 32px}.empty h3{font-size:28px;line-height:1.25;letter-spacing:-.035em;margin:10px 0}.empty p{max-width:570px;color:var(--ad-muted)}.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}.setup-card{background:var(--ad-surface);border:1px solid var(--ad-line);border-radius:12px;padding:22px}.setup-card h4{font-size:15px;margin:4px 0 10px}.step{font-size:11px;color:var(--ad-accent);font-weight:600}.command{font:12px/1.6 ui-monospace,monospace;background:var(--ad-field);border-radius:8px;padding:12px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.connect-form{margin:24px 0}.connect-form label{display:block;margin-bottom:8px;font-weight:550}.connect-form textarea{font:12px/1.6 ui-monospace,monospace}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:18px}.inline{display:flex;align-items:center;gap:8px}.host-label{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.links{margin-top:24px;padding-top:18px;border-top:1px solid var(--ad-line)}.connections{padding:10px 0;border-bottom:1px solid var(--ad-line);display:flex;justify-content:space-between;gap:16px}.connection-meta{font-size:11px;color:var(--ad-muted);overflow-wrap:anywhere}.new-provider{border:1px dashed var(--ad-line);width:100%;margin-top:15px;text-align:left}.save-row{justify-content:flex-end}.loading{padding:50px;text-align:center;color:var(--ad-muted)}
-@media(max-width:760px){.top{padding:18px;align-items:flex-start;flex-wrap:wrap}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--ad-line);display:flex;gap:6px;overflow:auto;align-items:center}.side-label{display:none}.provider{flex:0 0 205px}.new-provider{width:auto;white-space:nowrap;margin:0}.detail{padding:22px 18px}.field{grid-template-columns:1fr;gap:9px;padding:14px}.setup-grid{grid-template-columns:1fr}.empty{padding:26px 20px}.empty h3{font-size:25px}.host-label{max-width:180px}.model{gap:3px}.model-toolbar{align-items:flex-start;flex-wrap:wrap}.model .model-name{font-size:11px}.footer{flex-wrap:wrap}}
+.setup-host{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border:1px solid var(--ad-line);border-radius:10px;padding:12px 16px;margin-bottom:22px;overflow-wrap:anywhere}.setup-host .hint{flex-basis:100%}.setup-host .small{overflow-wrap:anywhere;min-width:0}.provider-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.provider-choice,.method-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:16px}.provider-choice strong{font-size:15px}.provider-choice .hint{margin-top:auto;padding-top:8px}.method-list{display:grid;gap:10px;margin:18px 0}.method-choice.chosen{border-color:var(--ad-accent);background:var(--ad-surface)}.method-choice strong:before{content:"○";margin-right:8px;color:var(--ad-muted)}.method-choice.chosen strong:before{content:"●";color:var(--ad-accent)}.setup-title h4{font-size:20px;margin:3px 0}.advanced summary{cursor:pointer;color:var(--ad-muted);padding:8px 0}.advanced .group{margin-top:6px}.hint a{color:var(--ad-accent);white-space:normal}
+@media(max-width:760px){.provider-catalog{grid-template-columns:1fr}.setup-title{flex-wrap:wrap}.top{padding:18px;align-items:flex-start;flex-wrap:wrap}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--ad-line);display:flex;gap:6px;overflow:auto;align-items:center}.side-label{display:none}.provider{flex:0 0 205px}.new-provider{width:auto;white-space:nowrap;margin:0}.detail{padding:22px 18px}.field{grid-template-columns:1fr;gap:9px;padding:14px}.setup-grid{grid-template-columns:1fr}.empty{padding:26px 20px}.empty h3{font-size:25px}.host-label{max-width:180px}.model{gap:3px}.model-toolbar{align-items:flex-start;flex-wrap:wrap}.model .model-name{font-size:11px}.footer{flex-wrap:wrap}}
 `;
 
 export function registerProviderPanel(
@@ -118,6 +143,8 @@ export function registerProviderPanel(
     private message = "";
     private failure = "";
     private adding = false;
+    private providerQuery = "";
+    private setupMethod = "";
     private draft?: HostProviderConfig;
     private apiKey = "";
     private generation = 0;
@@ -277,7 +304,7 @@ export function registerProviderPanel(
           a.localeCompare(b),
       );
     }
-    private async save(provider: HostProviderConfig) {
+    private async save(provider: HostProviderConfig, includeApiKey = false) {
       const revision = this.state?.management?.revision;
       if (!revision)
         throw new Error("Management access is required to edit host settings.");
@@ -287,7 +314,7 @@ export function registerProviderPanel(
       const change: ConfigureProvider = {
         revision,
         provider,
-        ...(this.apiKey ? { apiKey: this.apiKey } : {}),
+        ...(includeApiKey && this.apiKey ? { apiKey: this.apiKey } : {}),
       };
       try {
         this.accept(await this.call({ action: "configure", change }));
@@ -305,6 +332,11 @@ export function registerProviderPanel(
     }
     private input(event: Event) {
       const input = event.target as HTMLInputElement;
+      if (input.dataset.field === "provider-query") {
+        this.providerQuery = input.value;
+        this.render();
+        return;
+      }
       if (input.dataset.field === "query") {
         this.query = input.value;
         this.render();
@@ -335,6 +367,18 @@ export function registerProviderPanel(
             ? {}
             : { apiKeyRef: { env: keyEnv[kind] ?? "PROVIDER_API_KEY" } }),
         } as HostProviderConfig;
+        this.apiKey = "";
+        this.render();
+      }
+      if (
+        target.dataset.field === "reference-kind" &&
+        this.draft &&
+        "apiKeyRef" in this.draft
+      ) {
+        this.draft.apiKeyRef =
+          target.value === "file"
+            ? { file: "" }
+            : { env: keyEnv[this.draft.kind] ?? "PROVIDER_API_KEY" };
         this.render();
       }
       if (target.dataset.field === "setup-kind") {
@@ -371,12 +415,97 @@ export function registerProviderPanel(
       }
       if (action === "add") {
         this.adding = true;
-        this.draft = { id: "", kind: "codex" };
+        this.draft = this.state?.management?.providerDefinitions
+          ? undefined
+          : { id: "", kind: "codex" };
+        this.apiKey = "";
+        this.setupMethod = "";
+        this.providerQuery = "";
         this.tab = "runtime";
         this.render();
         return;
       }
-      if (action === "save" && this.draft) return this.save(this.draft);
+      if (action === "pick-provider") {
+        const definition = this.definitions().find(
+          (p) => p.kind === button.dataset.kind,
+        );
+        if (!definition) return;
+        const taken = new Set(
+          this.state?.management?.providers.map((p) => p.id),
+        );
+        let id = definition.kind,
+          suffix = 2;
+        while (taken.has(id)) id = `${definition.kind}-${suffix++}`;
+        this.draft = {
+          id,
+          kind: definition.kind,
+          name: definition.name,
+          ...(native(definition.kind) || definition.kind === "mock"
+            ? {}
+            : {
+                apiKeyRef: {
+                  env: keyEnv[definition.kind] ?? "PROVIDER_API_KEY",
+                },
+              }),
+        } as HostProviderConfig;
+        this.setupMethod =
+          definition.methods.find((m) => setupInteractions.has(m.interaction))
+            ?.id ?? "";
+        this.apiKey = "";
+        this.render();
+        this.root
+          .querySelector<HTMLElement>("[data-field=method-heading]")
+          ?.focus();
+        return;
+      }
+      if (action === "setup-method") {
+        this.setupMethod = button.dataset.method!;
+        if (
+          this.setupMethod === "api-key" &&
+          this.draft &&
+          "apiKeyRef" in this.draft
+        )
+          this.draft.apiKeyRef = {
+            env: keyEnv[this.draft.kind] ?? "PROVIDER_API_KEY",
+          };
+        this.apiKey = "";
+        this.render();
+        return;
+      }
+      if (action === "back-providers") {
+        this.draft = undefined;
+        this.apiKey = "";
+        this.setupMethod = "";
+        this.render();
+        this.root
+          .querySelector<HTMLElement>("[data-field=provider-query]")
+          ?.focus();
+        return;
+      }
+      if (action === "cancel-add") {
+        this.adding = false;
+        this.apiKey = "";
+        this.draft = structuredClone(
+          this.state?.management?.providers.find((p) => p.id === this.selected),
+        );
+        this.render();
+        return;
+      }
+      if (action === "connect-provider" && this.draft) {
+        const method = this.definitions()
+          .find((d) => d.kind === this.draft?.kind)
+          ?.methods.find((m) => m.id === this.setupMethod);
+        if (!method || !setupInteractions.has(method.interaction))
+          throw new Error("Choose a supported connection method.");
+        if (method.interaction === "api-key" && !this.apiKey.trim())
+          throw new Error(
+            "Enter an API key, or choose a host credential reference.",
+          );
+        if (this.draft.kind === "openai-compatible" && !this.draft.baseUrl)
+          throw new Error("Enter the compatible endpoint URL.");
+        return this.save(this.draft, true);
+      }
+      if (action === "save" && this.draft) return this.save(this.draft, true);
       if (action === "enable") {
         const p = this.state?.management?.providers.find(
           (p) => p.id === button.dataset.id,
@@ -572,7 +701,128 @@ export function registerProviderPanel(
           "",
         )}</select><pre class="command">agenticdriver setup --provider codex --manage</pre><p class="small">Run this in a terminal on the provider machine. Keep it running and copy the invitation it prints.</p></section><section class="setup-card"><span class="step">02 / OR USE A REMOTE HOST</span><h4>Connect another machine</h4><p class="small">Ask its operator for an AgenticDriver invitation. The invitation includes the host address and your connection permissions.</p><div class="notice">Remote hosts use HTTPS. For hosted apps, the address must be reachable from the app's backend.</div><p class="small">Already running a host? Create an invitation with <code>agenticdriver pair</code>.</p></section></div><div class="connect-form">${this.state?.connection && this.state.canDisconnect ? '<div class="notice">A saved connection is unavailable. <button data-action="disconnect">Forget saved connection</button></div>' : ""}<label for="invitation">Connection invitation</label><textarea id="invitation" data-field="invitation" placeholder="ad1.…" autocomplete="off" spellcheck="false" aria-describedby="invite-hint"></textarea><div class="footer"><span class="hint" id="invite-hint">Used once. Your app keeps the connection credential privately.</span><button class="primary" data-action="connect" ${this.busy || this.state?.canConnect === false ? "disabled" : ""}>${this.busy ? "Connecting…" : "Connect host →"}</button></div>${this.state?.canConnect === false ? '<p class="hint">This application manages connections outside this panel.</p>' : ""}</div></div>`;
     }
+    private definitions(): ProviderDefinition[] {
+      const management = this.state?.management;
+      return (management?.providerDefinitions ?? []).filter((p) =>
+        management?.supportedKinds.includes(p.kind),
+      );
+    }
+    private setupProvider(): string {
+      const definitions = this.definitions(),
+        p = this.draft;
+      const host = `<div class="setup-host"><span class="eyebrow">SET UP ON</span><strong>${escape(this.state?.connection?.label ?? "Connected host")}</strong>${this.state?.connection?.url ? `<span class="small muted">${escape(this.state.connection.url)}</span>` : ""}<span class="hint">Accounts, paths and credentials belong to this host.</span></div>`;
+      if (!p) {
+        const filtered = definitions.filter((d) =>
+          `${d.name} ${d.description} ${d.kind} ${d.category} ${d.protocol}`
+            .toLowerCase()
+            .includes(this.providerQuery.toLowerCase()),
+        );
+        return `${host}<label class="section-label" for="provider-search">Choose a provider connection</label><input id="provider-search" data-field="provider-query" type="search" placeholder="Search providers, APIs or gateways…" value="${escape(this.providerQuery)}"><div class="provider-catalog">${filtered.map((d) => `<button class="provider-choice" data-action="pick-provider" data-kind="${escape(d.kind)}" ${!Object.hasOwn(labels, d.kind) ? "disabled" : ""}><span class="eyebrow">${escape(categories[d.category] ?? d.category)}</span><strong>${escape(d.name)}</strong><span class="small muted">${escape(d.description)}</span><span class="hint">${Object.hasOwn(labels, d.kind) ? escape(d.protocol) : "Requires a newer panel"}</span></button>`).join("") || '<p class="muted">No supported provider connections match this search.</p>'}</div><div class="footer"><span class="hint">Choose a connection method next. No model calls are made.</span><button data-action="cancel-add">Cancel</button></div>`;
+      }
+      const definition = definitions.find((d) => d.kind === p.kind);
+      if (!definition)
+        return '<div class="notice">This provider is no longer advertised by the host. Refresh to load current setup options.</div>';
+      const method = definition.methods.find((m) => m.id === this.setupMethod);
+      const methods = definition.methods
+        .map(
+          (m) =>
+            `<button class="method-choice ${m.id === this.setupMethod ? "chosen" : ""}" data-action="setup-method" data-method="${escape(m.id)}" aria-pressed="${m.id === this.setupMethod}" ${!setupInteractions.has(m.interaction) ? "disabled" : ""}><strong>${escape(m.label)}</strong><span class="small muted">${escape(m.description)}</span>${!setupInteractions.has(m.interaction) ? '<span class="hint">Requires a newer panel</span>' : ""}</button>`,
+        )
+        .join("");
+      let fields = this.field(
+        "Connection name",
+        "name",
+        p.name,
+        "A recognizable name for this account or gateway.",
+      );
+      let advanced =
+        this.field(
+          "Instance ID",
+          "id",
+          p.id,
+          "Unique on this host. Use a new ID for a different account.",
+        ) +
+        this.field(
+          "Account ID",
+          "accountId",
+          p.accountId,
+          "Optional stable identity for usage tracking.",
+        );
+      if (native(p.kind)) {
+        advanced +=
+          this.field(
+            "Binary path",
+            "binary",
+            "binary" in p ? p.binary : undefined,
+            "Official runtime executable on this host. Empty uses its standard command.",
+          ) +
+          this.field(
+            "Account directory",
+            "accountDirectory",
+            "accountDirectory" in p ? p.accountDirectory : undefined,
+            "Absolute path to the signed-in account on this host.",
+          );
+        if (p.kind === "codex")
+          advanced += this.field(
+            "Reasoning effort",
+            "reasoningEffort",
+            p.reasoningEffort,
+            "Optional. Supported values depend on the selected model.",
+          );
+      }
+      if ("apiKeyRef" in p) {
+        if (p.kind === "openai-compatible")
+          fields += this.field(
+            "API endpoint",
+            "baseUrl",
+            p.baseUrl,
+            "Required. The endpoint must support OpenAI Chat Completions.",
+          );
+        else
+          advanced += this.field(
+            "API endpoint",
+            "baseUrl",
+            p.baseUrl,
+            `Optional endpoint override for ${definition.protocol}.`,
+          );
+        if (method?.interaction === "api-key")
+          fields += this.field(
+            "API key",
+            "apiKey",
+            this.apiKey,
+            "Write only. Stored privately on the connected host when you save.",
+            false,
+            true,
+          );
+        if (method?.interaction === "secret-reference") {
+          const file = "file" in p.apiKeyRef;
+          fields += `<div class="field"><label for="reference-kind">Credential source</label><select id="reference-kind" data-field="reference-kind"><option value="env" ${!file ? "selected" : ""}>Host environment variable</option><option value="file" ${file ? "selected" : ""}>Private file on host</option></select></div>`;
+          fields += file
+            ? this.field(
+                "Credential file",
+                "file",
+                "file" in p.apiKeyRef ? p.apiKeyRef.file : "",
+                "Enter a private file path on the connected host.",
+              )
+            : this.field(
+                "Credential environment variable",
+                "env",
+                "env" in p.apiKeyRef ? p.apiKeyRef.env : "",
+                "Enter the variable name, not its secret value.",
+              );
+        }
+      }
+      const owner =
+        method?.credentialOwner === "native-runtime"
+          ? "Credentials stay with the official runtime."
+          : method?.credentialOwner === "host"
+            ? "Credentials are resolved privately by the connected host."
+            : "No credentials are needed.";
+      return `${host}<div class="row setup-title"><div><span class="eyebrow">${escape(categories[definition.category])}</span><h4 tabindex="-1" data-field="method-heading">${escape(definition.name)}</h4><span class="hint">${escape(definition.protocol)}</span></div><button data-action="back-providers">Change provider</button></div><div class="method-list" aria-label="Connection methods">${methods}</div>${definition.requirements ? `<div class="notice">${escape(definition.requirements)}</div>` : ""}<p class="hint">${owner} ${helpLink(definition.docsUrl)}</p><div class="group">${fields}</div><details class="advanced"><summary>Advanced settings</summary><div class="group">${advanced}</div></details><div class="notice">All models are allowed by default for this instance. You can add connection overrides in Models. Application execution grants stay separate; saving does not run a model or verify account access.</div><div class="footer"><button data-action="cancel-add">Cancel</button><button class="primary" data-action="connect-provider" ${this.busy || !method || !setupInteractions.has(method.interaction) ? "disabled" : ""}>${this.busy ? "Saving…" : "Save connection"}</button></div>`;
+    }
     private runtime(provider?: ProviderInfo) {
+      if (this.adding && this.state?.management?.providerDefinitions)
+        return this.setupProvider();
       const p = this.draft,
         readonly = !this.state?.management || p?.kind === "extension";
       if (!p)
@@ -722,9 +972,9 @@ export function registerProviderPanel(
             "",
           )}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? "No providers granted")}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? "Ask the host operator for a provider grant.")}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding ? this.modelList(selected) : this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.connectionSection()}</main></div>`;
       this.root.innerHTML = `<style>${css}</style><section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${content}</section>`;
-      if (focusField === "query") {
+      if (focusField === "query" || focusField === "provider-query") {
         const input = this.root.querySelector<HTMLInputElement>(
-          '[data-field="query"]',
+          `[data-field="${focusField}"]`,
         );
         input?.focus();
         if (selection !== null && selection !== undefined)
