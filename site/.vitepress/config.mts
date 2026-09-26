@@ -64,6 +64,7 @@ export default defineConfig({
           { text: "Local execution host", link: "/host" },
           { text: "Pair local and remote clients", link: "/connections" },
           { text: "Remote provider management", link: "/provider-management" },
+          { text: "Native provider sign-in", link: "/provider-sign-in" },
           { text: "Better Auth and AuthYard", link: "/authentication" },
           { text: "Remote deployment", link: "/deployment" },
           { text: "Discovery", link: "/discovery" },

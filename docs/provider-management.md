@@ -56,12 +56,13 @@ Each `ProviderDefinition` contains `kind`, `name`, `description`, `category`
 `requirements`/HTTPS `docsUrl`. A `ProviderConnectionMethod` contains `id`,
 `label`, `description`, `interaction` and `credentialOwner`:
 
-| Interaction        | Current setup behavior                                            | Credential owner |
-| ------------------ | ----------------------------------------------------------------- | ---------------- |
-| `external`         | Use the official runtime's existing sign-in on the connected host | `native-runtime` |
-| `api-key`          | Supply the write-only `apiKey` when saving a connection           | `host`           |
-| `secret-reference` | Set `apiKeyRef` to an existing host credential                    | `host`           |
-| `none`             | Configure the offline fixture                                     | `none`           |
+| Interaction        | Current setup behavior                                                    | Credential owner |
+| ------------------ | ------------------------------------------------------------------------- | ---------------- |
+| `external`         | Use the official runtime's existing sign-in on the connected host         | `native-runtime` |
+| `device-code`      | Owned Codex device sign-in, native verification and explicit confirmation | `native-runtime` |
+| `api-key`          | Supply the write-only `apiKey` when saving a connection                   | `host`           |
+| `secret-reference` | Set `apiKeyRef` to an existing host credential                            | `host`           |
+| `none`             | Configure the offline fixture                                             | `none`           |
 
 TypeScript exports both types from `@agenticdriver/sdk/client` and
 `@agenticdriver/sdk/management`; Python, Go and Rust expose the same names.
@@ -73,9 +74,9 @@ Unknown future interaction strings are retained for display; the panel disables
 them until it supports their flow. Render text as text and accept only safe HTTPS
 documentation links.
 
-These methods do not implement a browser OAuth/device-code lifecycle.
-[AD-054 / #50](https://github.com/agenticdriver/agenticdriver/issues/50) tracks
-owned provider sign-in attempts separately. [The reference review](provider-connection-design.md)
+Qualified hosts advertise the optional [owned provider sign-in lifecycle](provider-sign-in.md)
+for Codex device authentication. Other native providers retain existing-session setup.
+[The reference review](provider-connection-design.md)
 explains the connection model and gateway/observability boundaries.
 
 ```ts

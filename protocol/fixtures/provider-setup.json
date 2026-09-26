@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "attempts": [
+    {
+      "id": "12345678-1234-4123-8123-123456789abc",
+      "providerId": "codex-work",
+      "accountId": "work-account",
+      "name": "Work account",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "method": "codex-device",
+      "phase": "waiting",
+      "createdAt": "2026-09-26T12:00:00.000Z",
+      "updatedAt": "2026-09-26T12:00:00.000Z",
+      "expiresAt": "2026-09-26T12:15:00.000Z",
+      "interaction": {
+        "type": "device-code",
+        "verificationUrl": "https://auth.openai.com/codex/device",
+        "userCode": "TEST-CODE"
+      }
+    }
+  ]
+}

@@ -245,6 +245,8 @@ test("generated OpenAPI components resolve recursive JSON tool and approval sche
     assert.equal(validate(result), false);
   for (const name of [
     "ToolExecutionRequest",
+    "ProviderSetupRequest",
+    "ProviderSetupSnapshot",
     "ToolExecutionReceipt",
     "ApplicationToolDefinition",
     "ApplicationToolGrant",

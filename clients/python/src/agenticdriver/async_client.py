@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 from .connections import CreateInvitation, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_value
 from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
+from .setup import ProviderSetupRequest, ProviderSetupSnapshot, setup_request, setup_snapshot
 from ._errors import DriverError
 from ._protocol import (
     EventDecoder,
@@ -348,6 +349,10 @@ class AsyncAgenticClient:
     async def revoke_connection(self, connection_id: str) -> bool:
         async with self._request("v1/management/connections/revoke", {"id": connection_id}) as response:
             return bool(connection_value(await self._json(response), "revoke")["revoked"])
+
+    async def provider_setup(self, request: ProviderSetupRequest) -> ProviderSetupSnapshot:
+        async with self._request("v1/management/setup", setup_request(request)) as response:
+            return setup_snapshot(await self._json(response), request)
 
     async def management(self) -> ManagementSnapshot:
         async with self._request("v1/management") as response:

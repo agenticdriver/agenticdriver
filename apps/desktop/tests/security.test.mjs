@@ -54,8 +54,16 @@ test("only bundled assets and selected documentation URLs can leave the local ap
   ])
     assert.equal(assetName(value), undefined);
   assert.ok(externalDocumentation("https://developers.openai.com/codex/cli/"));
+  assert.equal(
+    externalDocumentation("https://auth.openai.com/codex/device"),
+    "https://auth.openai.com/codex/device",
+  );
   for (const value of [
     "javascript:alert(1)",
+    "https://auth.openai.com/codex/device?redirect_uri=https://example.com",
+    "https://auth.openai.com/codex/device#code=secret",
+    "https://auth.openai.com/other",
+    "https://auth.openai.com.evil.example/codex/device",
     "file:///private",
     "https://developers.openai.com.evil.example/",
     "https://user:pass@developers.openai.com/",

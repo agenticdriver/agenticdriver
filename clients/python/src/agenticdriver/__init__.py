@@ -177,6 +177,7 @@ from .models import SessionMode, SessionIdentity, SessionHandle, SessionCreate, 
 __all__ += ['SessionMode', 'SessionIdentity', 'SessionHandle', 'SessionCreate', 'SessionInfo', 'SessionSnapshot', 'SessionDeleteResult']
 
 from .management import ProviderConfiguration, ConfigureProvider, ManagementSnapshot, ProviderDefinition, ProviderConnectionMethod
+from .setup import ProviderSetupConfig, ProviderSetupStart, ProviderSetupList, ProviderSetupOperation, ProviderSetupRequest, ProviderSetupSnapshot, ProviderSetupAttempt, ProviderSetupAccount, ProviderSetupInteraction, ProviderSetupError
 __all__ += ["ProviderConfiguration", "ConfigureProvider", "ManagementSnapshot", "ProviderDefinition", "ProviderConnectionMethod"]
 
 from .connections import ConnectionGrant, CreateInvitation, ConnectionInfo, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_target
@@ -184,3 +185,5 @@ __all__ += ["ConnectionGrant", "CreateInvitation", "ConnectionInfo", "Connection
 
 from .panel import ProviderPanel, AsyncProviderPanel, provider_panel_html, provider_panel_script
 __all__ += ["ProviderPanel", "AsyncProviderPanel", "provider_panel_html", "provider_panel_script"]
+
+__all__ += ["ProviderSetupConfig", "ProviderSetupStart", "ProviderSetupList", "ProviderSetupOperation", "ProviderSetupRequest", "ProviderSetupSnapshot", "ProviderSetupAttempt", "ProviderSetupAccount", "ProviderSetupInteraction", "ProviderSetupError"]

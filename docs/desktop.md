@@ -38,7 +38,7 @@ Launch **AgenticDriver** from the application menu. The installer uses
 `~/.local/share/agenticdriver/desktop` and the user application-menu directory
 (or `XDG_DATA_HOME`), retains previous preview versions, and does not install a
 system service. The archive is
-`apps/desktop/release/AgenticDriver-0.1.0-alpha.1-linux-x64.tar.gz`.
+`apps/desktop/release/AgenticDriver-0.1.0-alpha.2-linux-x64.tar.gz`.
 Extract it and launch `agenticdriver-desktop` for portable use. No sudo or
 `--no-sandbox` option is needed on the qualified Fedora desktop. Distribution
 policies for user namespaces still apply; do not disable the renderer sandbox.
@@ -53,7 +53,8 @@ revoke grants on remote hosts; revoke those there first when appropriate.
 
 1. The app starts a separate empty local host with a stable loopback endpoint.
    Add a provider in **Providers**, using an existing official native session,
-   a write-only API key or an explicitly selected compatible gateway.
+   [owned Codex device sign-in](provider-sign-in.md), a write-only API key or an
+   explicitly selected compatible gateway.
 2. In **Connections**, name the application, review its provider access and
    lifetime, then create a one-use invitation. Paste it into the application's
    AgenticDriver connection settings. Grant provider management only when that
@@ -80,10 +81,10 @@ the SDK's fallback mark.
 
 Models reported by an account stay visible. Catalog discovery, host permissions,
 application enablement and live qualification remain separate. No inference is
-performed by onboarding or metadata refresh. Native interactive sign-in inside
-the app is tracked separately in [#50](https://github.com/agenticdriver/agenticdriver/issues/50);
-this preview attaches existing official sessions and does not claim to implement
-that flow. No provider/account/model fallback is added.
+performed by onboarding or metadata refresh. Preview `0.1.0-alpha.2` adds Codex
+device sign-in on qualified Linux x64 hosts, with a separate private account
+profile and explicit confirmation after native verification. Other native
+providers use existing sessions. No provider/account/model fallback is added.
 
 ## Host lifecycle and private state
 
@@ -109,7 +110,7 @@ The renderer is sandboxed, has context isolation and no Node integration. A narr
 validated IPC interface reaches a separate Node worker; long-lived credentials
 stay there. The renderer loads only packaged assets through a restricted local
 protocol, and new windows/navigation are denied except selected documentation
-links opened by the user. This is local transport access control; applications
+links and the exact official Codex device page opened by the user. This is local transport access control; applications
 retain their existing authentication stack.
 
 ## Validation

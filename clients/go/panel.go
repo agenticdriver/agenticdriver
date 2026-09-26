@@ -84,10 +84,11 @@ func (p *ProviderPanel) Snapshot(ctx context.Context, refresh bool) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	management, pairing := false, false
+	management, pairing, setup := false, false, false
 	for _, feature := range protocol.Features {
 		management = management || feature == "provider-management"
 		pairing = pairing || feature == "client-pairing"
+		setup = setup || feature == "provider-setup"
 	}
 	if management {
 		info, err := client.Management(ctx)
@@ -95,6 +96,13 @@ func (p *ProviderPanel) Snapshot(ctx context.Context, refresh bool) (map[string]
 			return nil, err
 		}
 		state["management"] = info
+		if setup {
+			attempts, err := client.ProviderSetup(ctx, ProviderSetupRequest{Action: "list"})
+			if err != nil {
+				return nil, err
+			}
+			state["setup"] = attempts
+		}
 		state["canInvite"] = pairing && connection != nil && connection.URL != ""
 	}
 	return state, nil
@@ -104,14 +112,15 @@ func (p *ProviderPanel) Handle(ctx context.Context, raw []byte) (any, error) {
 		return nil, &Error{Code: "BODY_TOO_LARGE", Message: "The panel request is too large."}
 	}
 	var request struct {
-		Action     string            `json:"action"`
-		Refresh    bool              `json:"refresh"`
-		Invitation string            `json:"invitation"`
-		Change     ConfigureProvider `json:"change"`
-		ID         string            `json:"id"`
-		Subject    string            `json:"subject"`
-		Providers  []string          `json:"providers"`
-		Manage     bool              `json:"manageProviders"`
+		Action     string               `json:"action"`
+		Refresh    bool                 `json:"refresh"`
+		Invitation string               `json:"invitation"`
+		Change     ConfigureProvider    `json:"change"`
+		Setup      ProviderSetupRequest `json:"request"`
+		ID         string               `json:"id"`
+		Subject    string               `json:"subject"`
+		Providers  []string             `json:"providers"`
+		Manage     bool                 `json:"manageProviders"`
 	}
 	if err := json.Unmarshal(raw, &request); err != nil {
 		return nil, &Error{Code: "INVALID_PANEL_REQUEST", Message: "Use a valid panel request."}
@@ -142,6 +151,8 @@ func (p *ProviderPanel) Handle(ctx context.Context, raw []byte) (any, error) {
 		return nil, &Error{Code: "CONNECTION_REQUIRED", Message: "Connect an AgenticDriver host first."}
 	}
 	switch request.Action {
+	case "setup":
+		return client.ProviderSetup(ctx, request.Setup)
 	case "configure":
 		if _, err := client.ConfigureProvider(ctx, request.Change); err != nil {
 			return nil, err

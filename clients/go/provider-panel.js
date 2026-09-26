@@ -62,6 +62,7 @@ const categories = {
     fixture: "Offline",
 };
 const setupInteractions = new Set([
+    "device-code",
     "external",
     "api-key",
     "secret-reference",
@@ -93,6 +94,8 @@ const emptyPreferences = () => ({
     order: [],
 });
 const css = `
+.setup-attempts{padding:20px;display:grid;gap:16px;border-bottom:1px solid var(--ad-border,#343b52)}.setup-attempts .command{font-size:1.35rem;letter-spacing:.12em;white-space:pre-wrap;overflow-wrap:anywhere}.setup-attempts p{overflow-wrap:anywhere}.setup-attempts h4{margin:12px 0}.setup-attempts a{color:inherit;text-decoration:underline}
+
 :host{--ad-bg:#252a3b;--ad-surface:#2c3245;--ad-field:#222737;--ad-line:#3a4157;--ad-fg:#e9ecf5;--ad-muted:#a6aec4;--ad-accent:#a6b6ff;--ad-good:#9ddbc2;display:block;color:var(--ad-fg);font:14px/1.5 system-ui,sans-serif;color-scheme:dark}
 :host([theme=light]){--ad-bg:#fafbff;--ad-surface:#f0f2f9;--ad-field:#fff;--ad-line:#d8deee;--ad-fg:#202839;--ad-muted:#5d6980;--ad-accent:#3e52b6;--ad-good:#237a59;color-scheme:light}
 *{box-sizing:border-box}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}button{color:inherit;border:1px solid var(--ad-line);border-radius:8px;background:transparent;padding:7px 12px}button:hover:enabled{background:var(--ad-surface)}button.primary{background:var(--ad-accent);color:var(--ad-bg);border-color:transparent;font-weight:650}button.primary:hover:enabled{filter:brightness(1.08)}.quiet{border:0;padding:5px 8px}.shell{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:18px;overflow:hidden;min-height:460px;max-width:1320px;margin:auto}.top{padding:22px 26px;display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--ad-line)}.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--ad-muted);text-transform:uppercase}.top h2{font-size:20px;letter-spacing:-.025em;margin:4px 0 0;font-weight:600}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:11px;border:1px solid var(--ad-line);border-radius:20px;padding:3px 9px;color:var(--ad-muted);white-space:nowrap}.live{color:var(--ad-good)}.layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:480px}.sidebar{background:color-mix(in srgb,var(--ad-surface) 45%,transparent);border-right:1px solid var(--ad-line);padding:12px}.side-label{font-size:11px;color:var(--ad-muted);padding:10px 10px 14px;text-transform:uppercase;letter-spacing:.07em}.provider{display:flex;align-items:center;border:1px solid transparent;border-radius:11px;margin:3px 0;padding:5px;gap:3px}.provider.selected{background:var(--ad-surface);border-color:var(--ad-line)}.provider button.select{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-align:left;border:0;padding:10px 6px}.avatar{width:32px;height:32px;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:650;color:var(--ad-accent);background:var(--ad-field);border-radius:9px}.avatar img{width:24px;height:24px;object-fit:contain}.provider-copy{min-width:0}.provider-copy strong{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.provider-copy small{font-size:11px;color:var(--ad-muted);display:block}.switch{width:32px;height:19px;flex:0 0 32px;padding:2px!important;border:0;border-radius:18px;background:var(--ad-line);position:relative}.switch:before{content:"";width:15px;height:15px;display:block;border-radius:50%;background:var(--ad-muted)}.switch[aria-checked=true]{background:var(--ad-accent)}.switch[aria-checked=true]:before{background:var(--ad-bg);margin-left:13px}.detail{padding:26px 30px;min-width:0}.detail-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.detail-head>div{min-width:0;overflow-wrap:anywhere}.detail-head h3{font-size:19px;margin:0;font-weight:600}.muted{color:var(--ad-muted)}.small{font-size:12px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ad-line);margin:22px 0}.tabs button{border:0;border-radius:0;padding:10px 16px;color:var(--ad-muted);border-bottom:2px solid transparent}.tabs button[aria-selected=true]{color:var(--ad-accent);border-bottom-color:var(--ad-accent)}.group{border:1px solid var(--ad-line);border-radius:12px;overflow:hidden;margin:14px 0}.field{display:grid;grid-template-columns:minmax(130px,1fr) minmax(160px,1fr);gap:20px;padding:16px 18px;align-items:center}.field+.field{border-top:1px solid var(--ad-line)}.field label{font-weight:550;display:block}.hint{color:var(--ad-muted);font-size:12px;font-weight:400;margin:4px 0 0}input,select,textarea{border:1px solid var(--ad-line);border-radius:8px;padding:8px 10px;background:var(--ad-field);color:var(--ad-fg);width:100%;min-width:0}input:disabled{opacity:.65}input[type=checkbox]{width:16px;height:16px;accent-color:var(--ad-accent)}textarea{resize:vertical;min-height:90px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.model-access{flex-wrap:wrap}.model-access .inline{white-space:nowrap}.model-toolbar{margin-bottom:12px;display:flex;gap:14px;align-items:center}.model-toolbar input{max-width:260px}.models{border-top:1px solid var(--ad-line);margin-top:14px}.model{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--ad-line)}.model.hidden-model{opacity:.65}.model .model-name{flex:1;min-width:0;text-align:left;border:0;font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;padding:4px}.model .star{font-size:18px;width:27px;padding:2px;border:0}.star.favorite{color:#e9c979}.icon-button{font-size:12px;padding:3px 6px}.section-label{font-size:12px;color:var(--ad-muted);margin:22px 0 10px}.notice{border:1px solid var(--ad-line);border-radius:10px;padding:12px 15px;color:var(--ad-muted);font-size:12px;margin:12px 0}.error{border-color:#b5727c;color:#f2b7bf;margin:16px 24px}.success{color:var(--ad-good)}.empty{max-width:840px;margin:auto;padding:40px 32px}.empty h3{font-size:28px;line-height:1.25;letter-spacing:-.035em;margin:10px 0}.empty p{max-width:570px;color:var(--ad-muted)}.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}.setup-card{background:var(--ad-surface);border:1px solid var(--ad-line);border-radius:12px;padding:22px}.setup-card h4{font-size:15px;margin:4px 0 10px}.step{font-size:11px;color:var(--ad-accent);font-weight:600}.command{font:12px/1.6 ui-monospace,monospace;background:var(--ad-field);border-radius:8px;padding:12px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.connect-form{margin:24px 0}.connect-form label{display:block;margin-bottom:8px;font-weight:550}.connect-form textarea{font:12px/1.6 ui-monospace,monospace}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:18px}.inline{display:flex;align-items:center;gap:8px}.host-label{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.links{margin-top:24px;padding-top:18px;border-top:1px solid var(--ad-line)}.connections{padding:10px 0;border-bottom:1px solid var(--ad-line);display:flex;justify-content:space-between;gap:16px}.connection-meta{font-size:11px;color:var(--ad-muted);overflow-wrap:anywhere}.new-provider{border:1px dashed var(--ad-line);width:100%;margin-top:15px;text-align:left}.save-row{justify-content:flex-end}.loading{padding:50px;text-align:center;color:var(--ad-muted)}
@@ -115,6 +118,8 @@ export function registerProviderPanel(registry = customElements) {
         adding = false;
         providerQuery = "";
         setupMethod = "";
+        setupTimer;
+        setupSequence = 0;
         draft;
         apiKey = "";
         generation = 0;
@@ -167,6 +172,8 @@ export function registerProviderPanel(registry = customElements) {
         }
         disconnectedCallback() {
             this.generation++;
+            clearTimeout(this.setupTimer);
+            this.setupSequence++;
         }
         async call(request) {
             if (!this.transport)
@@ -193,9 +200,99 @@ export function registerProviderPanel(registry = customElements) {
             this.apiKey = "";
             this.links = undefined;
             this.invite = undefined;
+            this.armSetupPoll();
+        }
+        async setupRequest(request) {
+            const generation = this.generation;
+            const sequence = ++this.setupSequence;
+            this.busy = true;
+            clearTimeout(this.setupTimer);
+            this.render();
+            try {
+                const result = (await this.call({
+                    action: "setup",
+                    request,
+                }));
+                if (generation !== this.generation ||
+                    sequence !== this.setupSequence ||
+                    !this.state)
+                    return;
+                if (request.action === "accept" &&
+                    result.attempts[0]?.phase === "succeeded") {
+                    const snapshot = await this.call({ action: "snapshot" });
+                    if (generation === this.generation &&
+                        sequence === this.setupSequence) {
+                        this.selected = result.attempts[0].providerId;
+                        this.accept(snapshot);
+                        this.message =
+                            "Account connected. Application execution grants stay unchanged.";
+                    }
+                }
+                else {
+                    const changed = new Set(result.attempts.map((a) => a.id));
+                    this.state.setup = {
+                        version: 1,
+                        attempts: [
+                            ...(this.state.setup?.attempts ?? []).filter((a) => !changed.has(a.id)),
+                            ...result.attempts,
+                        ],
+                    };
+                    if (request.action === "start") {
+                        this.adding = false;
+                        this.apiKey = "";
+                        this.draft = structuredClone(this.state.management?.providers.find((p) => p.id === this.selected));
+                    }
+                }
+            }
+            finally {
+                if (generation === this.generation) {
+                    this.busy = false;
+                    this.render();
+                    this.armSetupPoll();
+                }
+            }
+        }
+        armSetupPoll() {
+            clearTimeout(this.setupTimer);
+            if (!this.isConnected ||
+                !this.state?.setup?.attempts.some((a) => ["starting", "waiting", "verifying", "ready"].includes(a.phase)))
+                return;
+            this.setupTimer = setTimeout(async () => {
+                if (this.busy) {
+                    this.armSetupPoll();
+                    return;
+                }
+                const generation = this.generation, sequence = ++this.setupSequence;
+                try {
+                    const result = (await this.call({
+                        action: "setup",
+                        request: { action: "list" },
+                    }));
+                    if (generation !== this.generation ||
+                        sequence !== this.setupSequence ||
+                        !this.state)
+                        return;
+                    if (JSON.stringify(result) !== JSON.stringify(this.state.setup)) {
+                        this.state.setup = result;
+                        this.render();
+                    }
+                    this.armSetupPoll();
+                }
+                catch (error) {
+                    if (generation === this.generation &&
+                        sequence === this.setupSequence) {
+                        this.failure =
+                            "Sign-in status is unavailable. Refresh to reconnect. " +
+                                (error instanceof Error ? error.message : "");
+                        this.render();
+                    }
+                }
+            }, 2000);
         }
         async refresh() {
             const generation = ++this.generation;
+            clearTimeout(this.setupTimer);
+            this.setupSequence++;
             this.busy = true;
             this.failure = "";
             this.render();
@@ -356,6 +453,13 @@ export function registerProviderPanel(registry = customElements) {
             this.message = "";
             if (action === "refresh")
                 return this.refresh();
+            if ((action === "setup-accept" || action === "setup-cancel") &&
+                button.dataset.id) {
+                return this.setupRequest({
+                    action: action === "setup-accept" ? "accept" : "cancel",
+                    id: button.dataset.id,
+                });
+            }
             if (action === "select") {
                 this.selected = button.dataset.id;
                 this.query = "";
@@ -386,7 +490,12 @@ export function registerProviderPanel(registry = customElements) {
                 const definition = this.definitions().find((p) => p.kind === button.dataset.kind);
                 if (!definition)
                     return;
-                const taken = new Set(this.state?.management?.providers.map((p) => p.id));
+                const taken = new Set([
+                    ...(this.state?.management?.providers.map((p) => p.id) ?? []),
+                    ...(this.state?.setup?.attempts
+                        .filter((a) => ["starting", "waiting", "verifying", "ready"].includes(a.phase))
+                        .map((a) => a.providerId) ?? []),
+                ]);
                 let id = definition.kind, suffix = 2;
                 while (taken.has(id))
                     id = `${definition.kind}-${suffix++}`;
@@ -447,6 +556,23 @@ export function registerProviderPanel(registry = customElements) {
                     ?.methods.find((m) => m.id === this.setupMethod);
                 if (!method || !setupInteractions.has(method.interaction))
                     throw new Error("Choose a supported connection method.");
+                if (method.interaction === "device-code") {
+                    if (!this.state?.setup ||
+                        !this.state.management ||
+                        this.draft.kind !== "codex" ||
+                        method.id !== "codex-device")
+                        throw new Error("This host does not offer that sign-in method.");
+                    const { accountDirectory: _shared, ...provider } = this.draft;
+                    return this.setupRequest({
+                        action: "start",
+                        revision: this.state.management.revision,
+                        method: "codex-device",
+                        provider: {
+                            ...provider,
+                            accountId: provider.accountId || `account-${crypto.randomUUID()}`,
+                        },
+                    });
+                }
                 if (method.interaction === "api-key" && !this.apiKey.trim())
                     throw new Error("Enter an API key, or choose a host credential reference.");
                 if (this.draft.kind === "openai-compatible" && !this.draft.baseUrl)
@@ -630,7 +756,46 @@ export function registerProviderPanel(registry = customElements) {
         }
         definitions() {
             const management = this.state?.management;
-            return (management?.providerDefinitions ?? []).filter((p) => management?.supportedKinds.includes(p.kind));
+            return (management?.providerDefinitions ?? [])
+                .filter((p) => management?.supportedKinds.includes(p.kind))
+                .map((p) => ({
+                ...p,
+                methods: p.methods.filter((m) => m.interaction !== "device-code" ||
+                    (Boolean(this.state?.setup) &&
+                        m.id === "codex-device" &&
+                        p.kind === "codex")),
+            }));
+        }
+        setupCards() {
+            const attempts = this.state?.setup?.attempts ?? [];
+            const pending = attempts.filter((a) => ["starting", "waiting", "verifying", "ready"].includes(a.phase));
+            const finished = attempts.filter((a) => !pending.includes(a)).slice(-2);
+            if (!attempts.length)
+                return "";
+            const statuses = {
+                starting: "Starting sign-in…",
+                waiting: "Complete sign-in in your browser",
+                verifying: "Verifying the account…",
+                ready: "Confirm this account",
+                succeeded: "Account connected",
+                failed: "Sign-in failed",
+                cancelled: "Sign-in cancelled",
+                expired: "Sign-in expired",
+            };
+            return `<section class="setup-attempts" aria-label="Provider sign-in">${[
+                ...pending,
+                ...finished,
+            ]
+                .map((a) => {
+                const active = pending.includes(a);
+                const device = a.phase === "waiting" &&
+                    a.interaction?.verificationUrl ===
+                        "https://auth.openai.com/codex/device"
+                    ? a.interaction
+                    : undefined;
+                return `<article class="setup-card"><div class="eyebrow">${escape(a.name)} · ${escape(this.state?.connection?.label ?? "Connected host")}</div><h4>${escape(statuses[a.phase] ?? a.phase)}</h4>${device ? `<p>Open the official ChatGPT page and enter this code:</p><pre class="command" aria-label="Device sign-in code">${escape(device.userCode)}</pre><a href="https://auth.openai.com/codex/device" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open ChatGPT sign-in ↗</a><p class="hint">Sign in only if you started this connection. Return here to confirm the verified account.</p>` : ""}${a.phase === "ready" && a.account ? `<p><strong>${escape(a.account.email ?? "ChatGPT account")}</strong> · ${escape(a.account.plan)}</p>${a.account.providerAccountId ? `<p class="hint">Provider account: ${escape(a.account.providerAccountId)}</p>` : ""}<p>Connect this account as <strong>${escape(a.name)}</strong> on ${escape(this.state?.connection?.label ?? "this host")}?</p><button class="primary" data-action="setup-accept" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Confirm account</button>` : ""}${a.error ? `<p class="notice error" role="alert">${escape(a.error.message)}</p>` : ""}${active ? `<div class="footer"><span class="hint">Sign-in expires ${escape(new Date(a.expiresAt).toLocaleTimeString())} · Existing accounts stay connected.</span><button data-action="setup-cancel" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Cancel sign-in</button></div>` : `<p class="hint">${a.phase === "succeeded" ? "Account verified. No model was run and application permissions stay unchanged." : "You can start a new attempt from Add provider."}</p>`}</article>`;
+            })
+                .join("")}</section>`;
         }
         setupProvider() {
             const definitions = this.definitions(), p = this.draft;
@@ -650,11 +815,13 @@ export function registerProviderPanel(registry = customElements) {
                 .join("");
             let fields = this.field("Connection name", "name", p.name, "A recognizable name for this account or gateway.");
             let advanced = this.field("Instance ID", "id", p.id, "Unique on this host. Use a new ID for a different account.") +
-                this.field("Account ID", "accountId", p.accountId, "Optional stable identity for usage tracking.");
+                this.field("Account ID", "accountId", p.accountId, method?.interaction === "device-code"
+                    ? "A stable account ID is created if left empty."
+                    : "Optional stable identity for usage tracking.");
             if (native(p.kind)) {
-                advanced +=
-                    this.field("Binary path", "binary", "binary" in p ? p.binary : undefined, "Official runtime executable on this host. Empty uses its standard command.") +
-                        this.field("Account directory", "accountDirectory", "accountDirectory" in p ? p.accountDirectory : undefined, "Absolute path to the signed-in account on this host.");
+                advanced += this.field("Binary path", "binary", "binary" in p ? p.binary : undefined, "Official runtime executable on this host. Empty uses its standard command.");
+                if (method?.interaction !== "device-code")
+                    advanced += this.field("Account directory", "accountDirectory", "accountDirectory" in p ? p.accountDirectory : undefined, "Absolute path to the signed-in account on this host.");
                 if (p.kind === "codex")
                     advanced += this.field("Reasoning effort", "reasoningEffort", p.reasoningEffort, "Optional. Supported values depend on the selected model.");
             }
@@ -678,7 +845,7 @@ export function registerProviderPanel(registry = customElements) {
                 : method?.credentialOwner === "host"
                     ? "Credentials are resolved privately by the connected host."
                     : "No credentials are needed.";
-            return `${host}<div class="row setup-title"><div><span class="eyebrow">${escape(categories[definition.category])}</span><h4 tabindex="-1" data-field="method-heading">${escape(definition.name)}</h4><span class="hint">${escape(definition.protocol)}</span></div><button data-action="back-providers">Change provider</button></div><div class="method-list" aria-label="Connection methods">${methods}</div>${definition.requirements ? `<div class="notice">${escape(definition.requirements)}</div>` : ""}<p class="hint">${owner} ${helpLink(definition.docsUrl)}</p><div class="group">${fields}</div><details class="advanced"><summary>Advanced settings</summary><div class="group">${advanced}</div></details><div class="notice">All models are allowed by default for this instance. You can add connection overrides in Models. Application execution grants stay separate; saving does not run a model or verify account access.</div><div class="footer"><button data-action="cancel-add">Cancel</button><button class="primary" data-action="connect-provider" ${this.busy || !method || !setupInteractions.has(method.interaction) ? "disabled" : ""}>${this.busy ? "Saving…" : "Save connection"}</button></div>`;
+            return `${host}<div class="row setup-title"><div><span class="eyebrow">${escape(categories[definition.category])}</span><h4 tabindex="-1" data-field="method-heading">${escape(definition.name)}</h4><span class="hint">${escape(definition.protocol)}</span></div><button data-action="back-providers">Change provider</button></div><div class="method-list" aria-label="Connection methods">${methods}</div>${definition.requirements ? `<div class="notice">${escape(definition.requirements)}</div>` : ""}<p class="hint">${owner} ${helpLink(definition.docsUrl)}</p><div class="group">${fields}</div><details class="advanced"><summary>Advanced settings</summary><div class="group">${advanced}</div></details><div class="notice">All models are allowed by default for this instance. You can add connection overrides in Models. Application execution grants stay separate. ${method?.interaction === "device-code" ? "Sign-in verifies the account; models remain untested until you explicitly run them." : "Saving does not run a model or verify account access."}</div><div class="footer"><button data-action="cancel-add">Cancel</button><button class="primary" data-action="connect-provider" ${this.busy || !method || !setupInteractions.has(method.interaction) ? "disabled" : ""}>${this.busy ? "Saving…" : method?.interaction === "device-code" ? "Start sign-in" : "Save connection"}</button></div>`;
         }
         runtime(provider) {
             if (this.adding && this.state?.management?.providerDefinitions)
@@ -759,7 +926,7 @@ export function registerProviderPanel(registry = customElements) {
                     return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}</strong><small>${config?.enabled === false ? "Disabled" : provider.authMode === "cli-session" ? "Subscription / local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
                 })
                     .join("")}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? "No providers granted")}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? "Ask the host operator for a provider grant.")}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding ? this.modelList(selected) : this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.connectionSection()}</main></div>`;
-            this.root.innerHTML = `<style>${css}</style><section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${content}</section>`;
+            this.root.innerHTML = `<style>${css}</style><section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
             if (focusField === "query" || focusField === "provider-query") {
                 const input = this.root.querySelector(`[data-field="${focusField}"]`);
                 input?.focus();

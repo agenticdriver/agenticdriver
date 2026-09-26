@@ -26,9 +26,14 @@ pub use connections::{
     CreateInvitation,
 };
 pub mod management;
+pub mod setup;
 pub use management::{
     ConfigureProvider, ManagementSnapshot, ProviderConfiguration, ProviderConnectionMethod,
     ProviderDefinition,
+};
+pub use setup::{
+    ProviderSetupAccount, ProviderSetupAttempt, ProviderSetupConfig, ProviderSetupError,
+    ProviderSetupInteraction, ProviderSetupRequest, ProviderSetupSnapshot,
 };
 pub mod jobs;
 pub mod sessions;

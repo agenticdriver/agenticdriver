@@ -1,5 +1,6 @@
 import { withConnections } from "../src/connections.js";
 import { managedHost } from "../src/management.js";
+import { isDeepStrictEqual } from "node:util";
 /** Test-only reference peer. Never loads a real provider or account credentials. */
 import { writeFile, readFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -40,6 +41,7 @@ const fixture = JSON.parse(
     rawHex?: string;
     json?: unknown;
     operation?: string;
+    setupRequest?: unknown;
     lineEnding?: string;
     bom?: boolean;
     multiline?: boolean;
@@ -324,7 +326,7 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       return;
     }
     const id =
-      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results)|sessions\/(?:create|read|delete)|jobs\/(?:submit|read|cancel|events))$/.exec(
+      /^\/fixtures\/([^/]+)\/v1\/(runs|providers|protocol|management\/setup|retrieval\/ingest|approvals\/decisions|tool-executions\/(?:progress|results)|sessions\/(?:create|read|delete)|jobs\/(?:submit|read|cancel|events))$/.exec(
         req.url ?? "",
       )?.[1];
     const example = fixture.cases.find((c) => c.id === id);
@@ -333,8 +335,27 @@ const handler: Parameters<typeof httpServer>[1] = async (req, res) => {
       res.end();
       return;
     }
-    for await (const _chunk of req) {
-      /* Drain the small test request. */
+    const received: Buffer[] = [];
+    for await (const chunk of req) received.push(chunk);
+    if (
+      example.operation === "provider-setup" &&
+      (req.method !== "POST" ||
+        !isDeepStrictEqual(
+          JSON.parse(Buffer.concat(received).toString("utf8")),
+          example.setupRequest,
+        ))
+    ) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          error: {
+            code: "FIXTURE_REQUEST_MISMATCH",
+            message: "Setup request changed during serialization.",
+            retryable: false,
+          },
+        }),
+      );
+      return;
     }
     if (example.redirect) {
       res.writeHead(302, { Location: "/redirect-target" });

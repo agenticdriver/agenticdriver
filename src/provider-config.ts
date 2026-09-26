@@ -46,6 +46,7 @@ const codexCli = cli.extend({
   reasoningEffort: CodexReasoningEffortSchema.optional(),
   applicationTools: z.literal("mcp").optional(),
 });
+export const CodexProviderConfigSchema = codexCli;
 export const HostProviderConfigSchema = z.union([
   api,
   cli,

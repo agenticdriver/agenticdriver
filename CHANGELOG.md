@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added caller-bound native Codex device sign-in through the host, all four SDK languages and the shared panel. Desktop preview `0.1.0-alpha.2` exposes the flow. Native verification precedes account confirmation; separate private profiles preserve existing sign-ins and execution grants. See [provider sign-in](docs/provider-sign-in.md).
+
 - Added the Linux desktop companion under `apps/desktop`: provider management, Usagestat snapshots, scoped application invitations and activity, durable local host management, and remote host profiles.
 
 - Empty management hosts support first-run onboarding. Paired clients expose optional process-local last-request and in-flight-request metadata in all four SDK languages.

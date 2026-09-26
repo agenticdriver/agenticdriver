@@ -49,6 +49,10 @@ async fn reference_peer_conformance() {
             request.retrieval = Some(serde_json::from_value(retrieval.clone()).unwrap());
         }
         let result = match example["operation"].as_str() {
+            Some("provider-setup") => peer
+                .provider_setup(&serde_json::from_value(example["setupRequest"].clone()).unwrap())
+                .await
+                .map(|_| ()),
             Some("providers") => peer.providers().await.map(|_| ()),
             Some("protocol") => peer.protocol().await.map(|_| ()),
             Some("job-submit") => peer

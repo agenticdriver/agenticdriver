@@ -31,6 +31,7 @@ export function protocolInfo(
   options: {
     clientPairing?: boolean;
     providerManagement?: boolean;
+    providerSetup?: boolean;
     jobs?: boolean;
     sessions?: boolean;
     applicationTools?: boolean;
@@ -49,6 +50,7 @@ export function protocolInfo(
       "json-results",
       ...(options.clientPairing ? ["client-pairing"] : []),
       ...(options.providerManagement ? ["provider-management"] : []),
+      ...(options.providerSetup ? ["provider-setup"] : []),
       ...(options.jobs ? ["durable-jobs"] : []),
       ...(options.sessions ? ["conversation-sessions"] : []),
       ...(options.applicationTools ? ["application-tools"] : []),

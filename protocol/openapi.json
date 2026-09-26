@@ -829,6 +829,44 @@
         }
       }
     },
+    "/v1/management/setup": {
+      "post": {
+        "summary": "Start, inspect, accept or cancel an owned native provider sign-in",
+        "description": "Requires provider-setup and manageProviders. Attempts are bound to the initiating credential, provider/account and configuration revision. Accept only after native account verification. No model requests or execution grants.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProviderSetupRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Caller-owned setup state; provider credentials omitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSetupSnapshot"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "403": { "description": "Management grant required" },
+          "404": { "description": "Attempt unavailable to this credential" },
+          "409": {
+            "description": "Stale, finished or not-yet-verified attempt"
+          },
+          "503": { "description": "Owned sign-in unavailable on this host" }
+        }
+      }
+    },
     "/v1/management": {
       "get": {
         "summary": "Read host provider settings (manageProviders grant required)",
@@ -2548,6 +2586,232 @@
             ]
           }
         }
+      },
+      "ProviderSetupRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "start" },
+              "revision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "method": { "type": "string", "const": "codex-device" },
+              "provider": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
+                    }
+                  },
+                  "kind": { "type": "string", "const": "codex" },
+                  "binary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "reasoningEffort": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                  },
+                  "applicationTools": { "type": "string", "const": "mcp" }
+                },
+                "required": ["id", "accountId", "kind"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["action", "revision", "method", "provider"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": { "action": { "type": "string", "const": "list" } },
+            "required": ["action"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "status" },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": ["action", "id"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "accept" },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": ["action", "id"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "cancel" },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": ["action", "id"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ProviderSetupSnapshot": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "version": { "type": "number", "const": 1 },
+          "attempts": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "providerId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                },
+                "accountId": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                },
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                "revision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                "method": { "type": "string", "const": "codex-device" },
+                "phase": {
+                  "type": "string",
+                  "enum": [
+                    "starting",
+                    "waiting",
+                    "verifying",
+                    "ready",
+                    "succeeded",
+                    "failed",
+                    "cancelled",
+                    "expired"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "interaction": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "const": "device-code" },
+                    "verificationUrl": {
+                      "type": "string",
+                      "const": "https://auth.openai.com/codex/device"
+                    },
+                    "userCode": {
+                      "type": "string",
+                      "pattern": "^[A-Z0-9-]{4,40}$"
+                    }
+                  },
+                  "required": ["type", "verificationUrl", "userCode"]
+                },
+                "account": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "anyOf": [
+                        { "type": "string", "maxLength": 320 },
+                        { "type": "null" }
+                      ]
+                    },
+                    "plan": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "providerAccountId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    }
+                  },
+                  "required": ["email", "plan"]
+                },
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              },
+              "required": [
+                "id",
+                "providerId",
+                "accountId",
+                "name",
+                "revision",
+                "method",
+                "phase",
+                "createdAt",
+                "updatedAt",
+                "expiresAt"
+              ]
+            }
+          }
+        },
+        "required": ["version", "attempts"]
       },
       "JobSubmit": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",

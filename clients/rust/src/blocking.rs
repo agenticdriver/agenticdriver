@@ -198,6 +198,18 @@ impl AgenticClient {
             .and_then(Value::as_bool)
             .ok_or(crate::connections::invalid())
     }
+    pub fn provider_setup(
+        &self,
+        input: &crate::ProviderSetupRequest,
+    ) -> Result<crate::ProviderSetupSnapshot> {
+        crate::setup::validate_request(input)?;
+        let value: Value = read_json(self.request(
+            "v1/management/setup",
+            Some(&serde_json::to_value(input)?),
+            false,
+        )?)?;
+        crate::setup::snapshot(value, input)
+    }
     pub fn management(&self) -> Result<crate::ManagementSnapshot> {
         let value: Value = read_json(self.request("v1/management", None, false)?)?;
         crate::management::snapshot(value, None)

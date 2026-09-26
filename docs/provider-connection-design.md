@@ -9,7 +9,7 @@ the first slice on `sdk-roadmap`: host-reported provider definitions, typed meta
 in all four languages, and a searchable shared setup component for existing
 native sign-ins, API keys, host secret references and compatible endpoints.
 [AD-054 / #50](https://github.com/agenticdriver/agenticdriver/issues/50) owns the
-separate, still planned native browser/device sign-in lifecycle.
+[owned native device sign-in lifecycle](provider-sign-in.md), initially qualified for Codex.
 
 ## Reference review
 

@@ -58,6 +58,8 @@ class ClientConformance(unittest.TestCase):
                 try:
                     if case.get("operation") == "providers":
                         client.providers()
+                    elif case.get("operation") == "provider-setup":
+                        client.provider_setup(case["setupRequest"])
                     elif case.get("operation") == "protocol":
                         client.protocol()
                     elif case.get("operation") == "job-submit":

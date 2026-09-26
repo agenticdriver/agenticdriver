@@ -1,4 +1,5 @@
 import { providerPanel, type ProviderPanelState } from "../src/panel.js";
+import type { ProviderSetupRequest } from "../src/setup-types.js";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { AgenticClient } from "../src/client.js";
@@ -36,6 +37,7 @@ const fixtures = JSON.parse(
   cases: {
     id: string;
     jobSubmit?: JobSubmit;
+    setupRequest?: ProviderSetupRequest;
     jobIdentity?: JobIdentity;
     jobEvents?: JobEventsRequest;
     expectedError?: string;
@@ -64,6 +66,8 @@ for (const example of fixtures.cases) {
   let failure: unknown;
   try {
     if (example.operation === "providers") await client.providers();
+    else if (example.operation === "provider-setup")
+      await client.providerSetup(example.setupRequest!);
     else if (example.operation === "protocol") await client.protocol();
     else if (example.operation === "job-submit")
       await client.submitJob(example.jobSubmit!);

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { HostProviderConfigSchema } from "./provider-config.js";
+import type { ProviderSetup } from "./setup-types.js";
 export {
   HostProviderConfigSchema,
   type HostProviderConfig,
@@ -64,4 +65,5 @@ export type ConfigureProvider = z.infer<typeof ConfigureProviderSchema>;
 export interface ProviderManagement {
   snapshot(): ManagementSnapshot | Promise<ManagementSnapshot>;
   configure(input: unknown): Promise<ManagementSnapshot>;
+  setup?: ProviderSetup;
 }

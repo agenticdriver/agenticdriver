@@ -1,5 +1,6 @@
 import { hostConnections } from "./connections.js";
 import { providerDefinitions } from "./provider-definitions.js";
+import { providerSetup } from "./provider-setup.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -18,6 +19,7 @@ import {
   type ProviderManagement,
 } from "./management-types.js";
 export type * from "./management-types.js";
+export type * from "./setup-types.js";
 
 const revision = (config: HostConfig) =>
   createHash("sha256").update(JSON.stringify(config)).digest("hex");
@@ -34,6 +36,10 @@ export async function managedHost(
   const path = resolve(configPath),
     directory = dirname(path);
   let config = await readHostConfig(path);
+  const ownedSignIn =
+    process.platform === "linux" &&
+    process.arch === "x64" &&
+    Boolean(config.usage?.hostId);
   const driver = configuredDriver(config, path, options);
   let queue: Promise<unknown> = Promise.resolve();
   const snapshot = (): ManagementSnapshot => ({
@@ -41,7 +47,7 @@ export async function managedHost(
     revision: revision(config),
     providers: structuredClone(config.providers),
     supportedKinds: providerDefinitions().map((p) => p.kind),
-    providerDefinitions: providerDefinitions(),
+    providerDefinitions: providerDefinitions({ ownedSignIn }),
   });
   const configure: ProviderManagement["configure"] = (input) => {
     const operation = queue.then(async () => {
@@ -156,10 +162,32 @@ export async function managedHost(
     join(directory, "state", "connections.json"),
     { providers: () => driver.listProviders().map((p) => p.id) },
   );
+  const setup = ownedSignIn
+    ? await providerSetup({
+        directory,
+        snapshot,
+        configure,
+        async preflight(provider, expectedRevision) {
+          const disk = await readHostConfig(path);
+          if (
+            revision(disk) !== expectedRevision ||
+            revision(config) !== expectedRevision
+          )
+            throw new DriverError(
+              "CONFIG_CONFLICT",
+              "Host settings changed. Refresh before signing in.",
+            );
+          validateHostConfig({
+            ...config,
+            providers: [...config.providers, provider],
+          });
+        },
+      })
+    : undefined;
   return {
     driver,
     connections,
-    management: { snapshot, configure } satisfies ProviderManagement,
+    management: { snapshot, configure, setup } satisfies ProviderManagement,
     config: () => structuredClone(config),
   };
 }

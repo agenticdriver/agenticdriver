@@ -130,6 +130,7 @@ else {
             evidence.contextIsolated &&
             evidence.nodeUnavailable &&
             evidence.providerAdded &&
+            evidence.providerSetupUi &&
             prefs.sandbox &&
             prefs.contextIsolation &&
             !prefs.nodeIntegration &&
@@ -138,6 +139,7 @@ else {
             JSON.stringify({
               desktopSmoke: valid ? "passed" : "failed",
               rendererIsolated: Boolean(valid),
+              providerSetupUi: evidence.providerSetupUi === true,
               runtime: "v24.21.0",
               ...(evidence.startupError
                 ? { startupError: evidence.startupError }

@@ -86,6 +86,10 @@ pub fn panel_snapshot<B: PanelBackend>(backend: &B, refresh: bool) -> Result<Val
     let features = client.protocol()?.features;
     if features.iter().any(|f| f == "provider-management") {
         state["management"] = serde_json::to_value(client.management()?)?;
+        if features.iter().any(|f| f == "provider-setup") {
+            state["setup"] =
+                serde_json::to_value(client.provider_setup(&crate::ProviderSetupRequest::List)?)?;
+        }
         state["canInvite"] = json!(
             features.iter().any(|f| f == "client-pairing")
                 && backend.connection().and_then(|c| c.url).is_some()
@@ -115,6 +119,9 @@ pub fn handle_provider_panel<B: PanelBackend>(backend: &mut B, request: &Value) 
         .client()
         .ok_or(Error::Protocol("Connect an AgenticDriver host first."))?;
     match action {
+        "setup" => Ok(serde_json::to_value(client.provider_setup(
+            &serde_json::from_value(request["request"].clone())?,
+        )?)?),
         "configure" => {
             client.configure_provider(&serde_json::from_value(request["change"].clone())?)?;
             panel_snapshot(backend, false)
@@ -197,6 +204,13 @@ pub async fn panel_snapshot_async<B: AsyncPanelBackend>(
     let features = client.protocol().await?.features;
     if features.iter().any(|f| f == "provider-management") {
         state["management"] = serde_json::to_value(client.management().await?)?;
+        if features.iter().any(|f| f == "provider-setup") {
+            state["setup"] = serde_json::to_value(
+                client
+                    .provider_setup(&crate::ProviderSetupRequest::List)
+                    .await?,
+            )?;
+        }
         state["canInvite"] = json!(
             features.iter().any(|f| f == "client-pairing")
                 && backend.connection().and_then(|c| c.url).is_some()
@@ -229,6 +243,11 @@ pub async fn handle_provider_panel_async<B: AsyncPanelBackend>(
         .client()
         .ok_or(Error::Protocol("Connect an AgenticDriver host first."))?;
     match action {
+        "setup" => Ok(serde_json::to_value(
+            client
+                .provider_setup(&serde_json::from_value(request["request"].clone())?)
+                .await?,
+        )?),
         "configure" => {
             client
                 .configure_provider(&serde_json::from_value(request["change"].clone())?)

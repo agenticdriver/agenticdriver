@@ -53,6 +53,7 @@ try {
     throw new Error("Native desktop smoke did not pass.");
   }
   assert.equal(evidence.rendererIsolated, true);
+  assert.equal(evidence.providerSetupUi, true);
   console.log(
     JSON.stringify({
       ...evidence,

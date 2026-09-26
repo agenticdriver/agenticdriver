@@ -47,7 +47,7 @@ The Go and Python examples use their standard HTTP servers. The Rust example use
 ## What the component owns
 
 - Provider instance list, refresh time, reported health and account identifier.
-- Searchable provider picker and guided connection methods reported by the selected host: existing native sign-in, write-only API key, host credential reference and compatible endpoint. Account identity, executable paths and other advanced settings remain available.
+- Searchable provider picker and guided connection methods reported by the selected host: existing native sign-in, owned Codex device sign-in, write-only API key, host credential reference and compatible endpoint. Account identity, executable paths and other advanced settings remain available.
 - Revision-checked remote changes to display name, enabled state, native executable/account directory, reasoning effort, API endpoint and credential reference; API keys are write-only.
 - Reported model inventory plus explicitly configured IDs, search, optional model allowlists, and all-model access by default.
 - Device-local favorites, visibility and ordering, isolated by connection ID and provider instance.
@@ -57,15 +57,17 @@ The component does not start inference. A model selection emits `agenticdriver:m
 
 Inventory, host configuration and execution grants are distinct. An empty model allowlist denies all models; an omitted allowlist permits any explicitly chosen model. A reported model is not marked live-tested. Managers can see all instances; `management.executionProviders` identifies which they can actually run. Management-only connections cannot select models for execution. Hosts predating that field leave management-side selection disabled until their permissions can be determined. Refresh and settings changes do not cancel active runs.
 
-Provider-native installation and subscription sign-in remain with the official runtime on the provider machine. Extension settings remain host-operator owned. This release does not install native binaries, perform provider sign-in inside the browser, or expose arbitrary process arguments/environment variables. Supported settings match the SDK's qualified runtime adapters.
+Provider-native installation, token exchange, storage and refresh remain with the official runtime on the provider machine. Qualified hosts can guide [Codex device sign-in](provider-sign-in.md) from the component. Extension settings remain host-operator owned. This release does not install native binaries or expose arbitrary process arguments/environment variables. Codex device sign-in opens the official provider page in the user's browser. Supported settings match the SDK's qualified runtime adapters.
 
 ## Add a provider connection
 
-Choose **Add provider**, search for the provider or gateway, and select its advertised connection method. The panel identifies the connected host before requesting any credentials. API connections accept a key once or reference an existing host environment variable/private file; compatible endpoints also require their URL. Native connections use the official runtime's existing sign-in, with setup requirements and documentation shown before saving. Expanding **Advanced settings** exposes the instance/account IDs and native executable/account directory.
+Choose **Add provider**, search for the provider or gateway, and select its advertised connection method. The panel identifies the connected host before requesting any credentials. API connections accept a key once or reference an existing host environment variable/private file; compatible endpoints also require their URL. Native connections use the official runtime's existing sign-in or an advertised owned sign-in method, with setup requirements shown before proceeding. Expanding **Advanced settings** exposes the instance/account IDs and native executable/account directory.
 
 Saving a connection does not run a model, start provider sign-in or extend any application's execution grant. Model discovery may run afterward and reports its own status. New instances allow all explicitly selected models by default; use **Models** for a connection allowlist. A gateway connection identifies that gateway account, not a guaranteed upstream provider/account; configure upstream routing and billing at the gateway.
 
-The shared component reads optional `management.providerDefinitions`. Older hosts without that field retain the original `supportedKinds` settings form. All four language packages preserve this metadata and Codex's `applicationTools` setting when configuration is saved. [Provider management](provider-management.md#connection-definitions) documents the typed contract. The [connection design review](provider-connection-design.md) records the T3 Code, OpenCode, gateway and Langfuse references and the separate planned native sign-in lifecycle.
+Owned sign-in presents its device code, polls caller-owned setup state and requires explicit account confirmation after native verification. It stays available through refresh and can be cancelled without changing shared accounts. The component hides this method when `provider-setup` is absent.
+
+The shared component reads optional `management.providerDefinitions`. Older hosts without that field retain the original `supportedKinds` settings form. All four language packages preserve this metadata and Codex's `applicationTools` setting when configuration is saved. [Provider management](provider-management.md#connection-definitions) documents the typed contract. The [connection design review](provider-connection-design.md) records the T3 Code, OpenCode, gateway and Langfuse references and the native sign-in lifecycle.
 
 ## Embed in an existing application
 

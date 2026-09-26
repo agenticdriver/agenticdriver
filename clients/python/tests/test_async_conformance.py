@@ -74,6 +74,8 @@ class AsyncConformance(unittest.IsolatedAsyncioTestCase):
                     try:
                         if case.get("operation") == "providers":
                             await client.providers()
+                        elif case.get("operation") == "provider-setup":
+                            await client.provider_setup(case["setupRequest"])
                         elif case.get("operation") == "protocol":
                             await client.protocol()
                         elif case.get("operation") == "job-submit":

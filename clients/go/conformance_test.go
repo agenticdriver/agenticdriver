@@ -170,6 +170,7 @@ func TestReferencePeerConformance(t *testing.T) {
 	var fixture struct {
 		Cases []struct {
 			JobSubmit            JobSubmit                   `json:"jobSubmit"`
+			SetupRequest         ProviderSetupRequest        `json:"setupRequest"`
 			JobIdentity          JobIdentity                 `json:"jobIdentity"`
 			JobEvents            JobEventsRequest            `json:"jobEvents"`
 			SessionCreate        SessionCreate               `json:"sessionCreate"`
@@ -202,6 +203,8 @@ func TestReferencePeerConformance(t *testing.T) {
 			var err error
 			if example.Operation == "providers" {
 				_, err = client.Providers(context.Background())
+			} else if example.Operation == "provider-setup" {
+				_, err = client.ProviderSetup(context.Background(), example.SetupRequest)
 			} else if example.Operation == "protocol" {
 				_, err = client.Protocol(context.Background())
 			} else if example.Operation == "job-submit" {

@@ -13,6 +13,7 @@ export function trustedSender(event, contents) {
 export function externalDocumentation(value) {
   try {
     const url = new URL(value);
+    if (url.href === "https://auth.openai.com/codex/device") return url.href;
     return url.protocol === "https:" &&
       !url.username &&
       !url.password &&

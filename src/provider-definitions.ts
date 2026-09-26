@@ -141,6 +141,23 @@ const definitions: ProviderDefinition[] = [
 ];
 
 /** Pure metadata. Does not inspect credentials, start a process or contact a provider. */
-export function providerDefinitions(): ProviderDefinition[] {
-  return structuredClone(definitions);
+export function providerDefinitions(
+  options: { ownedSignIn?: boolean } = {},
+): ProviderDefinition[] {
+  const result = structuredClone(definitions);
+  if (options.ownedSignIn) {
+    const codex = result.find((p) => p.kind === "codex")!;
+    codex.description = "Connect an official Codex CLI account on this host.";
+    codex.requirements =
+      "Requires the qualified Codex CLI 0.157.0 executable on this Linux x64 host. Device sign-in creates a separate private profile; existing accounts stay unchanged. Your ChatGPT account must allow device-code sign-in.";
+    codex.methods.unshift({
+      id: "codex-device",
+      label: "Sign in with ChatGPT",
+      description:
+        "Open the official device page, enter the displayed code, then confirm the verified account. Codex owns the credentials on the selected host.",
+      interaction: "device-code",
+      credentialOwner: "native-runtime",
+    });
+  }
+  return result;
 }

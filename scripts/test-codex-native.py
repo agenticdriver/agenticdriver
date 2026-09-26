@@ -27,11 +27,11 @@ def main():
     parser.add_argument("--binary", required=True, type=Path,
                         help="Absolute path to the native Linux ELF binary, not its npm launcher")
     parser.add_argument("--receipt", type=Path)
-    parser.add_argument("--suite", choices=("adapter", "tools", "application-tools"), default="adapter",
+    parser.add_argument("--suite", choices=("adapter", "tools", "application-tools", "setup"), default="adapter",
                         help="Production adapter checks or an offline native tool protocol audit")
     args = parser.parse_args()
     fixture = {"adapter": "codex-native.mjs", "tools": "codex-tools-native.mjs",
-               "application-tools": "codex-application-tools-native.mjs"}[args.suite]
+               "application-tools": "codex-application-tools-native.mjs", "setup": "codex-setup-native.mjs"}[args.suite]
     if sys.platform != "linux":
         parser.error("Native Codex fixtures currently require Linux and bubblewrap.")
     if not args.binary.is_absolute() or not args.binary.is_file():
@@ -83,6 +83,8 @@ def main():
         "adapterSha256": digest(ROOT / "dist/providers/codex-app-server.js"),
         "processRunnerSha256": digest(ROOT / "dist/providers/cli-process.js"),
         "classifierSha256": digest(ROOT / "dist/providers/codex-cli-errors.js"),
+        "setupWorkerSha256": digest(ROOT / "dist/providers/codex-sign-in.js"),
+        "setupManagerSha256": digest(ROOT / "dist/provider-setup.js"),
         "sourceCommit": subprocess.check_output(
             ["git", "-c", f"safe.directory={ROOT}", "rev-parse", "HEAD"],
             cwd=ROOT, text=True).strip(),

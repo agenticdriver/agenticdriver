@@ -10,6 +10,10 @@ import {
   ManagementSnapshotSchema,
 } from "../src/management-types.js";
 import { mkdir, writeFile } from "node:fs/promises";
+import {
+  ProviderSetupRequestSchema,
+  ProviderSetupSnapshotSchema,
+} from "../src/setup-types.js";
 import { z } from "zod";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
@@ -89,6 +93,8 @@ const schemas = {
       RevokeConnection: RevokeConnectionSchema,
       ConfigureProvider: ConfigureProviderSchema,
       ManagementSnapshot: ManagementSnapshotSchema,
+      ProviderSetupRequest: ProviderSetupRequestSchema,
+      ProviderSetupSnapshot: ProviderSetupSnapshotSchema,
       JobSubmit: JobSubmitSchema,
       JobIdentity: JobIdentitySchema,
       JobInfo: JobInfoSchema,
@@ -687,6 +693,33 @@ const document = {
               },
             },
           },
+        },
+      },
+    },
+    "/v1/management/setup": {
+      post: {
+        summary:
+          "Start, inspect, accept or cancel an owned native provider sign-in",
+        description:
+          "Requires provider-setup and manageProviders. Attempts are bound to the initiating credential, provider/account and configuration revision. Accept only after native account verification. No model requests or execution grants.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: ref("ProviderSetupRequest") },
+          },
+        },
+        responses: {
+          "200": {
+            description:
+              "Caller-owned setup state; provider credentials omitted",
+            content: {
+              "application/json": { schema: ref("ProviderSetupSnapshot") },
+            },
+          },
+          "403": { description: "Management grant required" },
+          "404": { description: "Attempt unavailable to this credential" },
+          "409": { description: "Stale, finished or not-yet-verified attempt" },
+          "503": { description: "Owned sign-in unavailable on this host" },
         },
       },
     },

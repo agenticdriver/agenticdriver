@@ -317,6 +317,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             providerManagement:
               options.management !== undefined &&
               principal.manageProviders === true,
+            providerSetup:
+              options.management?.setup !== undefined &&
+              principal.manageProviders === true,
             jobs: jobs !== undefined,
             sessions: driver.supportsSessions,
             applicationTools: driver.supportsApplicationTools,
@@ -368,6 +371,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       }
       if (
         req.url === "/v1/management" ||
+        req.url === "/v1/management/setup" ||
         req.url === "/v1/management/providers"
       ) {
         if (!options.management || principal.manageProviders !== true)
@@ -375,7 +379,28 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             "FORBIDDEN",
             "This credential cannot manage provider settings.",
           );
-        if (req.url === "/v1/management" && req.method === "GET")
+        if (req.url === "/v1/management/setup" && req.method === "POST") {
+          if (!options.management.setup)
+            throw new DriverError(
+              "SETUP_UNAVAILABLE",
+              "This host does not offer owned provider sign-in.",
+            );
+          // Bind to the authenticated principal AND credential. Another administrator,
+          // even with the same subject or a rotated token, cannot claim this interaction.
+          const caller = JSON.stringify([
+            principal.id,
+            principal.subject,
+            createHash("sha256").update(bearer).digest("hex"),
+          ]);
+          json(
+            res,
+            200,
+            await options.management.setup.request(
+              await readRequest(req),
+              caller,
+            ),
+          );
+        } else if (req.url === "/v1/management" && req.method === "GET")
           json(res, 200, {
             ...(await options.management.snapshot()),
             executionProviders: principal.providers,
@@ -809,7 +834,11 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
         try {
           await stoppedJobs;
         } finally {
-          if (ownsJobStore) await jobStore?.close?.();
+          try {
+            await options.management?.setup?.close();
+          } finally {
+            if (ownsJobStore) await jobStore?.close?.();
+          }
         }
       })());
     },
@@ -822,6 +851,18 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (code === "SETUP_NOT_FOUND") return 404;
+  if (code === "SETUP_CAPACITY") return 429;
+  if (code === "SETUP_UNAVAILABLE") return 503;
+  if (code === "INVALID_SETUP_REQUEST") return 400;
+  if (
+    [
+      "SETUP_NEW_INSTANCE_REQUIRED",
+      "SETUP_FINISHED",
+      "SETUP_NOT_READY",
+    ].includes(code)
+  )
+    return 409;
   if (code === "INVITATION_REJECTED") return 401;
   if (code === "INVALID_INVITATION") return 400;
   if (code === "CONNECTION_CAPACITY") return 429;

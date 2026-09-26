@@ -5,6 +5,10 @@ import {
   type ManagementSnapshot,
 } from "./management-types.js";
 import { DriverError } from "./errors.js";
+import {
+  ProviderSetupRequestSchema,
+  type ProviderSetupSnapshot,
+} from "./setup-types.js";
 import type { ProviderInfo } from "./types.js";
 import type { ProviderPresentation } from "./catalog.js";
 export interface PanelConnection {
@@ -17,6 +21,7 @@ export interface ProviderPanelState {
   connection?: PanelConnection;
   providers: ProviderInfo[];
   management?: ManagementSnapshot;
+  setup?: ProviderSetupSnapshot;
   presentations?: Record<string, ProviderPresentation>;
   canConnect: boolean;
   canDisconnect: boolean;
@@ -24,6 +29,9 @@ export interface ProviderPanelState {
   connectionError?: string;
 }
 export const PanelRequestSchema = z.discriminatedUnion("action", [
+  z
+    .object({ action: z.literal("setup"), request: ProviderSetupRequestSchema })
+    .strict(),
   z
     .object({ action: z.literal("snapshot"), refresh: z.boolean().optional() })
     .strict(),
@@ -90,6 +98,9 @@ export function providerPanel(options: ProviderPanelOptions) {
       providers,
       connection,
       management,
+      ...(management && protocol.features.includes("provider-setup")
+        ? { setup: await client.providerSetup({ action: "list" }) }
+        : {}),
       canInvite: Boolean(
         management &&
         connection?.url &&
@@ -137,6 +148,7 @@ export function providerPanel(options: ProviderPanelOptions) {
       await client.configureProvider(action.change);
       return snapshot();
     }
+    if (action.action === "setup") return client.providerSetup(action.request);
     if (action.action === "connections") return client.connections();
     if (action.action === "revoke") return client.revokeConnection(action.id);
     const connection = options.connection?.();

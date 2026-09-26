@@ -10673,6 +10673,435 @@
         "id": "00000000-0000-0000-0000-000000000001",
         "after": 0
       }
+    },
+    {
+      "id": "setup-waiting",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-verified-account",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "ready",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "account": {
+              "email": "fixture@example.invalid",
+              "plan": "pro",
+              "providerAccountId": "native-account"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-providerid",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "foreign",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-accountid",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "foreign",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-revision",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-phase",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "unrecognized",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-expiresat",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "invalid",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-invalid-id",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "invalid",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-untrusted-device-url",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "start",
+        "method": "codex-device",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "provider": {
+          "kind": "codex",
+          "id": "codex-work",
+          "accountId": "work-account",
+          "models": []
+        }
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://example.invalid/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-foreign-attempt",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "status",
+        "id": "22345678-1234-4123-8123-123456789abc"
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-duplicate-attempt",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "list"
+      },
+      "expectedError": "INVALID_RESPONSE",
+      "json": {
+        "version": 1,
+        "attempts": [
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          },
+          {
+            "id": "12345678-1234-4123-8123-123456789abc",
+            "providerId": "codex-work",
+            "accountId": "work-account",
+            "name": "Work account",
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "method": "codex-device",
+            "phase": "waiting",
+            "createdAt": "2026-09-26T12:00:00.000Z",
+            "updatedAt": "2026-09-26T12:00:00.000Z",
+            "expiresAt": "2026-09-26T12:15:00.000Z",
+            "interaction": {
+              "type": "device-code",
+              "verificationUrl": "https://auth.openai.com/codex/device",
+              "userCode": "TEST-CODE"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "setup-empty-list",
+      "operation": "provider-setup",
+      "setupRequest": {
+        "action": "list"
+      },
+      "json": {
+        "version": 1,
+        "attempts": []
+      }
     }
   ]
 }

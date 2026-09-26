@@ -18,6 +18,14 @@ import {
   type ManagementSnapshot,
 } from "./management-types.js";
 export type * from "./management-types.js";
+import {
+  ProviderSetupRequestSchema,
+  ProviderSetupSnapshotSchema,
+  matchesSetupResponse,
+  type ProviderSetupRequest,
+  type ProviderSetupSnapshot,
+} from "./setup-types.js";
+export type * from "./setup-types.js";
 import { z } from "zod";
 import {
   SessionInfoSchema,
@@ -238,6 +246,7 @@ export class AgenticClient {
       | { id: string }
       | Record<string, never>
       | ConfigureProvider
+      | ProviderSetupRequest
       | RunRequest
       | RetrievalSearch
       | RetrievalIndexRequest
@@ -389,6 +398,28 @@ export class AgenticClient {
       z.object({ revoked: z.boolean() }),
       options,
     );
+  }
+  async providerSetup(
+    input: ProviderSetupRequest,
+    options: ClientRequestOptions = {},
+  ): Promise<ProviderSetupSnapshot> {
+    const request = ProviderSetupRequestSchema.safeParse(input);
+    if (!request.success)
+      throw new DriverError(
+        "INVALID_SETUP_REQUEST",
+        "Choose a supported provider setup operation.",
+      );
+    const parsed = ProviderSetupSnapshotSchema.safeParse(
+      await readResponseJson(
+        await this.request("v1/management/setup", request.data, options.signal),
+      ),
+    );
+    if (!parsed.success || !matchesSetupResponse(parsed.data, request.data))
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid or mismatched provider setup state.",
+      );
+    return parsed.data;
   }
   async management(
     options: ClientRequestOptions = {},

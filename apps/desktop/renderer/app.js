@@ -419,7 +419,145 @@ try {
       hostId: "local",
       request: { action: "snapshot" },
     });
+    // Real renderer regression, enabled only by the isolated --smoke-test harness.
+    // The component transport below is synthetic; it never starts provider sign-in.
+    const setupState = structuredClone(after);
+    setupState.connection = { id: "renderer-fixture", label: "Synthetic host" };
+    setupState.canInvite = false;
+    setupState.setup = { version: 1, attempts: [] };
+    const setupPanel = document.createElement("agenticdriver-providers");
+    let pendingProvider,
+      confirmations = 0;
+    const check = (ok) => {
+      if (!ok) throw new Error("Provider sign-in UI regression.");
+    };
+    const until = async (condition) => {
+      for (let i = 0; i < 200; i++) {
+        if (condition()) return;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      check(false);
+    };
+    setupPanel.transport = async (input) => {
+      if (input.action === "snapshot") return structuredClone(setupState);
+      check(input.action === "setup");
+      const request = input.request;
+      if (request.action === "start") {
+        pendingProvider = request.provider;
+        check(!Object.hasOwn(pendingProvider, "accountDirectory"));
+        const now = new Date().toISOString();
+        setupState.setup.attempts = [
+          {
+            id: crypto.randomUUID(),
+            providerId: pendingProvider.id,
+            accountId: pendingProvider.accountId,
+            name: pendingProvider.name,
+            revision: request.revision,
+            method: request.method,
+            phase: "waiting",
+            createdAt: now,
+            updatedAt: now,
+            expiresAt: new Date(Date.now() + 900000).toISOString(),
+            interaction: {
+              type: "device-code",
+              verificationUrl: "https://auth.openai.com/codex/device",
+              userCode: "TEST-CODE",
+            },
+          },
+        ];
+      } else if (request.action === "cancel") {
+        setupState.setup.attempts[0].phase = "cancelled";
+        delete setupState.setup.attempts[0].interaction;
+      } else if (request.action === "accept") {
+        check(setupState.setup.attempts[0].phase === "ready");
+        confirmations++;
+        setupState.setup.attempts[0].phase = "succeeded";
+        setupState.management.providers.push({
+          ...pendingProvider,
+          accountDirectory: "/synthetic/owned-profile",
+        });
+        setupState.providers.push({
+          ...setupState.providers[0],
+          id: pendingProvider.id,
+          name: pendingProvider.name,
+          vendor: "codex",
+          authMode: "cli-session",
+        });
+      } else check(request.action === "list");
+      return structuredClone(setupState.setup);
+    };
+    document.body.append(setupPanel);
+    const root = setupPanel.shadowRoot;
+    const click = (selector) => {
+      const button = root.querySelector(selector);
+      check(button && !button.disabled);
+      button.click();
+    };
+    const initialName = setupState.management.providers[0].name ?? "";
+    try {
+      await setupPanel.refresh();
+      const begin = async () => {
+        click('[data-action="add"]');
+        click('[data-kind="codex"]');
+        const name = root.querySelector('[data-config="name"]');
+        name.value = "Synthetic owned account";
+        name.dispatchEvent(
+          new InputEvent("input", { bubbles: true, composed: true }),
+        );
+        click('[data-action="connect-provider"]');
+        await until(
+          () =>
+            root.querySelector('[data-action="setup-cancel"]') &&
+            !root.querySelector('[data-action="setup-cancel"]').disabled,
+        );
+        check(root.querySelector('[data-config="name"]').value === initialName);
+        check(!root.querySelector('[data-config="binary"]'));
+        check(!root.querySelector('[data-action="setup-accept"]'));
+      };
+      await begin();
+      click('[data-action="setup-cancel"]');
+      await until(() =>
+        root
+          .querySelector(".setup-attempts")
+          .textContent.includes("Sign-in cancelled"),
+      );
+      check(root.querySelector('[data-config="name"]').value === initialName);
+      await begin();
+      const attempt = setupState.setup.attempts[0];
+      attempt.phase = "ready";
+      delete attempt.interaction;
+      attempt.account = {
+        email: "renderer@example.invalid",
+        plan: "synthetic",
+      };
+      await setupPanel.refresh();
+      check(
+        confirmations === 0 &&
+          root
+            .querySelector(".setup-attempts")
+            .textContent.includes("renderer@example.invalid"),
+      );
+      click('[data-action="setup-accept"]');
+      await until(
+        () =>
+          root.querySelector('[data-action="select"][aria-pressed="true"]')
+            ?.dataset.id === pendingProvider.id,
+      );
+      check(
+        confirmations === 1 &&
+          root.querySelector('[data-config="name"]').value ===
+            "Synthetic owned account",
+      );
+      delete setupState.setup;
+      await setupPanel.refresh();
+      click('[data-action="add"]');
+      click('[data-kind="codex"]');
+      check(!root.querySelector('[data-method="codex-device"]'));
+    } finally {
+      setupPanel.remove();
+    }
     await api.reportSmoke({
+      providerSetupUi: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&
         typeof window.process === "undefined",
