@@ -5,6 +5,20 @@ Prometheus. GitHub schedules jobs and retains logs/artifacts; Prometheus supplie
 compute. The labels are `self-hosted`, `linux`, `x64`, `prometheus-ci`. There is no
 hosted-runner fallback. The stack lives at `/var/docker/agenticdriver-ci`.
 
+The CI workflow schedules one job group at a time: desktop, Codex, Claude,
+deployment, the three runtime combinations, documentation and release candidate.
+The runtime matrix has `max-parallel: 1`. This matches the single runner instead
+of leaving nine jobs waiting for assignment. In run `36323616397`, eight checks
+passed, but GitHub cancelled the last unassigned job after about twenty minutes
+with “The job was not acquired by Runner of type self-hosted even after multiple
+attempts.” The runner remained online and the private Docker daemon was healthy.
+
+Group dependencies use `!cancelled()` so a completed test failure does not hide
+later diagnostics, while cancelling an obsolete workflow still stops its queue.
+All nine checks and the repository/ref guards remain in place. See
+[GitHub's job conditions](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows)
+and [matrix limits](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymax-parallel).
+
 The Ubuntu 24.04 userspace contains compiler, Git/GitHub CLI, Python bootstrap,
 OpenSSL, Poppler and Docker CLI prerequisites. Workflows install their declared
 Node, Python, Go and Rust versions. Runner 2.337.0 is downloaded from the official

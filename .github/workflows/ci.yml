@@ -38,7 +38,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   codex-native:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: desktop
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Offline native Codex contracts
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
@@ -70,7 +71,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   claude-native:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: codex-native
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Offline native Claude contracts
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
@@ -102,10 +104,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   release-candidate:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: documentation
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     uses: ./.github/workflows/release-candidate.yml
   documentation:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: verify
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Documentation site
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
@@ -126,7 +130,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   deployment:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: claude-native
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Linux containers and verified TLS
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     steps:
@@ -150,11 +155,13 @@ jobs:
       - run: npm ci
       - run: npm run test:deployment
   verify:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    needs: deployment
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: ${{ matrix.label }}
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - label: Linux minimum runtimes
