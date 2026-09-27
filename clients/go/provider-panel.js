@@ -342,7 +342,13 @@ function registerProviderPanel(registry = customElements) {
         try {
           const stored = JSON.parse(localStorage.getItem(key) ?? "null");
           if (stored && ["favorites", "hidden", "order"].every((k) => Array.isArray(stored[k]) && stored[k].length <= 1e3 && stored[k].every((v) => typeof v === "string")))
-            value = stored;
+            value = {
+              favorites: stored.favorites,
+              hidden: stored.hidden,
+              order: stored.order,
+              ...["color", "monochrome"].includes(stored.iconStyle) ? { iconStyle: stored.iconStyle } : {},
+              ...typeof stored.iconVariant === "string" && stored.iconVariant.length <= 128 ? { iconVariant: stored.iconVariant } : {}
+            };
         } catch {
         }
         this.preferenceCache.set(key, value);

@@ -411,7 +411,18 @@ export function registerProviderPanel(
                 stored[k].every((v: unknown) => typeof v === "string"),
             )
           )
-            value = stored;
+            value = {
+              favorites: stored.favorites,
+              hidden: stored.hidden,
+              order: stored.order,
+              ...(["color", "monochrome"].includes(stored.iconStyle)
+                ? { iconStyle: stored.iconStyle }
+                : {}),
+              ...(typeof stored.iconVariant === "string" &&
+              stored.iconVariant.length <= 128
+                ? { iconVariant: stored.iconVariant }
+                : {}),
+            };
         } catch {
           /* Private browsing or unavailable storage: use in-memory preferences. */
         }
