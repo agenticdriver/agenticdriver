@@ -15,7 +15,10 @@ published application preview until the new channels are independently verified.
   on failure. Setup distinguishes expiration, rejection, network and TLS errors.
 - The shared provider component enters an unavailable/retry state after failed
   refresh or sign-in status polling, hiding stale account and provider controls.
-  Recovery retains selection/preferences and keeps identity hidden.
+  A disconnected snapshot retaining a saved connection enters the same state
+  rather than first-time onboarding. Recovery retains selection/preferences and
+  keeps identity hidden. Native T3 acceptance found this additional edge case;
+  [issue #60](https://github.com/agenticdriver/agenticdriver/issues/60) owns its fix.
 - Prometheus CI runs its nine checks sequentially on the existing runner. The
   packaged native UI is checked at wide and 390×844 sizes with native Enter-key
   form submission.
@@ -29,7 +32,18 @@ one-use replay rejection and loopback-bind inspection. See
 [connection recovery](remote-connections-2026-09-27.md),
 [invitation destinations](invitation-destinations-2026-09-27.md) and
 [panel recovery](panel-recovery-2026-09-27.md). No model calls were made. T3 browser
-automation was unavailable; native Electron checks do not claim T3 acceptance.
+automation was unavailable during that earlier source validation.
+
+Additional native T3 acceptance for issue #60 used a separate disposable desktop
+preview and mock-only remote host. Invitation preview, native Enter submission,
+protocol-only connection checks, saved-host rename, host shutdown and explicit
+recovery passed. At the measured 2103×1183 viewport, the offline saved host kept
+its ID and selected provider, showed recovery without onboarding or stale
+management controls, and restored the same provider after retry. Browser resize
+timed out, so this is desktop-width T3 evidence only. Native Electron regression
+checks passed at both 1340×883 and 390×844, alongside 341 SDK and 14 desktop tests.
+These checks used synthetic providers without inference, real account data or
+shared-service changes.
 
 That earlier CI does not qualify the newly versioned release source. The exact
 release commit, its own CI run, archive hashes, publication and fresh installation

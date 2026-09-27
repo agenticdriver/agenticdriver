@@ -14,6 +14,7 @@
 - Fixed stale provider controls after failed refresh or sign-in status polling.
   The shared component hides account details and management/model actions until
   explicit retry succeeds, then restores the saved selection and preferences.
+  A saved host reported offline stays in recovery instead of first-time setup.
   All four language packages include the same recovery behavior; no panel API
   or wire protocol change is required.
 - Added actual wide/narrow packaged desktop and native keyboard checks, verified

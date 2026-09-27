@@ -886,6 +886,37 @@ try {
         root.querySelector('[data-field="icon-style"]').value === "monochrome",
       );
       check(!root.innerHTML.includes("details@example.invalid"));
+      // A valid snapshot can also report an unavailable saved host. It must
+      // retain the selected provider and never offer first-time onboarding.
+      setupPanel.transport = async (input) => {
+        check(input.action === "snapshot");
+        return {
+          connected: false,
+          connection: structuredClone(setupState.connection),
+          providers: [],
+          canConnect: false,
+          canDisconnect: false,
+          connectionError: "Synthetic saved host unavailable",
+        };
+      };
+      await setupPanel.refresh();
+      check(root.textContent.includes("Connection unavailable"));
+      check(root.textContent.includes("Synthetic saved host unavailable"));
+      check(
+        !root.querySelector(
+          '[data-action="connect"], [data-action="disconnect"], [data-action="add"], [data-action="choose"], [data-action="setup-accept"], .setup-grid',
+        ),
+      );
+      check(!root.innerHTML.includes("details@example.invalid"));
+      setupPanel.transport = availableTransport;
+      await setupPanel.refresh();
+      check(
+        root.querySelector('[data-action="select"][aria-pressed="true"]')
+          .dataset.id === selectedBeforeFailure,
+      );
+      check(
+        root.querySelector('[data-field="icon-style"]').value === "monochrome",
+      );
       // A late error from an older refresh must not replace a newer successful view.
       let rejectOld;
       setupPanel.transport = () =>
@@ -1204,7 +1235,12 @@ try {
     );
     check(
       !$("agenticdriver-providers").shadowRoot.querySelector(
-        '[data-action="add"]',
+        '[data-action="add"], [data-action="connect"], .setup-grid',
+      ),
+    );
+    check(
+      $("agenticdriver-providers").shadowRoot.textContent.includes(
+        "Connection unavailable",
       ),
     );
     await request({ action: "start" });

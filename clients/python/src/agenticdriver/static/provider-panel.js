@@ -228,8 +228,18 @@ function registerProviderPanel(registry = customElements) {
       const state = value;
       if (typeof state?.connected !== "boolean" || !Array.isArray(state.providers))
         throw new Error("The panel returned invalid connection state.");
+      const sameConnection = state.connection?.id !== void 0 && state.connection.id === this.state?.connection?.id;
       this.revealedAccounts.clear();
       this.state = state;
+      if (!state.connected && state.connection) {
+        if (!sameConnection)
+          this.selected = "";
+        this.draft = void 0;
+        this.adding = false;
+        this.removalPending = false;
+        this.markUnavailable(state.connectionError ?? "The saved connection is unavailable. Check the host or connection settings, then retry.");
+        return;
+      }
       this.unavailable = false;
       this.failure = state.connectionError ?? "";
       if (!state.providers.some((p) => p.id === this.selected))

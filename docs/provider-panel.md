@@ -79,8 +79,11 @@ fails with `PROVIDER_IN_USE`: disable the provider or have the host operator
 update those grants first. Account policies must also remain valid; the panel
 does not silently rewrite operator-owned policy. Extensions remain operator-owned.
 
-In builds following alpha.3, a failed snapshot refresh or sign-in-status poll
-shows **Connection unavailable**. Previous provider/account details, model
+In alpha.4, a failed snapshot refresh or sign-in-status poll shows
+**Connection unavailable**. A snapshot with `connected: false` and a saved
+`connection` enters the same recovery view; a disconnected snapshot without a
+saved connection shows initial setup according to the application's permissions.
+Previous provider/account details, model
 selection and management controls are hidden until **Retry connection** obtains
 fresh state. The selected provider and device-local model/icon preferences remain
 scoped to the saved connection. Retrying reads metadata; it never repeats a
