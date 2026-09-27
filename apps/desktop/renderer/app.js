@@ -39,6 +39,9 @@ let overview,
   invitation,
   busy = false,
   generation = 0;
+const invitationPreviews = new WeakMap();
+let previewTimer,
+  previewSequence = 0;
 const pages = {
   providers: [
     "PROVIDERS & ACCOUNTS",
@@ -78,6 +81,8 @@ function notice(message, error = false) {
 async function action(fn) {
   if (busy) return;
   busy = true;
+  document.body.setAttribute("aria-busy", "true");
+  $("#host-select").disabled = true;
   notice("");
   try {
     await fn();
@@ -85,6 +90,8 @@ async function action(fn) {
     notice(error.message, true);
   } finally {
     busy = false;
+    document.body.setAttribute("aria-busy", "false");
+    $("#host-select").disabled = false;
   }
 }
 function selected() {
@@ -148,7 +155,10 @@ async function providers(current) {
     return;
   }
   state.innerHTML =
-    '<div class="notice">All reported models are shown. Choose model access per provider connection; applications receive the access you grant.</div>';
+    '<div class="notice">All reported models are shown. Choose model access per provider connection; applications receive the access you grant.</div>' +
+    (selected() !== "local"
+      ? `<div class="remote-tools"><span class="muted">Using ${escape(overview.hosts.find((h) => h.id === selected())?.label)}</span><button class="button quiet" data-action="check-host" data-host="${selected()}">Check connection</button><button class="button quiet" data-view="hosts">Host settings</button></div>`
+      : "");
   const hostId = selected();
   const panel = document.createElement("agenticdriver-providers");
   panel.transport = (req) => request({ action: "panel", hostId, request: req });
@@ -156,12 +166,72 @@ async function providers(current) {
   providerPanel = panel;
   mount.append(panel);
 }
+function hostStatus(host) {
+  const expired = host.expiresAt && Date.parse(host.expiresAt) <= Date.now();
+  const check = expired
+    ? {
+        status: "expired",
+        message:
+          "This connection expired. Use a new invitation below to reconnect.",
+      }
+    : host.check;
+  const labels = {
+    connected: "Credential accepted",
+    expired: "Expired",
+    rejected: "Access rejected",
+    "credential-unavailable": "Credential unavailable",
+    incompatible: "Incompatible host",
+    certificate: "Certificate needs attention",
+    unreachable: "Unreachable",
+    stopped: "Stopped",
+  };
+  return `<span class="badge ${check?.status === "connected" ? "green" : check ? "amber" : ""}">${escape(labels[check?.status] ?? "Not checked")}</span><p class="help">${escape(check?.message ?? "Check the host and saved credential without running a model.")}${check?.checkedAt ? `<br>Checked ${escape(relative(check.checkedAt))}${check.protocolVersion ? ` · Protocol ${escape(check.protocolVersion)} · ${check.canManageProviders ? "Provider management allowed" : "No provider management grant"}` : ""}` : ""}</p>`;
+}
+function refreshHostStatuses() {
+  for (const host of [overview.local, ...overview.hosts]) {
+    const target = document.querySelector(`[data-host-status="${host.id}"]`);
+    if (target) target.innerHTML = hostStatus(host);
+  }
+}
+function invitationField() {
+  return `<label class="field">Connection invitation<textarea name="invitation" required placeholder="ad1.…" spellcheck="false" autocomplete="off"></textarea></label><div class="invitation-preview" aria-live="polite"></div>`;
+}
+async function previewInvitation(form) {
+  const value = form.elements.invitation.value.trim();
+  const target = form.querySelector(".invitation-preview");
+  const submit = form.querySelector('[type="submit"]');
+  const sequence = ++previewSequence;
+  invitationPreviews.delete(form);
+  submit.disabled = true;
+  target.textContent = value ? "Reading invitation…" : "";
+  if (!value) return;
+  try {
+    const preview = await request({
+      action: "preview-invitation",
+      invitation: value,
+    });
+    if (sequence !== previewSequence || !form.isConnected) return;
+    const existing = overview.hosts.find((h) => h.id === form.dataset.host);
+    const mismatch = existing && existing.url !== preview.url;
+    target.innerHTML = `<div class="notice ${mismatch ? "warning" : ""}"><strong>Invitation destination</strong><p class="address">${escape(preview.url)}</p><p>${mismatch ? "This address differs from the saved host. Add it as another host to keep your existing connection." : preview.location === "this-computer" ? "This address reaches this computer. A remote machine needs its own reachable HTTPS address or an existing secure tunnel." : "This is a remote host. Its HTTPS certificate will be verified when you connect."}</p><p class="help">The invitation has not been exchanged and no connection has been made.</p></div>`;
+    if (!mismatch) {
+      invitationPreviews.set(form, { value, url: preview.url });
+      submit.disabled = false;
+      if (form.elements.label && !form.elements.label.value.trim())
+        form.elements.label.value = preview.suggestedLabel.slice(0, 80);
+    }
+  } catch {
+    if (sequence === previewSequence && form.isConnected)
+      target.innerHTML =
+        '<p class="notice warning">Paste the complete one-use invitation beginning with ad1. from the selected host.</p>';
+  }
+}
 function renderHosts() {
   const local = overview.local;
   $("#hosts-view").innerHTML = `
     <div class="card host-row"><div class="row"><div><div class="chips"><h2>This computer</h2><span class="badge ${local.running ? "green" : ""}"><i class="dot ${local.running ? "running" : ""}"></i>${local.running ? "Running" : "Stopped"}</span></div><p class="address">${escape(local.url ?? "An endpoint is assigned on first start")}</p><p class="muted">A private host managed by this app. ${local.activeRequests} request${local.activeRequests === 1 ? "" : "s"} in progress.</p></div><div class="host-actions"><button class="button ${local.running ? "quiet" : "primary"}" data-action="${local.running ? "stop" : "start"}">${local.running ? "Stop host" : "Start host"}</button><button class="button" data-action="select" data-host="local">Manage providers</button></div></div>${local.error ? `<div class="notice warning">${escape(local.error.message)}</div>` : ""}<label class="check"><input type="checkbox" id="startup" ${overview.startLocalAtLaunch ? "checked" : ""}>Start the local host when AgenticDriver opens</label><p class="help">Closing the app stops its host. Existing hosts started elsewhere are managed separately.</p><div id="stop-confirm" hidden class="notice warning">Stopping interrupts requests on this local host.<div class="actions"><button class="button danger" data-action="interrupt">Stop and interrupt requests</button><button class="button quiet" data-action="cancel-stop">Keep running</button></div></div></div>
-    ${overview.hosts.map((h) => `<div class="card host-row"><div class="row"><div><h2>${escape(h.label)}</h2><p class="address">${escape(h.url)}</p><p class="muted">Connection expires ${escape(date(h.expiresAt))}</p></div><div class="host-actions"><button class="button" data-action="select" data-host="${h.id}">Manage providers</button><button class="button quiet" data-action="forget" data-host="${h.id}">Remove</button></div></div></div>`).join("")}
-    <div class="card"><div class="card-head"><div><h2>Connect another host</h2><p class="muted">Paste a one-use invitation from the host you want to manage.</p></div><span class="badge">Local or HTTPS</span></div><form id="connect-form" class="stack"><label class="field">Name<input name="label" required maxlength="80" placeholder="Workstation, home server…" autocomplete="off"></label><label class="field">Connection invitation<textarea name="invitation" required placeholder="ad1.…" spellcheck="false" autocomplete="off"></textarea></label><p class="help">A localhost invitation connects to this computer. Remote hosts need a reachable HTTPS endpoint or your existing secure tunnel. Management controls require an operator invitation.</p><div><button class="button primary" type="submit">Connect host</button></div></form></div>`;
+    ${overview.hosts.map((h) => `<div class="card host-row"><div class="row"><div><h2>${escape(h.label)}</h2><p class="address">${escape(h.url)}</p><p class="muted">Connection expires ${escape(date(h.expiresAt))}</p></div><div class="host-actions"><button class="button" data-action="select" data-host="${h.id}">Open providers</button><button class="button quiet" data-action="check-host" data-host="${h.id}">Check connection</button></div></div><div data-host-status="${h.id}" role="status">${hostStatus(h)}</div><details class="host-options"><summary>Connection settings</summary><form class="rename-form fields" data-host="${h.id}"><label class="field">Name<input name="label" required maxlength="80" value="${escape(h.label)}" autocomplete="off"></label><div><button class="button" type="submit">Save name</button></div></form><h3>Reconnect this host</h3><p class="muted">Replace an expired or revoked credential with a new invitation from the same address. Your host name and saved provider preferences stay in place.</p><form class="reconnect-form stack" data-host="${h.id}">${invitationField()}<div><button class="button" type="submit" disabled>Reconnect host</button></div></form><p class="help">Previous grants remain valid until they expire or the host operator revokes them. Active requests are not interrupted.</p><button class="button quiet" data-action="forget" data-host="${h.id}">Remove saved host</button></details></div>`).join("")}
+    <div class="card"><div class="card-head"><div><h2>Connect another host</h2><p class="muted">Paste an invitation and review where it will connect.</p></div><span class="badge">Local or HTTPS</span></div><form id="connect-form" class="stack">${invitationField()}<label class="field">Name<input name="label" required maxlength="80" placeholder="Workstation, home server…" autocomplete="off"></label><p class="help">The host operator creates an invitation in Connections or with agenticdriver pair. Each invitation is used once. Provider management needs a management grant.</p><div><button class="button primary" type="submit" disabled>Connect host</button></div></form></div>`;
 }
 async function connections(current) {
   $("#connections-view").innerHTML =
@@ -278,6 +348,20 @@ document.addEventListener("click", (event) => {
       });
       updateHeader();
       await show("providers");
+    } else if (act === "check-host") {
+      const hostId = button.dataset.host;
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = "Checking…";
+      try {
+        const check = await request({ action: "check-host", hostId });
+        await refreshOverview();
+        refreshHostStatuses();
+        notice(check.message, check.status !== "connected");
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
     } else if (act === "revoke") {
       await request({
         action: "revoke",
@@ -310,22 +394,59 @@ document.addEventListener("click", (event) => {
 });
 document.addEventListener("submit", (event) => {
   const form = event.target;
-  if (!["connect-form", "invite-form", "usage-form"].includes(form.id)) return;
+  if (
+    !["connect-form", "invite-form", "usage-form"].includes(form.id) &&
+    !form.matches(".reconnect-form,.rename-form")
+  )
+    return;
   event.preventDefault();
   const data = new FormData(form);
   const hostId = selected();
   void action(async () => {
-    if (form.id === "connect-form") {
-      const value = data.get("invitation");
+    if (form.id === "connect-form" || form.matches(".reconnect-form")) {
+      const value = String(data.get("invitation")).trim();
+      if (invitationPreviews.get(form)?.value !== value) {
+        await previewInvitation(form);
+        notice(
+          "Review the invitation destination, then choose Connect or Reconnect.",
+        );
+        return;
+      }
+      const reconnect = form.matches(".reconnect-form");
+      const submit = form.querySelector('[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "Connecting…";
       form.elements.invitation.value = "";
+      invitationPreviews.delete(form);
+      form.querySelector(".invitation-preview").replaceChildren();
+      try {
+        overview = await request({
+          action: reconnect ? "reconnect" : "connect",
+          ...(reconnect
+            ? { hostId: form.dataset.host }
+            : { label: data.get("label") }),
+          invitation: value,
+        });
+      } finally {
+        submit.textContent = reconnect ? "Reconnect host" : "Connect host";
+      }
+      updateHeader();
+      await show(reconnect ? "hosts" : "providers");
+      notice(
+        reconnect
+          ? "New credential saved. Your host name and provider preferences were preserved."
+          : "Host saved. Your credential is stored privately.",
+      );
+    } else if (form.matches(".rename-form")) {
       overview = await request({
-        action: "connect",
+        action: "rename-host",
+        hostId: form.dataset.host,
         label: data.get("label"),
-        invitation: value,
       });
       updateHeader();
-      await show("providers");
-      notice("Host connected. Your credential is saved privately.");
+      form.closest(".host-row").querySelector("h2").textContent =
+        overview.hosts.find((h) => h.id === form.dataset.host).label;
+      notice("Host name saved.");
     } else if (form.id === "invite-form") {
       const result = await request({
         action: "invite",
@@ -358,6 +479,16 @@ document.addEventListener("submit", (event) => {
       await show("usage");
     }
   });
+});
+document.addEventListener("input", (event) => {
+  if (event.target.name !== "invitation" || !event.target.form) return;
+  clearTimeout(previewTimer);
+  invitationPreviews.delete(event.target.form);
+  event.target.form.querySelector('[type="submit"]').disabled = true;
+  previewSequence++;
+  previewTimer = setTimeout(() => {
+    void previewInvitation(event.target.form);
+  }, 180);
 });
 $("#host-select").addEventListener("change", () => {
   void action(async () => {
@@ -455,7 +586,7 @@ try {
     let pendingProvider,
       confirmations = 0;
     const check = (ok) => {
-      if (!ok) throw new Error("Provider sign-in UI regression.");
+      if (!ok) throw new Error("Desktop UI regression.");
     };
     const until = async (condition) => {
       for (let i = 0; i < 200; i++) {
@@ -677,11 +808,153 @@ try {
     } finally {
       emptyReadonly.remove();
     }
+    // Exercise the actual desktop forms against this isolated fixture host.
+    // Fixture setup uses IPC; connection, checking, renaming and recovery use UI actions.
+    const uiClick = async (selector) => {
+      const button = document.querySelector(selector);
+      check(button && !button.disabled);
+      button.click();
+      await until(() => !busy);
+    };
+    const uiSubmit = async (form) => {
+      check(form.checkValidity());
+      form.requestSubmit();
+      await until(() => !busy);
+    };
+    const fillInvitation = (form, value) => {
+      form.elements.invitation.value = value;
+      form.elements.invitation.dispatchEvent(
+        new Event("input", { bubbles: true }),
+      );
+    };
+    const fitsViewport = () =>
+      check(document.documentElement.scrollWidth <= window.innerWidth);
+    const fixtureInvitation = () =>
+      request({
+        action: "invite",
+        hostId: "local",
+        input: {
+          grant: {
+            subject: "desktop-recovery-fixture",
+            providers: [],
+            manageProviders: true,
+          },
+        },
+      });
+    const firstInvitation = await fixtureInvitation();
+    const nextInvitation = await fixtureInvitation();
+    await uiClick('button[data-view="hosts"]');
+    let form = $("#connect-form");
+    fillInvitation(form, "incomplete-invitation");
+    await until(() =>
+      form
+        .querySelector(".invitation-preview")
+        .textContent.includes("Paste the complete"),
+    );
+    check(form.querySelector('[type="submit"]').disabled);
+    fillInvitation(form, firstInvitation.invitation);
+    await until(() => !form.querySelector('[type="submit"]').disabled);
+    check(
+      form
+        .querySelector(".invitation-preview")
+        .textContent.includes(overview.local.url),
+    );
+    check(
+      !form
+        .querySelector(".invitation-preview")
+        .textContent.includes(firstInvitation.invitation),
+    );
+    check(
+      (await request({ action: "connections", hostId: "local" })).connections
+        .length === 0,
+    );
+    form.elements.label.value = "Synthetic workstation";
+    fitsViewport();
+    await uiSubmit(form);
+    const remoteId = selected();
+    check(remoteId !== "local" && overview.hosts.length === 1);
+    check(overview.hosts[0].check.status === "connected");
+    await uiClick('button[data-view="hosts"]');
+    const settings = $(".host-options");
+    settings.open = true;
+    const nameForm = $(".rename-form");
+    nameForm.elements.label.value = "Renamed workstation";
+    await uiSubmit(nameForm);
+    check(
+      $("#host-select").selectedOptions[0].textContent ===
+        "Renamed workstation",
+    );
+    check(
+      nameForm.closest(".host-row").querySelector("h2").textContent ===
+        "Renamed workstation",
+    );
+    // Keep a real scoped preference record, and verify replacement uses the same scope.
+    const preferenceKey = `agenticdriver.models.${remoteId}.synthetic-only`;
+    const preferenceValue = JSON.stringify({
+      favorites: ["synthetic-model"],
+      hidden: [],
+      order: [],
+    });
+    localStorage.setItem(preferenceKey, preferenceValue);
+    await request({ action: "stop" });
+    await uiClick(`[data-action="check-host"][data-host="${remoteId}"]`);
+    check(
+      $(`[data-host-status="${remoteId}"]`).textContent.includes("Unreachable"),
+    );
+    await uiClick(`[data-action="select"][data-host="${remoteId}"]`);
+    await until(() =>
+      $("agenticdriver-providers").shadowRoot.textContent.includes(
+        "Open Hosts",
+      ),
+    );
+    check(
+      !$("agenticdriver-providers").shadowRoot.querySelector(
+        '[data-action="add"]',
+      ),
+    );
+    await request({ action: "start" });
+    await uiClick('button[data-view="hosts"]');
+    await uiClick(`[data-action="check-host"][data-host="${remoteId}"]`);
+    check(
+      $(`[data-host-status="${remoteId}"]`).textContent.includes(
+        "Credential accepted",
+      ),
+    );
+    const paired = (await request({ action: "connections", hostId: "local" }))
+      .connections[0];
+    await request({
+      action: "revoke",
+      hostId: "local",
+      connectionId: paired.id,
+    });
+    await uiClick(`[data-action="check-host"][data-host="${remoteId}"]`);
+    check(
+      $(`[data-host-status="${remoteId}"]`).textContent.includes(
+        "Access rejected",
+      ),
+    );
+    $(".host-options").open = true;
+    form = $(".reconnect-form");
+    fillInvitation(form, nextInvitation.invitation);
+    await until(() => !form.querySelector('[type="submit"]').disabled);
+    fitsViewport();
+    await uiSubmit(form);
+    check(selected() === remoteId && overview.hosts.length === 1);
+    check(overview.hosts[0].label === "Renamed workstation");
+    check(overview.hosts[0].check.status === "connected");
+    check(localStorage.getItem(preferenceKey) === preferenceValue);
+    check(!$(".reconnect-form").elements.invitation.value);
+    check(!document.body.innerHTML.includes(nextInvitation.invitation));
+    check(
+      $("#notification").textContent.includes("preferences were preserved"),
+    );
+    fitsViewport();
     check(styleViolations.length === 0);
     await api.reportSmoke({
       providerSetupUi: true,
       providerDetailsUi: true,
       providerRemovalUi: true,
+      remoteConnectionUi: true,
       strictStyleCsp: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&
@@ -700,6 +973,7 @@ setInterval(() => {
   if (busy || document.hidden) return;
   void (async () => {
     await refreshOverview();
+    if (view === "hosts") refreshHostStatuses();
     if (view === "connections" && $("#connection-list")) {
       const hostId = selected();
       const next = await request({ action: "connections", hostId });

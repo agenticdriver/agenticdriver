@@ -9,7 +9,7 @@ import {
   shell,
 } from "electron";
 import { mkdirSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startWorker } from "./worker-client.mjs";
@@ -133,6 +133,7 @@ else {
             evidence.providerSetupUi &&
             evidence.providerDetailsUi &&
             evidence.providerRemovalUi &&
+            evidence.remoteConnectionUi &&
             evidence.strictStyleCsp &&
             prefs.sandbox &&
             prefs.contextIsolation &&
@@ -145,6 +146,8 @@ else {
               providerSetupUi: evidence.providerSetupUi === true,
               providerDetailsUi: evidence.providerDetailsUi === true,
               providerRemovalUi: evidence.providerRemovalUi === true,
+              remoteConnectionUi: evidence.remoteConnectionUi === true,
+              viewport: window.getContentSize(),
               strictStyleCsp: evidence.strictStyleCsp === true,
               runtime: "v24.21.0",
               ...(evidence.startupError
@@ -152,6 +155,12 @@ else {
                 : {}),
             }),
           );
+          if (valid && process.env.AGENTICDRIVER_DESKTOP_SMOKE_SCREENSHOT)
+            await writeFile(
+              process.env.AGENTICDRIVER_DESKTOP_SMOKE_SCREENSHOT,
+              (await window.webContents.capturePage()).toPNG(),
+              { mode: 0o600 },
+            );
           process.exitCode = valid ? 0 : 1;
           setImmediate(() => app.quit());
           return true;
@@ -182,6 +191,8 @@ else {
           additionalArguments: smoke ? ["--desktop-smoke"] : [],
         },
       });
+      if (smoke && process.env.AGENTICDRIVER_DESKTOP_SMOKE_NARROW === "1")
+        window.setContentSize(390, 844);
       window.webContents.on("will-navigate", (event, url) => {
         if (url !== APP_URL) event.preventDefault();
       });

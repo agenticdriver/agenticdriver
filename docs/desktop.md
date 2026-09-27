@@ -107,6 +107,37 @@ requests; it is not persistent online presence or usage accounting. Static
 credentials are outside the pairing list. Refreshing metadata does not cancel runs.
 Remote host removal forgets this app's saved credential without stopping that host.
 
+### Check and recover a saved host
+
+In **Hosts**, pasting an invitation first shows its destination. This preview
+only parses the invitation; it does not contact the host or exchange the code.
+Check that the address is reachable from this computer before choosing **Connect
+host**. A loopback address reaches this computer, including an existing local
+tunnel; it does not identify the remote machine automatically.
+
+**Check connection** reads the host's authenticated protocol endpoint. It reports
+the last check time, protocol version and whether the credential grants provider
+management. It performs no model calls and does not certify provider credentials
+or model availability. Status is a dated observation, not continuous presence.
+Expired, revoked, unreadable, unreachable, incompatible and untrusted-certificate
+connections show their next recovery step. TLS verification stays enabled.
+
+Expand **Connection settings** to rename a host or **Reconnect this host** with a
+fresh invitation for the same address. Reconnection preserves the saved host ID,
+name and provider preferences. A different destination must be added as another
+host. A successful exchange writes a new private profile and atomically switches
+the saved host to it; a failed exchange leaves the previous profile unchanged.
+Old profiles remain private for clients already using them. Their grants still
+expire normally or can be revoked explicitly by the host operator. Reconnecting
+does not revoke grants or cancel active requests.
+
+If the exchange succeeds but settings cannot be saved, the app retains both
+profiles and reports the uncertain state. Reconcile the newly issued grant on the
+host before creating another invitation; the app never repeats an exchange
+automatically. The active private profile filename is recorded in `settings.json`
+and is not exposed to the renderer. Removing the saved host removes these local
+copies without revoking the host-side grants.
+
 The renderer is sandboxed, has context isolation and no Node integration. A narrow,
 validated IPC interface reaches a separate Node worker; long-lived credentials
 stay there. The renderer loads only packaged assets through a restricted local

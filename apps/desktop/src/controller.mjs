@@ -29,6 +29,7 @@ import {
 import { providerPanel, PanelRequestSchema } from "@agenticdriver/sdk/panel";
 import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 import { providerPresentation } from "@agenticdriver/sdk/catalog";
+import { connectionFailure, invitationPreview } from "./connection-status.mjs";
 
 const id = z.union([z.literal("local"), z.uuid()]);
 const remoteSchema = z
@@ -37,6 +38,10 @@ const remoteSchema = z
     label: z.string().trim().min(1).max(80),
     url: z.string(),
     expiresAt: z.string(),
+    profileFile: z
+      .string()
+      .regex(/^profile-[a-f0-9-]{36}\.json$/)
+      .optional(),
   })
   .strict();
 const stateSchema = z
@@ -68,6 +73,27 @@ export const RequestSchema = z.discriminatedUnion("action", [
     .strict(),
   z.object({ action: z.literal("select"), hostId: id }).strict(),
   z.object({ action: z.literal("startup"), enabled: z.boolean() }).strict(),
+  z
+    .object({
+      action: z.literal("preview-invitation"),
+      invitation: z.string().min(1).max(16384),
+    })
+    .strict(),
+  z.object({ action: z.literal("check-host"), hostId: id }).strict(),
+  z
+    .object({
+      action: z.literal("rename-host"),
+      hostId: z.uuid(),
+      label: z.string().trim().min(1).max(80),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("reconnect"),
+      hostId: z.uuid(),
+      invitation: z.string().min(1).max(16384),
+    })
+    .strict(),
   z
     .object({
       action: z.literal("connect"),
@@ -191,6 +217,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
   const configPath = join(directory, "local", "config.json");
   const settingsPath = join(directory, "settings.json");
   const clients = new Map();
+  const checks = new Map();
   let queue = Promise.resolve();
   const serial = (fn) => {
     const pending = queue.then(fn);
@@ -208,7 +235,12 @@ export async function desktopController(directory, { autoStart = true } = {}) {
     return found;
   };
   const profilePath = (hostId) =>
-    join(directory, "connections", hostId, "profile.json");
+    join(
+      directory,
+      "connections",
+      hostId,
+      record(hostId).profileFile ?? "profile.json",
+    );
   async function client(hostId) {
     if (hostId === "local") {
       if (!localClient)
@@ -228,7 +260,44 @@ export async function desktopController(directory, { autoStart = true } = {}) {
   const connection = (hostId) =>
     hostId === "local"
       ? { id: "local", label: "This computer", url: server?.url }
-      : { ...record(hostId) };
+      : publicHost(record(hostId));
+  function publicHost({ id, label, url, expiresAt }) {
+    return {
+      id,
+      label,
+      url,
+      expiresAt,
+      ...(checks.has(id) ? { check: checks.get(id) } : {}),
+    };
+  }
+  async function checkHost(hostId) {
+    const identity = hostId === "local" ? server : profilePath(hostId);
+    const started = Date.now();
+    let result;
+    try {
+      // A bounded protocol read verifies this credential, not provider/model execution.
+      const protocol = await (await client(hostId)).protocol();
+      result = {
+        status: "connected",
+        message:
+          "The host accepted this connection. Provider and model access still depend on its grants.",
+        protocolVersion: protocol.version,
+        canManageProviders: protocol.features.includes("provider-management"),
+        latencyMs: Date.now() - started,
+      };
+    } catch (error) {
+      result = connectionFailure(error);
+    }
+    result.checkedAt = new Date().toISOString();
+    // Do not apply an older check to a replaced or forgotten credential.
+    const unchanged =
+      hostId === "local"
+        ? server === identity
+        : state.hosts.some((h) => h.id === hostId) &&
+          profilePath(hostId) === identity;
+    if (unchanged) checks.set(hostId, result);
+    return result;
+  }
   async function start() {
     if (server) return;
     const localDir = join(directory, "local");
@@ -296,6 +365,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
       server = opened;
       host = candidate;
       localClient = connected;
+      checks.delete("local");
       startupError = undefined;
     } catch (error) {
       await opened?.close();
@@ -330,6 +400,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
     localClient = undefined;
     server = undefined;
     host = undefined;
+    checks.delete("local");
     await owned.close();
   }
   async function overview() {
@@ -345,8 +416,9 @@ export async function desktopController(directory, { autoStart = true } = {}) {
           (state.localPort ? `http://127.0.0.1:${state.localPort}` : undefined),
         ...(await activity()),
         error: startupError,
+        check: checks.get("local"),
       },
-      hosts: state.hosts,
+      hosts: state.hosts.map(publicHost),
       usage: { url: state.usage.url, hasToken: Boolean(state.usage.tokenFile) },
     };
   }
@@ -438,6 +510,19 @@ export async function desktopController(directory, { autoStart = true } = {}) {
     switch (request.action) {
       case "overview":
         return overview();
+      case "preview-invitation":
+        return invitationPreview(request.invitation);
+      case "check-host":
+        return checkHost(request.hostId);
+      case "rename-host":
+        record(request.hostId);
+        await save({
+          ...state,
+          hosts: state.hosts.map((h) =>
+            h.id === request.hostId ? { ...h, label: request.label } : h,
+          ),
+        });
+        return overview();
       case "start":
         await start();
         return overview();
@@ -458,7 +543,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         const hostId = randomUUID();
         const descriptor = await connectClient(
           request.invitation,
-          profilePath(hostId),
+          join(directory, "connections", hostId, "profile.json"),
         );
         try {
           await save({
@@ -480,6 +565,41 @@ export async function desktopController(directory, { autoStart = true } = {}) {
             "The invitation was consumed and the profile saved, but the host list could not be updated. Reconcile the saved profile before pairing again.",
           );
         }
+        await checkHost(hostId);
+        return overview();
+      }
+      case "reconnect": {
+        const previous = record(request.hostId);
+        if (connectionTarget(request.invitation).url !== previous.url)
+          fail(
+            "HOST_ADDRESS_MISMATCH",
+            "This invitation has a different host address. Add it as another host instead of replacing this connection.",
+          );
+        const profileFile = `profile-${randomUUID()}.json`;
+        const descriptor = await connectClient(
+          request.invitation,
+          join(directory, "connections", previous.id, profileFile),
+        );
+        try {
+          await save({
+            ...state,
+            hosts: state.hosts.map((h) =>
+              h.id === previous.id
+                ? { ...h, profileFile, expiresAt: descriptor.expiresAt }
+                : h,
+            ),
+          });
+        } catch {
+          fail(
+            "HOST_SAVE_FAILED",
+            "The new invitation was consumed and its profile saved, but the host list could not be updated. The previous connection is unchanged. Reconcile the new grant on the host before trying again.",
+          );
+        }
+        // Keep the old profile/token for already-created clients and active requests.
+        // Reconnection never revokes a grant; Forget removes this app's local copies.
+        clients.delete(previous.id);
+        checks.delete(previous.id);
+        await checkHost(previous.id);
         return overview();
       }
       case "forget": {
@@ -493,19 +613,48 @@ export async function desktopController(directory, { autoStart = true } = {}) {
           hosts: state.hosts.filter((h) => h.id !== request.hostId),
         });
         clients.delete(request.hostId);
+        checks.delete(request.hostId);
         await rm(join(directory, "connections", request.hostId), {
           recursive: true,
           force: true,
         });
         return overview();
       }
-      case "panel":
+      case "panel": {
         if (["connect", "disconnect"].includes(request.request.action))
           fail(
             "INVALID_PANEL_REQUEST",
             "Use the desktop host connection controls.",
           );
-        return panel(request.hostId)(request.request);
+        const identity =
+          request.hostId === "local" ? server : profilePath(request.hostId);
+        try {
+          return await panel(request.hostId)(request.request);
+        } catch (error) {
+          if (
+            request.request.action !== "snapshot" ||
+            request.hostId === "local" ||
+            !state.hosts.some((h) => h.id === request.hostId)
+          )
+            throw error;
+          const failure = connectionFailure(error);
+          if (profilePath(request.hostId) === identity)
+            checks.set(request.hostId, {
+              ...failure,
+              checkedAt: new Date().toISOString(),
+            });
+          return {
+            connected: false,
+            connection: connection(request.hostId),
+            providers: [],
+            canConnect: false,
+            canDisconnect: false,
+            canInvite: false,
+            connectionError:
+              failure.message + " Open Hosts to check or reconnect.",
+          };
+        }
+      }
       case "connections":
         return (await client(request.hostId)).connections();
       case "invite": {
@@ -603,6 +752,8 @@ export async function desktopController(directory, { autoStart = true } = {}) {
       const req = parsed.data;
       if (
         req.action === "overview" ||
+        req.action === "preview-invitation" ||
+        req.action === "check-host" ||
         req.action === "usage" ||
         req.action === "connections" ||
         (req.action === "panel" && req.request.action === "snapshot")

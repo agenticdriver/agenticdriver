@@ -29,6 +29,8 @@ jobs:
       - run: docker build -f apps/desktop/Dockerfile -t agenticdriver-desktop-smoke:local apps/desktop
       - name: Native packaged desktop with renderer sandbox enabled
         run: docker run --rm --init --network none --cap-add SYS_ADMIN --security-opt seccomp=unconfined agenticdriver-desktop-smoke:local
+      - name: Native packaged desktop at 390 by 844
+        run: docker run --rm --init --network none --cap-add SYS_ADMIN --security-opt seccomp=unconfined -e AGENTICDRIVER_DESKTOP_SMOKE_NARROW=1 agenticdriver-desktop-smoke:local
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: agenticdriver-desktop-linux-x64
