@@ -1,0 +1,20 @@
+{
+  "verifiedAt": "2026-09-27T12:35:32.525707+00:00",
+  "source": "d46e2292d0759ea24fed2035945d1ed8297e4357",
+  "ciRun": 36318567162,
+  "artifactId": 10932345369,
+  "archive": "AgenticDriver-0.2.0-alpha.3-linux-x64.tar.gz",
+  "size": 163518415,
+  "sha256": "7a2cfdd4ef4ec603de1b64e2312012a7a6cf9a2331f354bbf243441411465f3d",
+  "localNativeSmoke": {
+    "desktopSmoke": "passed",
+    "rendererIsolated": true,
+    "providerSetupUi": true,
+    "providerDetailsUi": true,
+    "providerRemovalUi": true,
+    "strictStyleCsp": true,
+    "runtime": "v24.21.0",
+    "executable": "packaged",
+    "nodeOptionsDisabled": true
+  }
+}

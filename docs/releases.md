@@ -7,17 +7,21 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The **0.2.0-alpha.3 candidate** adds shared provider icons and optional native
-connection details across all four clients and the Linux desktop. Its intended
-Python version is **0.2.0a3**. Publication is pending exact-candidate checks; use
+The opt-in **0.2.0-alpha.3** preview is published on npm, crates.io, Go and GitHub.
+It adds shared provider icons and optional native connection details across all
+four clients and the Linux desktop. Python **0.2.0a3** wheel/sdist downloads are
+available on GitHub while PyPI organization approval remains pending. npm's
+`alpha` tag points to this preview; stable `latest` remains `0.1.0`. All nine
+SDK jobs passed on Prometheus, followed by fresh installed-client quickstarts
+over verified HTTPS. See [alpha.3 evidence](validation/release-0.2.0-alpha.3.md),
 [alpha adoption](alpha.md) and the
 [alpha.3 release page](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.3)
-for channel availability. Previously published versions remain unchanged.
+for exact artifacts and channel availability. Previously published versions remain unchanged.
 
 The opt-in **0.2.0-alpha.2** preview (Python **0.2.0a2**) is published on npm,
 GitHub, crates.io and the Go module proxy, including the Linux desktop companion.
-npm registry publication was verified on 2026-09-27: `alpha` points to this preview
-and stable `latest` remains `0.1.0`. Python wheel/sdist downloads are available
+npm registry publication was verified on 2026-09-27. Its exact version remains
+installable after the `alpha` tag moved to alpha.3. Python wheel/sdist downloads are available
 while PyPI organization approval is pending.
 It fixes the TypeScript host-helper declaration issue
 found by application acceptance checks after alpha.1 publication. Alpha.1's

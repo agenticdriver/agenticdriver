@@ -10,16 +10,17 @@ Email/name stays masked until Reveal and is remasked on refresh or provider
 changes. Metadata availability does not establish successful model execution.
 Earlier host-helper fixes and strict installed-package checks remain included.
 
-This candidate is undergoing release validation. Install it only after the
-selected channel is marked published on the
-[GitHub prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.3).
-That page records the immutable source, publication status, tested archives and
-checksums.
+Alpha.3 is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.3).
+Python wheel/sdist and the Linux desktop are available as GitHub downloads;
+PyPI organization approval remains pending. The
+[publication record](validation/release-0.2.0-alpha.3.md) preserves the immutable
+source, checksums and fresh installed-client verification.
 The stable npm `latest` tag remains on `0.1.0`.
 
 ## Install the exact alpha
 
-Once the corresponding channel is listed as published on the release page:
+Pin the exact preview:
 
 ```sh
 npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.3
@@ -30,17 +31,17 @@ go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.3
 
 For Rust, use `agenticdriver = "=0.2.0-alpha.3"` in `Cargo.toml`.
 
-The reviewed JavaScript archive is also a standalone installation option once
-the public GitHub release is available:
+The byte-identical reviewed JavaScript archive is also a public installation option:
 
 ```sh
 npm install --save-exact https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.3/agenticdriver-sdk-0.2.0-alpha.3.tgz
 ```
 
 The package and import name remain `@agenticdriver/sdk`. Commit the public URL and
-the lockfile integrity. Verify the archive SHA-256 against the release manifest.
-Registry publication uses that exact reviewed archive; channel availability is
-recorded separately on the release page. Alpha.2 remains available with its
+the lockfile integrity. The archive SHA-256 is
+`5c0cd3fbc471cf0dcf1bfe1798e4c1285ef8ec1e9dc44e419b751109e9f55460`;
+verify it against the release manifest. Registry publication uses that exact
+reviewed archive. Alpha.2 remains available with its
 [existing publication evidence](validation/release-0.2.0-alpha.2.md).
 
 Python uses the canonical PEP 440 version **0.2.0a3**. PyPI organization approval

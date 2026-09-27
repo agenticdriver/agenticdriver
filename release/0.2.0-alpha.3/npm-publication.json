@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-09-27T12:48:28.636610+00:00",
+  "name": "@agenticdriver/sdk",
+  "version": "0.2.0-alpha.3",
+  "distTags": {
+    "latest": "0.1.0",
+    "alpha": "0.2.0-alpha.3"
+  },
+  "integrity": "sha512-cPpNVFixhrHQxVLvAU4fl4+pZUdtjQRq/+2u3jwOCRyRNGVs9KzSK5AbMGd5f4Wm35LMVJdPxPNKtInZ3KlTsw==",
+  "sha256": "5c0cd3fbc471cf0dcf1bfe1798e4c1285ef8ec1e9dc44e419b751109e9f55460",
+  "tarball": "https://registry.npmjs.org/@agenticdriver/sdk/-/sdk-0.2.0-alpha.3.tgz",
+  "source": "d46e2292d0759ea24fed2035945d1ed8297e4357",
+  "ciRun": 36318567162
+}
