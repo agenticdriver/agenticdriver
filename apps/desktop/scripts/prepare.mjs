@@ -66,4 +66,5 @@ if (!prepared) {
 }
 const panel = fileURLToPath(import.meta.resolve("@agenticdriver/sdk/ui"));
 await cp(panel, join(root, "renderer/provider-panel.js"));
+await cp(join(dirname(panel), "provider-icons.NOTICE.txt"), join(root, "renderer/provider-icons.NOTICE.txt"));
 console.log(`Prepared ${version} and the current SDK provider component.`);
