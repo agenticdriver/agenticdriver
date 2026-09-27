@@ -46,6 +46,28 @@ independently reproduces it on 1.2.7. We cannot treat the requested empty tool
 list as an enforceable boundary from this evidence.
 [Upstream issue #1015](https://github.com/google-antigravity/antigravity-cli/issues/1015).
 
+## 1.2.12 recheck — 2026-09-27
+
+The official [1.2.12 Linux x64 release](https://github.com/google-antigravity/antigravity-cli/releases/tag/1.2.12)
+was checked with the same no-prompt probe at SDK source
+`d46e2292d0759ea24fed2035945d1ed8297e4357`. The downloaded archive matched
+the release asset's SHA-256:
+`26c7c4c661d6c9beda734fcf305031056a6ea46e697c4533e8151179724e2950`.
+The extracted binary SHA-256 was
+`ce6fdd9e7621ee9ac6eedaa337731ca1f235e412ff57cf9eabcd2aa23b3576ca`.
+
+Initialization still reported **57 tools** despite the selected empty tool list.
+The requested `gemini-3.8-flash-low` model, agent and strict permissions matched;
+the result remained `unsupported-tools`, with `promptSubmitted: false` and
+`liveCertified: false`. No user credentials or account configuration were loaded,
+and no prompt, tool invocation or token usage was observed. The current native
+sign-in and selected account/model remain unchanged. This advertised-capability
+mismatch leaves AD-052 open; it does not prove that a tool executed.
+
+The [sanitized readiness receipt](antigravity-2026-09-27.json) preserves the
+version, digests and probe result. The follow-up is recorded on
+[AD-052](https://github.com/agenticdriver/agenticdriver/issues/47#issuecomment-5855788238).
+
 ## Reproduce without inference
 
 From this SDK checkout on Linux with Bubblewrap installed:
