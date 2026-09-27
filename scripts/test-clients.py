@@ -30,7 +30,10 @@ def check_clients(url, token, ca, env, python, application, rust_application, ru
         commands += [(["node", "--import", "tsx", "tests/client-smoke.ts"], ROOT), (["node", "--import", "tsx", "tests/client-conformance.ts"], ROOT), (["go", "test", "-race", "-count=1", "./..."], ROOT / "clients/go")]
     if not PYTHON_ONLY:
         env.update(rust_env)
-        commands += [(["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet"], rust_application), (["cargo", f"+{TOOLCHAIN}", "test", "--locked", "--quiet"], ROOT / "clients/rust")]
+        # These integration tests share one host, its admission limits and mutable
+        # management state. Do not let CPU count choose their parallelism; tests
+        # that exercise concurrency still create it explicitly within a test.
+        commands += [(["cargo", f"+{TOOLCHAIN}", "run", "--locked", "--quiet"], rust_application), (["cargo", f"+{TOOLCHAIN}", "test", "--locked", "--quiet", "--", "--test-threads=1"], ROOT / "clients/rust")]
     failures = []
     for command, directory in commands:
         result = subprocess.run(command, cwd=directory, env=env, timeout=180)
