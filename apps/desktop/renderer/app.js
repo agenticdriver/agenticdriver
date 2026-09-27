@@ -42,6 +42,9 @@ let overview,
 const invitationPreviews = new WeakMap();
 let previewTimer,
   previewSequence = 0;
+const destinationPreviews = new WeakMap();
+let destinationTimer,
+  destinationSequence = 0;
 const pages = {
   providers: [
     "PROVIDERS & ACCOUNTS",
@@ -126,7 +129,7 @@ async function refreshOverview() {
 async function show(next) {
   view = next;
   const current = ++generation;
-  invitation = undefined;
+  clearInvitationResult();
   notice("");
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("selected", button.dataset.view === view);
@@ -233,6 +236,51 @@ function renderHosts() {
     ${overview.hosts.map((h) => `<div class="card host-row"><div class="row"><div><h2>${escape(h.label)}</h2><p class="address">${escape(h.url)}</p><p class="muted">Connection expires ${escape(date(h.expiresAt))}</p></div><div class="host-actions"><button class="button" data-action="select" data-host="${h.id}">Open providers</button><button class="button quiet" data-action="check-host" data-host="${h.id}">Check connection</button></div></div><div data-host-status="${h.id}" role="status">${hostStatus(h)}</div><details class="host-options"><summary>Connection settings</summary><form class="rename-form fields" data-host="${h.id}"><label class="field">Name<input name="label" required maxlength="80" value="${escape(h.label)}" autocomplete="off"></label><div><button class="button" type="submit">Save name</button></div></form><h3>Reconnect this host</h3><p class="muted">Replace an expired or revoked credential with a new invitation from the same address. Your host name and saved provider preferences stay in place.</p><form class="reconnect-form stack" data-host="${h.id}">${invitationField()}<div><button class="button" type="submit" disabled>Reconnect host</button></div></form><p class="help">Previous grants remain valid until they expire or the host operator revokes them. Active requests are not interrupted.</p><button class="button quiet" data-action="forget" data-host="${h.id}">Remove saved host</button></details></div>`).join("")}
     <div class="card"><div class="card-head"><div><h2>Connect another host</h2><p class="muted">Paste an invitation and review where it will connect.</p></div><span class="badge">Local or HTTPS</span></div><form id="connect-form" class="stack">${invitationField()}<label class="field">Name<input name="label" required maxlength="80" placeholder="Workstation, home server…" autocomplete="off"></label><p class="help">The host operator creates an invitation in Connections or with agenticdriver pair. Each invitation is used once. Provider management needs a management grant.</p><div><button class="button primary" type="submit" disabled>Connect host</button></div></form></div>`;
 }
+function invitationDestinationFields(hostId) {
+  return `<fieldset class="destination-fields"><legend>Where will the application backend connect?</legend><label class="field">Connection route<select name="destination"><option value="current">${hostId === "local" ? "On this computer" : "Use this host’s saved address"}</option><option value="https">Another computer · HTTPS</option>${hostId === "local" ? '<option value="tunnel">Another computer · SSH tunnel</option>' : ""}</select></label><label class="field" data-destination-field="https" hidden>Reachable HTTPS address<input name="clientUrl" type="url" required disabled placeholder="https://driver.example.com/agenticdriver/" autocomplete="off"></label><label class="field" data-destination-field="tunnel" hidden>Loopback port beside the application backend<input name="tunnelPort" type="number" value="17433" min="1024" max="65535" required disabled></label><div class="destination-preview" role="status"></div></fieldset>`;
+}
+function destinationInput(form) {
+  const mode = form.elements.destination.value;
+  return mode === "https"
+    ? { mode, url: form.elements.clientUrl.value.trim() }
+    : mode === "tunnel"
+      ? { mode, port: Number(form.elements.tunnelPort.value) }
+      : { mode };
+}
+async function previewDestination(form) {
+  const input = destinationInput(form);
+  const sequence = ++destinationSequence;
+  destinationPreviews.delete(form);
+  form.querySelector('[type="submit"]').disabled = true;
+  for (const field of form.querySelectorAll("[data-destination-field]")) {
+    field.hidden = field.dataset.destinationField !== input.mode;
+    field.querySelector("input").disabled = field.hidden;
+  }
+  const target = form.querySelector(".destination-preview");
+  target.textContent = "Reading destination…";
+  try {
+    const preview = await request({
+      action: "preview-destination",
+      hostId: selected(),
+      destination: input,
+    });
+    if (sequence !== destinationSequence || !form.isConnected) return;
+    const description =
+      input.mode === "https"
+        ? "Configure this HTTPS address to reach the selected host, including any path prefix. The connecting application will verify its certificate."
+        : input.mode === "tunnel"
+          ? "Start one of the tunnels below before using the invitation. The loopback listener must be beside the application backend, not only its browser."
+          : preview.url.startsWith("http:")
+            ? "This loopback address reaches this computer. An application backend running elsewhere needs HTTPS or a tunnel."
+            : "Applications must be able to reach this saved HTTPS address from their backend.";
+    target.innerHTML = `<div class="notice"><strong>Invitation destination</strong><p class="address">${escape(preview.url)}</p><p>${description}</p>${preview.commands ? `<details class="tunnel-instructions"><summary>SSH setup instructions</summary><p>Choose one direction. Replace the capitalized destination with your existing SSH account and machine; keep that SSH session running.</p><label class="field">Run on the application backend machine<textarea readonly class="command" aria-label="Forward SSH tunnel command">${escape(preview.commands.fromApplication)}</textarea></label><p class="help">This direction needs SSH access from the application machine to this computer.</p><label class="field">Or run on this computer<textarea readonly class="command" aria-label="Reverse SSH tunnel command">${escape(preview.commands.fromHost)}</textarea></label><p class="help">This direction needs SSH access from this computer to the application server. Both recipes request a loopback listener; the SSH server must permit forwarding and honor that bind address.</p></details>` : ""}<p class="help">No route has been verified and no access has been issued. ${input.mode === "tunnel" ? "AgenticDriver does not start SSH or configure the server." : "Operator credentials are never sent to this preview address."}</p></div>`;
+    destinationPreviews.set(form, JSON.stringify(input));
+    form.querySelector('[type="submit"]').disabled = false;
+  } catch {
+    if (sequence !== destinationSequence || !form.isConnected) return;
+    target.innerHTML = `<p class="notice warning">${input.mode === "https" ? "Enter an absolute HTTPS address without credentials, a query string or a fragment." : input.mode === "tunnel" ? "Choose a loopback port between 1024 and 65535." : "Start the selected host before creating an invitation."}</p>`;
+  }
+}
 async function connections(current) {
   $("#connections-view").innerHTML =
     '<div class="card"><p class="muted">Reading connections…</p></div>';
@@ -248,8 +296,9 @@ async function connections(current) {
     $("#connections-view").innerHTML = `
       <div class="summary-grid" id="connection-summary"></div>
       <div class="card"><div class="card-head"><div><h2>Application access</h2><p class="muted">Counts include status checks and model streams observed by this host process. They do not indicate a persistent online connection.</p></div><span class="badge" id="connections-updated">Just refreshed</span></div><div id="connection-list"></div></div>
-      <div class="card"><div class="card-head"><div><h2>Connect a new application</h2><p class="muted">Create an invitation, then paste it into the application’s AgenticDriver settings.</p></div><span class="badge">One use · 10 minutes</span></div><form id="invite-form" class="stack"><label class="field">Application name<input name="subject" required maxlength="128" placeholder="LitAgent, Brandstorm, AI Workspace…"></label><fieldset><legend>Provider access</legend><div class="provider-checks">${providers.map((p) => `<label class="check"><input type="checkbox" name="provider" value="${escape(p.id)}" checked><span>${escape(p.name || p.id)} <small class="muted">${escape(p.kind)}</small></span></label>`).join("") || '<p class="muted">Add a provider first, or create a management-only invitation.</p>'}</div></fieldset><div class="fields"><label class="field">Connection lifetime<select name="lifetime"><option value="86400">1 day</option><option value="604800">7 days</option><option value="2592000" selected>30 days</option><option value="7776000">90 days</option></select></label><label class="check"><input type="checkbox" name="manage"><span>Allow provider management<br><small class="muted">Can edit providers and issue or revoke connection grants.</small></span></label></div><div><button class="button primary" type="submit">Create invitation</button></div></form><div id="invitation-result" hidden></div></div>`;
+      <div class="card"><div class="card-head"><div><h2>Connect a new application</h2><p class="muted">Create an invitation, then paste it into the application’s AgenticDriver settings.</p></div><span class="badge">One use · 10 minutes</span></div><form id="invite-form" class="stack"><label class="field">Application name<input name="subject" required maxlength="128" placeholder="LitAgent, Brandstorm, AI Workspace…"></label>${invitationDestinationFields(hostId)}<fieldset><legend>Provider access</legend><div class="provider-checks">${providers.map((p) => `<label class="check"><input type="checkbox" name="provider" value="${escape(p.id)}" checked><span>${escape(p.name || p.id)} <small class="muted">${escape(p.kind)}</small></span></label>`).join("") || '<p class="muted">Add a provider first, or create a management-only invitation.</p>'}</div></fieldset><div class="fields"><label class="field">Connection lifetime<select name="lifetime"><option value="86400">1 day</option><option value="604800">7 days</option><option value="2592000" selected>30 days</option><option value="7776000">90 days</option></select></label><label class="check"><input type="checkbox" name="manage"><span>Allow provider management<br><small class="muted">Can edit providers and issue or revoke connection grants.</small></span></label></div><div><button class="button primary" type="submit" disabled>Create invitation</button></div></form><div id="invitation-result" hidden></div></div>`;
     renderConnectionList();
+    await previewDestination($("#invite-form"));
   } catch (error) {
     if (current === generation)
       $("#connections-view").innerHTML =
@@ -448,22 +497,41 @@ document.addEventListener("submit", (event) => {
         overview.hosts.find((h) => h.id === form.dataset.host).label;
       notice("Host name saved.");
     } else if (form.id === "invite-form") {
-      const result = await request({
-        action: "invite",
-        hostId,
-        input: {
-          grant: {
-            subject: data.get("subject"),
-            providers: data.getAll("provider"),
-            manageProviders: data.get("manage") === "on",
+      const destination = destinationInput(form);
+      if (destinationPreviews.get(form) !== JSON.stringify(destination)) {
+        await previewDestination(form);
+        notice("Review the destination, then create the invitation.");
+        return;
+      }
+      const submit = form.querySelector('[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "Creating invitation…";
+      form.inert = true;
+      clearInvitationResult();
+      let result;
+      try {
+        result = await request({
+          action: "invite",
+          hostId,
+          destination,
+          input: {
+            grant: {
+              subject: data.get("subject"),
+              providers: data.getAll("provider"),
+              manageProviders: data.get("manage") === "on",
+            },
+            connectionLifetimeSeconds: Number(data.get("lifetime")),
           },
-          connectionLifetimeSeconds: Number(data.get("lifetime")),
-        },
-      });
+        });
+      } finally {
+        form.inert = false;
+        submit.disabled = false;
+        submit.textContent = "Create invitation";
+      }
       invitation = result.invitation;
       const target = $("#invitation-result");
       target.hidden = false;
-      target.innerHTML = `<div class="notice success" style="margin-top:20px"><strong>Ready to connect</strong><p>Paste this in the application’s connection settings. Expires ${escape(date(result.expiresAt))}.</p><label class="field">One-use invitation<textarea readonly class="invitation" spellcheck="false">${escape(invitation)}</textarea></label><div class="actions"><button class="button" data-action="copy">Copy invitation</button></div></div>`;
+      target.innerHTML = `<div class="notice success invitation-result"><strong>Invitation created</strong><p class="address">${escape(result.destination.url)}</p><p>Paste this into the application’s AgenticDriver settings. Expires ${escape(date(result.expiresAt))}. The application backend must be able to reach this address; the route has not been tested.</p><label class="field">One-use invitation<textarea readonly class="invitation" spellcheck="false">${escape(invitation)}</textarea></label><div class="actions"><button class="button" data-action="copy">Copy invitation</button></div></div>`;
       links = await request({ action: "connections", hostId });
       renderConnectionList();
     } else {
@@ -480,7 +548,29 @@ document.addEventListener("submit", (event) => {
     }
   });
 });
+function clearInvitationResult() {
+  invitation = undefined;
+  const target = $("#invitation-result");
+  if (target) {
+    target.hidden = true;
+    target.replaceChildren();
+  }
+}
 document.addEventListener("input", (event) => {
+  if (event.target.form?.id === "invite-form") {
+    clearInvitationResult();
+    if (["clientUrl", "tunnelPort"].includes(event.target.name)) {
+      clearTimeout(destinationTimer);
+      destinationSequence++;
+      destinationPreviews.delete(event.target.form);
+      event.target.form.querySelector('[type="submit"]').disabled = true;
+      destinationTimer = setTimeout(
+        () => void previewDestination(event.target.form),
+        180,
+      );
+    }
+    return;
+  }
   if (event.target.name !== "invitation" || !event.target.form) return;
   clearTimeout(previewTimer);
   invitationPreviews.delete(event.target.form);
@@ -501,6 +591,13 @@ $("#host-select").addEventListener("change", () => {
   });
 });
 document.addEventListener("change", (event) => {
+  if (event.target.form?.id === "invite-form") {
+    clearInvitationResult();
+    if (event.target.name === "destination") {
+      clearTimeout(destinationTimer);
+      void previewDestination(event.target.form);
+    }
+  }
   if (event.target.id === "startup")
     void action(async () => {
       overview = await request({
@@ -841,7 +938,63 @@ try {
           },
         },
       });
-    const firstInvitation = await fixtureInvitation();
+    await uiClick('button[data-view="connections"]');
+    let inviteForm = $("#invite-form");
+    await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
+    inviteForm.elements.subject.value = "desktop-destination-fixture";
+    inviteForm.elements.manage.checked = true;
+    const chooseRoute = async (mode) => {
+      inviteForm.elements.destination.value = mode;
+      inviteForm.elements.destination.dispatchEvent(
+        new Event("change", { bubbles: true }),
+      );
+    };
+    await chooseRoute("https");
+    await until(() =>
+      inviteForm
+        .querySelector(".destination-preview")
+        .textContent.includes("Enter an absolute HTTPS"),
+    );
+    check(inviteForm.querySelector('[type="submit"]').disabled);
+    inviteForm.elements.clientUrl.value =
+      "https://driver.example.invalid/proxy/";
+    inviteForm.elements.clientUrl.dispatchEvent(
+      new Event("input", { bubbles: true }),
+    );
+    await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
+    fitsViewport();
+    await uiSubmit(inviteForm);
+    check(
+      $("#invitation-result").textContent.includes(
+        "https://driver.example.invalid/proxy/",
+      ),
+    );
+    check(
+      $("#invitation-result").textContent.includes("route has not been tested"),
+    );
+    await chooseRoute("tunnel");
+    check($("#invitation-result").hidden && !invitation);
+    await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
+    inviteForm.querySelector(".tunnel-instructions").open = true;
+    check(
+      inviteForm
+        .querySelector('[aria-label="Forward SSH tunnel command"]')
+        .value.includes("-L 127.0.0.1:17433:127.0.0.1:"),
+    );
+    check(
+      inviteForm
+        .querySelector('[aria-label="Reverse SSH tunnel command"]')
+        .value.includes("-R 127.0.0.1:17433:127.0.0.1:"),
+    );
+    fitsViewport();
+    await uiSubmit(inviteForm);
+    check(
+      $("#invitation-result").textContent.includes("http://127.0.0.1:17433/"),
+    );
+    await chooseRoute("current");
+    await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
+    await uiSubmit(inviteForm);
+    const firstInvitation = { invitation };
     const nextInvitation = await fixtureInvitation();
     await uiClick('button[data-view="hosts"]');
     let form = $("#connect-form");
@@ -949,12 +1102,23 @@ try {
       $("#notification").textContent.includes("preferences were preserved"),
     );
     fitsViewport();
+    await uiClick('[data-action="select"][data-host="local"]');
+    await uiClick('button[data-view="connections"]');
+    inviteForm = $("#invite-form");
+    await chooseRoute("tunnel");
+    await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
+    inviteForm.querySelector(".tunnel-instructions").open = true;
+    inviteForm
+      .querySelector(".destination-fields")
+      .scrollIntoView({ block: "start" });
+    fitsViewport();
     check(styleViolations.length === 0);
     await api.reportSmoke({
       providerSetupUi: true,
       providerDetailsUi: true,
       providerRemovalUi: true,
       remoteConnectionUi: true,
+      invitationDestinationUi: true,
       strictStyleCsp: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&

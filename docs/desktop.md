@@ -57,7 +57,7 @@ revoke grants on remote hosts; revoke those there first when appropriate.
    [owned Codex device sign-in](provider-sign-in.md), a write-only API key or an
    explicitly selected compatible gateway.
 2. In **Connections**, name the application, review its provider access and
-   lifetime, then create a one-use invitation. Paste it into the application's
+   lifetime, choose where its backend will connect, then create a one-use invitation. Paste it into the application's
    AgenticDriver connection settings. Grant provider management only when that
    application should administer the host.
 3. **Hosts** can start/stop the desktop's host or pair with another host using
@@ -86,6 +86,60 @@ performed by onboarding or metadata refresh. Preview `0.1.0-alpha.2` adds Codex
 device sign-in on qualified Linux x64 hosts, with a separate private account
 profile and explicit confirmation after native verification. Other native
 providers use existing sessions. No provider/account/model fallback is added.
+
+### Connect an application on another computer
+
+The **Connection route** in **Connections** determines the address inside the
+invitation. The destination preview does not contact that address, move operator
+credentials or issue access. Creating an invitation does not prove the route is
+reachable. These route controls and the recovery controls below require a desktop
+build newer than the published alpha.3.
+
+- **On this computer** uses the desktop's private loopback host. Choose this when
+  the application backend runs on the same computer, not merely when its browser
+  is open here.
+- **Another computer · HTTPS** uses the reachable base URL of a TLS host or reverse
+  proxy that routes to this selected host. Include any proxy path prefix. The SDK
+  requires HTTPS without embedded credentials, query strings or fragments, and
+  the connecting backend verifies the certificate. Configure the proxy separately;
+  changing this field does not bind a new listener or open a firewall port.
+- **Another computer · SSH tunnel** generates an invitation for a loopback port
+  beside the application backend. Choose a free unprivileged port, then expand
+  **SSH setup instructions**. Start one of the two displayed commands using your
+  existing SSH access. A forward tunnel runs on the application machine and
+  connects to the driver machine; a reverse tunnel runs on the driver machine and
+  connects to the application server. Keep the chosen SSH session running.
+
+For example, if this desktop listens on `127.0.0.1:7433` and the application-side
+port is `17433`, choose one direction:
+
+```sh
+# On the application backend machine:
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:17433:127.0.0.1:7433 USER@DRIVER_HOST
+
+# Or on the driver machine, connecting outward to the application server:
+ssh -N -o ExitOnForwardFailure=yes -R 127.0.0.1:17433:127.0.0.1:7433 USER@APP_SERVER
+```
+
+Replace the uppercase destination with your existing SSH account and hostname;
+use the actual port shown by the desktop. The invitation then targets
+`http://127.0.0.1:17433/` on the application machine. Both recipes request a
+loopback-only listener and stop when initial forwarding setup fails. The SSH
+server must permit forwarding and honor the bind address; a successfully started
+tunnel still does not prove that its ultimate target is reachable.
+See the [OpenSSH forwarding options](https://man.openbsd.org/ssh.1).
+
+AgenticDriver does not run these commands, manage SSH keys, change server policy
+or provide a relay. A containerized application has its own network namespace;
+place the tunnel beside its backend rather than assuming container loopback
+reaches the host OS. For remote hosts already saved in the desktop, use their
+saved address or an explicitly supplied HTTPS address; generate SSH recipes on
+the computer that owns the local host.
+
+After establishing the route, create the invitation and paste it into the
+application's connection settings. Provider keys and native sessions remain on
+the execution host. Existing TypeScript, Python, Go and Rust invitation APIs
+consume this same address-and-one-use-code format without an API migration.
 
 ## Host lifecycle and private state
 

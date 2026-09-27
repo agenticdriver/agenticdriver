@@ -30,6 +30,10 @@ import { providerPanel, PanelRequestSchema } from "@agenticdriver/sdk/panel";
 import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 import { providerPresentation } from "@agenticdriver/sdk/catalog";
 import { connectionFailure, invitationPreview } from "./connection-status.mjs";
+import {
+  DestinationSchema,
+  invitationDestination,
+} from "./invitation-destination.mjs";
 
 const id = z.union([z.literal("local"), z.uuid()]);
 const remoteSchema = z
@@ -112,9 +116,17 @@ export const RequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("connections"), hostId: id }).strict(),
   z
     .object({
+      action: z.literal("preview-destination"),
+      hostId: id,
+      destination: DestinationSchema,
+    })
+    .strict(),
+  z
+    .object({
       action: z.literal("invite"),
       hostId: id,
       input: CreateInvitationSchema,
+      destination: DestinationSchema.default({ mode: "current" }),
     })
     .strict(),
   z
@@ -512,6 +524,11 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         return overview();
       case "preview-invitation":
         return invitationPreview(request.invitation);
+      case "preview-destination":
+        return invitationDestination(
+          connection(request.hostId),
+          request.destination,
+        );
       case "check-host":
         return checkHost(request.hostId);
       case "rename-host":
@@ -659,13 +676,18 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         return (await client(request.hostId)).connections();
       case "invite": {
         const selected = connection(request.hostId);
-        if (!selected.url)
-          fail("HOST_STOPPED", "Start the host before creating an invitation.");
+        // Validate the destination before minting a grant. The operator credential
+        // remains on the saved host connection and is never used to probe a new URL.
+        const destination = invitationDestination(
+          selected,
+          request.destination,
+        );
         const invitation = await (
           await client(request.hostId)
         ).createInvitation(request.input);
         return {
-          invitation: connectionInvitation(selected.url, invitation.code),
+          invitation: connectionInvitation(destination.url, invitation.code),
+          destination,
           expiresAt: invitation.expiresAt,
           grant: invitation.grant,
         };
@@ -753,6 +775,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
       if (
         req.action === "overview" ||
         req.action === "preview-invitation" ||
+        req.action === "preview-destination" ||
         req.action === "check-host" ||
         req.action === "usage" ||
         req.action === "connections" ||

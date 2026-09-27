@@ -57,6 +57,7 @@ try {
   assert.equal(evidence.providerDetailsUi, true);
   assert.equal(evidence.providerRemovalUi, true);
   assert.equal(evidence.remoteConnectionUi, true);
+  assert.equal(evidence.invitationDestinationUi, true);
   if (process.env.AGENTICDRIVER_DESKTOP_SMOKE_NARROW === "1")
     assert.deepEqual(evidence.viewport, [390, 844]);
   assert.equal(evidence.strictStyleCsp, true);
