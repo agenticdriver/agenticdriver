@@ -4,6 +4,10 @@ AgenticDriver includes one framework-neutral web component, `<agenticdriver-prov
 
 These additions are packaged in the [0.2.0 alpha](alpha.md); the published 0.1.0 packages predate them. Pin the exact alpha and check host capabilities before enabling management controls.
 
+The shared icon library and connection-information card described below are
+source changes after `0.2.0-alpha.2`; that published SDK version does not yet
+include them.
+
 The component uses a constructed shadow stylesheet, with no inline style element
 or style attribute. Modern browsers/webviews with `CSSStyleSheet.replaceSync`
 and `ShadowRoot.adoptedStyleSheets` can embed it under `style-src 'self'` without
@@ -209,7 +213,17 @@ Resolve clients and descriptors for the same application user/request. A stable 
 
 ## Logos and provider metadata
 
-Reuse Usagestat's existing provider metadata/assets. The TypeScript bridge accepts a `presentations(providers)` callback returning `providerPresentation()` results keyed by SDK instance ID. Other bridges return a JSON snapshot that the application can enrich with the same `presentations` map. Serve reviewed assets from the application's own origin. The component renders those assets and uses provider initials when an asset is unavailable; it does not download remote images or build a competing provider-logo catalog.
+The component includes the independent [provider-icons library](provider-icons.md),
+also used by UsageStat-Bar. Applications need only the icon package to reuse the
+artwork; it has no SDK or provider-runtime dependency. Unknown providers use
+initials. The panel makes no icon CDN requests.
+
+Applications can still supply reviewed Usagestat metadata/assets. The TypeScript
+bridge accepts a `presentations(providers)` callback returning
+`providerPresentation()` results keyed by SDK instance ID. Other bridges can
+enrich their JSON snapshot with the same `presentations` map. Serve reviewed
+custom assets from the application's own origin. These presentations take
+precedence unless the user explicitly selects a bundled icon preference.
 
 ## Validation
 

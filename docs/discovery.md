@@ -4,7 +4,9 @@
 driver token. Each instance keeps its own ID, credential resolver, cache and model
 allowlist. Two OpenAI accounts, for example, remain separate instances such as
 `openai-personal` and `openai-work`. The response never includes credentials,
-account emails, CLI paths, raw provider errors or CLI output.
+CLI paths, raw provider errors or CLI output. Authorized callers can receive
+reported account email/name in the optional [connection details](#connection-details);
+the provider panel masks that identity by default.
 
 The embedded driver exposes `await driver.discoverProviders()`. Its optional
 `providers` filter is for trusted hosts to apply their authorization policy;
