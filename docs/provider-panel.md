@@ -5,8 +5,8 @@ AgenticDriver includes one framework-neutral web component, `<agenticdriver-prov
 These additions are packaged in the [0.2.0 alpha](alpha.md); the published 0.1.0 packages predate them. Pin the exact alpha and check host capabilities before enabling management controls.
 
 The shared icon library and connection-information card described below are
-source changes after `0.2.0-alpha.2`; that published SDK version does not yet
-include them.
+introduced in `0.2.0-alpha.3`. Check the [alpha release status](alpha.md) before
+installing; earlier SDK versions do not include these additions.
 
 The component uses a constructed shadow stylesheet, with no inline style element
 or style attribute. Modern browsers/webviews with `CSSStyleSheet.replaceSync`

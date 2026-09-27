@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.2.0-alpha.3 — 2026-09-27
+
+- Added the independent `@agenticdriver/provider-icons` catalogue shared with
+  UsageStat-Bar: 155 provider/product marks, monochrome and full colour, and
+  related marks such as ChatGPT/Codex and Claude/Claude Code. The provider panel
+  stores icon preferences per device, connection and provider. Every language
+  package and the desktop companion includes the artwork and its notices.
+- Added optional typed connection details across all four clients: native CLI
+  version, reported sign-in method/status, subscription, and account email/name.
+  The panel masks account identity until Reveal and remasks it on refresh,
+  provider changes and disconnect. Missing native fields remain unreported;
+  displaying saved sign-in does not qualify execution or change permissions.
+- Kept metadata refresh independent of active runs and model execution. Native
+  probes retain only bounded display fields, without reading token files in the
+  SDK, signing in, refreshing credentials or submitting prompts.
+- Extended offline native, protocol and packaged desktop checks for the new
+  metadata and privacy controls. Rust integration tests sharing one conformance
+  host now run sequentially to avoid competing for its execution capacity.
+
+Wire protocol remains 1.0. npm uses `alpha`; stable `latest` remains 0.1.0.
+Python uses 0.2.0a3 and remains a GitHub download while PyPI organization approval
+is pending. Existing host grants, model choices and application authentication
+remain unchanged.
+
 ## 0.2.0-alpha.2 — 2026-09-26
 
 - Empty management hosts show onboarding guidance; read-only connections retain

@@ -15,6 +15,8 @@ PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.2` previe
 adds provider/connection components and the local desktop companion. See
 [alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
 for exact versions, host compatibility and publication status.
+The `0.2.0-alpha.3` candidate adds shared provider icons and masked account
+details; install it only once its selected release channel is published.
 The TypeScript runtime, four language clients and three application examples have
 fixture coverage. The selected local Codex route has passed
 [live text and cancellation checks](docs/validation/codex-2026-09-25.md);

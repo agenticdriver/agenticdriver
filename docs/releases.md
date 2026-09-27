@@ -7,6 +7,13 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
+The **0.2.0-alpha.3 candidate** adds shared provider icons and optional native
+connection details across all four clients and the Linux desktop. Its intended
+Python version is **0.2.0a3**. Publication is pending exact-candidate checks; use
+[alpha adoption](alpha.md) and the
+[alpha.3 release page](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.3)
+for channel availability. Previously published versions remain unchanged.
+
 The opt-in **0.2.0-alpha.2** preview (Python **0.2.0a2**) is published on npm,
 GitHub, crates.io and the Go module proxy, including the Linux desktop companion.
 npm registry publication was verified on 2026-09-27: `alpha` points to this preview
