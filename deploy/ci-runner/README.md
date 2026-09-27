@@ -120,8 +120,10 @@ registry prerequisites and are not certified merely by changing runner labels.
 PyPI organization approval is still pending. PyPA describes self-hosted support
 as [best effort](https://github.com/pypa/gh-action-pypi-publish#non-goals).
 
-npm's [trusted publishing](https://docs.npmjs.com/trusted-publishers/) currently
-rejects self-hosted runners. Choosing `npm` explicitly fails with that explanation
-before uploading or requesting registry credentials. No long-lived npm token or
-hosted fallback is installed. An authorized local publication of the reviewed
-artifact remains possible using the owner's existing CLI sign-in.
+npm's [trusted publishing](https://docs.npmjs.com/trusted-publishers/) rejects
+self-hosted runners. The `npm` job in `publish.yml` is therefore a dedicated
+standard GitHub-hosted Ubuntu publish-only exception, restricted to this public
+repository. Standard public-repository runner minutes are free. All builds and
+tests remain on Prometheus, with no hosted fallback. The publisher downloads and
+verifies the exact successful CI artifact, uses OIDC without a long-lived npm
+token, and checks the published digest. See [release controls](../../docs/releases.md#prepare-publication).

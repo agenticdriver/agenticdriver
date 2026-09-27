@@ -21,14 +21,53 @@ concurrency:
   group: sdk-publication-${{ inputs.registry }}
   cancel-in-progress: false
 jobs:
-  npm-unavailable:
-    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'npm'
-    runs-on: [self-hosted, linux, x64, prometheus-ci]
+  npm:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && github.event.repository.private == false && inputs.registry == 'npm'
+    # npm OIDC requires a hosted runner. Standard runners are free for this
+    # public repository; builds, tests and other channels stay on Prometheus.
+    runs-on: ubuntu-24.04
+    environment: npm
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
     steps:
-      - name: Explain the registry limitation without uploading
+      - name: Validate the optional candidate revision
+        env:
+          CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
         run: |
-          echo '::error::npm trusted publishing requires a hosted runner. Hosted compute is disabled. Publish the reviewed artifact through the authorized local CLI, or wait for supported self-hosted OIDC; no token fallback is configured.'
-          exit 1
+          if [[ -n "$CANDIDATE_COMMIT" && ! "$CANDIDATE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "candidate_commit must be a full commit SHA"
+            exit 1
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.candidate_commit || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Install the pinned OIDC-capable npm CLI
+        run: npm install --global npm@11.19.0 --ignore-scripts
+      - name: Download and verify the exact Prometheus candidate
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN: ${{ inputs.ci_run }}
+        run: python3 scripts/publish.py prepare --run-id "$CI_RUN" --registry npm --output "$RUNNER_TEMP/release"
+      - name: Publish the reviewed archive using npm trusted publishing
+        if: steps.candidate.outputs.pending == 'true'
+        env:
+          NPM_ARCHIVE: ${{ steps.candidate.outputs.npm_archive }}
+          NPM_TAG: ${{ steps.candidate.outputs.npm_tag }}
+          # Automatic provenance uses the workflow revision, not checkout HEAD.
+          # A delayed channel must not attest its old bytes to a newer commit.
+          NPM_CONFIG_PROVENANCE: ${{ (inputs.candidate_commit || github.sha) == github.sha }}
+        run: npm publish "$NPM_ARCHIVE" --access public --tag "$NPM_TAG" --ignore-scripts
+      - name: Verify the registry has the exact reviewed bytes
+        env:
+          BUNDLE: ${{ steps.candidate.outputs.bundle }}
+        run: python3 scripts/publish.py verify --bundle "$BUNDLE" --registry npm
   package:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (inputs.registry == 'python' || inputs.registry == 'rust')
     runs-on: [self-hosted, linux, x64, prometheus-ci]

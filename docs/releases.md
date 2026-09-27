@@ -140,14 +140,27 @@ repository permissions with no registry-upload step or publishing secrets.
 
 ## Prepare publication
 
-All active workflow jobs use [Prometheus](../deploy/ci-runner/README.md), including
-exact candidate builds and Python/Rust/Go publication preparation. There is no
-GitHub-hosted fallback. The 0.2.0-alpha.1 Rust OIDC upload and Go public-proxy installation are verified
-in the alpha publication record. PyPI's organization setup is still pending;
-each subsequent upload requires its own exact artifact verification.
-The npm option now fails explicitly because npm's trusted publisher currently
-requires hosted compute. Authorized local CLI publication of the reviewed archive
-remains available; no replacement npm token has been installed on Prometheus.
+Builds, tests and Python/Rust/Go publication use
+[Prometheus](../deploy/ci-runner/README.md). npm publication uses a dedicated
+standard GitHub-hosted Ubuntu runner because npm does not support self-hosted
+OIDC. This is a publish-only exception, not a CI fallback. The job is restricted
+to the public repository; standard hosted runners for public repositories do not
+consume the private-repository minutes allowance.
+[GitHub billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
+
+The npm job downloads the successful Prometheus run's exact archive, verifies its
+manifest and hashes, and uses the existing `publish.yml` / `npm` trusted publisher.
+It does not rebuild the SDK, install application dependencies, or use an npm token.
+It verifies the registry bytes after upload. OIDC publication is being qualified;
+the earlier local uploads do not prove this workflow works. PyPI organization
+approval remains pending.
+
+Automatic npm provenance is enabled when the candidate and publishing workflow
+use the same source commit. For delayed publication of an older candidate, it is
+explicitly disabled: npm's automatic attestation identifies the workflow revision,
+which would otherwise misidentify those older bytes. The exact CI source and
+archive checks still apply. No workflow SHA or OIDC claim is rewritten.
+[npm provenance configuration](https://docs.npmjs.com/trusted-publishers/#disabling-provenance-generation)
 
 
 AD-042 remains open until registry installation and all three app migrations
