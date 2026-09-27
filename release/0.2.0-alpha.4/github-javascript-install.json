@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-09-27T20:35:53.857100+00:00",
+  "name": "@agenticdriver/sdk",
+  "version": "0.2.0-alpha.4",
+  "publicUrl": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-sdk-0.2.0-alpha.4.tgz",
+  "integrity": "sha512-TR3rntOQ8uPtFUU+LkRPIy6WjcNryQGKca9YZ5mGj2/q5YDGM3/dx+Vr8OsclBixEsSCeX+QfPO5FVt498n0Aw==",
+  "sha256": "3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1",
+  "exactLockfileResolvedUrl": true,
+  "applicationExamples": [
+    "brandstorm",
+    "literature-review",
+    "email-workspace"
+  ],
+  "modelCalls": 0,
+  "source": "a8d296e2944dbda7de326c525870c7769d28c4b9",
+  "ciRun": 36346455297
+}

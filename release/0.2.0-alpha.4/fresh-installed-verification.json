@@ -1,0 +1,19 @@
+{
+  "verifiedAt": "2026-09-27T20:26:29.731373+00:00",
+  "source": "a8d296e2944dbda7de326c525870c7769d28c4b9",
+  "ciRun": 36346455297,
+  "javascript": "reviewed archive plus public GitHub URL and exact lockfile integrity",
+  "python": [
+    "reviewed wheel",
+    "reviewed sdist"
+  ],
+  "rust": "crates.io 0.2.0-alpha.4",
+  "go": "public proxy v0.2.0-alpha.4",
+  "transport": "certificate-verified HTTPS",
+  "applicationExamples": [
+    "brandstorm",
+    "literature-review",
+    "email-workspace"
+  ],
+  "modelCalls": 0
+}

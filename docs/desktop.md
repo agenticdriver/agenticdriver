@@ -92,8 +92,8 @@ providers use existing sessions. No provider/account/model fallback is added.
 The **Connection route** in **Connections** determines the address inside the
 invitation. The destination preview does not contact that address, move operator
 credentials or issue access. Creating an invitation does not prove the route is
-reachable. These route controls and the recovery controls below require a desktop
-build newer than the published alpha.3.
+reachable. These route controls and the recovery controls below require desktop
+version `0.2.0-alpha.4` or later.
 
 - **On this computer** uses the desktop's private loopback host. Choose this when
   the application backend runs on the same computer, not merely when its browser

@@ -1,0 +1,76 @@
+{
+  "verifiedAt": "2026-09-27T20:26:01.489110+00:00",
+  "releaseId": 397798447,
+  "tag": "v0.2.0-alpha.4",
+  "url": "https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4",
+  "source": "a8d296e2944dbda7de326c525870c7769d28c4b9",
+  "ciRun": 36346455297,
+  "draft": false,
+  "prerelease": true,
+  "assets": [
+    {
+      "name": "agenticdriver-0.2.0-alpha.4-candidate.zip",
+      "size": 1475630,
+      "sha256": "2ecf14e04030b07bfa1857b3cf8825964b8907f058d7d5a1c7376aeb50de0e0c",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-0.2.0-alpha.4-candidate.zip",
+      "anonymousDownload": true
+    },
+    {
+      "name": "AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz",
+      "size": 163539605,
+      "sha256": "8b9076cf07d8c09aa2be439c962635af1954b29f4405410c62f7996167c85503",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz",
+      "anonymousDownload": true
+    },
+    {
+      "name": "agenticdriver-0.2.0-alpha.4.crate",
+      "size": 166259,
+      "sha256": "a31115aac34a6bc38997cf0129241549cd71bc6f450553a0e65aade7ac8a6db0",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-0.2.0-alpha.4.crate",
+      "anonymousDownload": true
+    },
+    {
+      "name": "agenticdriver-0.2.0a4-py3-none-any.whl",
+      "size": 160064,
+      "sha256": "f9ca5d1c9bca622307b38a912b092d67b6f42a8f5f942e3117212cbdaaff280b",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-0.2.0a4-py3-none-any.whl",
+      "anonymousDownload": true
+    },
+    {
+      "name": "agenticdriver-0.2.0a4.tar.gz",
+      "size": 158720,
+      "sha256": "0c657b4b48f4254c3b23d835ced20eb5a66352ac5d5391a2e946c731065aa071",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-0.2.0a4.tar.gz",
+      "anonymousDownload": true
+    },
+    {
+      "name": "agenticdriver-sdk-0.2.0-alpha.4.tgz",
+      "size": 821343,
+      "sha256": "3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-sdk-0.2.0-alpha.4.tgz",
+      "anonymousDownload": true
+    },
+    {
+      "name": "ASSET-SHA256SUMS",
+      "size": 778,
+      "sha256": "68726c1e05692701e1288a2f7de14584e308cbe21792c9734c1e0daef2812eac",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/ASSET-SHA256SUMS",
+      "anonymousDownload": true
+    },
+    {
+      "name": "manifest.json",
+      "size": 2899,
+      "sha256": "a9d2f31b65accf4ccf545912f714105ea9fc2d4626c9327e14b7980192a50de0",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/manifest.json",
+      "anonymousDownload": true
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 976,
+      "sha256": "22a2478aca97175d61051732124a20a134347278b43a5681e808bddb1aac0549",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/SHA256SUMS",
+      "anonymousDownload": true
+    }
+  ],
+  "releaseAndGoTagsMatch": true
+}

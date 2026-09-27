@@ -7,18 +7,21 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The development branch is preparing **0.2.0-alpha.4** (Python **0.2.0a4**) with
-desktop connection destinations, credential recovery and shared-panel offline
-states. It is not published yet. Its versioned source and exact CI artifacts
-must pass the release gates before any channel changes; see the
-[alpha.4 candidate record](validation/release-0.2.0-alpha.4.md). The published
-alpha.3 coordinates below remain current during preparation.
+The opt-in **0.2.0-alpha.4** preview (Python **0.2.0a4**) is published on GitHub,
+crates.io and Go with desktop connection destinations, credential recovery and
+shared-panel offline states. All nine exact-source checks passed on Prometheus.
+The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are usable
+downloads. npm registry upload awaits its separate member browser approval;
+PyPI organization approval remains pending. See
+[alpha.4 evidence](validation/release-0.2.0-alpha.4.md), [alpha adoption](alpha.md)
+and the [alpha.4 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4)
+for verified hashes, fresh installation checks and channel status. Stable npm
+`latest` remains `0.1.0`.
 
-The opt-in **0.2.0-alpha.3** preview is published on npm, crates.io, Go and GitHub.
+The earlier **0.2.0-alpha.3** preview remains published on npm, crates.io, Go and GitHub.
 It adds shared provider icons and optional native connection details across all
 four clients and the Linux desktop. Python **0.2.0a3** wheel/sdist downloads are
-available on GitHub while PyPI organization approval remains pending. npm's
-`alpha` tag points to this preview; stable `latest` remains `0.1.0`. All nine
+available on GitHub while PyPI organization approval remains pending. All nine
 SDK jobs passed on Prometheus, followed by fresh installed-client quickstarts
 over verified HTTPS. See [alpha.3 evidence](validation/release-0.2.0-alpha.3.md),
 [alpha adoption](alpha.md) and the

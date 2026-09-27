@@ -1,61 +1,54 @@
-# 0.2.0-alpha.3 application preview
-
-The development branch is preparing **0.2.0-alpha.4** with remote connection
-setup and recovery improvements. Publication is pending; the exact install
-coordinates on this page remain the published alpha.3. See the
-[alpha.4 candidate record](validation/release-0.2.0-alpha.4.md).
+# 0.2.0-alpha.4 application preview
 
 This opt-in release packages the provider and connection component, refreshable
 account model catalogs, remote provider management, local/remote pairing, owned
 Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.
-The shared component supports strict style CSP and capability-gated provider removal.
-Alpha.3 adds the independent [shared provider icons](provider-icons.md), with
-monochrome/colour and product-mark choices, plus reported CLI/account details.
-Email/name stays masked until Reveal and is remasked on refresh or provider
-changes. Metadata availability does not establish successful model execution.
-Earlier host-helper fixes and strict installed-package checks remain included.
+Alpha.4 adds invitation destination previews, protocol-only saved-host checks,
+rename/same-address reconnect and offline recovery. The shared component hides
+stale account details and controls until an explicit retry succeeds, preserving
+same-connection provider selection and device-local preferences.
 
-Alpha.3 is published on npm, crates.io, Go and
-[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.3).
-Python wheel/sdist and the Linux desktop are available as GitHub downloads;
+The earlier [shared provider icons](provider-icons.md), monochrome/colour and
+product-mark choices, reported CLI/account details, strict style CSP and
+capability-gated provider removal remain included. Email/name stays masked until
+Reveal and is remasked on refresh or provider changes. Metadata availability does
+not establish successful model execution.
+
+Alpha.4 is published on crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4).
+The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are public
+downloads. npm registry upload awaits its separate member browser approval;
 PyPI organization approval remains pending. The
-[publication record](validation/release-0.2.0-alpha.3.md) preserves the immutable
-source, checksums and fresh installed-client verification.
-The stable npm `latest` tag remains on `0.1.0`.
+[publication record](validation/release-0.2.0-alpha.4.md) preserves the immutable
+source, checksums and fresh installed-client verification. Stable npm `latest`
+remains `0.1.0`; use the exact archive below until the alpha.4 registry upload is
+verified.
 
 ## Install the exact alpha
 
-Pin the exact preview:
+Pin the reviewed public archive; its package/import name remains `@agenticdriver/sdk`:
 
 ```sh
-npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.3
-# The moving preview channel is @agenticdriver/sdk@alpha; applications pin exact versions.
-
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.3
+npm install --save-exact https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-sdk-0.2.0-alpha.4.tgz
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.4
 ```
 
-For Rust, use `agenticdriver = "=0.2.0-alpha.3"` in `Cargo.toml`.
+For Rust, use `agenticdriver = "=0.2.0-alpha.4"` in `Cargo.toml`.
 
-The byte-identical reviewed JavaScript archive is also a public installation option:
+Commit the public URL and lockfile integrity. The JavaScript archive SHA-256 is
+`3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1`;
+verify it against the release manifest. Registry publication will use that exact
+reviewed archive. Earlier releases remain available with their
+[alpha.3 evidence](validation/release-0.2.0-alpha.3.md) and
+[alpha.2 evidence](validation/release-0.2.0-alpha.2.md).
 
-```sh
-npm install --save-exact https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.3/agenticdriver-sdk-0.2.0-alpha.3.tgz
-```
-
-The package and import name remain `@agenticdriver/sdk`. Commit the public URL and
-the lockfile integrity. The archive SHA-256 is
-`5c0cd3fbc471cf0dcf1bfe1798e4c1285ef8ec1e9dc44e419b751109e9f55460`;
-verify it against the release manifest. Registry publication uses that exact
-reviewed archive. Alpha.2 remains available with its
-[existing publication evidence](validation/release-0.2.0-alpha.2.md).
-
-Python uses the canonical PEP 440 version **0.2.0a3**. PyPI organization approval
-is still pending; download `agenticdriver-0.2.0a3-py3-none-any.whl` from the
+Python uses the canonical PEP 440 version **0.2.0a4**. PyPI organization approval
+is still pending; download `agenticdriver-0.2.0a4-py3-none-any.whl` from the
 prerelease, verify its SHA-256 against the release manifest, and install it in
-your virtual environment with `python -m pip install ./agenticdriver-0.2.0a3-py3-none-any.whl`.
+your virtual environment with `python -m pip install ./agenticdriver-0.2.0a4-py3-none-any.whl`.
 Do not substitute an unrelated PyPI package or a personal publisher.
 
-The Linux desktop archive is `AgenticDriver-0.2.0-alpha.3-linux-x64.tar.gz`.
+The Linux desktop archive is `AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz`.
 Extract it and run `agenticdriver-desktop`; Node and Electron are bundled.
 See [desktop setup](desktop.md) for private state, local installation and updating.
 There is no automatic updater, public relay, or Windows/macOS build in this alpha.
@@ -77,7 +70,10 @@ There is no automatic updater, public relay, or Windows/macOS build in this alph
 5. Test connection save/reload, catalog refresh, explicit selection, denied
    execution and backwards compatibility with synthetic fixtures. Keep catalog
    availability, host execution grants, application enablement and live-model
-   qualification separate. Refresh must retain choices and leave runs running.
+   qualification separate. Refresh must retain choices and leave runs running. Test an
+   unreachable saved host and explicit retry through the real settings/backend
+   bridge: hide stale controls, retain the saved host/preferences and restore
+   fresh state on recovery. A host-free state should still show app-permitted setup.
 6. Treat `ProviderInfo.connection` as optional. Older hosts can omit it; absent
    CLI/account fields are unreported. Use the shared component's reveal control
    or keep identity masked in application-owned settings. Icon preferences are

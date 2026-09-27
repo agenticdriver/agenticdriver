@@ -11,10 +11,12 @@ loop, normalized events, cancellation, transport, and usage reporting.
 
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
 The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
-PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.3` preview**
-is published on npm, crates.io, Go and GitHub. It includes provider/connection
-components, the local desktop companion, shared provider icons and masked account
-details. See
+PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.4` preview**
+is available on GitHub, crates.io and Go; npm registry publication is pending,
+with the reviewed JavaScript archive available now. It adds invitation destination
+previews, saved-host checks/reconnect and provider-panel recovery to the local
+desktop companion and four-language provider components. Shared provider icons
+and masked account details remain included. See
 [alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
 for exact versions, host compatibility and publication status.
 The TypeScript runtime, four language clients and three application examples have

@@ -1,0 +1,51 @@
+{
+  "verifiedAt": "2026-09-27T20:08:36.174867+00:00",
+  "source": "a8d296e2944dbda7de326c525870c7769d28c4b9",
+  "ciRun": 36346455297,
+  "artifact": "AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz",
+  "sha256": "8b9076cf07d8c09aa2be439c962635af1954b29f4405410c62f7996167c85503",
+  "size": 163539605,
+  "platform": "Fedora Linux x64",
+  "wide": {
+    "desktopSmoke": "passed",
+    "rendererIsolated": true,
+    "providerSetupUi": true,
+    "providerDetailsUi": true,
+    "providerRemovalUi": true,
+    "remoteConnectionUi": true,
+    "panelRecoveryUi": true,
+    "keyboardUi": true,
+    "invitationDestinationUi": true,
+    "viewport": [
+      1340,
+      883
+    ],
+    "strictStyleCsp": true,
+    "runtime": "v24.21.0",
+    "executable": "packaged",
+    "nodeOptionsDisabled": true
+  },
+  "narrow": {
+    "desktopSmoke": "passed",
+    "rendererIsolated": true,
+    "providerSetupUi": true,
+    "providerDetailsUi": true,
+    "providerRemovalUi": true,
+    "remoteConnectionUi": true,
+    "panelRecoveryUi": true,
+    "keyboardUi": true,
+    "invitationDestinationUi": true,
+    "viewport": [
+      390,
+      844
+    ],
+    "strictStyleCsp": true,
+    "runtime": "v24.21.0",
+    "executable": "packaged",
+    "nodeOptionsDisabled": true
+  },
+  "sdkVersion": "0.2.0-alpha.4",
+  "packagedPanelMatchesReleaseSource": true,
+  "syntheticOnly": true,
+  "modelCalls": 0
+}

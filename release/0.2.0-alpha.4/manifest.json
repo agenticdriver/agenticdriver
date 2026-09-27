@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "repository": "agenticdriver/agenticdriver",
+  "commit": "a8d296e2944dbda7de326c525870c7769d28c4b9",
+  "dirty": false,
+  "sourceDateEpoch": 1790539264,
+  "protocolVersion": "1.0",
+  "channel": "alpha",
+  "packages": {
+    "npm": {
+      "name": "@agenticdriver/sdk",
+      "version": "0.2.0-alpha.4",
+      "archive": "npm/agenticdriver-sdk-0.2.0-alpha.4.tgz"
+    },
+    "python": {
+      "name": "agenticdriver",
+      "version": "0.2.0a4",
+      "wheel": "python/agenticdriver-0.2.0a4-py3-none-any.whl",
+      "sdist": "python/agenticdriver-0.2.0a4.tar.gz"
+    },
+    "rust": {
+      "name": "agenticdriver",
+      "version": "0.2.0-alpha.4",
+      "archive": "rust/agenticdriver-0.2.0-alpha.4.crate"
+    },
+    "go": {
+      "name": "github.com/agenticdriver/agenticdriver/clients/go",
+      "version": "v0.2.0-alpha.4",
+      "tag": "clients/go/v0.2.0-alpha.4",
+      "archive": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.zip",
+      "mod": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.mod",
+      "info": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.info"
+    }
+  },
+  "files": [
+    {
+      "path": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/list",
+      "size": 15,
+      "sha256": "893355510e6171195fc80144b05d9e02fcf37a0c2756bc5fcb389573ff18bd1a"
+    },
+    {
+      "path": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.info",
+      "size": 61,
+      "sha256": "0e49cdd02cb5d2f887480c8720f9ff60909fb38733c4ed60923bcf65a3874a4b"
+    },
+    {
+      "path": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.mod",
+      "size": 66,
+      "sha256": "cc200f611413f76fff4d3cbc8aa19e058af3645e60742569e5ae1bdef929d662"
+    },
+    {
+      "path": "go/github.com/agenticdriver/agenticdriver/clients/go/@v/v0.2.0-alpha.4.zip",
+      "size": 172274,
+      "sha256": "ac1954897cb4f82d5717116f694a7cc4a23dc0e0684f11cec1e26aab8cae8c50"
+    },
+    {
+      "path": "npm/agenticdriver-sdk-0.2.0-alpha.4.tgz",
+      "size": 821343,
+      "sha256": "3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1"
+    },
+    {
+      "path": "python/agenticdriver-0.2.0a4-py3-none-any.whl",
+      "size": 160064,
+      "sha256": "f9ca5d1c9bca622307b38a912b092d67b6f42a8f5f942e3117212cbdaaff280b"
+    },
+    {
+      "path": "python/agenticdriver-0.2.0a4.tar.gz",
+      "size": 158720,
+      "sha256": "0c657b4b48f4254c3b23d835ced20eb5a66352ac5d5391a2e946c731065aa071"
+    },
+    {
+      "path": "rust/agenticdriver-0.2.0-alpha.4.crate",
+      "size": 166259,
+      "sha256": "a31115aac34a6bc38997cf0129241549cd71bc6f450553a0e65aade7ac8a6db0"
+    }
+  ],
+  "tools": {
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "python": "3.14.7",
+    "cargo": "cargo 1.89.0 (c24e10642 2025-06-23)",
+    "go": "go version go1.27.1 linux/amd64"
+  }
+}
