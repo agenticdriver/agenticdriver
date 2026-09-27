@@ -121,7 +121,21 @@ else {
         clipboard.writeText(value);
         return true;
       });
-      if (smoke)
+      if (smoke) {
+        ipcMain.handle("desktop:smoke-enter", (event) => {
+          authorize(event);
+          window.webContents.focus();
+          window.webContents.sendInputEvent({
+            type: "keyDown",
+            keyCode: "Enter",
+          });
+          window.webContents.sendInputEvent({ type: "char", keyCode: "\r" });
+          window.webContents.sendInputEvent({
+            type: "keyUp",
+            keyCode: "Enter",
+          });
+          return true;
+        });
         ipcMain.handle("desktop:smoke", async (event, evidence) => {
           authorize(event);
           const prefs = window.webContents.getLastWebPreferences();
@@ -136,6 +150,7 @@ else {
             evidence.remoteConnectionUi &&
             evidence.invitationDestinationUi &&
             evidence.panelRecoveryUi &&
+            evidence.keyboardUi &&
             evidence.strictStyleCsp &&
             prefs.sandbox &&
             prefs.contextIsolation &&
@@ -150,6 +165,7 @@ else {
               providerRemovalUi: evidence.providerRemovalUi === true,
               remoteConnectionUi: evidence.remoteConnectionUi === true,
               panelRecoveryUi: evidence.panelRecoveryUi === true,
+              keyboardUi: evidence.keyboardUi === true,
               invitationDestinationUi:
                 evidence.invitationDestinationUi === true,
               viewport: window.getContentSize(),
@@ -170,6 +186,7 @@ else {
           setImmediate(() => app.quit());
           return true;
         });
+      }
       worker = startWorker(
         join(app.getPath("userData"), "driver"),
         join(root, "runtime", "node"),

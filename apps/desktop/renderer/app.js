@@ -1170,7 +1170,11 @@ try {
     settings.open = true;
     const nameForm = $(".rename-form");
     nameForm.elements.label.value = "Renamed workstation";
-    await uiSubmit(nameForm);
+    nameForm.elements.label.focus();
+    await api.pressSmokeEnter();
+    await until(
+      () => !busy && overview.hosts[0].label === "Renamed workstation",
+    );
     check(
       $("#host-select").selectedOptions[0].textContent ===
         "Renamed workstation",
@@ -1258,6 +1262,7 @@ try {
       remoteConnectionUi: true,
       invitationDestinationUi: true,
       panelRecoveryUi: true,
+      keyboardUi: true,
       strictStyleCsp: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&

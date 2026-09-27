@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld(
     ...(smoke
       ? {
           smoke: true,
+          pressSmokeEnter: () => ipcRenderer.invoke("desktop:smoke-enter"),
           reportSmoke: (evidence) =>
             ipcRenderer.invoke("desktop:smoke", {
               ...evidence,

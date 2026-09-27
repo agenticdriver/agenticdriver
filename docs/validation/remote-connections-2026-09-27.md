@@ -23,8 +23,10 @@ a newer desktop build; they are not present in the immutable alpha.3 release.
   style CSP remain enabled.
 - Native screenshots of the saved-host and connection forms were inspected at
   both widths. T3 browser metadata remained available, but its interaction tools
-  reported no attached automation host. No T3 browser interaction or keyboard
-  acceptance is claimed for this change.
+  reported no attached automation host. No T3 browser interaction is claimed.
+  Keyboard submission is covered separately by Electron's native key/character
+  events: pressing Enter in the host-name field submits the real form. This
+  smoke-only IPC is absent from ordinary launches.
 - The Prometheus workflow now runs the packaged native smoke at both sizes.
   Its run receipt is recorded on the issue after completion.
 
