@@ -1,5 +1,10 @@
 # 0.2.0-alpha.3 application preview
 
+The development branch is preparing **0.2.0-alpha.4** with remote connection
+setup and recovery improvements. Publication is pending; the exact install
+coordinates on this page remain the published alpha.3. See the
+[alpha.4 candidate record](validation/release-0.2.0-alpha.4.md).
+
 This opt-in release packages the provider and connection component, refreshable
 account model catalogs, remote provider management, local/remote pairing, owned
 Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.

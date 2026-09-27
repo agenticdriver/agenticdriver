@@ -7,6 +7,13 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
+The development branch is preparing **0.2.0-alpha.4** (Python **0.2.0a4**) with
+desktop connection destinations, credential recovery and shared-panel offline
+states. It is not published yet. Its versioned source and exact CI artifacts
+must pass the release gates before any channel changes; see the
+[alpha.4 candidate record](validation/release-0.2.0-alpha.4.md). The published
+alpha.3 coordinates below remain current during preparation.
+
 The opt-in **0.2.0-alpha.3** preview is published on npm, crates.io, Go and GitHub.
 It adds shared provider icons and optional native connection details across all
 four clients and the Linux desktop. Python **0.2.0a3** wheel/sdist downloads are

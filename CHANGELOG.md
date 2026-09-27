@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0-alpha.4 — 2026-09-27
+
+- Added local, HTTPS and existing SSH-tunnel invitation destinations to the
+  desktop, including proxy path prefixes and forward/reverse SSH instructions.
+  Destination previews do not consume invitations or contact the destination.
+  The desktop keeps operator credentials on the original host and labels
+  generated routes as unverified.
+- Added authenticated protocol-only connection checks, actionable credential,
+  network and TLS errors, saved-host names and same-address reconnection.
+  Credential replacement retains the saved host identity and preferences and
+  preserves the previous profile if exchange or settings persistence fails.
+- Fixed stale provider controls after failed refresh or sign-in status polling.
+  The shared component hides account details and management/model actions until
+  explicit retry succeeds, then restores the saved selection and preferences.
+  All four language packages include the same recovery behavior; no panel API
+  or wire protocol change is required.
+- Added actual wide/narrow packaged desktop and native keyboard checks, verified
+  private-CA HTTPS/proxy fixtures and an opt-in two-machine SSH check. All CI
+  groups now run sequentially on the existing Prometheus runner.
+
+Wire protocol remains 1.0. npm uses `alpha`; stable `latest` stays at 0.1.0.
+Python uses 0.2.0a4. See [release status](docs/releases.md) before selecting
+download coordinates. No model/account/billing fallback or default inference
+deadline/inactivity timeout is introduced.
+
 ## 0.2.0-alpha.3 — 2026-09-27
 
 - Added the independent `@agenticdriver/provider-icons` catalogue shared with
