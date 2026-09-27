@@ -7,11 +7,11 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The opt-in **0.2.0-alpha.4** preview (Python **0.2.0a4**) is published on GitHub,
+The opt-in **0.2.0-alpha.4** preview (Python **0.2.0a4**) is published on npm, GitHub,
 crates.io and Go with desktop connection destinations, credential recovery and
 shared-panel offline states. All nine exact-source checks passed on Prometheus.
 The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are usable
-downloads. npm registry upload awaits its separate member browser approval;
+downloads. npm publication is verified through GitHub OIDC without member approval;
 PyPI organization approval remains pending. See
 [alpha.4 evidence](validation/release-0.2.0-alpha.4.md), [alpha adoption](alpha.md)
 and the [alpha.4 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4)
@@ -151,9 +151,10 @@ consume the private-repository minutes allowance.
 The npm job downloads the successful Prometheus run's exact archive, verifies its
 manifest and hashes, and uses the existing `publish.yml` / `npm` trusted publisher.
 It does not rebuild the SDK, install application dependencies, or use an npm token.
-It verifies the registry bytes after upload. OIDC publication is being qualified;
-the earlier local uploads do not prove this workflow works. PyPI organization
-approval remains pending.
+It verifies the registry bytes after upload. OIDC publication is verified for alpha.4 in the
+[release evidence](validation/release-0.2.0-alpha.4.md). The subsequent verification
+run skipped upload after matching the existing bytes. PyPI organization approval
+remains pending.
 
 Automatic npm provenance is enabled when the candidate and publishing workflow
 use the same source commit. For delayed publication of an older candidate, it is

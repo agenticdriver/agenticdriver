@@ -47,12 +47,12 @@ the panel API and independently pinned provider-icons `v0.1.0-alpha.1` are uncha
 - A separate [two-machine SSH fixture](invitation-destinations-2026-09-27.md)
   verified a reverse route to Prometheus, one-use invitation replay rejection,
   and the remote loopback bind. Its temporary tunnel/host/grant were cleaned up.
-- Fresh Rust/crates.io and Go/public-proxy installations passed the quickstarts over verified HTTPS. JavaScript and Python wheel/sdist passed from the reviewed archives, including the three packaged JavaScript app examples. npm registry installation remains pending publication.
+- Fresh Rust/crates.io and Go/public-proxy installations passed the quickstarts over verified HTTPS. JavaScript and Python wheel/sdist passed from the reviewed archives, including the three packaged JavaScript app examples. Fresh npm registry installation subsequently passed too.
 - A fresh application installed the public GitHub JavaScript URL directly,
   verified its exact lockfile URL/integrity and ran all three bundled app examples.
   See the [public URL install receipt](../../release/0.2.0-alpha.4/github-javascript-install.json).
 - All nine public GitHub downloads matched their reviewed SHA-256 and size.
-  The release and Go tags point directly to the source above. The GitHub JavaScript download is byte-identical to the reviewed candidate archive; npm registry upload is pending its separate browser approval.
+  The release and Go tags point directly to the source above. The GitHub JavaScript download is byte-identical to the reviewed candidate archive; the npm registry download now matches too.
 
 All checks used synthetic providers, metadata fixtures or isolated offline native
 contracts. No live model request, real account payload or provider sign-in was
@@ -82,25 +82,37 @@ JavaScript lockfile integrity:
 
 | Channel | Version | Status |
 | --- | --- | --- |
-| JavaScript archive | `@agenticdriver/sdk@0.2.0-alpha.4` | GitHub archive published, byte-verified and installed. npm registry upload awaits member browser approval; stable `latest` remains `0.1.0`. |
+| JavaScript archive | `@agenticdriver/sdk@0.2.0-alpha.4` | Published to npm through GitHub OIDC, byte-verified and installed. GitHub archive is identical; stable `latest` remains `0.1.0`. |
 | crates.io | `agenticdriver = "=0.2.0-alpha.4"` | Published through GitHub OIDC on Prometheus; registry contents and fresh installation verified. |
 | Go | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.4` | Immutable module tag published; public-proxy installation verified. |
 | Python | `agenticdriver==0.2.0a4` | GitHub wheel/sdist published and installed; PyPI organization approval pending. |
 | Linux x64 desktop | `0.2.0-alpha.4` | Exact CI archive published; wide/narrow native checks passed on Prometheus and Fedora. |
 
-[Rust publication 36347803499](https://github.com/agenticdriver/agenticdriver/actions/runs/36347803499) compared repackaged contents before obtaining its short-lived OIDC identity. [Go publication 36347805372](https://github.com/agenticdriver/agenticdriver/actions/runs/36347805372) verified the candidate before creating the immutable tag and testing the public proxy. Both passed on Prometheus runner 21. npm uses the authorized local member sign-in and original CI archive; no registry credential was copied to Prometheus.
+[Rust publication 36347803499](https://github.com/agenticdriver/agenticdriver/actions/runs/36347803499) compared repackaged contents before obtaining its short-lived OIDC identity. [Go publication 36347805372](https://github.com/agenticdriver/agenticdriver/actions/runs/36347805372) verified the candidate before creating the immutable tag and testing the public proxy. Both passed on Prometheus runner 21. npm used the original CI archive through GitHub OIDC on a standard hosted runner; no registry credential was copied to Prometheus.
 
 The [public download verification](../../release/0.2.0-alpha.4/github-publication.json)
 and [desktop smoke receipt](../../release/0.2.0-alpha.4/desktop-verification.json)
 record independently checked results. The selected PyPI organization's approval
 remains pending; Python uses the GitHub wheel/sdist. No personal PyPI publisher
-or hosted-runner fallback is introduced.
+is introduced. npm has a dedicated public-repository hosted publish-only job; all
+builds and tests remain on Prometheus.
 
-The [npm attempt receipt](../../release/0.2.0-alpha.4/npm-pending.json) records
-that the browser publishing flow ended with E404 before upload. The member's CLI
-sign-in remains valid; a fresh publishing approval is needed. The registry was
-checked again and does not contain alpha.4. No new login or replacement token
-was requested.
+The [earlier npm attempt receipt](../../release/0.2.0-alpha.4/npm-pending.json)
+is historical: that member browser flow failed before upload. It was superseded
+by [OIDC publication run 36354301760](https://github.com/agenticdriver/agenticdriver/actions/runs/36354301760).
+The upload succeeded without a browser approval or stored npm token; its immediate
+verification step failed while npm processed the package. Subsequent anonymous
+registry metadata and tarball downloads matched the reviewed SHA-256/SHA-512.
+The workflow now waits for processing without retrying the upload; authentication
+errors and conflicting bytes still fail immediately.
+
+[Verification run 36354464584](https://github.com/agenticdriver/agenticdriver/actions/runs/36354464584)
+checked the existing identical package and skipped upload. The
+[npm publication receipt](../../release/0.2.0-alpha.4/npm-publication.json)
+records both runs and stable/alpha tags. Automatic npm provenance was disabled
+for this delayed source revision, so it does not incorrectly attest alpha.4 to
+the newer workflow commit. Future same-commit publication enables it. Account
+security settings and existing credentials were preserved.
 
 ## Desktop and application adoption
 

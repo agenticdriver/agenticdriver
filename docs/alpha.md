@@ -14,30 +14,30 @@ capability-gated provider removal remain included. Email/name stays masked until
 Reveal and is remasked on refresh or provider changes. Metadata availability does
 not establish successful model execution.
 
-Alpha.4 is published on crates.io, Go and
+Alpha.4 is published on npm, crates.io, Go and
 [GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4).
 The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are public
-downloads. npm registry upload awaits its separate member browser approval;
+downloads. npm publication uses GitHub OIDC trusted publishing;
 PyPI organization approval remains pending. The
 [publication record](validation/release-0.2.0-alpha.4.md) preserves the immutable
 source, checksums and fresh installed-client verification. Stable npm `latest`
-remains `0.1.0`; use the exact archive below until the alpha.4 registry upload is
-verified.
+remains `0.1.0`; opt into the exact alpha version below.
 
 ## Install the exact alpha
 
-Pin the reviewed public archive; its package/import name remains `@agenticdriver/sdk`:
+Pin the exact registry version; its package/import name remains `@agenticdriver/sdk`:
 
 ```sh
-npm install --save-exact https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.4/agenticdriver-sdk-0.2.0-alpha.4.tgz
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.4
 go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.4
 ```
 
 For Rust, use `agenticdriver = "=0.2.0-alpha.4"` in `Cargo.toml`.
 
-Commit the public URL and lockfile integrity. The JavaScript archive SHA-256 is
+Commit the version pin and lockfile integrity. The public GitHub archive remains
+available and is byte-identical to the npm registry archive. The JavaScript archive SHA-256 is
 `3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1`;
-verify it against the release manifest. Registry publication will use that exact
+verify it against the release manifest. Registry publication used that exact
 reviewed archive. Earlier releases remain available with their
 [alpha.3 evidence](validation/release-0.2.0-alpha.3.md) and
 [alpha.2 evidence](validation/release-0.2.0-alpha.2.md).

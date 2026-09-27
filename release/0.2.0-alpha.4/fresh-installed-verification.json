@@ -1,8 +1,8 @@
 {
-  "verifiedAt": "2026-09-27T20:26:29.731373+00:00",
+  "verifiedAt": "2026-09-27T22:14:16.891209+00:00",
   "source": "a8d296e2944dbda7de326c525870c7769d28c4b9",
   "ciRun": 36346455297,
-  "javascript": "reviewed archive plus public GitHub URL and exact lockfile integrity",
+  "javascript": "npm registry 0.2.0-alpha.4; earlier GitHub URL verification also retained",
   "python": [
     "reviewed wheel",
     "reviewed sdist"
@@ -15,5 +15,7 @@
     "literature-review",
     "email-workspace"
   ],
-  "modelCalls": 0
+  "modelCalls": 0,
+  "npmPublishRun": 36354301760,
+  "npmVerificationRun": 36354464584
 }
