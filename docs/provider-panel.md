@@ -79,6 +79,16 @@ fails with `PROVIDER_IN_USE`: disable the provider or have the host operator
 update those grants first. Account policies must also remain valid; the panel
 does not silently rewrite operator-owned policy. Extensions remain operator-owned.
 
+In builds following alpha.3, a failed snapshot refresh or sign-in-status poll
+shows **Connection unavailable**. Previous provider/account details, model
+selection and management controls are hidden until **Retry connection** obtains
+fresh state. The selected provider and device-local model/icon preferences remain
+scoped to the saved connection. Retrying reads metadata; it never repeats a
+configuration write, pairs another host or restarts a run. An older failed refresh
+cannot replace a newer successful view. **Disconnect saved host** is offered only
+when the application supplies that permission. Initial backend failures also offer
+a retry instead of showing a connection wizard before permissions are known.
+
 Provider-native installation, token exchange, storage and refresh remain with the official runtime on the provider machine. Qualified hosts can guide [Codex device sign-in](provider-sign-in.md) from the component. Extension settings remain host-operator owned. This release does not install native binaries or expose arbitrary process arguments/environment variables. Codex device sign-in opens the official provider page in the user's browser. Supported settings match the SDK's qualified runtime adapters.
 
 ## Add a provider connection

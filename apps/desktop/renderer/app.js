@@ -853,6 +853,144 @@ try {
       click('[data-action="add"]');
       click('[data-kind="codex"]');
       check(!root.querySelector('[data-method="codex-device"]'));
+      await setupPanel.refresh();
+      selectIcon("icon-style", "monochrome");
+      const availableTransport = setupPanel.transport;
+      const selectedBeforeFailure = root.querySelector(
+        '[data-action="select"][aria-pressed="true"]',
+      ).dataset.id;
+      const unavailableTransport = async (input) => {
+        check(input.action === "snapshot");
+        throw new Error("Synthetic host unavailable");
+      };
+      setupPanel.transport = unavailableTransport;
+      await setupPanel.refresh();
+      check(root.textContent.includes("Connection unavailable"));
+      check(
+        !root.querySelector(
+          '[data-action="add"], [data-action="choose"], [data-action="enable"], [data-action="reveal-account"], [data-action="setup-accept"]',
+        ),
+      );
+      check(!root.innerHTML.includes("details@example.invalid"));
+      check(!root.querySelector('[data-action="connect"]'));
+      check(!root.querySelector('[data-action="disconnect"]'));
+      check(root.querySelector('[data-action="refresh"]'));
+      setupPanel.transport = availableTransport;
+      await setupPanel.refresh();
+      check(!root.textContent.includes("Connection unavailable"));
+      check(
+        root.querySelector('[data-action="select"][aria-pressed="true"]')
+          .dataset.id === selectedBeforeFailure,
+      );
+      check(
+        root.querySelector('[data-field="icon-style"]').value === "monochrome",
+      );
+      check(!root.innerHTML.includes("details@example.invalid"));
+      // A late error from an older refresh must not replace a newer successful view.
+      let rejectOld;
+      setupPanel.transport = () =>
+        new Promise((_resolve, reject) => {
+          rejectOld = reject;
+        });
+      const oldRefresh = setupPanel.refresh();
+      await until(() => Boolean(rejectOld));
+      setupPanel.transport = availableTransport;
+      await setupPanel.refresh();
+      rejectOld(new Error("Stale synthetic failure"));
+      await oldRefresh;
+      check(!root.textContent.includes("Connection unavailable"));
+      check(!root.textContent.includes("Stale synthetic failure"));
+      check(Boolean(root.querySelector('[data-action="add"]')));
+      setupState.setup = {
+        version: 1,
+        attempts: [{ ...attempt, phase: "waiting" }],
+      };
+      setupPanel.transport = async (input) => {
+        if (input.action === "setup" && input.request.action === "list")
+          throw new Error("Synthetic sign-in poll unavailable");
+        return availableTransport(input);
+      };
+      await setupPanel.refresh();
+      await until(() => root.textContent.includes("Connection unavailable"));
+      check(
+        !root.querySelector(
+          '[data-action="setup-accept"], [data-action="setup-cancel"]',
+        ),
+      );
+      delete setupState.setup;
+      setupPanel.transport = availableTransport;
+      await setupPanel.refresh();
+      const initiallyUnavailable = document.createElement(
+        "agenticdriver-providers",
+      );
+      initiallyUnavailable.transport = unavailableTransport;
+      document.body.append(initiallyUnavailable);
+      try {
+        await until(() =>
+          initiallyUnavailable.shadowRoot.textContent.includes(
+            "Connection unavailable",
+          ),
+        );
+        check(
+          Boolean(
+            initiallyUnavailable.shadowRoot.querySelector(
+              '[data-action="refresh"]',
+            ),
+          ),
+        );
+        check(
+          !initiallyUnavailable.shadowRoot.querySelector(
+            '[data-action="connect"]',
+          ),
+        );
+        initiallyUnavailable.transport = async () => ({
+          connected: false,
+          providers: [],
+          canConnect: true,
+        });
+        await initiallyUnavailable.refresh();
+        check(
+          Boolean(
+            initiallyUnavailable.shadowRoot.querySelector(
+              '[data-action="connect"]',
+            ),
+          ),
+        );
+        initiallyUnavailable.transport = async () => ({
+          connected: true,
+          providers: [],
+          canDisconnect: true,
+        });
+        await initiallyUnavailable.refresh();
+        initiallyUnavailable.transport = unavailableTransport;
+        await initiallyUnavailable.refresh();
+        check(
+          Boolean(
+            initiallyUnavailable.shadowRoot.querySelector(
+              '[data-action="disconnect"]',
+            ),
+          ),
+        );
+        let disconnected = false;
+        initiallyUnavailable.transport = async (input) => {
+          check(input.action === "disconnect");
+          disconnected = true;
+          return { connected: false, providers: [], canConnect: true };
+        };
+        initiallyUnavailable.shadowRoot
+          .querySelector('[data-action="disconnect"]')
+          .click();
+        await until(() =>
+          Boolean(
+            initiallyUnavailable.shadowRoot.querySelector(
+              '[data-action="connect"]',
+            ),
+          ),
+        );
+        check(disconnected);
+      } finally {
+        initiallyUnavailable.remove();
+      }
     } finally {
       setupPanel.remove();
     }
@@ -1119,6 +1257,7 @@ try {
       providerRemovalUi: true,
       remoteConnectionUi: true,
       invitationDestinationUi: true,
+      panelRecoveryUi: true,
       strictStyleCsp: true,
       nodeUnavailable:
         typeof window.require === "undefined" &&

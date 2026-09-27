@@ -164,6 +164,7 @@ export function registerProviderPanel(
     private busy = false;
     private message = "";
     private failure = "";
+    private unavailable = false;
     private adding = false;
     private removalPending = false;
     private stylesInstalled = false;
@@ -256,6 +257,7 @@ export function registerProviderPanel(
         throw new Error("The panel returned invalid connection state.");
       this.revealedAccounts.clear();
       this.state = state;
+      this.unavailable = false;
       this.failure = state.connectionError ?? "";
       if (!state.providers.some((p) => p.id === this.selected))
         this.selected = state.providers[0]?.id ?? "";
@@ -366,13 +368,24 @@ export function registerProviderPanel(
             generation === this.generation &&
             sequence === this.setupSequence
           ) {
-            this.failure =
+            this.markUnavailable(
               "Sign-in status is unavailable. Refresh to reconnect. " +
-              (error instanceof Error ? error.message : "");
+                (error instanceof Error ? error.message : ""),
+            );
             this.render();
           }
         }
       }, 2000);
+    }
+    private markUnavailable(message: string) {
+      this.unavailable = true;
+      this.failure = message;
+      this.revealedAccounts.clear();
+      this.apiKey = "";
+      this.links = undefined;
+      this.invite = undefined;
+      clearTimeout(this.setupTimer);
+      this.setupSequence++;
     }
     async refresh() {
       this.revealedAccounts.clear();
@@ -387,8 +400,9 @@ export function registerProviderPanel(
         if (generation === this.generation) this.accept(state);
       } catch (error) {
         if (generation === this.generation)
-          this.failure =
-            error instanceof Error ? error.message : "Could not connect.";
+          this.markUnavailable(
+            error instanceof Error ? error.message : "Could not connect.",
+          );
       } finally {
         if (generation === this.generation) {
           this.busy = false;
@@ -601,6 +615,11 @@ export function registerProviderPanel(
       this.failure = "";
       this.message = "";
       if (action === "refresh") return this.refresh();
+      if (
+        this.unavailable &&
+        !(action === "disconnect" && this.state?.canDisconnect)
+      )
+        return;
       if (action === "reveal-account" && button.dataset.id) {
         const id = button.dataset.id;
         if (this.revealedAccounts.has(id)) this.revealedAccounts.delete(id);
@@ -1353,12 +1372,14 @@ export function registerProviderPanel(
       if (focusSelector && this.busy) this.pendingFocus = focusSelector;
       const state = this.state,
         selected = state?.providers.find((p) => p.id === this.selected);
-      const connected = state?.connected === true;
-      const header = `<header class="top"><div><div class="eyebrow">AgenticDriver</div><h2>Providers & connections</h2></div><div class="actions">${connected ? `<span class="pill live host-label" title="${escape(state.connection?.url ?? "")}">● ${escape(state.connection?.label ?? "Connected host")}</span><button data-action="refresh" ${this.busy ? "disabled" : ""} aria-label="Refresh providers">↻ Refresh</button>${state.canDisconnect ? '<button data-action="disconnect">Disconnect</button>' : ""}` : `<span class="pill">Not connected</span>${state?.connection ? '<button data-action="refresh">Retry connection</button>' : ""}`}</div></header>`;
+      const connected = state?.connected === true && !this.unavailable;
+      const header = `<header class="top"><div><div class="eyebrow">AgenticDriver</div><h2>Providers & connections</h2></div><div class="actions">${connected ? `<span class="pill live host-label" title="${escape(state.connection?.url ?? "")}">● ${escape(state.connection?.label ?? "Connected host")}</span><button data-action="refresh" ${this.busy ? "disabled" : ""} aria-label="Refresh providers">↻ Refresh</button>${state.canDisconnect ? '<button data-action="disconnect">Disconnect</button>' : ""}` : `<span class="pill">${this.unavailable ? "Unavailable" : "Not connected"}</span>${state?.connection || this.unavailable ? `<button data-action="refresh" ${this.busy ? "disabled" : ""}>Retry connection</button>` : ""}`}</div></header>`;
       let content: string;
       if (!state && this.busy)
         content =
           '<div class="loading" role="status">Loading your connection…</div>';
+      else if (this.unavailable)
+        content = `<div class="empty" role="status"><h3>Connection unavailable</h3><p>Check the host or your application's connection settings, then refresh to read current provider access. Your saved host and model preferences are kept.</p><button class="primary" data-action="refresh" ${this.busy ? "disabled" : ""}>${this.busy ? "Checking connection…" : "Retry connection"}</button>${state?.canDisconnect ? '<button data-action="disconnect">Disconnect saved host</button>' : ""}</div>`;
       else if (!connected) content = this.disconnected();
       else
         content = `<div class="layout"><aside class="sidebar" aria-label="Provider instances"><div class="side-label">${state.providers.length} connected instances</div>${state.providers

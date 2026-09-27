@@ -135,6 +135,7 @@ else {
             evidence.providerRemovalUi &&
             evidence.remoteConnectionUi &&
             evidence.invitationDestinationUi &&
+            evidence.panelRecoveryUi &&
             evidence.strictStyleCsp &&
             prefs.sandbox &&
             prefs.contextIsolation &&
@@ -148,6 +149,7 @@ else {
               providerDetailsUi: evidence.providerDetailsUi === true,
               providerRemovalUi: evidence.providerRemovalUi === true,
               remoteConnectionUi: evidence.remoteConnectionUi === true,
+              panelRecoveryUi: evidence.panelRecoveryUi === true,
               invitationDestinationUi:
                 evidence.invitationDestinationUi === true,
               viewport: window.getContentSize(),
