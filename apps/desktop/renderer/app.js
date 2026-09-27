@@ -434,6 +434,22 @@ try {
     const setupState = structuredClone(after);
     setupState.connection = { id: "renderer-fixture", label: "Synthetic host" };
     setupState.canInvite = false;
+    Object.assign(setupState.providers[0], {
+      vendor: "codex",
+      authMode: "cli-session",
+      connection: {
+        source: "native-runtime",
+        checkedAt: new Date().toISOString(),
+        runtime: { name: "Codex CLI", version: "0.157.0" },
+        account: {
+          status: "signed-in",
+          method: "ChatGPT",
+          email: "details@example.invalid",
+          name: "Synthetic Person",
+          subscription: "Example plan",
+        },
+      },
+    });
     setupState.setup = { version: 1, attempts: [] };
     const setupPanel = document.createElement("agenticdriver-providers");
     let pendingProvider,
@@ -506,6 +522,45 @@ try {
     const initialName = setupState.management.providers[0].name ?? "";
     try {
       await setupPanel.refresh();
+      check(root.textContent.includes("Codex CLI · 0.157.0"));
+      check(root.textContent.includes("Example plan"));
+      check(
+        !root.innerHTML.includes("details@example.invalid") &&
+          !root.innerHTML.includes("Synthetic Person"),
+      );
+      click('[data-action="reveal-account"]');
+      check(
+        root.textContent.includes("details@example.invalid") &&
+          root.textContent.includes("Synthetic Person"),
+      );
+      click('[data-action="reveal-account"]');
+      check(!root.innerHTML.includes("details@example.invalid"));
+      const selectIcon = (field, value) => {
+        const select = root.querySelector(`[data-field="${field}"]`);
+        check(Boolean(select));
+        select.value = value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      };
+      selectIcon("icon-style", "monochrome");
+      selectIcon("icon-variant", "openai");
+      check(
+        root
+          .querySelector(".provider.selected svg")
+          ?.outerHTML.includes("currentColor"),
+      );
+      click('[data-action="reveal-account"]');
+      await setupPanel.refresh();
+      check(!root.innerHTML.includes("details@example.invalid"));
+      check(
+        root.querySelector('[data-field="icon-variant"]').value === "openai",
+      );
+      check(
+        !Object.keys(localStorage).some((key) =>
+          /details@example.invalid|Synthetic Person/.test(
+            localStorage.getItem(key),
+          ),
+        ),
+      );
       const begin = async () => {
         click('[data-action="add"]');
         click('[data-kind="codex"]');
@@ -543,10 +598,17 @@ try {
       await setupPanel.refresh();
       check(
         confirmations === 0 &&
-          root
-            .querySelector(".setup-attempts")
-            .textContent.includes("renderer@example.invalid"),
+          !root.innerHTML.includes("renderer@example.invalid"),
       );
+      const revealSetup = `.setup-attempts [data-action="reveal-account"]`;
+      click(revealSetup);
+      check(
+        root
+          .querySelector(".setup-attempts")
+          .textContent.includes("renderer@example.invalid"),
+      );
+      click(revealSetup);
+      check(!root.innerHTML.includes("renderer@example.invalid"));
       click('[data-action="setup-accept"]');
       await until(
         () =>
@@ -618,6 +680,7 @@ try {
     check(styleViolations.length === 0);
     await api.reportSmoke({
       providerSetupUi: true,
+      providerDetailsUi: true,
       providerRemovalUi: true,
       strictStyleCsp: true,
       nodeUnavailable:

@@ -54,6 +54,7 @@ try {
   }
   assert.equal(evidence.rendererIsolated, true);
   assert.equal(evidence.providerSetupUi, true);
+  assert.equal(evidence.providerDetailsUi, true);
   assert.equal(evidence.providerRemovalUi, true);
   assert.equal(evidence.strictStyleCsp, true);
   console.log(

@@ -131,6 +131,7 @@ else {
             evidence.nodeUnavailable &&
             evidence.providerAdded &&
             evidence.providerSetupUi &&
+            evidence.providerDetailsUi &&
             evidence.providerRemovalUi &&
             evidence.strictStyleCsp &&
             prefs.sandbox &&
@@ -142,6 +143,7 @@ else {
               desktopSmoke: valid ? "passed" : "failed",
               rendererIsolated: Boolean(valid),
               providerSetupUi: evidence.providerSetupUi === true,
+              providerDetailsUi: evidence.providerDetailsUi === true,
               providerRemovalUi: evidence.providerRemovalUi === true,
               strictStyleCsp: evidence.strictStyleCsp === true,
               runtime: "v24.21.0",
