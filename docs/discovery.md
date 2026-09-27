@@ -160,3 +160,32 @@ to API switch, or credential/account fallback fills these gaps.
 
 All probes avoid model generation. Live account/model certification is tracked
 separately for each provider; fixture tests do not establish vendor account access.
+
+## Connection details
+
+Provider listings optionally include `connection` with `source`, `checkedAt`,
+`runtime: {name, version}` and `account: {status, method?, email?, name?, subscription?}`.
+Account status is `signed-in`, `signed-out` or `unknown`. These are display
+observations from the selected runtime, not execution grants or live model
+qualification. TypeScript, Python, Go and Rust expose and validate the same
+optional fields; older hosts can omit them.
+
+Codex uses its qualified app-server `account/read` with `refreshToken: false`
+in the isolated catalogue process. Claude uses `auth status --json`, retaining
+only the supported display fields. CLI version output is parsed into a bounded
+version string. No SDK code reads native token files, starts sign-in, changes
+accounts, or sends a prompt while collecting these details. Unknown fields,
+credential material, local paths and provider organization/account IDs are not
+returned by these probes. Gemini CLI currently reports its version without a
+supported account identity/subscription probe. Standard API model listings do
+not report a person's identity, subscription or server version, so those values
+remain absent. An unsupported CLI version remains unsupported even if its
+version or saved sign-in can be displayed.
+
+Connection details follow the existing provider authorization filter and
+per-adapter discovery cache. Revoked/ungranted accounts are not inspected.
+Failed refreshes drop older identity metadata; successful refreshes replace it.
+Refresh does not interrupt running model work or expand permissions. The
+connection metadata is private account information available to authorized
+readers; the panel's reveal control is a display preference, not another access
+control or identity system.

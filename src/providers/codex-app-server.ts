@@ -3,11 +3,17 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { z } from "zod";
 import { DriverError } from "../errors.js";
-import type { ProviderAdapter, ProviderTurn, Usage } from "../types.js";
+import type {
+  ProviderAdapter,
+  ProviderTurn,
+  Usage,
+  ProviderConnectionMetadata,
+} from "../types.js";
 import type { CodexProviderOptions } from "./local-cli.js";
 import { cliEnvironment, runProcess } from "./cli-process.js";
 import { codexCliFailure } from "./codex-cli-errors.js";
 import { codexMcpBridge } from "./codex-mcp-bridge.js";
+import { cliVersion, codexAccount } from "./connection-metadata.js";
 import { codexHistory } from "./codex-history.js";
 
 // Pin the protocol whose environment and tool restrictions the native fixture audits.
@@ -82,7 +88,14 @@ async function inspectModels(
   const cursors = new Set<string>();
   let requestId = 1,
     pages = 0;
-  let result: { models: string[]; complete: boolean } | undefined;
+  let account: ProviderConnectionMetadata["account"];
+  let result:
+    | {
+        models: string[];
+        complete: boolean;
+        account?: ProviderConnectionMetadata["account"];
+      }
+    | undefined;
   let send: (message: unknown) => void, end: () => void;
   const page = (cursor?: string) =>
     send({
@@ -129,11 +142,21 @@ async function inspectModels(
           return;
         }
         if (result || message.id !== requestId) throw invalid();
+        if (requestId === 2) {
+          if (message.error === undefined)
+            account = codexAccount(message.result);
+          page();
+          return;
+        }
         if (message.error !== undefined) throw failure(message.error);
         if (requestId === 1) {
           object.parse(message.result);
           send({ method: "initialized" });
-          page();
+          send({
+            id: ++requestId,
+            method: "account/read",
+            params: { refreshToken: false },
+          });
           return;
         }
         const current = pageSchema.parse(message.result);
@@ -143,6 +166,7 @@ async function inspectModels(
           throw invalid();
         if (!current.nextCursor || models.size >= 1000 || pages >= 20) {
           result = {
+            account,
             models: [...models].slice(0, 1000),
             complete: !current.nextCursor && models.size <= 1000,
           };
@@ -171,12 +195,17 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
     );
   const env = cliEnvironment();
   if (options.accountDirectory) env.CODEX_HOME = options.accountDirectory;
-  const check = async (signal: AbortSignal, cwd?: string) => {
+  const check = async (
+    signal: AbortSignal,
+    cwd?: string,
+    observed?: (output: string) => void,
+  ) => {
     const version = await runProcess(binary, ["--version"], {
       env,
       cwd,
       signal,
     });
+    observed?.(version);
     if (version.trim() !== supportedVersion)
       throw new DriverError(
         "CLI_UPGRADE_REQUIRED",
@@ -201,9 +230,14 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
       usageStatId: "codex",
     },
     async inspect({ signal }) {
+      const connection: ProviderConnectionMetadata = {
+        source: "native-runtime",
+      };
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-inspect-"));
       try {
-        await check(signal, cwd);
+        await check(signal, cwd, (output) => {
+          connection.runtime = cliVersion("codex", output);
+        });
         let code: number | null = null;
         await runProcess(binary, ["login", "status"], {
           env,
@@ -214,15 +248,26 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
             code = value;
           },
         });
-        if (code !== 0) return { code: "CLI_AUTH_REQUIRED" };
+        connection.account = {
+          status: code === 0 ? "signed-in" : "signed-out",
+        };
+        if (code !== 0) return { code: "CLI_AUTH_REQUIRED", connection };
         try {
           const catalog = await inspectModels(binary, env, cwd, signal);
-          return { code: "CLI_CATALOG_AVAILABLE", ...catalog };
+          if (catalog.account) connection.account = catalog.account;
+          if (connection.account.status === "signed-out")
+            return { code: "CLI_AUTH_REQUIRED", connection };
+          return {
+            code: "CLI_CATALOG_AVAILABLE",
+            models: catalog.models,
+            complete: catalog.complete,
+            connection,
+          };
         } catch {
           signal.throwIfAborted();
           // A saved login still does not prove fresh account access. Keep configured
           // aliases distinct from an inventory when the native catalog is unavailable.
-          return { code: "CLI_SESSION_PRESENT" };
+          return { code: "CLI_SESSION_PRESENT", connection };
         }
       } catch (error) {
         signal.throwIfAborted();
@@ -231,8 +276,8 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
           (error.code === "CLI_UNAVAILABLE" ||
             error.code === "CLI_UPGRADE_REQUIRED")
         )
-          return { code: error.code };
-        return { code: "CLI_STATUS_UNKNOWN" };
+          return { code: error.code, connection };
+        return { code: "CLI_STATUS_UNKNOWN", connection };
       } finally {
         await rm(cwd, { recursive: true, force: true });
       }

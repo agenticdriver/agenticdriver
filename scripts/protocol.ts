@@ -47,6 +47,7 @@ import {
   RunRequestSchema,
   ModelCatalogSchema,
   ProviderHealthSchema,
+  ProviderConnectionDetailsSchema,
 } from "../src/types.js";
 import {
   PROTOCOL_VERSION,
@@ -167,6 +168,10 @@ const schemas = {
   RetrievalDeleteResult: z.toJSONSchema(RetrievalDeleteResultSchema, {
     target: "draft-2020-12",
   }),
+  ProviderConnectionDetails: z.toJSONSchema(ProviderConnectionDetailsSchema, {
+    target: "draft-2020-12",
+    io: "input",
+  }),
   ProviderHealth: z.toJSONSchema(ProviderHealthSchema, {
     target: "draft-2020-12",
     io: "input",
@@ -276,6 +281,7 @@ const schemas = {
         },
       },
       health: ref("ProviderHealth"),
+      connection: ref("ProviderConnectionDetails"),
       modelCatalog: ref("ModelCatalog"),
       capabilities: {
         type: "object",

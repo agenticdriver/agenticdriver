@@ -113,6 +113,9 @@ func (provider *Provider) UnmarshalJSON(data []byte) error {
 		_, ok := stringValue(raw)
 		valid = valid && ok
 	}
+	if raw, present := value["connection"]; present {
+		valid = valid && connectionDetailsValid(raw)
+	}
 	if raw, present := value["health"]; present {
 		h, ok := object(raw)
 		status, _ := stringValue(h["status"])
@@ -226,4 +229,45 @@ func stripBOM(value string, first *bool) string {
 	}
 	*first = false
 	return strings.TrimPrefix(value, "\uFEFF")
+}
+
+func connectionDetailsValid(raw json.RawMessage) bool {
+	v, ok := object(raw)
+	source, _ := stringValue(v["source"])
+	checked, _ := stringValue(v["checkedAt"])
+	_, err := time.Parse(time.RFC3339Nano, checked)
+	if !ok || err != nil || (source != "native-runtime" && source != "provider-api") {
+		return false
+	}
+	display := func(raw json.RawMessage, max int) bool {
+		s, ok := stringValue(raw)
+		if !ok || strings.TrimSpace(s) == "" || utf8.RuneCountInString(s) > max {
+			return false
+		}
+		for _, c := range s {
+			if c < 32 || c == 127 {
+				return false
+			}
+		}
+		return true
+	}
+	if raw, present := v["runtime"]; present {
+		r, ok := object(raw)
+		if !ok || !display(r["name"], 100) || !display(r["version"], 80) {
+			return false
+		}
+	}
+	if raw, present := v["account"]; present {
+		a, ok := object(raw)
+		status, _ := stringValue(a["status"])
+		if !ok || (status != "signed-in" && status != "signed-out" && status != "unknown") {
+			return false
+		}
+		for key, max := range map[string]int{"method": 80, "email": 320, "name": 200, "subscription": 120} {
+			if raw, present := a[key]; present && !display(raw, max) {
+				return false
+			}
+		}
+	}
+	return true
 }

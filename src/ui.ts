@@ -1,5 +1,9 @@
-import {resolveProviderIcon, providerIcons, type IconStyle} from '@agenticdriver/provider-icons';
-import {providerIconSvg} from '@agenticdriver/provider-icons/svg';
+import {
+  resolveProviderIcon,
+  providerIcons,
+  type IconStyle,
+} from "@agenticdriver/provider-icons";
+import { providerIconSvg } from "@agenticdriver/provider-icons/svg";
 import type { ProviderPanelState, PanelRequest } from "./panel.js";
 import type {
   HostProviderConfig,
@@ -121,14 +125,20 @@ const keyEnv: Record<string, string> = {
   xai: "XAI_API_KEY",
   "xai-responses": "XAI_API_KEY",
 };
-type Preferences = { favorites: string[]; hidden: string[]; order: string[]; iconStyle?: IconStyle; iconVariant?: string };
+type Preferences = {
+  favorites: string[];
+  hidden: string[];
+  order: string[];
+  iconStyle?: IconStyle;
+  iconVariant?: string;
+};
 const emptyPreferences = (): Preferences => ({
   favorites: [],
   hidden: [],
   order: [],
 });
 const css = `
-.invitation-actions{margin-top:14px}.remove-provider{margin-top:22px;padding-top:18px;border-top:1px solid var(--ad-line)}
+.connection-details{border:1px solid var(--ad-line);border-radius:12px;padding:16px 18px;margin:16px 0 22px}.connection-facts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.connection-facts strong{display:block;font-size:13px;font-weight:550;overflow-wrap:anywhere}.connection-facts>div>.hint{display:block;margin-bottom:4px}.account-identity{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:30px}.identity-value{overflow-wrap:anywhere;min-width:0}.identity-blur{filter:blur(4px);user-select:none;color:var(--ad-muted)}.account-identity button{font-size:12px;color:var(--ad-accent)}.provider-version{font:10px ui-monospace,monospace;color:var(--ad-muted);font-weight:400}.invitation-actions{margin-top:14px}.remove-provider{margin-top:22px;padding-top:18px;border-top:1px solid var(--ad-line)}
 
 .setup-attempts{padding:20px;display:grid;gap:16px;border-bottom:1px solid var(--ad-border,#343b52)}.setup-attempts .command{font-size:1.35rem;letter-spacing:.12em;white-space:pre-wrap;overflow-wrap:anywhere}.setup-attempts p{overflow-wrap:anywhere}.setup-attempts h4{margin:12px 0}.setup-attempts a{color:inherit;text-decoration:underline}
 
@@ -136,7 +146,7 @@ const css = `
 :host([theme=light]){--ad-bg:#fafbff;--ad-surface:#f0f2f9;--ad-field:#fff;--ad-line:#d8deee;--ad-fg:#202839;--ad-muted:#5d6980;--ad-accent:#3e52b6;--ad-good:#237a59;color-scheme:light}
 *{box-sizing:border-box}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}button{color:inherit;border:1px solid var(--ad-line);border-radius:8px;background:transparent;padding:7px 12px}button:hover:enabled{background:var(--ad-surface)}button.primary{background:var(--ad-accent);color:var(--ad-bg);border-color:transparent;font-weight:650}button.primary:hover:enabled{filter:brightness(1.08)}.quiet{border:0;padding:5px 8px}.shell{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:18px;overflow:hidden;min-height:460px;max-width:1320px;margin:auto}.top{padding:22px 26px;display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--ad-line)}.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--ad-muted);text-transform:uppercase}.top h2{font-size:20px;letter-spacing:-.025em;margin:4px 0 0;font-weight:600}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:11px;border:1px solid var(--ad-line);border-radius:20px;padding:3px 9px;color:var(--ad-muted);white-space:nowrap}.live{color:var(--ad-good)}.layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:480px}.sidebar{background:color-mix(in srgb,var(--ad-surface) 45%,transparent);border-right:1px solid var(--ad-line);padding:12px}.side-label{font-size:11px;color:var(--ad-muted);padding:10px 10px 14px;text-transform:uppercase;letter-spacing:.07em}.provider{display:flex;align-items:center;border:1px solid transparent;border-radius:11px;margin:3px 0;padding:5px;gap:3px}.provider.selected{background:var(--ad-surface);border-color:var(--ad-line)}.provider button.select{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-align:left;border:0;padding:10px 6px}.avatar{width:32px;height:32px;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:650;color:var(--ad-accent);background:var(--ad-field);border-radius:9px}.avatar img,.avatar svg{width:24px;height:24px;object-fit:contain}.brand-mark{color:var(--ad-fg);background:transparent}.icon-preferences{margin-bottom:20px}.icon-preferences>p{padding:0 18px}.provider-copy{min-width:0}.provider-copy strong{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.provider-copy small{font-size:11px;color:var(--ad-muted);display:block}.switch{width:32px;height:19px;flex:0 0 32px;padding:2px!important;border:0;border-radius:18px;background:var(--ad-line);position:relative}.switch:before{content:"";width:15px;height:15px;display:block;border-radius:50%;background:var(--ad-muted)}.switch[aria-checked=true]{background:var(--ad-accent)}.switch[aria-checked=true]:before{background:var(--ad-bg);margin-left:13px}.detail{padding:26px 30px;min-width:0}.detail-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.detail-head>div{min-width:0;overflow-wrap:anywhere}.detail-head h3{font-size:19px;margin:0;font-weight:600}.muted{color:var(--ad-muted)}.small{font-size:12px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ad-line);margin:22px 0}.tabs button{border:0;border-radius:0;padding:10px 16px;color:var(--ad-muted);border-bottom:2px solid transparent}.tabs button[aria-selected=true]{color:var(--ad-accent);border-bottom-color:var(--ad-accent)}.group{border:1px solid var(--ad-line);border-radius:12px;overflow:hidden;margin:14px 0}.field{display:grid;grid-template-columns:minmax(130px,1fr) minmax(160px,1fr);gap:20px;padding:16px 18px;align-items:center}.field+.field{border-top:1px solid var(--ad-line)}.field label{font-weight:550;display:block}.hint{color:var(--ad-muted);font-size:12px;font-weight:400;margin:4px 0 0}input,select,textarea{border:1px solid var(--ad-line);border-radius:8px;padding:8px 10px;background:var(--ad-field);color:var(--ad-fg);width:100%;min-width:0}input:disabled{opacity:.65}input[type=checkbox]{width:16px;height:16px;accent-color:var(--ad-accent)}textarea{resize:vertical;min-height:90px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.model-access{flex-wrap:wrap}.model-access .inline{white-space:nowrap}.model-toolbar{margin-bottom:12px;display:flex;gap:14px;align-items:center}.model-toolbar input{max-width:260px}.models{border-top:1px solid var(--ad-line);margin-top:14px}.model{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--ad-line)}.model.hidden-model{opacity:.65}.model .model-name{flex:1;min-width:0;text-align:left;border:0;font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;padding:4px}.model .star{font-size:18px;width:27px;padding:2px;border:0}.star.favorite{color:#e9c979}.icon-button{font-size:12px;padding:3px 6px}.section-label{font-size:12px;color:var(--ad-muted);margin:22px 0 10px}.notice{border:1px solid var(--ad-line);border-radius:10px;padding:12px 15px;color:var(--ad-muted);font-size:12px;margin:12px 0}.error{border-color:#b5727c;color:#f2b7bf;margin:16px 24px}.success{color:var(--ad-good)}.empty{max-width:840px;margin:auto;padding:40px 32px}.empty h3{font-size:28px;line-height:1.25;letter-spacing:-.035em;margin:10px 0}.empty p{max-width:570px;color:var(--ad-muted)}.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}.setup-card{background:var(--ad-surface);border:1px solid var(--ad-line);border-radius:12px;padding:22px}.setup-card h4{font-size:15px;margin:4px 0 10px}.step{font-size:11px;color:var(--ad-accent);font-weight:600}.command{font:12px/1.6 ui-monospace,monospace;background:var(--ad-field);border-radius:8px;padding:12px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.connect-form{margin:24px 0}.connect-form label{display:block;margin-bottom:8px;font-weight:550}.connect-form textarea{font:12px/1.6 ui-monospace,monospace}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:18px}.inline{display:flex;align-items:center;gap:8px}.host-label{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.links{margin-top:24px;padding-top:18px;border-top:1px solid var(--ad-line)}.connections{padding:10px 0;border-bottom:1px solid var(--ad-line);display:flex;justify-content:space-between;gap:16px}.connection-meta{font-size:11px;color:var(--ad-muted);overflow-wrap:anywhere}.new-provider{border:1px dashed var(--ad-line);width:100%;margin-top:15px;text-align:left}.save-row{justify-content:flex-end}.loading{padding:50px;text-align:center;color:var(--ad-muted)}
 .setup-host{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border:1px solid var(--ad-line);border-radius:10px;padding:12px 16px;margin-bottom:22px;overflow-wrap:anywhere}.setup-host .hint{flex-basis:100%}.setup-host .small{overflow-wrap:anywhere;min-width:0}.provider-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.provider-choice,.method-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:16px}.provider-choice strong{font-size:15px}.provider-choice .hint{margin-top:auto;padding-top:8px}.method-list{display:grid;gap:10px;margin:18px 0}.method-choice.chosen{border-color:var(--ad-accent);background:var(--ad-surface)}.method-choice strong:before{content:"○";margin-right:8px;color:var(--ad-muted)}.method-choice.chosen strong:before{content:"●";color:var(--ad-accent)}.setup-title h4{font-size:20px;margin:3px 0}.advanced summary{cursor:pointer;color:var(--ad-muted);padding:8px 0}.advanced .group{margin-top:6px}.hint a{color:var(--ad-accent);white-space:normal}
-@media(max-width:760px){.provider-catalog{grid-template-columns:1fr}.setup-title{flex-wrap:wrap}.top{padding:18px;align-items:flex-start;flex-wrap:wrap}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--ad-line);display:flex;gap:6px;overflow:auto;align-items:center}.side-label{display:none}.provider{flex:0 0 205px}.new-provider{width:auto;white-space:nowrap;margin:0}.detail{padding:22px 18px}.field{grid-template-columns:1fr;gap:9px;padding:14px}.setup-grid{grid-template-columns:1fr}.empty{padding:26px 20px}.empty h3{font-size:25px}.host-label{max-width:180px}.model{gap:3px}.model-toolbar{align-items:flex-start;flex-wrap:wrap}.model .model-name{font-size:11px}.footer{flex-wrap:wrap}}
+@media(max-width:760px){.connection-facts{grid-template-columns:1fr}.provider-catalog{grid-template-columns:1fr}.setup-title{flex-wrap:wrap}.top{padding:18px;align-items:flex-start;flex-wrap:wrap}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--ad-line);display:flex;gap:6px;overflow:auto;align-items:center}.side-label{display:none}.provider{flex:0 0 205px}.new-provider{width:auto;white-space:nowrap;margin:0}.detail{padding:22px 18px}.field{grid-template-columns:1fr;gap:9px;padding:14px}.setup-grid{grid-template-columns:1fr}.empty{padding:26px 20px}.empty h3{font-size:25px}.host-label{max-width:180px}.model{gap:3px}.model-toolbar{align-items:flex-start;flex-wrap:wrap}.model .model-name{font-size:11px}.footer{flex-wrap:wrap}}
 `;
 
 export function registerProviderPanel(
@@ -148,6 +158,7 @@ export function registerProviderPanel(
     private root = this.attachShadow({ mode: "open" });
     private state?: ProviderPanelState;
     private selected = "";
+    private revealedAccounts = new Set<string>();
     private tab = "runtime";
     private query = "";
     private busy = false;
@@ -217,6 +228,8 @@ export function registerProviderPanel(
       void this.refresh();
     }
     disconnectedCallback() {
+      this.revealedAccounts.clear();
+      this.render();
       this.generation++;
       clearTimeout(this.setupTimer);
       this.setupSequence++;
@@ -241,6 +254,7 @@ export function registerProviderPanel(
         !Array.isArray(state.providers)
       )
         throw new Error("The panel returned invalid connection state.");
+      this.revealedAccounts.clear();
       this.state = state;
       this.failure = state.connectionError ?? "";
       if (!state.providers.some((p) => p.id === this.selected))
@@ -361,6 +375,7 @@ export function registerProviderPanel(
       }, 2000);
     }
     async refresh() {
+      this.revealedAccounts.clear();
       const generation = ++this.generation;
       clearTimeout(this.setupTimer);
       this.setupSequence++;
@@ -523,9 +538,14 @@ export function registerProviderPanel(
     }
     private change(event: Event) {
       const target = event.target as HTMLSelectElement;
-      if (target.dataset.field === "icon-style" || target.dataset.field === "icon-variant") {
+      if (
+        target.dataset.field === "icon-style" ||
+        target.dataset.field === "icon-variant"
+      ) {
         const prefs = this.preferences();
-        if (target.dataset.field === "icon-style") prefs.iconStyle = target.value === "monochrome" ? "monochrome" : "color";
+        if (target.dataset.field === "icon-style")
+          prefs.iconStyle =
+            target.value === "monochrome" ? "monochrome" : "color";
         else prefs.iconVariant = target.value;
         this.savePreferences(prefs);
         return;
@@ -570,6 +590,13 @@ export function registerProviderPanel(
       this.failure = "";
       this.message = "";
       if (action === "refresh") return this.refresh();
+      if (action === "reveal-account" && button.dataset.id) {
+        const id = button.dataset.id;
+        if (this.revealedAccounts.has(id)) this.revealedAccounts.delete(id);
+        else this.revealedAccounts.add(id);
+        this.render();
+        return;
+      }
       if (action === "remove-provider") {
         this.removalPending = true;
         this.render();
@@ -597,6 +624,7 @@ export function registerProviderPanel(
         });
       }
       if (action === "select") {
+        this.revealedAccounts.clear();
         this.removalPending = false;
         this.selected = button.dataset.id!;
         this.query = "";
@@ -831,6 +859,7 @@ export function registerProviderPanel(
         return;
       }
       if (action === "disconnect") {
+        this.revealedAccounts.clear();
         this.busy = true;
         this.render();
         try {
@@ -894,22 +923,62 @@ export function registerProviderPanel(
         this.render();
       }
     }
+    private identity(
+      id: string,
+      fields: [string, string | undefined | null][],
+    ) {
+      const reported = fields.filter(([, value]) => Boolean(value));
+      if (!reported.length) return '<span class="muted">Not reported</span>';
+      const revealed = this.revealedAccounts.has(id);
+      // The hidden DOM contains placeholders only, including accessibility text.
+      return `<div class="account-identity">${revealed ? reported.map(([label, value]) => `<div class="identity-value"><span class="hint">${escape(label)}</span> ${escape(value)}</div>`).join("") : '<span class="identity-blur" aria-hidden="true">account••••@••••••</span>'}<button class="quiet" data-action="reveal-account" data-id="${escape(id)}" aria-label="${revealed ? "Hide" : "Reveal"} account details" aria-pressed="${revealed}">${revealed ? "Hide" : "Reveal"}</button></div>`;
+    }
+    private connectionDetails(provider: ProviderInfo) {
+      const details = provider.connection,
+        account = details?.account;
+      const signIn =
+        account?.status === "signed-in"
+          ? `Signed in${account.method ? ` · ${account.method}` : ""}`
+          : account?.status === "signed-out"
+            ? "Sign-in required"
+            : provider.health?.code === "CATALOG_AVAILABLE"
+              ? "Credential accepted for catalogue"
+              : "Not confirmed";
+      return `<section class="connection-details" aria-label="Provider connection details"><div class="connection-facts"><div><span class="hint">Runtime</span><strong>${escape(details?.runtime ? `${details.runtime.name} · ${details.runtime.version}` : provider.authMode === "api-key" ? "API endpoint · version not reported" : "Version not reported")}</strong></div><div><span class="hint">Sign-in</span><strong>${escape(signIn)}</strong></div><div><span class="hint">Subscription</span><strong>${escape(account?.subscription ?? "Not reported")}</strong></div><div><span class="hint">Account</span>${this.identity(
+        `provider:${provider.id}`,
+        [
+          ["Name", account?.name],
+          ["Email", account?.email],
+        ],
+      )}</div></div><p class="hint">${details?.source === "native-runtime" ? "Reported by the native runtime" : details?.source === "provider-api" ? "Reported by the provider" : "Refresh to read available connection details"}${details ? ` · ${escape(new Date(details.checkedAt).toLocaleTimeString())}` : ""}. Model execution has not been tested by this check.</p></section>`;
+    }
     private icon(provider: ProviderInfo) {
       const prefs = this.preferences(provider.id);
-      const options = {style: prefs.iconStyle ?? "color", variant: prefs.iconVariant};
-      return resolveProviderIcon(provider.vendor, options) ?? resolveProviderIcon(provider.vendor, {style: options.style}) ?? resolveProviderIcon(provider.usageStatId ?? "", options);
+      const options = {
+        style: prefs.iconStyle ?? "color",
+        variant: prefs.iconVariant,
+      };
+      return (
+        resolveProviderIcon(provider.vendor, options) ??
+        resolveProviderIcon(provider.vendor, { style: options.style }) ??
+        resolveProviderIcon(provider.usageStatId ?? "", options)
+      );
     }
     private appearance(provider?: ProviderInfo) {
       if (!provider) return "";
       const icon = this.icon(provider);
       if (!icon) return "";
       const prefs = this.preferences(provider.id);
-      return `<div class="group icon-preferences"><div class="field"><div><label for="icon-style">Icon style</label><p class="hint">Appearance on this device.</p></div><select id="icon-style" data-field="icon-style"><option value="color" ${prefs.iconStyle !== "monochrome" ? "selected" : ""}>Full colour</option><option value="monochrome" ${prefs.iconStyle === "monochrome" ? "selected" : ""}>Monochrome</option></select></div>${icon.alternatives.length > 1 ? `<div class="field"><label for="icon-variant">Product mark</label><select id="icon-variant" data-field="icon-variant">${icon.alternatives.map(id => `<option value="${escape(id)}" ${icon.id === id ? "selected" : ""}>${escape(providerIcons[id]!.name)}</option>`).join("")}</select></div>` : ""}${icon.requestedStyle !== icon.style ? '<p class="hint">This mark has monochrome artwork only.</p>' : ""}</div>`;
+      return `<div class="group icon-preferences"><div class="field"><div><label for="icon-style">Icon style</label><p class="hint">Appearance on this device.</p></div><select id="icon-style" data-field="icon-style"><option value="color" ${prefs.iconStyle !== "monochrome" ? "selected" : ""}>Full colour</option><option value="monochrome" ${prefs.iconStyle === "monochrome" ? "selected" : ""}>Monochrome</option></select></div>${icon.alternatives.length > 1 ? `<div class="field"><label for="icon-variant">Product mark</label><select id="icon-variant" data-field="icon-variant">${icon.alternatives.map((id) => `<option value="${escape(id)}" ${icon.id === id ? "selected" : ""}>${escape(providerIcons[id]!.name)}</option>`).join("")}</select></div>` : ""}${icon.requestedStyle !== icon.style ? '<p class="hint">This mark has monochrome artwork only.</p>' : ""}</div>`;
     }
     private avatar(provider: ProviderInfo) {
       const presentation = this.state?.presentations?.[provider.id];
       const prefs = this.preferences(provider.id);
-      if (presentation?.icon.kind === "asset" && !prefs.iconStyle && !prefs.iconVariant) {
+      if (
+        presentation?.icon.kind === "asset" &&
+        !prefs.iconStyle &&
+        !prefs.iconVariant
+      ) {
         try {
           const path = assetPath(presentation.icon.asset.src);
           return `<span class="avatar"><img src="${escape(path)}" alt="${escape(presentation.icon.alt)}"></span>`;
@@ -918,8 +987,14 @@ export function registerProviderPanel(
         }
       }
       const icon = this.icon(provider);
-      const svg = icon && providerIconSvg(icon.id, {style: icon.style, prefix: `ad-${this.preferenceScope}-${this.state?.providers.indexOf(provider) ?? 0}`});
-      if (svg) return `<span class="avatar brand-mark" aria-hidden="true">${svg}</span>`;
+      const svg =
+        icon &&
+        providerIconSvg(icon.id, {
+          style: icon.style,
+          prefix: `ad-${this.preferenceScope}-${this.state?.providers.indexOf(provider) ?? 0}`,
+        });
+      if (svg)
+        return `<span class="avatar brand-mark" aria-hidden="true">${svg}</span>`;
       return `<span class="avatar" aria-hidden="true">${escape(presentation?.icon.kind === "fallback" ? presentation.icon.text : provider.name.slice(0, 2).toUpperCase())}</span>`;
     }
     private field(
@@ -986,7 +1061,17 @@ export function registerProviderPanel(
               "https://auth.openai.com/codex/device"
               ? a.interaction
               : undefined;
-          return `<article class="setup-card"><div class="eyebrow">${escape(a.name)} · ${escape(this.state?.connection?.label ?? "Connected host")}</div><h4>${escape(statuses[a.phase] ?? a.phase)}</h4>${device ? `<p>Open the official ChatGPT page and enter this code:</p><pre class="command" aria-label="Device sign-in code">${escape(device.userCode)}</pre><a href="https://auth.openai.com/codex/device" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open ChatGPT sign-in ↗</a><p class="hint">Sign in only if you started this connection. Return here to confirm the verified account.</p>` : ""}${a.phase === "ready" && a.account ? `<p><strong>${escape(a.account.email ?? "ChatGPT account")}</strong> · ${escape(a.account.plan)}</p>${a.account.providerAccountId ? `<p class="hint">Provider account: ${escape(a.account.providerAccountId)}</p>` : ""}<p>Connect this account as <strong>${escape(a.name)}</strong> on ${escape(this.state?.connection?.label ?? "this host")}?</p><button class="primary" data-action="setup-accept" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Confirm account</button>` : ""}${a.error ? `<p class="notice error" role="alert">${escape(a.error.message)}</p>` : ""}${active ? `<div class="footer"><span class="hint">Sign-in expires ${escape(new Date(a.expiresAt).toLocaleTimeString())} · Existing accounts stay connected.</span><button data-action="setup-cancel" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Cancel sign-in</button></div>` : `<p class="hint">${a.phase === "succeeded" ? "Account verified. No model was run and application permissions stay unchanged." : "You can start a new attempt from Add provider."}</p>`}</article>`;
+          return `<article class="setup-card"><div class="eyebrow">${escape(a.name)} · ${escape(this.state?.connection?.label ?? "Connected host")}</div><h4>${escape(statuses[a.phase] ?? a.phase)}</h4>${device ? `<p>Open the official ChatGPT page and enter this code:</p><pre class="command" aria-label="Device sign-in code">${escape(device.userCode)}</pre><a href="https://auth.openai.com/codex/device" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open ChatGPT sign-in ↗</a><p class="hint">Sign in only if you started this connection. Return here to confirm the verified account.</p>` : ""}${
+            a.phase === "ready" && a.account
+              ? `<p><strong>ChatGPT account</strong> · ${escape(a.account.plan)}</p>${this.identity(
+                  `setup:${a.id}`,
+                  [
+                    ["Email", a.account.email],
+                    ["Provider account", a.account.providerAccountId],
+                  ],
+                )}<p>Connect this account as <strong>${escape(a.name)}</strong> on ${escape(this.state?.connection?.label ?? "this host")}?</p><button class="primary" data-action="setup-accept" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Confirm account</button>`
+              : ""
+          }${a.error ? `<p class="notice error" role="alert">${escape(a.error.message)}</p>` : ""}${active ? `<div class="footer"><span class="hint">Sign-in expires ${escape(new Date(a.expiresAt).toLocaleTimeString())} · Existing accounts stay connected.</span><button data-action="setup-cancel" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Cancel sign-in</button></div>` : `<p class="hint">${a.phase === "succeeded" ? "Account verified. No model was run and application permissions stay unchanged." : "You can start a new attempt from Add provider."}</p>`}</article>`;
         })
         .join("")}</section>`;
     }
@@ -1270,11 +1355,11 @@ export function registerProviderPanel(
             const config = state.management?.providers.find(
               (p) => p.id === provider.id,
             );
-            return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}</strong><small>${config?.enabled === false ? "Disabled" : provider.authMode === "cli-session" ? "Subscription / local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
+            return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` · ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
           })
           .join(
             "",
-          )}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? (state.management ? "No providers configured" : "No providers granted"))}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? (state.management ? "Configure an account on the connected host." : "Ask the host operator for a provider grant."))}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding && selected ? this.modelList(selected) : (this.appearance(selected) + this.runtime(selected))}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.removalSection()}${this.connectionSection()}</main></div>`;
+          )}${state.management ? '<button class="new-provider" data-action="add">＋ Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? (state.management ? "No providers configured" : "No providers granted"))}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? (state.management ? "Configure an account on the connected host." : "Ask the host operator for a provider grant."))}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} · Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? this.connectionDetails(selected) : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding && selected ? this.modelList(selected) : this.appearance(selected) + this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.removalSection()}${this.connectionSection()}</main></div>`;
       this.root.innerHTML = `<section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
       if (focusField === "query" || focusField === "provider-query") {
         const input = this.root.querySelector<HTMLInputElement>(

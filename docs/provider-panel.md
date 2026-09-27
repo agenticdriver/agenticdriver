@@ -214,3 +214,30 @@ Reuse Usagestat's existing provider metadata/assets. The TypeScript bridge accep
 ## Validation
 
 The shared panel is checked in the native T3 browser at desktop and narrow widths. Protocol tests exercise role restrictions, revisions, private profile reload, expired connections, browser origin checks, and credential non-disclosure. Installed language packages exercise the management bridge over real HTTP and certificate-verified HTTPS, preserving unrestricted and empty model lists. All CI runs use Prometheus. Browser inspection and catalog refresh do not spend inference tokens.
+
+## Icons and connection information
+
+Settings uses the shared [provider icon library](provider-icons.md), with full
+colour/monochrome and product-mark choices stored on this device for each
+connection and provider. Icons work offline in every language's bundled panel
+and in the desktop Companion. These preferences make no host configuration or
+model requests.
+
+The connection card shows the reported CLI version, sign-in method/status and
+subscription. Account email/name is masked and visually blurred by default.
+**Reveal** displays reported fields; **Hide**, switching providers, refreshing,
+disconnecting or reopening the component masks them again. The hidden DOM,
+accessibility labels and browser preferences contain no reported identity.
+Owned-sign-in confirmation uses the same control. Provider labels and explicit
+host account IDs remain configuration labels, separate from native identity.
+
+Absent fields say **Not reported**. Saved sign-in, reachable catalogue,
+execution permissions and a successful model run remain distinct; refreshing
+this card never invokes a model. See [discovery](discovery.md#connection-details)
+for the typed metadata contract and runtime limitations.
+
+For a repeatable visual fixture with synthetic identities only, run `npm run
+build` then `node scripts/preview-provider-details.mjs`. Check reveal/hide by
+keyboard, refresh and provider-switch masking, icon preferences through reload,
+light/dark themes, and 390px/1920px layouts. This fixture has no provider calls
+and disallows network connections in its content security policy.

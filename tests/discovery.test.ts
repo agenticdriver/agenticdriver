@@ -512,7 +512,7 @@ if (args.includes('--version')) {
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line) as string[]);
-      assert.equal(calls.length, 7);
+      assert.equal(calls.length, 9);
       assert(
         calls.every(
           (args) =>
@@ -555,6 +555,10 @@ else if (args[0] === 'app-server') {
     fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify({ mode, ...message })+'\\n');
     if (message.method === 'initialize') send({ id: message.id, result: {} });
     else if (message.method === 'initialized') {}
+    else if (message.method === 'account/read') {
+      if (message.params.refreshToken !== false) process.exit(9);
+      send({id: message.id, result: {account: {type: 'chatgpt', email: 'fixture@example.invalid', planType: 'plus', accessToken: 'must-not-leak'}}});
+    }
     else if (message.method === 'model/list') {
       if (message.params.includeHidden !== true || message.params.limit !== 100) process.exit(9);
       if (mode === 'authority') return send({ id: 42, method: 'item/tool/call', params: {} });
@@ -589,6 +593,14 @@ else if (args[0] === 'app-server') {
         models: ["permitted", "hidden", "additional"],
         complete: true,
       });
+      assert.equal(good!.connection?.runtime?.version, "0.157.0");
+      assert.deepEqual(good!.connection?.account, {
+        status: "signed-in",
+        method: "ChatGPT",
+        email: "fixture@example.invalid",
+        subscription: "plus",
+      });
+      assert.doesNotMatch(JSON.stringify(good), /must-not-leak|accessToken/);
       assert.equal(good!.health?.code, "CLI_CATALOG_AVAILABLE");
       assert.equal(good!.health?.status, "unknown");
       assert.match(good!.health!.message, /cached or bundled/);
@@ -617,7 +629,9 @@ else if (args[0] === 'app-server') {
         .map((line) => JSON.parse(line));
       assert.ok(
         messages.every((message) =>
-          ["initialize", "initialized", "model/list"].includes(message.method),
+          ["initialize", "initialized", "account/read", "model/list"].includes(
+            message.method,
+          ),
         ),
       );
       assert.equal(

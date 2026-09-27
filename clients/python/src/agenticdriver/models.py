@@ -147,6 +147,32 @@ class ProviderHealth(TypedDict):
     checkedAt: str
 
 
+class ProviderRuntime(TypedDict):
+    name: str
+    version: str
+
+
+class _ProviderAccount(TypedDict):
+    status: Literal["signed-in", "signed-out", "unknown"]
+
+
+class ProviderAccount(_ProviderAccount, total=False):
+    method: str
+    email: str
+    name: str
+    subscription: str
+
+
+class _ProviderConnectionDetails(TypedDict):
+    source: Literal["native-runtime", "provider-api"]
+    checkedAt: str
+
+
+class ProviderConnectionDetails(_ProviderConnectionDetails, total=False):
+    runtime: ProviderRuntime
+    account: ProviderAccount
+
+
 class ModelCatalog(TypedDict):
     source: Literal["provider", "configured", "unavailable"]
     models: list[str]
@@ -165,6 +191,7 @@ class ProviderInfo(_Provider, total=False):
     models: list[str]
     inputMediaTypes: dict[str, list[MediaType]]
     usageStatId: str
+    connection: ProviderConnectionDetails
     health: ProviderHealth
     modelCatalog: ModelCatalog
 
@@ -360,6 +387,9 @@ __all__ = [
     "RunResult",
     "ErrorInfo",
     "ProviderHealth",
+    "ProviderConnectionDetails",
+    "ProviderRuntime",
+    "ProviderAccount",
     "ModelCatalog",
     "ProviderInfo",
     "ProtocolInfo",

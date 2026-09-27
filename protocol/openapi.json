@@ -5245,6 +5245,74 @@
         "required": ["corpus", "sourceId", "revision", "deleted"],
         "additionalProperties": false
       },
+      "ProviderConnectionDetails": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": ["native-runtime", "provider-api"]
+          },
+          "runtime": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              }
+            },
+            "required": ["name", "version"]
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["signed-in", "signed-out", "unknown"]
+              },
+              "method": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              },
+              "email": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 320,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              },
+              "subscription": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+              }
+            },
+            "required": ["status"]
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          }
+        },
+        "required": ["source", "checkedAt"]
+      },
       "ProviderHealth": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -6021,6 +6089,9 @@
             }
           },
           "health": { "$ref": "#/components/schemas/ProviderHealth" },
+          "connection": {
+            "$ref": "#/components/schemas/ProviderConnectionDetails"
+          },
           "modelCatalog": { "$ref": "#/components/schemas/ModelCatalog" },
           "capabilities": {
             "type": "object",

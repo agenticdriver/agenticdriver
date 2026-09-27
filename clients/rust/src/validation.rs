@@ -33,6 +33,44 @@ pub(crate) fn optional_health<'de, D: Deserializer<'de>>(
     }
     Ok(Some(value))
 }
+pub(crate) fn present<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<T>, D::Error> {
+    T::deserialize(deserializer).map(Some)
+}
+pub(crate) fn optional_connection<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<crate::ProviderConnectionDetails>, D::Error> {
+    let value = crate::ProviderConnectionDetails::deserialize(deserializer)?;
+    let display = |s: &str, max| {
+        !s.trim().is_empty()
+            && s.chars().count() <= max
+            && !s.chars().any(|c| (c as u32) < 32 || c == '\u{7f}')
+    };
+    let valid = matches!(value.source.as_str(), "native-runtime" | "provider-api")
+        && timestamp_valid(&value.checked_at)
+        && value
+            .runtime
+            .as_ref()
+            .is_none_or(|r| display(&r.name, 100) && display(&r.version, 80))
+        && value.account.as_ref().is_none_or(|a| {
+            matches!(a.status.as_str(), "signed-in" | "signed-out" | "unknown")
+                && [
+                    (&a.method, 80),
+                    (&a.email, 320),
+                    (&a.name, 200),
+                    (&a.subscription, 120),
+                ]
+                .iter()
+                .all(|(s, max)| s.as_ref().is_none_or(|s| display(s, *max)))
+        });
+    if !valid {
+        return Err(serde::de::Error::custom(
+            "Invalid provider connection details",
+        ));
+    }
+    Ok(Some(value))
+}
 pub(crate) fn optional_catalog<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> std::result::Result<Option<ModelCatalog>, D::Error> {

@@ -58,6 +58,24 @@ def valid_result(value, request, run_id=None):
             value.get("finishReason") in ("stop", "length") and valid_usage(value.get("usage")) and valid_context_result(value, valid_timestamp) and valid_retrieval_links(value, request) and valid_session_result(value, request, valid_timestamp))
 
 
+def valid_connection(value):
+    def display(v, maximum):
+        return isinstance(v, str) and bool(v.strip()) and len(v) <= maximum and not re.search(r"[\x00-\x1f\x7f]", v)
+    if not isinstance(value, dict) or value.get("source") not in ("native-runtime", "provider-api") or not valid_timestamp(value.get("checkedAt")):
+        return False
+    if "runtime" in value:
+        r = value["runtime"]
+        if not isinstance(r, dict) or not display(r.get("name"), 100) or not display(r.get("version"), 80):
+            return False
+    if "account" in value:
+        a = value["account"]
+        if not isinstance(a, dict) or a.get("status") not in ("signed-in", "signed-out", "unknown"):
+            return False
+        if any(k in a and not display(a[k], n) for k, n in [("method",80), ("email",320), ("name",200), ("subscription",120)]):
+            return False
+    return True
+
+
 def valid_catalog(value):
     if not isinstance(value, dict) or not isinstance(value.get("providers"), list):
         return False
@@ -74,6 +92,8 @@ def valid_catalog(value):
         if "inputMediaTypes" in provider and not valid_media_catalog(provider["inputMediaTypes"]):
             return False
         if "usageStatId" in provider and not isinstance(provider["usageStatId"], str):
+            return False
+        if "connection" in provider and not valid_connection(provider["connection"]):
             return False
         if "health" in provider:
             health = provider["health"]

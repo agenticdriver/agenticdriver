@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ProviderConnectionMetadataSchema } from "./types.js";
 import { abortable } from "./errors.js";
 import type {
   ProviderAdapter,
@@ -57,7 +58,7 @@ const messages: Record<
   ],
   CLI_UPGRADE_REQUIRED: [
     "unsupported",
-    "Upgrade the CLI to a version with the required restricted execution features.",
+    "This CLI does not meet the adapter's qualified execution requirements. Check the supported runtime version and features.",
   ],
   CLI_SESSION_PRESENT: [
     "unknown",
@@ -97,13 +98,14 @@ const inspectionSchema = z
       .max(1000)
       .optional(),
     complete: z.boolean().optional(),
+    connection: ProviderConnectionMetadataSchema.optional(),
   })
   .refine(
     (value) =>
       !["CATALOG_AVAILABLE", "CLI_CATALOG_AVAILABLE"].includes(value.code) ||
       value.models !== undefined,
   );
-type Snapshot = Pick<ProviderInfo, "health" | "modelCatalog">;
+type Snapshot = Pick<ProviderInfo, "health" | "modelCatalog" | "connection">;
 
 /** One cache per driver and instance. Callers must filter authorization before invoking it. */
 export class ProviderDiscovery {
@@ -170,6 +172,9 @@ export class ProviderDiscovery {
         : { code: "INVALID_DISCOVERY_RESPONSE" as const };
       const [status, message] = messages[result.code];
       return {
+        connection: result.connection
+          ? { ...result.connection, checkedAt: new Date().toISOString() }
+          : undefined,
         health: {
           status,
           code: result.code,
@@ -199,6 +204,7 @@ export class ProviderDiscovery {
         : "DISCOVERY_FAILED";
       const [status, message] = messages[code];
       return {
+        connection: undefined,
         health: { status, code, message, checkedAt: new Date().toISOString() },
         modelCatalog: {
           source: provider.info.models ? "configured" : "unavailable",

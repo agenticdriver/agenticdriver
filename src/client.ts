@@ -82,6 +82,7 @@ import {
 import {
   ModelCatalogSchema,
   ProviderHealthSchema,
+  ProviderConnectionDetailsSchema,
   UsageSchema,
 } from "./types.js";
 import { abortable, cancelOnClose, DriverError } from "./errors.js";
@@ -94,6 +95,8 @@ export type {
   RunEvent,
   ProviderInfo,
   ProviderHealth,
+  ProviderConnectionDetails,
+  ProviderConnectionMetadata,
   ModelCatalog,
   Usage,
   ErrorInfo,
@@ -610,6 +613,7 @@ export class AgenticClient {
               .optional(),
             usageStatId: z.string().optional(),
             health: ProviderHealthSchema.optional(),
+            connection: ProviderConnectionDetailsSchema.optional(),
             modelCatalog: ModelCatalogSchema.optional(),
             capabilities: z
               .object({

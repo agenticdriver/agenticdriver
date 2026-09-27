@@ -426,6 +426,11 @@ try {
   assert.equal(catalog.code, "CLI_CATALOG_AVAILABLE");
   assert.ok(catalog.models.length > 0);
   assert.equal(catalog.complete, true);
+  assert.equal(catalog.connection.runtime.version, "0.157.0");
+  assert.deepEqual(catalog.connection.account, {
+    status: "signed-in",
+    method: "API key",
+  });
   assert.equal(
     requests.length,
     beforeCatalog,

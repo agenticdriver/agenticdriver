@@ -11102,6 +11102,347 @@
         "version": 1,
         "attempts": []
       }
+    },
+    {
+      "id": "connection-details-valid",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "connection-details-null",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": null
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-bad-source",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "inferred",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-bad-date",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "yesterday",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-null-runtime",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": null,
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-invalid-version",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": 5
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-null-account",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": null
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-null-email",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": null,
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-invalid-status",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "verified",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-oversized-subscription",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "Synthetic Person",
+                "subscription": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
+    },
+    {
+      "id": "connection-details-control-name",
+      "operation": "providers",
+      "json": {
+        "providers": [
+          {
+            "id": "fixture",
+            "name": "Fixture",
+            "vendor": "codex",
+            "authMode": "cli-session",
+            "capabilities": {
+              "tools": false,
+              "textStreaming": false
+            },
+            "connection": {
+              "source": "native-runtime",
+              "checkedAt": "2026-09-27T12:00:00.000Z",
+              "runtime": {
+                "name": "Codex CLI",
+                "version": "0.157.0"
+              },
+              "account": {
+                "status": "signed-in",
+                "email": "fixture@example.invalid",
+                "name": "name\u0000control",
+                "subscription": "Example"
+              }
+            }
+          }
+        ]
+      },
+      "expectedError": "INVALID_RESPONSE"
     }
   ]
 }

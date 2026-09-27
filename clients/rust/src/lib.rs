@@ -257,9 +257,45 @@ pub struct Provider {
     #[serde(default, deserialize_with = "validation::optional_health")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub health: Option<ProviderHealth>,
+    #[serde(default, deserialize_with = "validation::optional_connection")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connection: Option<ProviderConnectionDetails>,
     #[serde(default, deserialize_with = "validation::optional_catalog")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model_catalog: Option<ModelCatalog>,
+}
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderConnectionDetails {
+    pub source: String,
+    pub checked_at: String,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runtime: Option<ProviderRuntime>,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub account: Option<ProviderAccount>,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProviderRuntime {
+    pub name: String,
+    pub version: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProviderAccount {
+    pub status: String,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub method: Option<String>,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, deserialize_with = "validation::present")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription: Option<String>,
 }
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

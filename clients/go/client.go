@@ -88,21 +88,39 @@ type Result struct {
 	FinishReason string            `json:"finishReason"`
 }
 type Provider struct {
-	InputMediaTypes map[string][]string `json:"inputMediaTypes,omitempty"`
-	ID              string              `json:"id"`
-	Name            string              `json:"name"`
-	Vendor          string              `json:"vendor"`
-	AuthMode        string              `json:"authMode"`
-	Models          []string            `json:"models,omitempty"`
-	UsageStatID     string              `json:"usageStatId,omitempty"`
-	Health          *ProviderHealth     `json:"health,omitempty"`
-	ModelCatalog    *ModelCatalog       `json:"modelCatalog,omitempty"`
+	InputMediaTypes map[string][]string        `json:"inputMediaTypes,omitempty"`
+	ID              string                     `json:"id"`
+	Name            string                     `json:"name"`
+	Vendor          string                     `json:"vendor"`
+	AuthMode        string                     `json:"authMode"`
+	Models          []string                   `json:"models,omitempty"`
+	UsageStatID     string                     `json:"usageStatId,omitempty"`
+	Connection      *ProviderConnectionDetails `json:"connection,omitempty"`
+	Health          *ProviderHealth            `json:"health,omitempty"`
+	ModelCatalog    *ModelCatalog              `json:"modelCatalog,omitempty"`
 	Capabilities    struct {
 		HistoryContinuation bool `json:"historyContinuation"`
 		NativeContinuation  bool `json:"nativeContinuation"`
 		Tools               bool `json:"tools"`
 		TextStreaming       bool `json:"textStreaming"`
 	} `json:"capabilities"`
+}
+type ProviderConnectionDetails struct {
+	Source    string           `json:"source"`
+	CheckedAt string           `json:"checkedAt"`
+	Runtime   *ProviderRuntime `json:"runtime,omitempty"`
+	Account   *ProviderAccount `json:"account,omitempty"`
+}
+type ProviderRuntime struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+type ProviderAccount struct {
+	Status       string `json:"status"`
+	Method       string `json:"method,omitempty"`
+	Email        string `json:"email,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Subscription string `json:"subscription,omitempty"`
 }
 type ProviderHealth struct {
 	Status    string `json:"status"`

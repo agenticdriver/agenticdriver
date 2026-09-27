@@ -172,6 +172,39 @@ export const ProviderHealthSchema = z.object({
   checkedAt: z.iso.datetime({ offset: true }),
 });
 export type ProviderHealth = z.infer<typeof ProviderHealthSchema>;
+/** Safe display fields reported by a read-only native or API inspection. Not execution proof. */
+const connectionText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+    .regex(/^[^\u0000-\u001f\u007f]*$/);
+export const ProviderConnectionMetadataSchema = z.object({
+  source: z.enum(["native-runtime", "provider-api"]),
+  runtime: z
+    .object({ name: connectionText(100), version: connectionText(80) })
+    .optional(),
+  account: z
+    .object({
+      status: z.enum(["signed-in", "signed-out", "unknown"]),
+      method: connectionText(80).optional(),
+      email: connectionText(320).optional(),
+      name: connectionText(200).optional(),
+      subscription: connectionText(120).optional(),
+    })
+    .optional(),
+});
+export const ProviderConnectionDetailsSchema =
+  ProviderConnectionMetadataSchema.extend({
+    checkedAt: z.iso.datetime({ offset: true }),
+  });
+export type ProviderConnectionMetadata = z.infer<
+  typeof ProviderConnectionMetadataSchema
+>;
+export type ProviderConnectionDetails = z.infer<
+  typeof ProviderConnectionDetailsSchema
+>;
 export const ModelCatalogSchema = z.object({
   source: z.enum(["provider", "configured", "unavailable"]),
   models: z.array(z.string()).max(1000),
@@ -197,6 +230,7 @@ export type ProviderInspectionCode =
   | "DISCOVERY_TIMEOUT"
   | "DISCOVERY_FAILED";
 export interface ProviderInspection {
+  connection?: ProviderConnectionMetadata;
   code: ProviderInspectionCode;
   models?: string[];
   complete?: boolean;
@@ -218,6 +252,7 @@ export interface ProviderInfo {
   usageStatId?: string;
   /** Advisory discovery metadata. It never changes the allowlist or run selection. */
   health?: ProviderHealth;
+  connection?: ProviderConnectionDetails;
   modelCatalog?: ModelCatalog;
 }
 export interface ProviderAdapter {

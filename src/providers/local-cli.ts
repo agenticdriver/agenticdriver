@@ -1,6 +1,7 @@
 import { cliEnvironment, runProcess } from "./cli-process.js";
 export { runProcess } from "./cli-process.js";
 import { codexAppServer } from "./codex-app-server.js";
+import { cliVersion, claudeAccount } from "./connection-metadata.js";
 import { claudeCatalog } from "./claude-catalog.js";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -12,6 +13,7 @@ import { codexCliFailure } from "./codex-cli-errors.js";
 import { geminiCliFailure } from "./gemini-cli-errors.js";
 import type {
   ProviderAdapter,
+  ProviderConnectionMetadata,
   ProviderContext,
   ProviderTurn,
   Usage,
@@ -118,13 +120,23 @@ function localCli(
       }[vendor],
     },
     async inspect({ signal }) {
+      const connection: ProviderConnectionMetadata = {
+        source: "native-runtime",
+      };
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-inspect-"));
       try {
+        const version = await runProcess(binary, ["--version"], {
+          env,
+          cwd,
+          signal,
+        });
+        connection.runtime = cliVersion(vendor, version);
         await checkFeatures(signal, cwd);
-        if (vendor === "gemini-cli") return { code: "CLI_STATUS_UNKNOWN" };
+        if (vendor === "gemini-cli")
+          return { code: "CLI_STATUS_UNKNOWN", connection };
         let exitCode: number | null = null;
-        // Output can contain account identifiers or masked keys. Retain nothing in the result.
-        await runProcess(binary, ["auth", "status"], {
+        // Parse only allowlisted display fields; discard raw output and paths.
+        const status = await runProcess(binary, ["auth", "status", "--json"], {
           env,
           cwd,
           signal,
@@ -133,16 +145,19 @@ function localCli(
             exitCode = code;
           },
         });
+        connection.account = claudeAccount(status, exitCode === 0);
         if (exitCode === 0) {
           const catalog = await claudeCatalog(binary, claudeArguments(), {
             env,
             cwd,
             signal,
           });
-          if (catalog) return { code: "CLI_CATALOG_AVAILABLE", ...catalog };
+          if (catalog)
+            return { code: "CLI_CATALOG_AVAILABLE", ...catalog, connection };
         }
         return {
           code: exitCode === 0 ? "CLI_SESSION_PRESENT" : "CLI_AUTH_REQUIRED",
+          connection,
         };
       } catch (error) {
         signal.throwIfAborted();
@@ -152,8 +167,8 @@ function localCli(
             error.code === "CLI_UPGRADE_REQUIRED" ||
             error.code === "INVALID_DISCOVERY_RESPONSE")
         )
-          return { code: error.code };
-        return { code: "CLI_STATUS_UNKNOWN" };
+          return { code: error.code, connection };
+        return { code: "CLI_STATUS_UNKNOWN", connection };
       } finally {
         await rm(cwd, { recursive: true, force: true });
       }
