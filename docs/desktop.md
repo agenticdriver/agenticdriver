@@ -211,6 +211,14 @@ npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
 node apps/desktop/scripts/native-smoke.mjs /absolute/path/to/linux-unpacked/agenticdriver-desktop
 ```
 
+For an explicitly selected remote machine with existing pinned SSH access and
+Python 3, the optional transport check is
+`node apps/desktop/scripts/test-ssh-connection.mjs YOUR_SSH_ALIAS`. It creates a
+temporary mock-only host and a remote loopback reverse tunnel, verifies pairing
+and metadata access without running a model, then revokes the grant and removes
+its state. It does not change the remote SSH server or install a service. This
+check is opt-in and never runs as part of ordinary SDK tests or CI.
+
 Tests cover actual SDK hosts, private file permissions, durable endpoint/profile
 restoration, remote management, grant rejection/revocation, write-only credentials,
 metadata refresh during a streamed fixture run and protected shutdown. The native

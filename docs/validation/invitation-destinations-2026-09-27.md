@@ -35,3 +35,21 @@ provider account, model, application data, firewall, shared service or installed
 desktop session was changed. Prometheus runs the packaged smoke at both sizes;
 the issue records the final CI receipt. T3 browser interactions remain unavailable
 because no automation host is attached.
+
+## Opt-in two-machine SSH check
+
+`node apps/desktop/scripts/test-ssh-connection.mjs prometheus` passed against the
+existing pinned SSH host on 2026-09-27. A temporary mock-only desktop host ran on
+the workstation. OpenSSH allocated a remote loopback port on Prometheus and
+forwarded it back to that host. A Python client running on Prometheus exchanged
+the invitation, read protocol 1.0 and discovered only `ssh-fixture`. Reusing the
+invitation was rejected. Linux socket inspection confirmed a loopback-only bind.
+SSH host-key verification remained required.
+
+The check revoked its temporary grant, closed its own SSH process and host,
+and removed its temporary profile. It made zero model calls, wrote no provider
+credentials to Prometheus, changed no SSH/firewall policy and restarted no shared
+service. The script requires an explicit existing SSH destination and is excluded
+from ordinary tests/CI; do not run it against an unselected machine. This receipt
+qualifies the tested reverse route, not every SSH server policy or the opposite
+forwarding direction.
