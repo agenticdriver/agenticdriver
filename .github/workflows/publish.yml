@@ -67,7 +67,28 @@ jobs:
       - name: Verify the registry has the exact reviewed bytes
         env:
           BUNDLE: ${{ steps.candidate.outputs.bundle }}
-        run: python3 scripts/publish.py verify --bundle "$BUNDLE" --registry npm
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          import sys
+          import time
+          sys.path.insert(0, "scripts")
+          from publish import check_registry, pending_files
+          from release import verify
+          bundle = Path(os.environ["BUNDLE"])
+          manifest = verify(bundle, require_clean=True)
+          for attempt in range(19):
+              # Only absence is retried. Auth errors, outages and wrong bytes
+              # raise immediately; this loop never repeats the upload.
+              if not pending_files(bundle, manifest, "npm"):
+                  check_registry(bundle, "npm")
+                  break
+              if attempt == 18:
+                  raise SystemExit("npm accepted publication but availability is still pending; inspect before retrying")
+              print("Waiting for npm registry processing", flush=True)
+              time.sleep(10)
+          PYTHON
   package:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (inputs.registry == 'python' || inputs.registry == 'rust')
     runs-on: [self-hosted, linux, x64, prometheus-ci]
