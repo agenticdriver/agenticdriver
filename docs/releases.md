@@ -7,10 +7,11 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-The opt-in **0.2.0-alpha.2** preview (Python **0.2.0a2**) is published on GitHub,
-crates.io and the Go module proxy, including the Linux desktop companion. The
-public npm archive is installable while npm member sign-in is pending; Python
-wheel/sdist downloads are available while PyPI organization approval is pending.
+The opt-in **0.2.0-alpha.2** preview (Python **0.2.0a2**) is published on npm,
+GitHub, crates.io and the Go module proxy, including the Linux desktop companion.
+npm registry publication was verified on 2026-09-27: `alpha` points to this preview
+and stable `latest` remains `0.1.0`. Python wheel/sdist downloads are available
+while PyPI organization approval is pending.
 It fixes the TypeScript host-helper declaration issue
 found by application acceptance checks after alpha.1 publication. Alpha.1's
 GitHub/Rust/Go artifacts remain immutable; its npm upload was held.

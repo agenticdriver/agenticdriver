@@ -1,6 +1,6 @@
 # 0.2.0-alpha.2 publication evidence
 
-Verified on 2026-09-26. This application preview contains the SDK, shared
+Release verified on 2026-09-26; npm registry publication verified on 2026-09-27. This application preview contains the SDK, shared
 provider/connection component and Linux desktop companion. Wire protocol remains
 **1.0**. Alpha.1's published archives and tags remain unchanged.
 
@@ -69,7 +69,7 @@ The npm lockfile integrity is
 
 | Channel | Version | Evidence or remaining gate |
 | --- | --- | --- |
-| npm | `@agenticdriver/sdk@0.2.0-alpha.2` | Public GitHub archive install verified; registry upload awaits renewed member sign-in. Stable `latest` remains `0.1.0`. |
+| npm | `@agenticdriver/sdk@0.2.0-alpha.2` | Published to the `alpha` tag; registry archive and fresh registry installation verified. Stable `latest` remains `0.1.0`. |
 | crates.io | `agenticdriver = "=0.2.0-alpha.2"` | Published through GitHub OIDC on Prometheus; reviewed artifact verified. |
 | Go | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.2` | Published module tag; fresh public-proxy installation passed. |
 | Python | `agenticdriver==0.2.0a2` | Wheel and sdist are public GitHub downloads; PyPI organization approval remains pending. |
@@ -82,6 +82,15 @@ short-lived crates.io identity, uploading and verifying the registry result.
 validated the exact successful CI candidate before creating its immutable module
 tag and installing through the public proxy and checksum database. Both used
 Prometheus. No personal PyPI publisher or hosted-runner fallback was introduced.
+
+The [npm publication receipt](../../release/0.2.0-alpha.2/npm-publication.json)
+records the public registry URL, exact archive digest/integrity and distribution
+tags. The renewed member sign-in and npm publishing verification completed on
+2026-09-27. The upload used the original reviewed CI archive, without rebuilding;
+its registry download is byte-identical to the GitHub archive. A fresh registry
+installation passed the JavaScript quickstart over verified HTTPS. Existing app
+pins to the public GitHub archive remain valid; switching to the exact registry
+version does not change SDK code or require a host restart.
 
 ## Desktop and application adoption
 
