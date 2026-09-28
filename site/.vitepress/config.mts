@@ -95,6 +95,7 @@ export default defineConfig({
           { text: "Provider extensions", link: "/provider-extensions" },
           { text: "Architecture", link: "/architecture" },
           { text: "Security boundaries", link: "/security" },
+          { text: "Application evaluations", link: "/evaluations" },
           { text: "Protocol", link: "/protocol" },
           { text: "Compatibility", link: "/compatibility" },
           { text: "Migration notes", link: "/migrations" },

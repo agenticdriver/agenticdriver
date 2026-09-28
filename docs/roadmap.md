@@ -5,7 +5,7 @@ The live [organization project](https://github.com/orgs/agenticdriver/projects/1
 ## Decisions
 
 - Call the product an SDK. Keep runtime, protocol, host, providers and language clients in one SDK repository initially; applications remain in their own repositories.
-- The SDK repository remains under the personal account until a transfer is explicitly chosen. This organization project can track work across owners and repositories.
+- The SDK repository is public under the `agenticdriver` organization. The organization project also tracks application work in its existing repositories.
 - Support all three application workstreams: Brandstorm, agentic-literature-review and AI Workspace.
 - No default total run deadline and no default inactivity timeout. Applications can opt into idleTimeoutMs; actual model or tool progress resets it, transport heartbeats do not.
 - Use official provider authentication and supported integration routes. CLI sessions may use subscription or API billing; never assume every subscription is an API entitlement.

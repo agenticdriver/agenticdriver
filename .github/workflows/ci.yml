@@ -202,6 +202,15 @@ jobs:
       - run: python -m unittest discover -s tests -p ci_runner_test.py -v
       - run: npm ci
       - run: npm run check
+      - name: Deterministic application evaluations
+        run: npm run evaluate -- --output "$RUNNER_TEMP/application-evaluations.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: application-evaluations-node-${{ matrix.node }}
+          path: ${{ runner.temp }}/application-evaluations.json
+          if-no-files-found: ignore
+          retention-days: 7
       - if: matrix.node != '22.13.0'
         run: npm run test:auth
       - run: npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json

@@ -137,7 +137,8 @@
     "check:antigravity": "tsx scripts/check-antigravity.ts",
     "protocol": "tsx scripts/protocol.ts",
     "format": "prettier --write src tests examples protocol docs README.md package.json tsconfig*.json",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "evaluate": "tsx scripts/evaluate.ts"
   },
   "dependencies": {
     "@agenticdriver/provider-icons": "https://github.com/agenticdriver/provider-icons/releases/download/v0.1.0-alpha.1/agenticdriver-provider-icons-0.1.0-alpha.1.tgz",

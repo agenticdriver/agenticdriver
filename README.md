@@ -1,6 +1,6 @@
 # AgenticDriver SDK
 
-[Release candidates and registry status](docs/releases.md) · [Changelog](CHANGELOG.md)
+[Release candidates and registry status](docs/releases.md) · [Changelog](CHANGELOG.md) · [Application evaluations](docs/evaluations.md)
 
 Bring your own agent to your application. Connect to a model API or an installed
 agent CLI through one execution contract, in-process or over authenticated HTTPS.
