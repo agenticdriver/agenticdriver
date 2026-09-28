@@ -5,8 +5,10 @@ AgenticDriver **0.1.0** uses protocol **1.0** and is published on npm, crates.io
 and the public Go module proxy. The Python wheel is available from the GitHub
 release while PyPI organization approval is pending. Applications do not need a
 sibling SDK checkout at runtime. The source repository is public and includes
-newer, unreleased changes; the [release inventory](releases.md) identifies the
-immutable published artifacts.
+newer changes; the [release inventory](releases.md) identifies immutable published
+artifacts. This guide starts with the stable 0.1.0 baseline. For provider
+management, host invitations and the Linux desktop, use the published
+[0.2.0-alpha.5 release](alpha.md).
 
 ## 1. Obtain the packages
 
@@ -31,9 +33,9 @@ cargo package --locked --manifest-path clients/rust/Cargo.toml
 ```
 
 Keep the npm archive, Python wheel and Rust crate with their source revision and
-checksums. Transfer those artifacts to the application machine. Their current
-versions are still `0.1.0`; a newly built archive has different contents from the
-published release and must retain its source revision and checksums.
+checksums. Transfer those artifacts to the application machine. Read the version
+from each artifact's package metadata; a source build can differ from a published
+artifact with the same version and must retain its source revision and checksums.
 The [compatibility matrix](compatibility.md) lists supported runtimes and tested
 platforms. Read [migration notes](migrations.md) when updating a package or host.
 
@@ -61,12 +63,14 @@ separate private development token file. It never replaces an existing config.
 Stop the foreground host with Ctrl+C when finished. See the [host guide](host.md)
 for paths, commands and provider configuration.
 
-Application authentication uses **Better Auth paired with AuthYard**. Before
-connecting real users or a remote application, follow the
-[auth guide](authentication.md) and [remote deployment recipe](deployment.md).
+Applications keep their chosen authentication system. Before connecting real
+users or a remote application, configure scoped host access through the
+[application-owned auth contract](authentication.md#connect-an-existing-authorization-system)
+or the alpha host's [connection flow](connections.md). The
+[Better Auth/AuthYard deployment recipe](deployment.md) is an optional integration.
 The development token above is only a local fixture credential. Keep provider API
 keys and native sign-in on the execution host; clients receive scoped driver
-credentials from their application's auth flow.
+credentials through the chosen connection or application auth flow.
 
 ## 3. Connect a language client
 
@@ -75,7 +79,7 @@ The following examples share five application-supplied settings:
 | Setting                    | Value                                                                                                                          |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `AGENTICDRIVER_URL`        | The host's HTTPS URL, or loopback HTTP for the local mock                                                                      |
-| `AGENTICDRIVER_TOKEN_FILE` | A private file containing the current driver OAuth access token; for the mock, the file referenced by its `tokens[0].tokenRef` |
+| `AGENTICDRIVER_TOKEN_FILE` | A private file containing the current driver bearer credential; for the mock, the file referenced by its `tokens[0].tokenRef` |
 | `AGENTICDRIVER_PROVIDER`   | An authorized instance ID from discovery; explicitly `mock` for the local fixture                                              |
 | `AGENTICDRIVER_MODEL`      | A model exposed by that instance; explicitly `demo` for the local fixture                                                      |
 | `AGENTICDRIVER_CA`         | Optional private-CA PEM certificate; omit for ordinary trusted HTTPS                                                           |

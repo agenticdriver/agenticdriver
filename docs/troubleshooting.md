@@ -6,7 +6,7 @@ report stable codes and bounded metadata without becoming a second usage store.
 
 | Symptom                                     | Check                                                                                                        | Next action                                                                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `UNAUTHORIZED`                              | Current driver credential, Better Auth issuer/resource, native expiry/revocation and the app's current grant | Obtain a current app credential or repair the explicit service/device grant; do not substitute a provider API key |
+| `UNAUTHORIZED`                              | Current driver credential, configured authentication adapter, expiry/revocation and the current host/app grant | Obtain a current driver credential or repair the explicit connection/service/device grant; do not substitute a provider API key |
 | `FORBIDDEN`                                 | Provider/tool/source/job/session scopes                                                                      | Request the appropriate application permission; never derive authority from run metadata                          |
 | `ORIGIN_DENIED`                             | Browser origin and exact host allowlist                                                                      | Register the intended application origin; keep bearer authentication enabled                                      |
 | TLS verification fails                      | Hostname, SANs, certificate chain and client trust                                                           | Renew or repair the certificate/CA configuration; keep validation on                                              |
@@ -23,7 +23,7 @@ report stable codes and bounded metadata without becoming a second usage store.
 `agenticdriver doctor --config PATH` validates static CLI configuration and checks
 the configured route without generating a model response. `status --refresh`
 refreshes authenticated discovery. For an application-authenticated host, use its
-normal client and current Better Auth credential for discovery instead of the
+normal client and current driver credential for discovery instead of the
 static-token CLI helper.
 
 Container `/health` measures host readiness. Check the external HTTPS endpoint

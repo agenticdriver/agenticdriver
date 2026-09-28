@@ -2,6 +2,11 @@
 
 The live [organization project](https://github.com/orgs/agenticdriver/projects/1) tracks the work items and follow-ups. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
 
+This file preserves the original planning baseline, item descriptions and initial
+checkboxes; they are not the current completion status. See the
+[release inventory](releases.md), [alpha.5 qualification](validation/release-0.2.0-alpha.5.md)
+and project for implemented features, published artifacts and remaining gates.
+
 ## Decisions
 
 - Call the product an SDK. Keep runtime, protocol, host, providers and language clients in one SDK repository initially; applications remain in their own repositories.
@@ -10,10 +15,11 @@ The live [organization project](https://github.com/orgs/agenticdriver/projects/1
 - No default total run deadline and no default inactivity timeout. Applications can opt into idleTimeoutMs; actual model or tool progress resets it, transport heartbeats do not.
 - Use official provider authentication and supported integration routes. CLI sessions may use subscription or API billing; never assume every subscription is an API entitlement.
 - Applications own domain data, accepted artifacts and business workflows. The SDK supplies execution primitives and optional host services.
+- Applications choose and own their authentication. The Better Auth/AuthYard recipe is optional; consuming the SDK does not trigger an application auth migration.
 - Keep provider credentials on the execution host. Requests select configured instances and explicitly permitted tools.
 - Use project drafts initially. Convert each draft into an issue in its Target repository when work is picked up, retaining its roadmap ID and dependencies.
 
-## Existing local foundation
+## Initial planning baseline (historical)
 
 - A local v0.1 implementation exists: TypeScript runtime, HTTP/SSE host, API adapters, restricted text-only CLI adapters, and TypeScript, Python, Go and Rust clients.
 - Tool input and output validation, cancellation, optional inactivity handling, scoped bearer authentication, usage callbacks and Usagestat read integration are implemented.
@@ -23,7 +29,7 @@ The live [organization project](https://github.com/orgs/agenticdriver/projects/1
 
 ## Phases
 
-These are scope milestones, not calendar deadlines. P0 means a prerequisite or release blocker, P1 means planned implementation, and P2 means an optional extension. All items below start in Todo; existing work is described above and in each item.
+These are scope milestones, not calendar deadlines. P0 means a prerequisite or release blocker, P1 means planned implementation, and P2 means an optional extension. Items initially started in Todo; their current status is maintained in the organization project.
 
 - **Alpha:** Installable SDK, live provider validation, usable language clients and a connected workflow in each application.
 - **Beta:** Account lifecycle, richer tools and context, optional durable execution, and complete application workflows.
@@ -342,14 +348,14 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 
 **Current state:** Hosts use a startup token registry. There is no user-facing pairing, token expiry or rotation without restart.
 
-**Scope:** Use Better Auth, paired with the existing AuthYard controlPlane connector, for explicit app-to-host pairing, short-lived access credentials and independently revocable grants for devices, providers and tools. Keep canonical identity and session storage in the application auth runtime.
+**Scope:** Add explicit app-to-host pairing, short-lived access credentials and independently revocable grants for devices, providers and tools. Offer Better Auth with the existing AuthYard controlPlane connector as an optional integration. Keep canonical identity and session storage in the application's chosen auth runtime; generic host connection authorization must not impose an auth stack.
 
 **Completion criteria:**
 
 - [ ] Pairing requires a deliberate device/user confirmation and cannot be completed by an unrelated web origin.
 - [ ] Grant rotation, expiry and revocation take effect without leaking provider credentials or confusing account identity.
 - [ ] OS secret storage and backend service credentials are supported; browser credentials have narrow scopes and documented storage constraints.
-- [ ] The supported Better Auth and AuthYard connector versions are pinned and exercised together; management outages do not require a parallel identity system or expose provider credentials.
+- [ ] When the optional Better Auth/AuthYard integration is selected, its supported versions are pinned and exercised together; management outages do not require a parallel identity system or expose provider credentials.
 
 **Depends on:** [AD-001](#ad-001), [AD-011](#ad-011)
 

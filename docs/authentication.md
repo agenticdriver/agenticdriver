@@ -1,13 +1,45 @@
-# Better Auth, AuthYard and device pairing
+# Application authentication and optional Better Auth integration
 
 The [security review](security.md) describes token, tenant and execution trust
 boundaries, tested defenses and remaining native-isolation qualification.
 
-Use the application's **Better Auth** runtime and database for identity, OAuth
-clients, consent and credentials. Add **AuthYard's existing `controlPlane`
-connector** for management. AgenticDriver authenticates OAuth access tokens and
-maps their scopes to concrete driver resources. It does not create another user,
-password, session or refresh-token database.
+Applications own their authentication and choose their auth stack. Consuming the
+SDK does not require Better Auth, AuthYard or a login migration. Application
+identity, authorization to an execution host, and a provider account's native
+sign-in are separate concerns; provider credentials stay on the execution host.
+
+## Connect an existing authorization system
+
+A programmatic host accepts the `HostAuthentication` interface exported from
+`@agenticdriver/sdk/server`. Its `authenticate(token, signal)` checks the current
+credential and returns an `AuthenticatedPrincipal`, or `undefined` to deny it.
+The principal contains an opaque authorization `id`, a canonical `subject`, and
+explicit provider, tool and other resource grants. Map those fields from the
+application's trusted current policy, never from request metadata. Protect the
+existing identity service's credentials and honor the supplied cancellation signal.
+
+Supply this adapter as `serve(driver, { authentication, ...options })`, or through
+the programmatic configured host. Use either `authentication` or static `tokens`,
+never both. Static tokens have explicit host-owned grants but no built-in expiry
+or rotation. Detached jobs additionally require `resolveJobPrincipal(id, signal)`
+to recheck a durable, revocable grant after restart; never use a bearer as its ID.
+See the [public contract](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/src/authorization.ts)
+and [host configuration](host.md).
+
+The [host connection flow](connections.md) and [desktop companion](desktop.md)
+also support scoped host invitations and connection management without imposing
+an application identity provider. Choose that flow or an application-owned
+credential flow according to the integration. Browser cookies alone never
+authorize SDK requests.
+
+## Optional Better Auth and AuthYard recipe
+
+The remainder of this guide describes the tested integration for applications
+that select **Better Auth** with **AuthYard's `controlPlane` connector** for
+management. Their existing Better Auth runtime and database remain authoritative
+for identity, OAuth clients, consent and credentials. AgenticDriver authenticates
+OAuth access tokens and maps their scopes to concrete driver resources. It does
+not create another user, password, session or refresh-token database.
 
 The tested integration pins Better Auth and `@better-auth/oauth-provider` to
 **1.7.3**, with AuthYard's **`@authplane/better-auth` 0.2.0**, protocol 1, on
@@ -155,8 +187,9 @@ search/index/delete, sessions and jobs can be granted independently. Corpus gran
 do not bypass the application's source/revision authorization.
 
 Use either `authentication` or the existing static `tokens` configuration,
-never both. Static tokens remain available for existing service installations;
-they do not gain rotation or expiry. New application auth uses Better Auth.
+never both. Static tokens remain available for operator-owned service
+installations; they do not gain rotation or expiry. Other applications can supply
+their own `HostAuthentication` adapter as described above.
 
 ## Pair and rotate a device
 

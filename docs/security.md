@@ -1,6 +1,6 @@
 # Execution and authentication trust boundaries
 
-This is the AD-041 review of the current SDK, Better Auth/AuthYard integration
+This is the AD-041 review of the current SDK, optional Better Auth/AuthYard integration
 and self-hosted API deployment. It records implemented controls, tests and
 remaining assumptions. **AD-041 remains open pending AD-012's native process
 isolation qualification.** Passing local tests is not an independent audit,
@@ -9,9 +9,14 @@ live-provider certification or proof of an unselected production deployment.
 ## Authority and ownership
 
 The application owns canonical users, services, documents, mailbox access,
-approvals and accepted artifacts. Better Auth issues/revokes its credentials;
-the existing AuthYard connector supplies management and event delivery. SDK
-introspection intersects token consent, current application grants and concrete
+approvals and accepted artifacts. Its chosen identity system remains
+authoritative; SDK consumption does not require an auth migration. A programmatic
+host's `HostAuthentication` adapter validates current credentials and maps trusted
+application policy to a canonical subject and explicit resource grants.
+
+When the optional Better Auth integration is selected, Better Auth issues/revokes
+credentials and the AuthYard connector supplies management and event delivery.
+SDK introspection intersects token consent, current application grants and concrete
 host scopes. Client metadata, retrieved text and model output confer no authority.
 
 The execution host's operator is trusted with provider credentials, configured
@@ -36,7 +41,8 @@ configured API/mock providers and explicit service clients.
 | Host → proxy/network | Raw host on namespace-local loopback; non-root/read-only containers, dropped capabilities, certificate checks and cancellation propagation | `scripts/test-deployment.py`                                                     |
 
 Test paths above live in [`tests/`](../tests/), except the explicitly named
-integration/deployment scripts. The native auth contract uses Better Auth and
+integration/deployment scripts. The Better Auth and device-consent rows describe
+that optional integration, not a universal consumer requirement. Its native auth contract uses Better Auth and
 OAuth Provider 1.7.3, with the qualified AuthYard `@authplane/better-auth` 0.2.0
 artifact. Renamed or changed connector versions require their own qualification.
 
@@ -48,12 +54,17 @@ the application must protect token storage and its pairing/consent UI. The SDK
 neither persists browser credentials nor extracts provider-native sign-in tokens.
 Keep app and host logs free of authorization headers and refresh/device codes.
 
-Pairing verification URLs must stay on the issuer's origin. Auth HTTP calls omit
+The optional OAuth device-pairing helper keeps verification URLs on the issuer's
+origin. Its auth HTTP calls omit
 cookies, reject redirects, bound response sizes and have an explicit short auth
 exchange timeout. The refresh helper rejects concurrent refresh attempts and
 does not retry an uncertain rotation. Real Better Auth tests verify a denied
 foreign origin/user/client, consumed device-code replay, scope intersections,
 revocation, reuse invalidation and service identities distinct from their owners.
+The separate [host invitation flow](connections.md) uses host-owned scoped grants
+and one-use invitations; it does not create application identities or impose an
+OAuth issuer. Other auth adapters must preserve their chosen issuer's credential
+and revocation semantics.
 
 Foreground work keeps the authority accepted when execution starts; queued work
 rechecks authorization before starting. Revoking a credential blocks later
@@ -65,7 +76,7 @@ Detached jobs require a separately implemented durable current-grant resolver;
 request tokens cannot become indefinite worker credentials. The SDK narrows
 durable authority to admitted scopes, rechecks it and interrupts revoked jobs.
 The application resolver must bound its own network/database calls and observe
-cancellation. AuthYard management outages do not replace or bypass Better Auth's
+cancellation. In the optional integration, AuthYard management outages do not replace or bypass Better Auth's
 local authority; the qualified connector queues management events independently.
 
 ## Endpoints, context and local files
@@ -129,9 +140,14 @@ authentication exchange timeouts and operator shutdown grace do not add a defaul
 SDK run deadline or inactivity timeout. An operator still needs appropriate
 connection/auth rate controls for its actual public ingress and auth service.
 
-Remaining release gates: native account/process isolation under AD-012 and the
-provider-specific certifications; the selected Antigravity native tool-isolation
-blocker; Grok Build's idle/side-work controls; actual app/registry/production
-deployment qualification; and a fresh hosted CI run after GitHub's account
-billing/spending restriction is resolved. Locally passing fixtures do not close
-these gates or authorize automatic fallback to another model/account.
+Remaining gates include AD-012's native account/process isolation and platform
+qualification, provider-specific certifications, the selected Antigravity
+tool-isolation blocker, Grok Build's idle/side-work controls, PyPI organization
+approval, and the complete application/production workload requirements of v1.
+The [current release evidence](validation/release-0.2.0-alpha.5.md) records the
+passing Prometheus Linux CI, published packages and installed-package checks;
+macOS/Windows execution remains unqualified without the corresponding runners.
+GitHub-hosted compute is used only for npm's public OIDC publish-only job.
+The [synthetic operational qualification](operational-qualification.md) closes a
+specific Linux workload gate, not all v1 requirements. Fixture success never
+authorizes automatic fallback to another model or account.

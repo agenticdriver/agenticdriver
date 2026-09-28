@@ -52,12 +52,13 @@ environment. To use server-owned API credentials, register instances on the
 application's execution server. For multiple accounts with local CLIs, separate
 process users or containers provide the meaningful filesystem boundary.
 
-Applications use their Better Auth runtime paired with AuthYard for identity,
-OAuth consent, device pairing and revocable credentials. The SDK's native OAuth
-introspection adapter maps current app grants into scoped execution authority;
-its browser-safe pairing client handles the approved device flow and explicit
-refresh/revocation. See [authentication](authentication.md). A static token
-registry remains available for local development and operator-owned hosts.
+Applications own their identity system and keep their chosen auth stack.
+Programmatic hosts accept `HostAuthentication` to map current application policy
+into scoped execution authority. Static tokens and the host's
+[scoped connection flow](connections.md) serve operator-owned hosts. The
+[optional Better Auth/AuthYard recipe](authentication.md) supplies OAuth
+introspection, device pairing and explicit refresh/revocation for applications
+that choose that integration; it is not a dependency of SDK consumers.
 A hosted browser cannot automatically reach a laptop; use a reachable
 authenticated HTTPS endpoint or a trusted tunnel. The Linux desktop from alpha.5
 can manage an [outbound SSH tunnel](desktop.md#manage-an-outbound-ssh-tunnel)

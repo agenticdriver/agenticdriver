@@ -6,24 +6,19 @@ authenticated HTTP/HTTPS protocol; only the execution host needs Node.js.
 Optional [durable jobs](jobs.md) require Node 22.13+, explicit SQLite storage and
 retention, stable account bindings and separate token job grants.
 
-For a service behind verified TLS, use the [container deployment recipe](deployment.md)
-with application-owned Better Auth/AuthYard authorization. Programmatic hosts may
-omit `tokens` and supply `HostAuthentication` to `configuredServer`; the static
-CLI still requires at least one token and never starts without authentication.
+Programmatic hosts may omit `tokens` and supply application-owned
+`HostAuthentication` to `configuredServer`; applications keep their chosen auth
+stack. The static CLI still requires at least one token and never starts without
+authentication. The [container deployment recipe](deployment.md) is a separate
+option using verified TLS and the optional Better Auth/AuthYard integration.
 
 ## Install and run a mock workflow
 
-The published package is `@agenticdriver/sdk@0.1.0`. To use the development host
-features described below, build and install an archive from the tested source:
+The stable package is `@agenticdriver/sdk@0.1.0`. For the host features described
+below, install the published [alpha.5 package](alpha.md) in an application directory:
 
 ```bash
-# In the SDK checkout
-npm ci
-npm run check
-npm pack
-
-# In an application directory; replace the path with your actual archive
-npm install /absolute/path/to/agenticdriver-sdk-0.1.0.tgz
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
 npx --no-install agenticdriver init
 npx --no-install agenticdriver doctor
 npx --no-install agenticdriver serve
@@ -231,10 +226,11 @@ including the Usagestat quota helper and the limits of observed budgets.
 
 ## Secret references and diagnostics
 
-Applications that need device pairing and credential rotation use the
-[Better Auth/AuthYard integration](authentication.md) with the programmatic host.
-It reuses these secret references for confidential service credentials. The
-configuration-driven CLI's static-token mode remains explicit and separate.
+Applications can supply their existing credential system through
+[application-owned authentication](authentication.md#connect-an-existing-authorization-system).
+The optional Better Auth/AuthYard integration reuses these secret references for
+confidential service credentials. The configuration-driven CLI's static-token
+mode and [host connection invitations](connections.md) remain explicit options.
 
 Custom hosts can attach [optional diagnostics](diagnostics.md) through
 `configuredDriver(config, { diagnostics })`. Structured records and the

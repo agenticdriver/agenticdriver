@@ -7,14 +7,18 @@ bypass TLS by using the host's container address. Both processes run as UID/GID
 1000 with a read-only root filesystem, no Linux capabilities and no privilege
 escalation. Writable state has a separate named volume.
 
-Authentication uses the application's **Better Auth** OAuth provider paired with
-**AuthYard**, as described in [the authentication guide](authentication.md).
-The stock entry point accepts explicitly registered backend service identities.
+This particular recipe uses the application's **Better Auth** OAuth provider
+paired with **AuthYard**, as described in the
+[optional integration guide](authentication.md). It is one deployment option;
+the SDK's generic host contract accepts application-owned authentication and does
+not require consumers to adopt this auth stack. The stock Compose entry point
+accepts explicitly registered backend service identities.
 Each service maps to one canonical application subject and a bounded set of SDK
 scopes. It rejects user tokens. For direct end-user device pairing, build an
-application host with `betterAuthAuthentication` and the application's current
-user/device grants. Keep application users, organizations, credentials and
-sessions in its existing Better Auth database.
+application host with the application's current authorization adapter and
+user/device grants. If selecting this recipe's OAuth integration, use
+`betterAuthAuthentication` and keep application users, organizations, credentials
+and sessions in its existing Better Auth database.
 
 The image contains configured API adapters and the mock adapter. It contains no
 signed-in CLI account, arbitrary extension loader, auth server or management
@@ -26,8 +30,8 @@ enabled explicitly through the regular host configuration and scope grants.
 ## Prepare a host
 
 Use a Linux Docker Engine with Compose v2.20+ (or v5), a selected DNS name, a
-trusted certificate with that name in its SANs, and an application Better Auth
-service reachable by HTTPS. No registry image has been published yet: build the
+trusted certificate with that name in its SANs, and, for this recipe, an
+application Better Auth service reachable by HTTPS. No registry image has been published yet: build the
 two images from a reviewed SDK commit. The Node 24 and Caddy 2.11.4 bases are
 pinned to multi-platform manifest digests in their Dockerfiles. The deployment
 test currently verifies Linux amd64. Other architectures remain unqualified.
@@ -99,7 +103,7 @@ foreground runs. More immediate per-run revocation requires application-owned
 tracking and cancellation, as explained in the auth guide.
 
 `config.json` uses the [regular host schema](host.md). Leave `tokens` absent;
-the deployment requires Better Auth and rejects static driver tokens. The example
+this Compose entry point requires Better Auth and rejects static driver tokens. The example
 selects a synthetic mock provider. To run a real API account, change the provider
 kind, instance ID and explicit model list, set a private `apiKeyRef`, update the
 scope's provider ID, and retain stable `usage.hostId` and `accountId` values.

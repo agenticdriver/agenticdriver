@@ -72,9 +72,9 @@ synthetic thread, drafts a reply and suggests a task. It registers no mail-sendi
 tool and does not claim that a message was sent or a task created.
 
 In [AI Workspace](https://github.com/hashimkarim/ai-workspace), mailbox OAuth,
-message synchronization and ownership belong to the application. Better Auth and
-AuthYard govern application identities and sessions; the mail provider's own
-OAuth consent separately authorizes mailbox access. Resolve a selected thread
+message synchronization, identities and sessions belong to the application and
+its chosen auth stack. The mail provider's own OAuth consent separately
+authorizes mailbox access. Resolve a selected thread
 through the authenticated subject before sending context to the SDK.
 
 For questions spanning threads, index authorized message revisions with stable
@@ -90,7 +90,7 @@ for that flow, with uncertain-action reconciliation before any retry.
 
 All three applications follow the same sequence:
 
-1. Authenticate through their own Better Auth runtime paired with AuthYard; map
+1. Authenticate through their chosen application identity system; map
    canonical user/device or backend-service grants into SDK permissions.
 2. Discover the host's authorized providers and capabilities, then select the
    account instance and exact model deliberately. Credentials stay on the host.

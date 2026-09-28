@@ -88,7 +88,7 @@ export interface ServerOptions {
   };
   /** Static service credentials, or authentication, never both. */
   tokens?: AccessToken[];
-  /** Application-owned Better Auth authentication and current resource policy. */
+  /** Application-owned authentication and current resource policy. */
   authentication?: HostAuthentication;
   host?: string;
   port?: number;
