@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = client.run(&RunRequest::new(
         std::env::var("AGENTICDRIVER_PROVIDER")?,
         std::env::var("AGENTICDRIVER_MODEL")?,
-        "Say hello in one sentence.",
+        std::fs::read_to_string(std::env::var("AGENTICDRIVER_INPUT_FILE")?)?,
     ))?;
     println!("{}", result.text);
     Ok(())

@@ -9,8 +9,10 @@ agenticdriver setup --provider codex --config ./driver/config.json --manage
 This creates private application and operator credential files, starts the host,
 and prints an invitation valid for ten minutes. `--manage` gives the resulting
 connection permission to configure providers and issue/revoke connection grants.
-Omit it for ordinary application execution access. Choose `--provider mock` for a
-fully offline setup. Each model run still needs an explicit provider and model.
+Omit it for ordinary application execution access. Use an actual supported native
+session or provider API account. Each model run still needs an explicit provider
+and model. The [real connection guide](real-connections.md) includes meaningful
+application prompts and a qualified remote SSH route.
 
 Paste the `ad1.…` invitation into the application's connection panel. The
 application backend exchanges it once and saves the resulting credential privately.

@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "date": "2026-09-28",
+  "sdkVersion": "0.2.0-alpha.5",
+  "host": "Prometheus Linux x64",
+  "transport": "OpenSSH with existing host-key verification; loopback on each endpoint",
+  "runtime": {
+    "node": "24.16.0",
+    "codex": "0.157.0",
+    "claude": "2.1.282"
+  },
+  "selection": {
+    "codex": {
+      "model": "gpt-6-luna",
+      "reasoningEffort": "medium",
+      "authMode": "cli-session",
+      "subscription": "pro"
+    },
+    "claude": {
+      "model": "claude-haiku-4-5-20251001",
+      "authMode": "cli-session",
+      "subscription": "pro"
+    }
+  },
+  "runs": [
+    {
+      "client": "javascript",
+      "case": "brandstorm",
+      "runId": "f1d722ee-6694-4cbc-9590-03c172813fca",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 257,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "startedAt": "2026-09-28T14:59:22.311Z",
+      "finishedAt": "2026-09-28T14:59:37.854Z",
+      "durationMs": 15543,
+      "textDeltaEvents": 1,
+      "catalogRefreshDuringRun": false,
+      "responseSha256": "94698d20b06196dec3fe5c82377e256d72e21b0ab5e0c10bce1aad329ea9fa23"
+    },
+    {
+      "client": "javascript",
+      "case": "literature",
+      "runId": "bb98ea9a-4248-4307-bf7f-2663a48256de",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 6202,
+        "outputTokens": 209,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "startedAt": "2026-09-28T14:59:37.885Z",
+      "finishedAt": "2026-09-28T14:59:44.298Z",
+      "durationMs": 6413,
+      "textDeltaEvents": 1,
+      "catalogRefreshDuringRun": false,
+      "responseSha256": "01ba824011faac95560c248292db2e68da0bc7f9767d32771e1c6f83cfaccb87"
+    },
+    {
+      "client": "javascript",
+      "case": "workspace",
+      "runId": "2f04e709-cef3-4ba3-bfe5-da6f6f59c8cb",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 6203,
+        "outputTokens": 188,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "startedAt": "2026-09-28T14:59:44.381Z",
+      "finishedAt": "2026-09-28T14:59:55.026Z",
+      "durationMs": 10645,
+      "textDeltaEvents": 1,
+      "catalogRefreshDuringRun": false,
+      "responseSha256": "9407af2aa4c0abf0e7fc0d34477bb9809e981bc4669d807ed8409c57977f4227"
+    },
+    {
+      "client": "javascript",
+      "case": "brandstorm",
+      "runId": "a2c127a3-50b4-43ed-bfad-b9416e83a1b3",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 3757,
+        "outputTokens": 987,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.008692
+      },
+      "startedAt": "2026-09-28T15:00:45.298Z",
+      "finishedAt": "2026-09-28T15:00:56.782Z",
+      "durationMs": 11484,
+      "textDeltaEvents": 79,
+      "catalogRefreshDuringRun": true,
+      "responseSha256": "02ff9cc6bd450c1404821931dab0a16a4a5eea370e5d82fdfbaadd70d7917099"
+    },
+    {
+      "client": "javascript",
+      "case": "literature",
+      "runId": "4413d2ab-9c66-4421-9bbb-31293f5e83e4",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 3846,
+        "outputTokens": 701,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.007351
+      },
+      "startedAt": "2026-09-28T15:00:56.828Z",
+      "finishedAt": "2026-09-28T15:01:05.673Z",
+      "durationMs": 8845,
+      "textDeltaEvents": 103,
+      "catalogRefreshDuringRun": true,
+      "responseSha256": "e5672514be6a21b8cdaea9a0f7672f0b25d59e77987828c1c006f2af7570f858"
+    },
+    {
+      "client": "javascript",
+      "case": "workspace",
+      "runId": "f4c8ef67-4af8-4b2f-aec7-f3083a6a60b7",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 3847,
+        "outputTokens": 885,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.008272
+      },
+      "startedAt": "2026-09-28T15:01:05.712Z",
+      "finishedAt": "2026-09-28T15:01:14.717Z",
+      "durationMs": 9005,
+      "textDeltaEvents": 42,
+      "catalogRefreshDuringRun": true,
+      "responseSha256": "4ea498071b0678f0188781dc4680de20fdaf2859a2c375b53fa27520e18ae84a"
+    },
+    {
+      "client": "python",
+      "case": "literature",
+      "runId": "ed372f86-67a1-45ae-9bb3-0522c8e97349",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 6202,
+        "outputTokens": 216,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "startedAt": "2026-09-28T15:05:13.525Z",
+      "finishedAt": "2026-09-28T15:05:26.380Z",
+      "durationMs": 12855,
+      "responseSha256": "79df20ec0207f96b47539ceeacf3ab5bdb0f5fdc8c5edb6388d9baf100025ca5"
+    },
+    {
+      "client": "go",
+      "case": "workspace",
+      "runId": "4dabc4d8-88d9-4f72-956b-4f9ce82e3e01",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 3848,
+        "outputTokens": 2844,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.018068
+      },
+      "startedAt": "2026-09-28T15:05:50.150Z",
+      "finishedAt": "2026-09-28T15:06:14.289Z",
+      "durationMs": 24139,
+      "responseSha256": "43ce3b55682101ae685d3f795ec27a02835fb23c419429d8128c5d838f6f0c8e"
+    },
+    {
+      "client": "rust",
+      "case": "brandstorm",
+      "runId": "676d8d3a-f2ce-4128-89df-7805e0f096e1",
+      "subject": "sdk-real-applications",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 277,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "startedAt": "2026-09-28T15:06:14.361Z",
+      "finishedAt": "2026-09-28T15:06:27.127Z",
+      "durationMs": 12766,
+      "responseSha256": "cdd2d6113896d84bcdd39b369ced1956825361f940dae3b66c2fb35a592e8ce0"
+    }
+  ],
+  "privateReceipts": {
+    "codex-real-applications.json": "0e5049d7c11f20e109a02a11efd0f9b77e544c3236205725d5a49a534ec33ad2",
+    "claude-real-applications.json": "c5d7243bd7e5384c652b14e6c43decf0fe6427558d70592f370b96c1d20344b6",
+    "python-real-application.json": "c350c00c4e0050d63b2b20e4a705583f6633167c606c3777cad0c63c3ea6549e",
+    "go-real-application.json": "3fecda2f4e3bc11d006c97dd247b442bfbad6e22d9e4c5b0d8dce3c3c3843d9b",
+    "rust-real-application.json": "22b6ab60a2a98b46e348753d8c45df497b80fdb6b92b027cf6ea34f6562bb0b0"
+  },
+  "totals": {
+    "prometheus-codex": {
+      "completed": 5,
+      "inputTokens": 30865,
+      "outputTokens": 1147,
+      "cachedInputTokens": 0,
+      "reasoningTokens": 0
+    },
+    "prometheus-claude": {
+      "completed": 4,
+      "inputTokens": 15298,
+      "outputTokens": 5417,
+      "cachedInputTokens": 0,
+      "apiEquivalentCostUsd": 0.042383
+    }
+  }
+}

@@ -23,6 +23,8 @@ func main() {
 	defer cancel()
 	token, err := os.ReadFile(os.Getenv("AGENTICDRIVER_TOKEN_FILE"))
 	must(err)
+	prompt, err := os.ReadFile(os.Getenv("AGENTICDRIVER_INPUT_FILE"))
+	must(err)
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	defer transport.CloseIdleConnections()
 	if path := os.Getenv("AGENTICDRIVER_CA"); path != "" {
@@ -38,7 +40,7 @@ func main() {
 	must(err)
 	result, err := client.Run(ctx, sdk.Request{
 		Provider: os.Getenv("AGENTICDRIVER_PROVIDER"), Model: os.Getenv("AGENTICDRIVER_MODEL"),
-		Input: "Say hello in one sentence.",
+		Input: string(prompt),
 	})
 	must(err)
 	fmt.Println(result.Text)

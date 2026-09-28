@@ -10,6 +10,6 @@ const client = new AgenticClient({
 const result = await client.run({
   provider: process.env.AGENTICDRIVER_PROVIDER,
   model: process.env.AGENTICDRIVER_MODEL,
-  input: "Say hello in one sentence.",
+  input: await readFile(process.env.AGENTICDRIVER_INPUT_FILE, "utf8"),
 });
 console.log(result.text);

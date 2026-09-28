@@ -1,31 +1,32 @@
 # Install and connect
 
-Start with a synthetic workflow, then select a live provider deliberately.
-AgenticDriver **0.1.0** uses protocol **1.0** and is published on npm, crates.io
+Start with an explicitly selected real provider account and a meaningful prompt.
+AgenticDriver **0.2.0-alpha.5** uses protocol **1.0** and is published on npm, crates.io
 and the public Go module proxy. The Python wheel is available from the GitHub
 release while PyPI organization approval is pending. Applications do not need a
 sibling SDK checkout at runtime. The source repository is public and includes
 newer changes; the [release inventory](releases.md) identifies immutable published
-artifacts. This guide starts with the stable 0.1.0 baseline. For provider
-management, host invitations and the Linux desktop, use the published
-[0.2.0-alpha.5 release](alpha.md).
+artifacts. This guide uses the published [0.2.0-alpha.5 release](alpha.md), including
+provider management, host invitations and the Linux desktop. The stable release
+remains 0.1.0.
 
 ## 1. Obtain the packages
 
 The examples below use these published package identities:
 
-| Language              | Package                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| JavaScript/TypeScript | `@agenticdriver/sdk@0.1.0` on npm                              |
-| Python                | `agenticdriver-0.1.0-py3-none-any.whl` from the GitHub release |
-| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.1.0`     |
-| Rust                  | `agenticdriver = "=0.1.0"` on crates.io                        |
+| Language              | Package                                                             |
+| --------------------- | ------------------------------------------------------------------- |
+| JavaScript/TypeScript | `@agenticdriver/sdk@0.2.0-alpha.5` on npm                           |
+| Python                | `agenticdriver-0.2.0a5-py3-none-any.whl` from the GitHub prerelease |
+| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5`  |
+| Rust                  | `agenticdriver = "=0.2.0-alpha.5"` on crates.io                     |
 
 For unreleased development changes, build from a reviewed SDK commit instead:
 
 ```sh
 npm ci
-npm run check
+npm run typecheck
+npm run build
 mkdir -p artifacts
 npm pack --pack-destination artifacts
 python3 -m pip wheel --no-deps ./clients/python --wheel-dir artifacts
@@ -39,50 +40,70 @@ artifact with the same version and must retain its source revision and checksums
 The [compatibility matrix](compatibility.md) lists supported runtimes and tested
 platforms. Read [migration notes](migrations.md) when updating a package or host.
 
-## 2. Try a local mock
+## 2. Connect your provider account
+
+On the execution machine, use a supported native CLI already signed into the
+account you intend to use. The qualified Codex adapter requires CLI 0.157.0;
+Claude Code 2.1.282 is also qualified. See [provider setup](providers.md) for
+other adapters and their actual availability. Keep provider sign-in files on
+this execution machine.
 
 In a fresh application directory, install the published npm package:
 
 ```sh
 npm init -y
-npm install --save-exact @agenticdriver/sdk@0.1.0
-npx --no-install agenticdriver init --config ./driver/config.json
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
+npx --no-install agenticdriver init --config ./driver/config.json \
+  --provider codex --provider-id my-codex --account-id my-codex-account \
+  --binary /absolute/path/to/codex \
+  --account-directory /absolute/path/to/your/codex-home --management
 npx --no-install agenticdriver serve --config ./driver/config.json
 ```
 
-In a second terminal in that directory:
+Replace the two native paths with your selected installation and signed-in
+account profile. `init` creates a private driver token and separate operator
+credential, and refuses to replace existing configuration. It does not sign in
+to a provider or run a model.
+
+In a second terminal, inspect the actual account catalog:
+
+```sh
+npx --no-install agenticdriver status --config ./driver/config.json --refresh
+```
+
+Download the [AgenticDriver brand brief](../examples/quickstart/brand-brief.txt)
+as `brand-brief.txt`, choose an inexpensive model reported by your account, and run:
 
 ```sh
 npx --no-install agenticdriver run --config ./driver/config.json \
-  --provider mock --model demo --input "Hello"
+  --provider my-codex --model YOUR_REPORTED_MODEL < brand-brief.txt
 ```
 
-The response is `AgenticDriver is connected.` This is an offline fixture: no
-provider account or model inference is used. `init` creates a loopback host and a
-separate private development token file. It never replaces an existing config.
-Stop the foreground host with Ctrl+C when finished. See the [host guide](host.md)
-for paths, commands and provider configuration.
+This submits a real model request and consumes that account's usage. Review its
+answer; seeing a catalog alone does not prove execution. Stop the foreground
+host with Ctrl+C when finished. See the [host guide](host.md) for service startup.
 
 Applications keep their chosen authentication system. Before connecting real
 users or a remote application, configure scoped host access through the
 [application-owned auth contract](authentication.md#connect-an-existing-authorization-system)
 or the alpha host's [connection flow](connections.md). The
 [Better Auth/AuthYard deployment recipe](deployment.md) is an optional integration.
-The development token above is only a local fixture credential. Keep provider API
-keys and native sign-in on the execution host; clients receive scoped driver
+Keep provider API keys and native sign-in on the execution host; clients receive scoped driver
 credentials through the chosen connection or application auth flow.
+For a host on another computer, follow the [real remote connection guide](real-connections.md).
 
 ## 3. Connect a language client
 
-The following examples share five application-supplied settings:
+The following examples share these application-supplied settings:
 
-| Setting                    | Value                                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `AGENTICDRIVER_URL`        | The host's HTTPS URL, or loopback HTTP for the local mock                                                                      |
-| `AGENTICDRIVER_TOKEN_FILE` | A private file containing the current driver bearer credential; for the mock, the file referenced by its `tokens[0].tokenRef` |
-| `AGENTICDRIVER_PROVIDER`   | An authorized instance ID from discovery; explicitly `mock` for the local fixture                                              |
-| `AGENTICDRIVER_MODEL`      | A model exposed by that instance; explicitly `demo` for the local fixture                                                      |
-| `AGENTICDRIVER_CA`         | Optional private-CA PEM certificate; omit for ordinary trusted HTTPS                                                           |
+| Setting                    | Value                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `AGENTICDRIVER_URL`        | The host's HTTPS URL, or loopback HTTP for a local host or SSH tunnel                                       |
+| `AGENTICDRIVER_TOKEN_FILE` | A private file containing the scoped driver credential, such as the file created by `agenticdriver connect` |
+| `AGENTICDRIVER_PROVIDER`   | An authorized provider instance ID from discovery                                                           |
+| `AGENTICDRIVER_MODEL`      | An explicitly selected model reported by that account                                                       |
+| `AGENTICDRIVER_INPUT_FILE` | A UTF-8 prompt file, such as the brand brief above or an application-owned example                          |
+| `AGENTICDRIVER_CA`         | Optional private-CA PEM certificate; omit for ordinary trusted HTTPS                                        |
 
 Use the application's credential manager to supply and rotate the token file;
 never put credentials in URLs, source code or browser storage. Python, Go and
@@ -91,10 +112,10 @@ applications must obtain a fresh token before subsequent operations and preserve
 the outcome of uncertain requests. JavaScript can resolve credentials for every
 request. None of the clients replays model work automatically after expiry.
 
-The examples below are executed against installed packages in the container CI
-gate. That gate uses a native Better Auth service credential, the AuthYard
-connector, a private CA and a synthetic model server. The same examples also run
-against the local mock when you explicitly set `mock` and `demo`.
+The [Prometheus validation receipt](validation/prometheus-real-2026-09-28.md)
+records real requests using installed packages through an SSH connection. The
+examples run once with the selected provider/model and do not select an alternate
+account or billing route.
 
 ### JavaScript and TypeScript
 
@@ -110,14 +131,14 @@ TypeScript imports the same `AgenticClient`; see its [full guide](javascript.md)
 ### Python
 
 Requires Python 3.10+. Download the reviewed wheel from the
-[0.1.0 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0),
-verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.1.0/ASSET-SHA256SUMS), and install it into
+[0.2.0-alpha.5 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.5),
+verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.5/ASSET-SHA256SUMS), and install it into
 the application's own environment:
 
 ```sh
 python3 -m venv .venv
 # Use .venv/Scripts/python.exe on Windows.
-.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.1.0-py3-none-any.whl
+.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.2.0a5-py3-none-any.whl
 .venv/bin/python client.py
 ```
 
@@ -135,7 +156,7 @@ Requires Go 1.22+. Install the published version:
 
 ```sh
 go mod init example.test/my-driver-client
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.1.0
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5
 go run .
 ```
 
@@ -156,7 +177,7 @@ Requires Rust 1.89+. Use the published crate:
 
 ```toml
 [dependencies]
-agenticdriver = "=0.1.0"
+agenticdriver = "=0.2.0-alpha.5"
 ```
 
 Save the following as `src/main.rs` in a `cargo new` application and run
@@ -169,7 +190,7 @@ for runtime ownership and feature selection.
 [Download the example](../examples/quickstart/client.rs) ·
 [Rust async, features and cancellation](../clients/rust/README.md).
 
-## 4. Choose a real execution route
+## 4. Validate the application workflow
 
 Provider instances belong to the host and have explicit account bindings.
 Refresh discovery, inspect the instance's health and capabilities, and select a

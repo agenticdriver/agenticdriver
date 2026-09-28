@@ -10,3 +10,10 @@
 - Record the actual provider/CLI version, selected model, connection path, example prompt, observed result and reported usage where available. Distinguish a connection check, successful model execution and application acceptance.
 - Keep credentials in the existing private credential files or stores. Use public material or realistic example content for prompts unless use of private application data is explicitly authorized.
 - Preserve historical fixture results as historical evidence; they do not replace the required real-connection checks for current work.
+
+## Remote validation on Prometheus
+
+- Prometheus is authorized as a remote test execution host using its existing Codex and Claude native sign-ins. Verify the current sign-in and model catalog before using a connection.
+- Use the existing trusted `prometheus` SSH destination and a separate loopback test host. Preserve application services, shared CI workers and native account profiles; keep provider credentials on the execution host.
+- Prefer the established inexpensive selections, Codex `gpt-6-luna` with medium reasoning and Claude `claude-haiku-4-5-20251001`, when those accounts report them. A missing model or failed account is a blocker to diagnose, not permission to switch accounts, models or billing modes.
+- Read `docs/real-connections.md` and `docs/validation/prometheus-real-2026-09-28.md` for the supported route and the limits of the recorded evidence. Private provisioning details are in the local validation state, not source control.

@@ -1,0 +1,10 @@
+Develop three distinct brand directions for AgenticDriver (agenticdriver.dev).
+It is an SDK for TypeScript, Python, Go and Rust applications. Developers connect
+their own provider API accounts or supported native subscription sessions.
+Execution can happen locally or through a secure connection to a remote host.
+Applications explicitly select a provider, account connection and model.
+The audience is developers building research assistants, email workspaces and
+creative tools. Keep the name AgenticDriver. Do not promise universal provider
+compatibility, unlimited usage, automatic model routing or guaranteed accuracy.
+For each direction, give a tagline, two hex colours, a visual motif and one
+sentence explaining why it fits the audience. Stay below 220 words in total.

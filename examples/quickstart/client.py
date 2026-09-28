@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from agenticdriver import AgenticClient
 
-# Obtain a current token from the application's Better Auth credential manager.
+# Use the private scoped credential issued by the selected AgenticDriver host.
 token = Path(os.environ["AGENTICDRIVER_TOKEN_FILE"]).read_text(encoding="utf8").strip()
 with AgenticClient(
     os.environ["AGENTICDRIVER_URL"], token,
@@ -11,6 +11,6 @@ with AgenticClient(
     result = client.run(
         provider=os.environ["AGENTICDRIVER_PROVIDER"],
         model=os.environ["AGENTICDRIVER_MODEL"],
-        input="Say hello in one sentence.",
+        input=Path(os.environ["AGENTICDRIVER_INPUT_FILE"]).read_text(encoding="utf8"),
     )
     print(result["text"])

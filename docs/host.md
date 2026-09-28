@@ -12,36 +12,42 @@ stack. The static CLI still requires at least one token and never starts without
 authentication. The [container deployment recipe](deployment.md) is a separate
 option using verified TLS and the optional Better Auth/AuthYard integration.
 
-## Install and run a mock workflow
+## Install and connect a real provider
 
 The stable package is `@agenticdriver/sdk@0.1.0`. For the host features described
 below, install the published [alpha.5 package](alpha.md) in an application directory:
 
 ```bash
 npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
-npx --no-install agenticdriver init
+npx --no-install agenticdriver init --provider codex \
+  --provider-id my-codex --account-id my-codex-account \
+  --binary /absolute/path/to/codex \
+  --account-directory /absolute/path/to/your/codex-home --management
 npx --no-install agenticdriver doctor
 npx --no-install agenticdriver serve
 ```
 
-In another terminal in that application directory:
+Use your selected, signed-in native account profile and a supported CLI version.
+The qualified Codex adapter requires 0.157.0. See the [quickstart](quickstart.md)
+for package installation and other language clients. In another terminal,
+inspect the catalog, then select an inexpensive reported model:
 
 ```bash
-npx --no-install agenticdriver status
-npx --no-install agenticdriver run --provider mock --model demo --input "Hello"
+npx --no-install agenticdriver status --refresh
+npx --no-install agenticdriver run --provider my-codex \
+  --model YOUR_REPORTED_MODEL < brand-brief.txt
 ```
 
-The mock returns `AgenticDriver is connected.` without model inference or external
-credentials. `init` creates a loopback listener, a random driver token in a separate
+Download [brand-brief.txt](../examples/quickstart/brand-brief.txt) first. This run
+uses your real account and consumes usage. `init` creates a loopback listener, a random driver token in a separate
 private file, and a durable operation directory reference. It never replaces an
 existing configuration. Choose `--config /another/path/config.json` to create an
 independent host. The CLI is also available with a user-owned npm global installation
 of the archive (`npm install --global /absolute/path/to/archive.tgz`).
 
-`npm run test:install` builds and installs an archive into an empty temporary
-application, then exercises these commands and an explicitly selected API fixture.
-It also tests cancellation and recovery after a host restart. This is installation
-and protocol evidence; real account certification is tracked separately.
+The [real remote examples](real-connections.md) cover pairing, provider settings
+and meaningful application prompts with actual accounts. The linked evidence
+distinguishes connection checks, model execution and application acceptance.
 
 ## Select a provider explicitly
 
@@ -70,16 +76,17 @@ requires `--base-url`; HTTPS is required except for loopback development endpoin
 Custom `extension` entries require a custom host's statically imported registry
 and an exact version pin; the stock CLI does not dynamically load packages.
 See the [extension host example](provider-extensions.md).
-Model selection is required for every non-mock initialization and every run:
+Every run requires an explicit model. Initialization exposes all reported models
+unless an operator chooses a per-connection override:
 
 ```bash
 npx --no-install agenticdriver run --config ./driver/config.json \
-  --provider company-api --model YOUR_MODEL --input "Suggest three brand names."
+  --provider company-api --model YOUR_MODEL < brand-brief.txt
 ```
 
 For an installed CLI, use its official sign-in as the OS user who will run the
-host, then initialize with `--provider codex`, `claude-code`, or `gemini-cli` and
-`--model YOUR_MODEL`. `--account-directory` selects a dedicated account directory;
+host, then initialize with `--provider codex`, `claude-code`, or `gemini-cli`.
+`--model YOUR_MODEL` is an optional restriction. `--account-directory` selects an account directory;
 `--binary` selects an installed executable. No credentials are extracted from a
 subscription or converted to API keys. See [provider setup](providers.md) for the
 supported restrictions and current certification limits.
@@ -94,9 +101,9 @@ policy. See [account-scoped usage](usage.md) before sending records to shared st
 
 ### Provision a separate catalog-only connection
 
-A standalone desktop/web management client is not required: the host CLI serves
-the protocol consumed by an application's backend and Settings UI. This SDK
-does not currently ship a provider-management GUI.
+The host CLI serves the protocol consumed by an application's backend and
+Settings UI. The [Linux desktop](desktop.md) and reusable [provider panel](provider-panel.md)
+offer graphical management of the same host contracts.
 
 When an operator specifically wants metadata without execution, use a new
 configuration and token with the optional `--catalog-only` override:
@@ -111,8 +118,9 @@ agenticdriver status --config ./litagent/config.json --refresh
 
 `--catalog-only` writes `models: []`; every run is rejected before provider
 execution. It cannot be combined with `--model`. Discovery may expose additional
-reported models, but enabling one requires an explicit host configuration edit
-and restart, as well as the application's own enablement. Keep model selection
+reported models, but enabling one requires an explicit provider configuration
+change, through a management connection or a file edit followed by restart,
+as well as the application's own enablement. Keep model selection
 explicit; do not copy all discovered IDs into the allowlist automatically.
 
 Give each application a distinct token ID/subject and private token file, with
