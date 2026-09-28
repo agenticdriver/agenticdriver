@@ -48,6 +48,47 @@ is privileged; this configuration is therefore not a hostile-code sandbox.
 Runner memory is capped at 8 GiB, nested Docker at 4 GiB. Existing homelab services
 are outside this Compose project.
 
+## Storage maintenance
+
+Each serial CI job runs `cache-maintenance.py` after checkout and before builds.
+It selects only the private loopback Docker daemon and its default builder. The
+helper rejects other repositories, refs, runners, events and Docker contexts;
+the root-owned job-started policy remains the authorization boundary.
+
+The [BuildKit cache limits](https://docs.docker.com/reference/cli/docker/buildx/prune/)
+retain up to 8 GB of unused build cache, reserve 2 GB for reuse, and target 16 GB
+of free space. These are cleanup targets, not a filesystem quota: layers used
+by images and active builds cannot necessarily be reclaimed. The helper checks
+the shared work filesystem after pruning and refuses to start compiling below
+8 GiB free. It never prunes containers, images, volumes, the host Docker daemon,
+application data, runner registration or provider credentials. Other projects
+can still fill the shared host filesystem; investigate that separately instead
+of expanding this cleanup's scope.
+
+For manual recovery, first verify the repository runner is idle and no SDK job
+is running. Stop its listener to prevent a new job racing maintenance, preserving
+its registration and volumes:
+
+```sh
+gh api repos/agenticdriver/agenticdriver/actions/runners \
+  --jq '.runners[] | {name,status,busy}'
+ssh prometheus 'cd /var/docker/agenticdriver-ci && docker compose stop runner'
+ssh prometheus 'docker exec agenticdriver-ci-docker-1 docker builder prune --builder default --force --reserved-space 2GB --max-used-space 8GB --min-free-space 16GB'
+ssh prometheus 'df -h /'
+ssh prometheus 'cd /var/docker/agenticdriver-ci && docker compose up -d runner'
+```
+
+The manual command executes inside this project's private daemon container, not
+on the host daemon. Resume the listener even if cleanup cannot recover enough
+space, then inspect storage before dispatching another build. Do not use host
+`docker system prune` or delete shared Docker volumes as a shortcut.
+
+Run `36354619085` failed during Rust linking when the host filesystem filled;
+its earlier successful jobs do not make that workflow green. Private build-cache
+recovery restored capacity without changing the published alpha.4 artifacts.
+The subsequent CI run is the evidence for the maintenance change, rather than
+retroactively treating that failed run as a pass.
+
 ## Provision or recover
 
 Inspect the exact repository's runner inventory and the existing Compose stack
