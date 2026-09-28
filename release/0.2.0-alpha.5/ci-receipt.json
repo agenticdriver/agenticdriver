@@ -1,0 +1,71 @@
+{
+  "source": "2d4d7c22c74e0a1dbd355398ee39f589ed4fbb76",
+  "ciRun": 36428692136,
+  "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36428692136",
+  "jobs": [
+    {
+      "id": 108948982993,
+      "name": "Linux desktop companion",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108951103630,
+      "name": "Offline native Codex contracts",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108951556020,
+      "name": "Offline native Claude contracts",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108951776023,
+      "name": "Linux containers and verified TLS",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108952775579,
+      "name": "Linux LTS and current clients",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108952775676,
+      "name": "Linux minimum runtimes",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108952775880,
+      "name": "Linux current Node",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108956562024,
+      "name": "Documentation site",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    },
+    {
+      "id": 108956744762,
+      "name": "release-candidate / Build and install exact release artifacts",
+      "conclusion": "success",
+      "runner_id": 21,
+      "runner_name": "prometheus-agenticdriver-01"
+    }
+  ],
+  "hostedCompute": false
+}

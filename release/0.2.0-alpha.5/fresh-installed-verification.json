@@ -1,0 +1,22 @@
+{
+  "verifiedAt": "2026-09-28T14:00:45.192119+00:00",
+  "source": "2d4d7c22c74e0a1dbd355398ee39f589ed4fbb76",
+  "ciRun": 36428692136,
+  "javascript": "npm registry 0.2.0-alpha.5",
+  "python": [
+    "reviewed wheel",
+    "reviewed sdist"
+  ],
+  "rust": "crates.io 0.2.0-alpha.5",
+  "go": "public proxy v0.2.0-alpha.5",
+  "transport": "certificate-verified HTTPS",
+  "applicationExamples": [
+    "brandstorm",
+    "literature-review",
+    "email-workspace"
+  ],
+  "modelCalls": 0,
+  "npmPublishRun": 36431377901,
+  "rustPublishRun": 36431388297,
+  "goPublishRun": 36431397762
+}

@@ -39,7 +39,7 @@ Launch **AgenticDriver** from the application menu. The installer uses
 `~/.local/share/agenticdriver/desktop` and the user application-menu directory
 (or `XDG_DATA_HOME`), retains previous preview versions, and does not install a
 system service. The archive is
-`apps/desktop/release/AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz`.
+`apps/desktop/release/AgenticDriver-0.2.0-alpha.5-linux-x64.tar.gz`.
 Extract it and launch `agenticdriver-desktop` for portable use. No sudo or
 `--no-sandbox` option is needed on the qualified Fedora desktop. Distribution
 policies for user namespaces still apply; do not disable the renderer sandbox.
@@ -112,9 +112,8 @@ version `0.2.0-alpha.4` or later.
 
 ### Manage an outbound SSH tunnel
 
-The next desktop alpha adds **SSH tunnels** in **Connections** when **This
-computer** is selected. This feature is currently in the source preview; it is
-not part of the immutable alpha.4 download.
+Desktop **0.2.0-alpha.5 or later** adds **SSH tunnels** in **Connections** when
+**This computer** is selected. Earlier downloads retain their manual SSH recipes.
 
 1. Expand **Add an SSH tunnel**. Name it, enter an existing SSH alias or
    `user@hostname`, and choose an unused application-server port such as `17433`.

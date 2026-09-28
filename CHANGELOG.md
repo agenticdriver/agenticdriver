@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0-alpha.5 — 2026-09-28 (candidate)
+## 0.2.0-alpha.5 — 2026-09-28
 
 - Added desktop-managed outbound OpenSSH routes on Linux: save/edit destinations,
   explicit start/stop, connection-state and recovery messages, and invitation
@@ -23,8 +23,8 @@
   and exit/diagnostic callback failures reject after cleanup. This is process
   cleanup, not isolation from descendants that escape their group.
 
-Wire protocol remains 1.0. Python uses 0.2.0a5. This candidate is not yet a
-published package; see [release status](docs/releases.md). Existing application
+Wire protocol remains 1.0. Python uses 0.2.0a5. npm, Rust, Go and GitHub downloads
+are published; PyPI organization approval remains pending. See [release status](docs/releases.md). Existing application
 authentication, provider/model/account selection and execution grants remain
 unchanged. No default inference deadline or inactivity timeout is introduced.
 

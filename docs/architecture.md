@@ -59,8 +59,8 @@ its browser-safe pairing client handles the approved device flow and explicit
 refresh/revocation. See [authentication](authentication.md). A static token
 registry remains available for local development and operator-owned hosts.
 A hosted browser cannot automatically reach a laptop; use a reachable
-authenticated HTTPS endpoint or a trusted tunnel. The Linux desktop source
-preview can manage an [outbound SSH tunnel](desktop.md#manage-an-outbound-ssh-tunnel)
+authenticated HTTPS endpoint or a trusted tunnel. The Linux desktop from alpha.5
+can manage an [outbound SSH tunnel](desktop.md#manage-an-outbound-ssh-tunnel)
 to a selected application server using existing native SSH access. A hosted relay
 service is not implemented. There is no hidden relay or browser session scraping.
 

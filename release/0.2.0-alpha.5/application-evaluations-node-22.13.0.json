@@ -1,0 +1,1099 @@
+{
+  "reportVersion": 1,
+  "evaluatedAt": "2026-09-28T13:37:11.520Z",
+  "sdkVersion": "0.2.0-alpha.5",
+  "sourceCommit": "2d4d7c22c74e0a1dbd355398ee39f589ed4fbb76",
+  "sourceDirty": false,
+  "mode": "fixture",
+  "datasetVersion": 1,
+  "datasetSha256": "c4bc27b6b07c64b92ba4f834ae445eb9e587861f8574bd9ce3caa0b4cd4ef102",
+  "classification": "synthetic contract evaluation, not model-quality certification",
+  "runtime": "v22.13.0",
+  "provenance": {
+    "provider": "mock",
+    "model": "demo",
+    "account": "synthetic",
+    "embedding": "lexical-hash-v1",
+    "store": "sqlite-reopened"
+  },
+  "liveModelCalls": 0,
+  "passed": true,
+  "rows": [
+    {
+      "id": "brand-brief/local/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": true
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": true
+          },
+          {
+            "id": "forbidden-words",
+            "passed": true
+          },
+          {
+            "id": "selected-palette",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/duplicate-and-forbidden-name",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": false
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": true
+          },
+          {
+            "id": "forbidden-words",
+            "passed": false
+          },
+          {
+            "id": "selected-palette",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/wrong-palette-and-tagline",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": true
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": false
+          },
+          {
+            "id": "forbidden-words",
+            "passed": true
+          },
+          {
+            "id": "selected-palette",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/local/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": true
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": true
+          },
+          {
+            "id": "forbidden-words",
+            "passed": true
+          },
+          {
+            "id": "selected-palette",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/duplicate-and-forbidden-name",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": false
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": true
+          },
+          {
+            "id": "forbidden-words",
+            "passed": false
+          },
+          {
+            "id": "selected-palette",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/wrong-palette-and-tagline",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "proposal-count",
+            "passed": true
+          },
+          {
+            "id": "distinct-names",
+            "passed": true
+          },
+          {
+            "id": "name-length-and-alphabet",
+            "passed": true
+          },
+          {
+            "id": "tagline-constraint",
+            "passed": false
+          },
+          {
+            "id": "forbidden-words",
+            "passed": true
+          },
+          {
+            "id": "selected-palette",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "brand-brief/http/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": true
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/fabricated-citation",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": false
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/valid-citation-unsupported-claim",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": false
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": true
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/stale-citation",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": false
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/local/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": true
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/fabricated-citation",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": false
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/valid-citation-unsupported-claim",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": false
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": true
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/stale-citation",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "shape",
+            "passed": true
+          },
+          {
+            "id": "required-facts",
+            "passed": true
+          },
+          {
+            "id": "supported-claims",
+            "passed": true
+          },
+          {
+            "id": "selected-current-evidence",
+            "passed": false
+          },
+          {
+            "id": "claim-supporting-quote",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "literature-evidence/http/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": true
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/wrong-thread",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": false
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/unauthorized-send-proposal",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/wrong-draft",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": true
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/local/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/reference",
+      "transport": "completed",
+      "quality": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": true
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-pass",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/wrong-thread",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": false
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": true
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/unauthorized-send-proposal",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/wrong-draft",
+      "transport": "completed",
+      "quality": {
+        "passed": false,
+        "checks": [
+          {
+            "id": "review-only-action-shape",
+            "passed": true
+          },
+          {
+            "id": "selected-thread",
+            "passed": true
+          },
+          {
+            "id": "exact-action-set",
+            "passed": true
+          },
+          {
+            "id": "correct-label",
+            "passed": true
+          },
+          {
+            "id": "correct-draft",
+            "passed": false
+          }
+        ]
+      },
+      "expected": "quality-fail",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/wrong-tenant",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/ungranted-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/insufficient-evidence",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/unsupported-capability",
+      "transport": "rejected",
+      "errorCode": "UNSUPPORTED_CAPABILITY",
+      "expected": "UNSUPPORTED_CAPABILITY",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/hostile-context-effect",
+      "transport": "rejected",
+      "errorCode": "TOOL_NOT_ALLOWED",
+      "expected": "TOOL_NOT_ALLOWED",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/cancel-during-tool",
+      "transport": "rejected",
+      "errorCode": "CANCELLED",
+      "expected": "CANCELLED",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/revoked-source",
+      "transport": "rejected",
+      "errorCode": "CONTEXT_NOT_FOUND",
+      "expected": "CONTEXT_NOT_FOUND",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/stale-index",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    },
+    {
+      "id": "email-review/http/deleted-source",
+      "transport": "rejected",
+      "errorCode": "NO_RETRIEVAL_EVIDENCE",
+      "expected": "NO_RETRIEVAL_EVIDENCE",
+      "passed": true
+    }
+  ]
+}

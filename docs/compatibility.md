@@ -2,7 +2,8 @@
 
 The [SDK checks workflow](../.github/workflows/ci.yml) runs on the repository's
 Prometheus Linux x64 runner, using an Ubuntu 24.04 container userspace and the
-Fedora host kernel. GitHub-hosted compute is disabled as of 2026-09-25. See the
+Fedora host kernel. Build/test compute uses Prometheus; npm has a dedicated
+standard GitHub-hosted publish-only job for its supported OIDC flow. See the
 [runner operations guide](../deploy/ci-runner/README.md) for its trust boundary,
 registration, prerequisites and recovery. A green run validates its exact
 commit/dependency resolutions, not other OS releases or vendor accounts.

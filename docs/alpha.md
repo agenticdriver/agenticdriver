@@ -1,12 +1,12 @@
-# 0.2.0-alpha.4 application preview
+# 0.2.0-alpha.5 application preview
 
 This opt-in release packages the provider and connection component, refreshable
 account model catalogs, remote provider management, local/remote pairing, owned
 Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.
-Alpha.4 adds invitation destination previews, protocol-only saved-host checks,
-rename/same-address reconnect and offline recovery. The shared component hides
-stale account details and controls until an explicit retry succeeds, preserving
-same-connection provider selection and device-local preferences.
+Alpha.5 adds desktop-managed outbound SSH routes, same-port restart preserving
+paired grants, and native CLI process cleanup. The source evaluation suite covers
+76 synthetic brand, literature and email cases. Existing saved-host checks,
+credential recovery and shared-panel offline handling remain included.
 
 The earlier [shared provider icons](provider-icons.md), monochrome/colour and
 product-mark choices, reported CLI/account details, strict style CSP and
@@ -14,12 +14,12 @@ capability-gated provider removal remain included. Email/name stays masked until
 Reveal and is remasked on refresh or provider changes. Metadata availability does
 not establish successful model execution.
 
-Alpha.4 is published on npm, crates.io, Go and
-[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.4).
+Alpha.5 is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.5).
 The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are public
 downloads. npm publication uses GitHub OIDC trusted publishing;
 PyPI organization approval remains pending. The
-[publication record](validation/release-0.2.0-alpha.4.md) preserves the immutable
+[publication record](validation/release-0.2.0-alpha.5.md) preserves the immutable
 source, checksums and fresh installed-client verification. Stable npm `latest`
 remains `0.1.0`; opt into the exact alpha version below.
 
@@ -28,27 +28,28 @@ remains `0.1.0`; opt into the exact alpha version below.
 Pin the exact registry version; its package/import name remains `@agenticdriver/sdk`:
 
 ```sh
-npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.4
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.4
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5
 ```
 
-For Rust, use `agenticdriver = "=0.2.0-alpha.4"` in `Cargo.toml`.
+For Rust, use `agenticdriver = "=0.2.0-alpha.5"` in `Cargo.toml`.
 
 Commit the version pin and lockfile integrity. The public GitHub archive remains
 available and is byte-identical to the npm registry archive. The JavaScript archive SHA-256 is
-`3d5ee438194b28f4ab4c128f0aa7076ac31dba5598d44e92638b6906296cc2e1`;
+`f8fbe71aaeb515aed1f082e8c463fbb23bd62ac6fca23133415bb1962902d9dd`;
 verify it against the release manifest. Registry publication used that exact
 reviewed archive. Earlier releases remain available with their
+[alpha.4 evidence](validation/release-0.2.0-alpha.4.md),
 [alpha.3 evidence](validation/release-0.2.0-alpha.3.md) and
 [alpha.2 evidence](validation/release-0.2.0-alpha.2.md).
 
-Python uses the canonical PEP 440 version **0.2.0a4**. PyPI organization approval
-is still pending; download `agenticdriver-0.2.0a4-py3-none-any.whl` from the
+Python uses the canonical PEP 440 version **0.2.0a5**. PyPI organization approval
+is still pending; download `agenticdriver-0.2.0a5-py3-none-any.whl` from the
 prerelease, verify its SHA-256 against the release manifest, and install it in
-your virtual environment with `python -m pip install ./agenticdriver-0.2.0a4-py3-none-any.whl`.
+your virtual environment with `python -m pip install ./agenticdriver-0.2.0a5-py3-none-any.whl`.
 Do not substitute an unrelated PyPI package or a personal publisher.
 
-The Linux desktop archive is `AgenticDriver-0.2.0-alpha.4-linux-x64.tar.gz`.
+The Linux desktop archive is `AgenticDriver-0.2.0-alpha.5-linux-x64.tar.gz`.
 Extract it and run `agenticdriver-desktop`; Node and Electron are bundled.
 See [desktop setup](desktop.md) for private state, local installation and updating.
 There is no automatic updater, public relay, or Windows/macOS build in this alpha.
@@ -81,8 +82,9 @@ There is no automatic updater, public relay, or Windows/macOS build in this alph
 
 For a new local host, use the desktop's empty-host onboarding or the documented
 `agenticdriver setup` / `agenticdriver panel` flow. A one-use invitation exchanges
-for a private connection profile. Remote hosts need reachable HTTPS or an
-existing secure tunnel; a browser's local machine and a hosted backend are
+for a private connection profile. Remote hosts need reachable HTTPS or a
+secure tunnel; the Linux desktop can explicitly manage an outbound SSH route
+to an already trusted application server. In either case, a browser's local machine and a hosted backend are
 different environments. See [connection setup](connections.md).
 
 Upgrade a shared host only after checking active work, preserving its config,

@@ -7,13 +7,17 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-**0.2.0-alpha.5 is the next candidate**, including desktop-managed outbound SSH
-routes and the SDK repository's shared application evaluation suite. Its manifests
-are being checked before publication. The available alpha.4 coordinates below
-remain valid; do not assume alpha.5 registry/download availability until a
-publication receipt is recorded.
+**0.2.0-alpha.5** (Python **0.2.0a5**) is published on npm, crates.io, Go and GitHub.
+It adds desktop-managed outbound SSH routes, native process cleanup and the SDK
+repository's shared application evaluation suite. All nine exact-source checks
+passed on Prometheus. Fresh registry/archive installations passed over verified
+HTTPS; npm trusted publishing also supplies verified same-source provenance.
+The Linux desktop and Python wheel/sdist are public downloads. PyPI organization
+approval remains pending. See [alpha.5 evidence](validation/release-0.2.0-alpha.5.md),
+[alpha adoption](alpha.md) and the [prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.5).
+Stable npm `latest` remains `0.1.0`; previously published versions remain unchanged.
 
-The opt-in **0.2.0-alpha.4** preview (Python **0.2.0a4**) is published on npm, GitHub,
+The earlier **0.2.0-alpha.4** preview (Python **0.2.0a4**) remains published on npm, GitHub,
 crates.io and Go with desktop connection destinations, credential recovery and
 shared-panel offline states. All nine exact-source checks passed on Prometheus.
 The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are usable
