@@ -29,6 +29,13 @@ jobs:
       - run: npm test --prefix apps/desktop
       - run: npm run package:linux --prefix apps/desktop
       - run: docker build -f apps/desktop/Dockerfile -t agenticdriver-desktop-smoke:local apps/desktop
+      - name: Packaged SSH transport with temporary native credentials
+        run: >-
+          docker run --rm --init --network none
+          -e AGENTICDRIVER_REQUIRE_SSH_TEST=1
+          --entrypoint /opt/agenticdriver/resources/app/runtime/node
+          agenticdriver-desktop-smoke:local
+          --test --test-timeout=60000 /opt/agenticdriver/resources/app/tests/ssh-native.test.mjs
       - name: Native packaged desktop with renderer sandbox enabled
         run: docker run --rm --init --network none --cap-add SYS_ADMIN --security-opt seccomp=unconfined agenticdriver-desktop-smoke:local
       - name: Native packaged desktop at 390 by 844

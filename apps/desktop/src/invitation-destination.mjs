@@ -19,13 +19,14 @@ export const DestinationSchema = z.discriminatedUnion("mode", [
       port: z.number().int().min(1024).max(65535),
     })
     .strict(),
+  z.object({ mode: z.literal("managed-tunnel"), tunnelId: z.uuid() }).strict(),
 ]);
 
 /** Reuse the SDK's URL rules with a dummy code. No credential is created or sent. */
 const normalized = (url) =>
   connectionTarget(connectionInvitation(url, "0".repeat(43))).url;
 
-export function invitationDestination(selected, destination) {
+export function invitationDestination(selected, destination, tunnels = []) {
   if (!selected.url)
     throw new DriverError(
       "HOST_STOPPED",
@@ -40,6 +41,14 @@ export function invitationDestination(selected, destination) {
         "HTTPS_REQUIRED",
         "Use the HTTPS address of the proxy or TLS host that reaches this host.",
       );
+  } else if (destination.mode === "managed-tunnel") {
+    const tunnel = tunnels.find((item) => item.id === destination.tunnelId);
+    if (selected.id !== "local" || tunnel?.status !== "running")
+      throw new DriverError(
+        "TUNNEL_NOT_RUNNING",
+        "Start the selected SSH tunnel on this computer before creating its invitation.",
+      );
+    url = `http://127.0.0.1:${tunnel.remotePort}`;
   } else if (destination.mode === "tunnel") {
     if (selected.id !== "local")
       throw new DriverError(

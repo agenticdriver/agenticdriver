@@ -31,6 +31,11 @@ import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 import { providerPresentation } from "@agenticdriver/sdk/catalog";
 import { connectionFailure, invitationPreview } from "./connection-status.mjs";
 import {
+  managedTunnels,
+  TunnelInputSchema,
+  TunnelSchema,
+} from "./ssh-tunnels.mjs";
+import {
   DestinationSchema,
   invitationDestination,
 } from "./invitation-destination.mjs";
@@ -55,6 +60,7 @@ const stateSchema = z
     startLocalAtLaunch: z.boolean(),
     localPort: z.number().int().min(1).max(65535).optional(),
     hosts: z.array(remoteSchema).max(32),
+    tunnels: z.array(TunnelSchema).max(8).default([]),
     usage: z
       .object({
         url: z.string().max(8192),
@@ -114,6 +120,31 @@ export const RequestSchema = z.discriminatedUnion("action", [
     })
     .strict(),
   z.object({ action: z.literal("connections"), hostId: id }).strict(),
+  z
+    .object({ action: z.literal("create-tunnel"), input: TunnelInputSchema })
+    .strict(),
+  z
+    .object({
+      action: z.literal("update-tunnel"),
+      tunnelId: z.uuid(),
+      input: TunnelInputSchema,
+    })
+    .strict(),
+  z.object({ action: z.literal("start-tunnel"), tunnelId: z.uuid() }).strict(),
+  z
+    .object({
+      action: z.literal("stop-tunnel"),
+      tunnelId: z.uuid(),
+      interrupt: z.boolean().default(false),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal("forget-tunnel"),
+      tunnelId: z.uuid(),
+      interrupt: z.boolean().default(false),
+    })
+    .strict(),
   z
     .object({
       action: z.literal("preview-destination"),
@@ -190,7 +221,10 @@ const number = (v) =>
   typeof v === "number" && Number.isFinite(v) ? v : undefined;
 
 /** The controller is backend-only and runs in a bundled Node child, never in the renderer. */
-export async function desktopController(directory, { autoStart = true } = {}) {
+export async function desktopController(
+  directory,
+  { autoStart = true, tunnels = managedTunnels() } = {},
+) {
   await privateDirectory(directory);
   const lockPath = join(directory, "desktop.lock");
   let lock;
@@ -230,6 +264,17 @@ export async function desktopController(directory, { autoStart = true } = {}) {
   const settingsPath = join(directory, "settings.json");
   const clients = new Map();
   const checks = new Map();
+  const tunnelRecord = (id) => {
+    const found = state.tunnels.find((item) => item.id === id);
+    if (!found) fail("TUNNEL_NOT_FOUND", "Select a saved SSH tunnel.");
+    return found;
+  };
+  const tunnelSnapshots = () =>
+    state.tunnels.map((item) => ({
+      ...item,
+      ...tunnels.snapshot(item.id),
+      url: `http://127.0.0.1:${item.remotePort}/`,
+    }));
   let queue = Promise.resolve();
   const serial = (fn) => {
     const pending = queue.then(fn);
@@ -401,12 +446,16 @@ export async function desktopController(directory, { autoStart = true } = {}) {
     };
   }
   async function stop(interrupt = false) {
-    if (!server) return;
+    if (!server) {
+      await tunnels.close();
+      return;
+    }
     if (!interrupt && (await activity()).activeRequests)
       fail(
         "HOST_BUSY",
         "Requests are in progress. Wait for them to finish or explicitly stop and interrupt them.",
       );
+    await tunnels.close();
     const owned = server;
     // New UI requests fail before close begins; only this desktop-owned listener is closed.
     localClient = undefined;
@@ -431,6 +480,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         check: checks.get("local"),
       },
       hosts: state.hosts.map(publicHost),
+      tunnels: tunnelSnapshots(),
       usage: { url: state.usage.url, hasToken: Boolean(state.usage.tokenFile) },
     };
   }
@@ -528,6 +578,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         return invitationDestination(
           connection(request.hostId),
           request.destination,
+          tunnelSnapshots(),
         );
       case "check-host":
         return checkHost(request.hostId);
@@ -674,6 +725,99 @@ export async function desktopController(directory, { autoStart = true } = {}) {
       }
       case "connections":
         return (await client(request.hostId)).connections();
+      case "create-tunnel": {
+        if (state.tunnels.length >= 8)
+          fail(
+            "TUNNEL_CAPACITY",
+            "Remove an unused tunnel before adding another.",
+          );
+        if (
+          state.tunnels.some(
+            (item) =>
+              item.target === request.input.target &&
+              item.remotePort === request.input.remotePort,
+          )
+        )
+          fail(
+            "TUNNEL_EXISTS",
+            "A tunnel already uses that SSH destination and loopback port. Start the saved tunnel instead.",
+          );
+        await save({
+          ...state,
+          tunnels: [...state.tunnels, { ...request.input, id: randomUUID() }],
+        });
+        return overview();
+      }
+      case "update-tunnel": {
+        tunnelRecord(request.tunnelId);
+        if (
+          ["running", "starting"].includes(
+            tunnels.snapshot(request.tunnelId).status,
+          )
+        )
+          fail(
+            "TUNNEL_RUNNING",
+            "Stop this tunnel before changing its destination or port.",
+          );
+        if (
+          state.tunnels.some(
+            (item) =>
+              item.id !== request.tunnelId &&
+              item.target === request.input.target &&
+              item.remotePort === request.input.remotePort,
+          )
+        )
+          fail(
+            "TUNNEL_EXISTS",
+            "Another saved tunnel already uses that destination and port.",
+          );
+        await save({
+          ...state,
+          tunnels: state.tunnels.map((item) =>
+            item.id === request.tunnelId
+              ? { ...request.input, id: item.id }
+              : item,
+          ),
+        });
+        await tunnels.forget(request.tunnelId);
+        return overview();
+      }
+      case "start-tunnel": {
+        const item = tunnelRecord(request.tunnelId);
+        if (!server)
+          fail(
+            "HOST_STOPPED",
+            "Start the local host before starting its tunnel.",
+          );
+        await tunnels.start(item, Number(new URL(server.url).port));
+        return overview();
+      }
+      case "stop-tunnel":
+      case "forget-tunnel": {
+        tunnelRecord(request.tunnelId);
+        if (
+          !request.interrupt &&
+          ["running", "starting"].includes(
+            tunnels.snapshot(request.tunnelId).status,
+          ) &&
+          (await activity()).activeRequests
+        )
+          fail(
+            "TUNNEL_BUSY",
+            "The local host has active requests. Wait for them to finish or explicitly stop this tunnel and interrupt its traffic.",
+          );
+        if (request.action === "forget-tunnel") {
+          await tunnels.stop(request.tunnelId);
+          await save({
+            ...state,
+            tunnels: state.tunnels.filter(
+              (item) => item.id !== request.tunnelId,
+            ),
+          });
+          await tunnels.forget(request.tunnelId);
+        } else await tunnels.stop(request.tunnelId);
+        return overview();
+      }
       case "invite": {
         const selected = connection(request.hostId);
         // Validate the destination before minting a grant. The operator credential
@@ -681,6 +825,7 @@ export async function desktopController(directory, { autoStart = true } = {}) {
         const destination = invitationDestination(
           selected,
           request.destination,
+          tunnelSnapshots(),
         );
         const invitation = await (
           await client(request.hostId)

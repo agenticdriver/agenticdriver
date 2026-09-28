@@ -45,6 +45,7 @@ let previewTimer,
 const destinationPreviews = new WeakMap();
 let destinationTimer,
   destinationSequence = 0;
+let renderedTunnels;
 const pages = {
   providers: [
     "PROVIDERS & ACCOUNTS",
@@ -237,7 +238,7 @@ function renderHosts() {
     <div class="card"><div class="card-head"><div><h2>Connect another host</h2><p class="muted">Paste an invitation and review where it will connect.</p></div><span class="badge">Local or HTTPS</span></div><form id="connect-form" class="stack">${invitationField()}<label class="field">Name<input name="label" required maxlength="80" placeholder="Workstation, home server…" autocomplete="off"></label><p class="help">The host operator creates an invitation in Connections or with agenticdriver pair. Each invitation is used once. Provider management needs a management grant.</p><div><button class="button primary" type="submit" disabled>Connect host</button></div></form></div>`;
 }
 function invitationDestinationFields(hostId) {
-  return `<fieldset class="destination-fields"><legend>Where will the application backend connect?</legend><label class="field">Connection route<select name="destination"><option value="current">${hostId === "local" ? "On this computer" : "Use this host’s saved address"}</option><option value="https">Another computer · HTTPS</option>${hostId === "local" ? '<option value="tunnel">Another computer · SSH tunnel</option>' : ""}</select></label><label class="field" data-destination-field="https" hidden>Reachable HTTPS address<input name="clientUrl" type="url" required disabled placeholder="https://driver.example.com/agenticdriver/" autocomplete="off"></label><label class="field" data-destination-field="tunnel" hidden>Loopback port beside the application backend<input name="tunnelPort" type="number" value="17433" min="1024" max="65535" required disabled></label><div class="destination-preview" role="status"></div></fieldset>`;
+  return `<fieldset class="destination-fields"><legend>Where will the application backend connect?</legend><label class="field">Connection route<select name="destination"><option value="current">${hostId === "local" ? "On this computer" : "Use this host’s saved address"}</option><option value="https">Another computer · HTTPS</option>${hostId === "local" ? '<option value="managed-tunnel">Another computer · Managed SSH tunnel</option><option value="tunnel">Another computer · Manual SSH instructions</option>' : ""}</select></label><label class="field" data-destination-field="https" hidden>Reachable HTTPS address<input name="clientUrl" type="url" required disabled placeholder="https://driver.example.com/agenticdriver/" autocomplete="off"></label><label class="field" data-destination-field="tunnel" hidden>Loopback port beside the application backend<input name="tunnelPort" type="number" value="17433" min="1024" max="65535" required disabled></label>${hostId === "local" ? '<label class="field" data-destination-field="managed-tunnel" hidden>Saved SSH tunnel<select name="managedTunnelId" required disabled></select></label>' : ""}<div class="destination-preview" role="status"></div></fieldset>`;
 }
 function destinationInput(form) {
   const mode = form.elements.destination.value;
@@ -245,7 +246,9 @@ function destinationInput(form) {
     ? { mode, url: form.elements.clientUrl.value.trim() }
     : mode === "tunnel"
       ? { mode, port: Number(form.elements.tunnelPort.value) }
-      : { mode };
+      : mode === "managed-tunnel"
+        ? { mode, tunnelId: form.elements.managedTunnelId.value }
+        : { mode };
 }
 async function previewDestination(form) {
   const input = destinationInput(form);
@@ -254,7 +257,7 @@ async function previewDestination(form) {
   form.querySelector('[type="submit"]').disabled = true;
   for (const field of form.querySelectorAll("[data-destination-field]")) {
     field.hidden = field.dataset.destinationField !== input.mode;
-    field.querySelector("input").disabled = field.hidden;
+    field.querySelector("input,select").disabled = field.hidden;
   }
   const target = form.querySelector(".destination-preview");
   target.textContent = "Reading destination…";
@@ -270,15 +273,61 @@ async function previewDestination(form) {
         ? "Configure this HTTPS address to reach the selected host, including any path prefix. The connecting application will verify its certificate."
         : input.mode === "tunnel"
           ? "Start one of the tunnels below before using the invitation. The loopback listener must be beside the application backend, not only its browser."
-          : preview.url.startsWith("http:")
-            ? "This loopback address reaches this computer. An application backend running elsewhere needs HTTPS or a tunnel."
-            : "Applications must be able to reach this saved HTTPS address from their backend.";
+          : input.mode === "managed-tunnel"
+            ? "OpenSSH accepted this tunnel. This loopback address is on the selected application server. Keep AgenticDriver open; the application still needs to complete pairing."
+            : preview.url.startsWith("http:")
+              ? "This loopback address reaches this computer. An application backend running elsewhere needs HTTPS or a tunnel."
+              : "Applications must be able to reach this saved HTTPS address from their backend.";
     target.innerHTML = `<div class="notice"><strong>Invitation destination</strong><p class="address">${escape(preview.url)}</p><p>${description}</p>${preview.commands ? `<details class="tunnel-instructions"><summary>SSH setup instructions</summary><p>Choose one direction. Replace the capitalized destination with your existing SSH account and machine; keep that SSH session running.</p><label class="field">Run on the application backend machine<textarea readonly class="command" aria-label="Forward SSH tunnel command">${escape(preview.commands.fromApplication)}</textarea></label><p class="help">This direction needs SSH access from the application machine to this computer.</p><label class="field">Or run on this computer<textarea readonly class="command" aria-label="Reverse SSH tunnel command">${escape(preview.commands.fromHost)}</textarea></label><p class="help">This direction needs SSH access from this computer to the application server. Both recipes request a loopback listener; the SSH server must permit forwarding and honor that bind address.</p></details>` : ""}<p class="help">No route has been verified and no access has been issued. ${input.mode === "tunnel" ? "AgenticDriver does not start SSH or configure the server." : "Operator credentials are never sent to this preview address."}</p></div>`;
     destinationPreviews.set(form, JSON.stringify(input));
     form.querySelector('[type="submit"]').disabled = false;
   } catch {
     if (sequence !== destinationSequence || !form.isConnected) return;
-    target.innerHTML = `<p class="notice warning">${input.mode === "https" ? "Enter an absolute HTTPS address without credentials, a query string or a fragment." : input.mode === "tunnel" ? "Choose a loopback port between 1024 and 65535." : "Start the selected host before creating an invitation."}</p>`;
+    target.innerHTML = `<div class="notice warning"><p>${input.mode === "https" ? "Enter an absolute HTTPS address without credentials, a query string or a fragment." : input.mode === "tunnel" ? "Choose a loopback port between 1024 and 65535." : input.mode === "managed-tunnel" ? "Add and start an SSH tunnel above, then select it here. Saved routes do not connect automatically." : "Start the selected host before creating an invitation."}</p>${input.mode === "managed-tunnel" ? '<button type="button" class="button" data-action="show-tunnel-setup">Set up SSH tunnel</button>' : ""}</div>`;
+  }
+}
+function tunnelCard() {
+  return `<div class="card" id="tunnel-card"><div class="card-head"><div><h2>SSH tunnels</h2><p class="muted">Let an application server reach this computer through your existing SSH access. Start a tunnel here, then use it for an invitation below.</p></div><span class="badge">Outbound · Linux</span></div><div id="tunnel-list"></div><details class="host-options" id="tunnel-setup"><summary>Add an SSH tunnel</summary><form id="tunnel-form" class="stack"><div class="fields"><label class="field">Name<input name="label" required maxlength="80" placeholder="My LitAgent server" autocomplete="off"></label><label class="field">SSH destination<input name="target" required maxlength="200" placeholder="my-server or user@server" autocomplete="off" spellcheck="false"></label><label class="field">Application server port<input name="remotePort" type="number" value="17433" min="1024" max="65535" required></label></div><p class="help">Use a destination you can already reach with SSH without a password prompt. Its host key must already be trusted. The server must permit loopback forwarding. Keys and SSH settings stay on this computer.</p><div><button type="submit" class="button">Save tunnel</button><button type="button" class="button quiet" data-action="cancel-tunnel-edit" hidden>Cancel editing</button></div></form></details><p class="help">Saving does not connect. Starting opens only the selected route; applications still need a scoped invitation. Stopping a tunnel does not revoke their access.</p></div>`;
+}
+function resetTunnelForm() {
+  const form = $("#tunnel-form");
+  form.reset();
+  delete form.dataset.tunnel;
+  form.querySelector('[type="submit"]').textContent = "Save tunnel";
+  form.querySelector('[data-action="cancel-tunnel-edit"]').hidden = true;
+}
+function renderTunnelList() {
+  const list = $("#tunnel-list");
+  if (!list) return;
+  const tunnels = overview.tunnels ?? [];
+  const signature = JSON.stringify(tunnels);
+  if (signature === renderedTunnels) return;
+  renderedTunnels = signature;
+  list.innerHTML =
+    tunnels
+      .map(
+        (t) =>
+          `<div class="tunnel-entry"><div class="connection-row"><div><strong>${escape(t.label)}</strong><div class="connection-details"><span class="badge ${t.status === "running" ? "green" : t.status === "failed" ? "amber" : ""}">${escape(t.status[0].toUpperCase() + t.status.slice(1))}</span><span class="address">${escape(t.target)} · ${escape(t.url)}</span></div><p class="help">${t.status === "running" ? "SSH forwarding is active. Application pairing and provider access are checked separately." : t.status === "starting" ? "Connecting with your existing SSH sign-in…" : t.status === "stopped" ? "Start when needed. This tunnel will not reconnect automatically." : escape(t.message)}</p></div><div class="host-actions">${t.status === "running" ? `<button class="button" data-action="use-tunnel" data-tunnel="${t.id}">Use for invitation</button>` : ""}<button class="button ${t.status === "running" ? "quiet" : "primary"}" data-action="${t.status === "running" ? "stop-tunnel" : "start-tunnel"}" data-tunnel="${t.id}" ${t.status === "starting" || !overview.local.running ? "disabled" : ""}>${t.status === "running" ? "Stop tunnel" : t.status === "starting" ? "Starting…" : "Start tunnel"}</button><button class="button quiet" data-action="edit-tunnel" data-tunnel="${t.id}" ${["starting", "running"].includes(t.status) ? "disabled" : ""}>Edit</button><button class="button quiet" data-action="forget-tunnel" data-tunnel="${t.id}" ${t.status === "starting" ? "disabled" : ""}>Remove</button></div></div><div class="notice warning" data-tunnel-confirm="${t.id}" hidden></div></div>`,
+      )
+      .join("") ||
+    '<p class="muted">No saved tunnels. Local and HTTPS connections work without one.</p>';
+  const form = $("#invite-form");
+  const select = form?.elements.managedTunnelId;
+  if (select) {
+    const chosen = select.value;
+    select.innerHTML =
+      '<option value="">Choose a running tunnel</option>' +
+      tunnels
+        .map(
+          (t) =>
+            `<option value="${t.id}" ${t.status !== "running" ? "disabled" : ""}>${escape(t.label)} · ${escape(t.status)}</option>`,
+        )
+        .join("");
+    select.value = tunnels.some((t) => t.id === chosen) ? chosen : "";
+    if (form.elements.destination.value === "managed-tunnel") {
+      clearInvitationResult();
+      void previewDestination(form);
+    }
   }
 }
 async function connections(current) {
@@ -296,8 +345,11 @@ async function connections(current) {
     $("#connections-view").innerHTML = `
       <div class="summary-grid" id="connection-summary"></div>
       <div class="card"><div class="card-head"><div><h2>Application access</h2><p class="muted">Counts include status checks and model streams observed by this host process. They do not indicate a persistent online connection.</p></div><span class="badge" id="connections-updated">Just refreshed</span></div><div id="connection-list"></div></div>
+      ${hostId === "local" ? tunnelCard() : ""}
       <div class="card"><div class="card-head"><div><h2>Connect a new application</h2><p class="muted">Create an invitation, then paste it into the application’s AgenticDriver settings.</p></div><span class="badge">One use · 10 minutes</span></div><form id="invite-form" class="stack"><label class="field">Application name<input name="subject" required maxlength="128" placeholder="LitAgent, Brandstorm, AI Workspace…"></label>${invitationDestinationFields(hostId)}<fieldset><legend>Provider access</legend><div class="provider-checks">${providers.map((p) => `<label class="check"><input type="checkbox" name="provider" value="${escape(p.id)}" checked><span>${escape(p.name || p.id)} <small class="muted">${escape(p.kind)}</small></span></label>`).join("") || '<p class="muted">Add a provider first, or create a management-only invitation.</p>'}</div></fieldset><div class="fields"><label class="field">Connection lifetime<select name="lifetime"><option value="86400">1 day</option><option value="604800">7 days</option><option value="2592000" selected>30 days</option><option value="7776000">90 days</option></select></label><label class="check"><input type="checkbox" name="manage"><span>Allow provider management<br><small class="muted">Can edit providers and issue or revoke connection grants.</small></span></label></div><div><button class="button primary" type="submit" disabled>Create invitation</button></div></form><div id="invitation-result" hidden></div></div>`;
     renderConnectionList();
+    renderedTunnels = undefined;
+    renderTunnelList();
     await previewDestination($("#invite-form"));
   } catch (error) {
     if (current === generation)
@@ -374,7 +426,93 @@ document.addEventListener("click", (event) => {
   const act = button.dataset.action;
   if (!act) return;
   void action(async () => {
-    if (act === "start" || act === "stop" || act === "interrupt") {
+    if (act === "show-tunnel-setup") {
+      $("#tunnel-setup").open = true;
+      $("#tunnel-card").scrollIntoView({ block: "start" });
+      $("#tunnel-form").elements.label.focus();
+    } else if (act === "cancel-tunnel-edit") {
+      resetTunnelForm();
+    } else if (act === "edit-tunnel") {
+      const tunnel = overview.tunnels.find(
+        (item) => item.id === button.dataset.tunnel,
+      );
+      const form = $("#tunnel-form");
+      form.dataset.tunnel = tunnel.id;
+      for (const key of ["label", "target", "remotePort"])
+        form.elements[key].value = tunnel[key];
+      form.querySelector('[type="submit"]').textContent = "Save changes";
+      form.querySelector('[data-action="cancel-tunnel-edit"]').hidden = false;
+      $("#tunnel-setup").open = true;
+      form.scrollIntoView({ block: "start" });
+      form.elements.label.focus();
+      notice(
+        "Edit this stopped route. A changed server or port needs a new invitation in the application.",
+      );
+    } else if (act === "use-tunnel") {
+      const form = $("#invite-form");
+      form.elements.destination.value = "managed-tunnel";
+      form.elements.managedTunnelId.value = button.dataset.tunnel;
+      clearInvitationResult();
+      await previewDestination(form);
+      form.scrollIntoView({ block: "start" });
+      form.elements.subject.focus();
+    } else if (
+      [
+        "start-tunnel",
+        "stop-tunnel",
+        "forget-tunnel",
+        "interrupt-tunnel",
+      ].includes(act)
+    ) {
+      const operation =
+        act === "interrupt-tunnel" ? button.dataset.operation : act;
+      const tunnelId = button.dataset.tunnel;
+      if (
+        operation === "forget-tunnel" &&
+        act !== "interrupt-tunnel" &&
+        button.dataset.confirm !== "yes"
+      ) {
+        button.dataset.confirm = "yes";
+        button.textContent = "Confirm removal";
+        notice(
+          "Remove this saved tunnel and stop its SSH session. Application grants will remain unchanged.",
+        );
+        return;
+      }
+      button.disabled = true;
+      if (operation === "start-tunnel") button.textContent = "Starting…";
+      try {
+        overview = await request({
+          action: operation,
+          tunnelId,
+          ...(operation === "start-tunnel"
+            ? {}
+            : { interrupt: act === "interrupt-tunnel" }),
+        });
+        if (
+          operation === "forget-tunnel" &&
+          $("#tunnel-form").dataset.tunnel === tunnelId
+        )
+          resetTunnelForm();
+        notice(
+          operation === "start-tunnel"
+            ? "SSH tunnel running. Choose Use for invitation to connect your application."
+            : "Tunnel stopped. Existing application grants were not revoked.",
+        );
+      } catch (error) {
+        if (error.code === "TUNNEL_BUSY") {
+          const confirm = $(`[data-tunnel-confirm="${tunnelId}"]`);
+          confirm.hidden = false;
+          confirm.innerHTML = `<p>The local host has active requests. Stopping this tunnel may interrupt them.</p><button class="button danger" data-action="interrupt-tunnel" data-operation="${operation}" data-tunnel="${tunnelId}">Stop tunnel and interrupt its traffic</button>`;
+          return;
+        }
+        throw error;
+      } finally {
+        button.disabled = false;
+        await refreshOverview();
+        renderTunnelList();
+      }
+    } else if (act === "start" || act === "stop" || act === "interrupt") {
       try {
         overview = await request({
           action: act === "start" ? "start" : "stop",
@@ -444,7 +582,9 @@ document.addEventListener("click", (event) => {
 document.addEventListener("submit", (event) => {
   const form = event.target;
   if (
-    !["connect-form", "invite-form", "usage-form"].includes(form.id) &&
+    !["connect-form", "invite-form", "usage-form", "tunnel-form"].includes(
+      form.id,
+    ) &&
     !form.matches(".reconnect-form,.rename-form")
   )
     return;
@@ -452,7 +592,23 @@ document.addEventListener("submit", (event) => {
   const data = new FormData(form);
   const hostId = selected();
   void action(async () => {
-    if (form.id === "connect-form" || form.matches(".reconnect-form")) {
+    if (form.id === "tunnel-form") {
+      overview = await request({
+        action: form.dataset.tunnel ? "update-tunnel" : "create-tunnel",
+        ...(form.dataset.tunnel ? { tunnelId: form.dataset.tunnel } : {}),
+        input: {
+          label: data.get("label"),
+          target: data.get("target"),
+          remotePort: Number(data.get("remotePort")),
+        },
+      });
+      resetTunnelForm();
+      $("#tunnel-setup").open = false;
+      renderTunnelList();
+      notice(
+        "Tunnel saved. Start it when you are ready to connect to that SSH server.",
+      );
+    } else if (form.id === "connect-form" || form.matches(".reconnect-form")) {
       const value = String(data.get("invitation")).trim();
       if (invitationPreviews.get(form)?.value !== value) {
         await previewInvitation(form);
@@ -593,7 +749,7 @@ $("#host-select").addEventListener("change", () => {
 document.addEventListener("change", (event) => {
   if (event.target.form?.id === "invite-form") {
     clearInvitationResult();
-    if (event.target.name === "destination") {
+    if (["destination", "managedTunnelId"].includes(event.target.name)) {
       clearTimeout(destinationTimer);
       void previewDestination(event.target.form);
     }
@@ -615,6 +771,7 @@ $("#page-refresh").addEventListener("click", () => {
     else if (view === "connections" && $("#connection-list")) {
       links = await request({ action: "connections", hostId: selected() });
       renderConnectionList();
+      renderTunnelList();
     } else await show(view);
   });
 });
@@ -1197,7 +1354,7 @@ try {
     check(remoteId !== "local" && overview.hosts.length === 1);
     check(overview.hosts[0].check.status === "connected");
     await uiClick('button[data-view="hosts"]');
-    const settings = $(".host-options");
+    const settings = $("#hosts-view .host-options");
     settings.open = true;
     const nameForm = $(".rename-form");
     nameForm.elements.label.value = "Renamed workstation";
@@ -1283,6 +1440,33 @@ try {
     await uiClick('[data-action="select"][data-host="local"]');
     await uiClick('button[data-view="connections"]');
     inviteForm = $("#invite-form");
+    $("#tunnel-setup").open = true;
+    const tunnelForm = $("#tunnel-form");
+    tunnelForm.elements.label.value = "Remote library";
+    tunnelForm.elements.target.value = "fixture.example.invalid";
+    await uiSubmit(tunnelForm);
+    check(
+      overview.tunnels.length === 1 && overview.tunnels[0].status === "stopped",
+    );
+    check($("#tunnel-list").textContent.includes("Remote library"));
+    await uiClick('[data-action="edit-tunnel"]');
+    check(tunnelForm.dataset.tunnel === overview.tunnels[0].id);
+    tunnelForm.elements.label.value = "Renamed library route";
+    await uiSubmit(tunnelForm);
+    check(overview.tunnels[0].label === "Renamed library route");
+    check(!tunnelForm.dataset.tunnel);
+    fitsViewport();
+    await chooseRoute("managed-tunnel");
+    await until(() =>
+      inviteForm
+        .querySelector(".destination-preview")
+        .textContent.includes("Add and start an SSH tunnel"),
+    );
+    check(inviteForm.querySelector('[type="submit"]').disabled);
+    await uiClick('[data-action="forget-tunnel"]');
+    check(overview.tunnels.length === 1);
+    await uiClick('[data-action="forget-tunnel"]');
+    check(overview.tunnels.length === 0);
     await chooseRoute("tunnel");
     await until(() => !inviteForm.querySelector('[type="submit"]').disabled);
     inviteForm.querySelector(".tunnel-instructions").open = true;
@@ -1297,6 +1481,7 @@ try {
       providerRemovalUi: true,
       remoteConnectionUi: true,
       invitationDestinationUi: true,
+      managedSshUi: true,
       panelRecoveryUi: true,
       keyboardUi: true,
       strictStyleCsp: true,
@@ -1310,8 +1495,17 @@ try {
   }
 } catch (error) {
   notice(error.message, true);
-  if (api?.smoke)
-    await api.reportSmoke({ startupError: error.code ?? "STARTUP_FAILED" });
+  if (api?.smoke) {
+    // A source line locates fixture failures without exporting stacks, data or credentials.
+    const lines = [...(error.stack ?? "").matchAll(/app\.js:(\d+):/g)]
+      .slice(0, 4)
+      .map((match) => match[1])
+      .join("_");
+    await api.reportSmoke({
+      startupError:
+        error.code ?? (lines ? `SMOKE_LINES_${lines}` : "STARTUP_FAILED"),
+    });
+  }
 }
 setInterval(() => {
   if (busy || document.hidden) return;
@@ -1324,6 +1518,7 @@ setInterval(() => {
       if (selected() === hostId && view === "connections") {
         links = next;
         renderConnectionList();
+        renderTunnelList();
       }
     }
   })().catch(() => {

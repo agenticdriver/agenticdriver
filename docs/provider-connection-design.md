@@ -113,8 +113,11 @@ A hosted application cannot reach a user's laptop by calling its own loopback
 address. Remote onboarding must explain the reachable path and offer supported
 direct TLS or a separately implemented outbound connection service. T3's
 [pairing, SSH and relay options](https://github.com/pingdotgg/t3code/blob/295d7cba09bb4b4084482a74b5a42a0cac72a0b1/docs/user/remote-access.md)
-are useful UX references. The existing outbound-relay roadmap item remains a
-separate implementation; a pairing invitation does not create a network tunnel.
+are useful UX references. AD-015 now selects a desktop-managed outbound OpenSSH
+tunnel as the smallest option for an existing SSH-accessible application server;
+see [the source preview](desktop.md#manage-an-outbound-ssh-tunnel). It reuses native
+SSH identity and host trust without adding a hosted relay. Starting the tunnel is
+an explicit step; a pairing invitation alone does not create network reachability.
 
 ## Observability and application ownership
 

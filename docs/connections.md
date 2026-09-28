@@ -67,6 +67,9 @@ client's CA trust for private certificates. A loopback URL refers to the machine
 running the application backend. For an app hosted elsewhere, use a reachable
 TLS host or an explicitly configured SSH tunnel terminating beside that backend.
 The SDK does not install a tunnel, change a firewall, or discover remote machines.
+The Linux desktop's next source preview can [manage an outbound SSH tunnel](desktop.md#manage-an-outbound-ssh-tunnel)
+using an existing trusted SSH destination. It produces the same invitations and
+requires no client-language or application authentication migration.
 
 ## All-language connection API
 

@@ -1,6 +1,7 @@
 /** Explicit opt-in remote transport check. Only a temporary mock host and loopback SSH forwarding. */
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { once } from "node:events";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -24,10 +25,14 @@ const sshOptions = [
   "ConnectTimeout=10",
   "-o",
   "ForwardAgent=no",
+  "-o",
+  "PermitLocalCommand=no",
+  "-o",
+  "ClearAllForwardings=yes",
 ];
 const quote = (text) => "'" + text.replaceAll("'", "'\\''") + "'";
 const directory = await mkdtemp(join(tmpdir(), "agenticdriver-ssh-"));
-let host, tunnel;
+let host, tunnelId;
 async function stop(child) {
   if (!child?.pid || child.exitCode !== null || child.signalCode !== null)
     return;
@@ -98,51 +103,38 @@ try {
       },
     },
   });
-  const source = (await host.request({ action: "overview" })).local.url;
-  const localPort = new URL(source).port;
-  tunnel = spawn(
-    "ssh",
-    [
-      ...sshOptions,
-      "-N",
-      "-o",
-      "ExitOnForwardFailure=yes",
-      "-R",
-      `127.0.0.1:0:127.0.0.1:${localPort}`,
-      target,
-    ],
-    { stdio: ["ignore", "ignore", "pipe"] },
-  );
-  const remotePort = await new Promise((resolve, reject) => {
-    let diagnostics = "";
-    const timeout = setTimeout(
-      () => finish(new Error("SSH forwarding did not become ready.")),
-      15000,
+  const requestedPort = process.argv[3];
+  let remotePort;
+  if (requestedPort !== undefined) {
+    remotePort = Number(requestedPort);
+    assert.ok(
+      Number.isInteger(remotePort) && remotePort >= 1024 && remotePort <= 65535,
     );
-    const finish = (error, port) => {
-      clearTimeout(timeout);
-      tunnel.off("error", failed);
-      tunnel.off("exit", exited);
-      error ? reject(error) : resolve(port);
-    };
-    const failed = () =>
-      finish(new Error("Could not start the selected SSH client."));
-    const exited = () =>
-      finish(
-        new Error("The selected SSH route exited before allocating a port."),
-      );
-    tunnel.on("error", failed);
-    tunnel.on("exit", exited);
-    tunnel.stderr.on("data", (chunk) => {
-      diagnostics = (diagnostics + chunk).slice(-8192);
-      const match = /Allocated port (\d+) for remote forward/.exec(diagnostics);
-      if (match) finish(undefined, Number(match[1]));
-    });
+  } else {
+    // Test-only free-port selection. Production always uses the saved explicit port.
+    const probe =
+      "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1]); s.close()";
+    const result = await promisify(execFile)(
+      "ssh",
+      [...sshOptions, target, `python3 -c ${quote(probe)}`],
+      { timeout: 15000, maxBuffer: 1024 },
+    );
+    remotePort = Number(result.stdout.trim());
+    assert.ok(
+      Number.isInteger(remotePort) && remotePort >= 1024 && remotePort <= 65535,
+    );
+  }
+  const configured = await host.request({
+    action: "create-tunnel",
+    input: { label: "Synthetic remote transport", target, remotePort },
   });
+  tunnelId = configured.tunnels[0].id;
+  const started = await host.request({ action: "start-tunnel", tunnelId });
+  assert.equal(started.tunnels[0].status, "running");
   const invitation = await host.request({
     action: "invite",
     hostId: "local",
-    destination: { mode: "tunnel", port: remotePort },
+    destination: { mode: "managed-tunnel", tunnelId },
     input: {
       grant: { subject: "ssh-metadata-fixture", providers: ["ssh-fixture"] },
       connectionLifetimeSeconds: 60,
@@ -184,13 +176,17 @@ try {
       .length,
     0,
   );
-  await stop(tunnel);
-  tunnel = undefined;
+  await host.request({ action: "stop-tunnel", tunnelId });
+  assert.equal(
+    (await host.request({ action: "overview" })).tunnels[0].status,
+    "stopped",
+  );
   await host.close();
   host = undefined;
   console.log(
     JSON.stringify({
       sshTransport: "passed",
+      desktopManaged: true,
       target,
       protocol: result.protocol,
       providerIds: result.providerIds,
@@ -203,7 +199,6 @@ try {
     }),
   );
 } finally {
-  await stop(tunnel);
   await host?.close({ interrupt: true });
   await rm(directory, { recursive: true, force: true });
 }

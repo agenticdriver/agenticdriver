@@ -58,6 +58,7 @@ try {
   assert.equal(evidence.providerRemovalUi, true);
   assert.equal(evidence.remoteConnectionUi, true);
   assert.equal(evidence.invitationDestinationUi, true);
+  assert.equal(evidence.managedSshUi, true);
   assert.equal(evidence.panelRecoveryUi, true);
   assert.equal(evidence.keyboardUi, true);
   if (process.env.AGENTICDRIVER_DESKTOP_SMOKE_NARROW === "1")

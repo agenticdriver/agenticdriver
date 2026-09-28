@@ -110,6 +110,68 @@ version `0.2.0-alpha.4` or later.
   connects to the driver machine; a reverse tunnel runs on the driver machine and
   connects to the application server. Keep the chosen SSH session running.
 
+### Manage an outbound SSH tunnel
+
+The next desktop alpha adds **SSH tunnels** in **Connections** when **This
+computer** is selected. This feature is currently in the source preview; it is
+not part of the immutable alpha.4 download.
+
+1. Expand **Add an SSH tunnel**. Name it, enter an existing SSH alias or
+   `user@hostname`, and choose an unused application-server port such as `17433`.
+   Saving the route does not contact the server.
+2. Choose **Start tunnel**. The desktop uses `/usr/bin/ssh` and your existing
+   native SSH configuration, keys or agent. Set up and verify that destination
+   in a terminal first; password prompts and unknown/changed host keys are
+   rejected. Use an SSH alias for IPv6, custom SSH ports or jump-host settings.
+3. Choose **Use for invitation**, review the application name, provider access
+   and lifetime, then create its invitation. The address is loopback on the
+   selected application server. Pair from the backend there, not from a browser
+   or a different container's network namespace.
+
+**Running** means OpenSSH accepted the requested forwarding, not that the
+application has paired or a provider has passed inference. **Stopped** and
+**Failed** routes cannot create managed-tunnel invitations. Failures explain
+whether host trust, native sign-in, forwarding or reachability needs attention.
+Use **Start tunnel** to reconnect explicitly. The saved port stays the same;
+there is no automatic retry, port change, alternate server or transport fallback.
+Use **Edit** on a stopped route to correct its name, destination or port. A changed
+server or port requires a new invitation at that address in the application.
+
+Stopping the tunnel or closing its local host ends only its owned SSH session.
+The desktop asks before interrupting active paired requests. A separate worker
+supervises OpenSSH and closes it if the owning desktop worker disconnects.
+Saved tunnels remain stopped when the desktop next opens. Existing application
+grants survive a tunnel restart and still expire or revoke on the SDK host;
+**Remove** forgets the route, not those grants. Revocation blocks new authorized
+requests and does not cancel an already-running request.
+
+This is an optional outbound OpenSSH integration, with no hosted relay service.
+It needs no inbound laptop listener beyond the existing private SDK host and no
+new firewall rule on that laptop. The selected SSH server is a trusted transport
+endpoint: SSH encryption ends there, and its administrators can observe traffic
+on its loopback interface. Provider API keys and native login files stay on the
+execution computer; scoped application bearer credentials travel inside SSH.
+The SSH server must permit remote forwarding and honor the requested
+`127.0.0.1` bind (for example, `GatewayPorts no`). A server configured to override
+bind addresses can widen the listener; the desktop does not change that policy.
+
+Each tunnel owns a private control socket. The initial SSH connection clears
+ambient port forwards; a separate multiplexing request adds exactly the chosen
+route. Agent/X11 forwarding, `LocalCommand`, `RemoteCommand`, password prompting,
+background persistence and host-key updates are disabled. User-owned SSH
+configuration remains trusted native configuration, including any `Match exec`,
+proxy or jump commands it deliberately contains. The desktop accepts no shell
+command, key contents or SSH password through its renderer or the remote SDK API.
+Provider-key environment variables and Node preload settings are not passed to
+SSH. See [OpenSSH options](https://man.openbsd.org/ssh.1) and
+[configuration](https://man.openbsd.org/ssh_config.5).
+
+Managed tunnels are qualified on Linux only. CLI users and other platforms can
+keep using the manual recipes below; direct local and verified HTTPS connections
+remain independent of SSH.
+
+### Manual SSH recipes
+
 For example, if this desktop listens on `127.0.0.1:7433` and the application-side
 port is `17433`, choose one direction:
 
@@ -129,8 +191,9 @@ server must permit forwarding and honor the bind address; a successfully started
 tunnel still does not prove that its ultimate target is reachable.
 See the [OpenSSH forwarding options](https://man.openbsd.org/ssh.1).
 
-AgenticDriver does not run these commands, manage SSH keys, change server policy
-or provide a relay. A containerized application has its own network namespace;
+The manual route displays these commands without running them. AgenticDriver
+does not manage SSH keys, change server policy or provide a hosted relay.
+A containerized application has its own network namespace;
 place the tunnel beside its backend rather than assuming container loopback
 reaches the host OS. For remote hosts already saved in the desktop, use their
 saved address or an explicitly supplied HTTPS address; generate SSH recipes on

@@ -149,6 +149,7 @@ else {
             evidence.providerRemovalUi &&
             evidence.remoteConnectionUi &&
             evidence.invitationDestinationUi &&
+            evidence.managedSshUi &&
             evidence.panelRecoveryUi &&
             evidence.keyboardUi &&
             evidence.strictStyleCsp &&
@@ -168,6 +169,7 @@ else {
               keyboardUi: evidence.keyboardUi === true,
               invitationDestinationUi:
                 evidence.invitationDestinationUi === true,
+              managedSshUi: evidence.managedSshUi === true,
               viewport: window.getContentSize(),
               strictStyleCsp: evidence.strictStyleCsp === true,
               runtime: "v24.21.0",

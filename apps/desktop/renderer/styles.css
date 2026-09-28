@@ -679,6 +679,18 @@ agenticdriver-providers {
 [hidden] {
   display: none !important;
 }
+.tunnel-entry .connection-row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.tunnel-entry .connection-row > div {
+  min-width: 0;
+  max-width: 100%;
+}
+.tunnel-entry .address {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 @media (min-width: 1600px) {
   .workspace {
     padding: 0 60px;

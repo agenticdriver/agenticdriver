@@ -58,9 +58,11 @@ introspection adapter maps current app grants into scoped execution authority;
 its browser-safe pairing client handles the approved device flow and explicit
 refresh/revocation. See [authentication](authentication.md). A static token
 registry remains available for local development and operator-owned hosts.
-An outbound relay is separate, pending work. A hosted browser cannot
-automatically reach a laptop; use a reachable authenticated HTTPS endpoint or a
-trusted tunnel. There is no hidden relay or browser session scraping.
+A hosted browser cannot automatically reach a laptop; use a reachable
+authenticated HTTPS endpoint or a trusted tunnel. The Linux desktop source
+preview can manage an [outbound SSH tunnel](desktop.md#manage-an-outbound-ssh-tunnel)
+to a selected application server using existing native SSH access. A hosted relay
+service is not implemented. There is no hidden relay or browser session scraping.
 
 Browser origins are denied by default. Hosts may configure an exact
 `allowedOrigins` list, but bearer authentication is still mandatory. Clients
