@@ -87,6 +87,7 @@ export function runProcess(
       for (const line of lines) if (line.trim()) options.onLine(line);
     };
     let bytes = 0,
+      exited = false,
       failure: unknown,
       killTimer: ReturnType<typeof setTimeout> | undefined;
     const terminate = (signal: NodeJS.Signals) => {
@@ -99,6 +100,7 @@ export function runProcess(
       }
     };
     const stop = () => {
+      if (exited) return;
       terminate("SIGTERM");
       killTimer ??= setTimeout(() => terminate("SIGKILL"), 1000);
       killTimer.unref();
@@ -151,31 +153,42 @@ export function runProcess(
     });
     options.signal.addEventListener("abort", abort, { once: true });
     if (options.signal.aborted) abort();
+    child.once("exit", () => {
+      exited = true;
+      if (killTimer) clearTimeout(killTimer);
+      // `close` waits for inherited stdout/stderr too. A descendant retaining
+      // either pipe must not prevent a finished CLI invocation from settling.
+      // This reaps our POSIX process group, not children that escape that group.
+      terminate("SIGKILL");
+    });
     child.once("close", (code) => {
-      options.onExit?.(code);
       options.signal.removeEventListener("abort", abort);
       if (killTimer) clearTimeout(killTimer);
-      terminate("SIGKILL");
       try {
+        options.onExit?.(code);
         acceptText(decoder.end(), true);
       } catch (error) {
-        failure = error;
+        failure ??= error;
       }
       if (failure) reject(failure);
       else if (
         code === null ||
         !(options.acceptedExitCodes ?? [0]).includes(code)
       )
-        reject(
-          options.classifyExit?.(
-            code,
-            Buffer.concat(diagnostic).toString("utf8"),
-          ) ??
-            new DriverError(
-              "CLI_FAILED",
-              "The CLI failed. Check its installed version, sign-in, and model access.",
-            ),
-        );
+        try {
+          reject(
+            options.classifyExit?.(
+              code,
+              Buffer.concat(diagnostic).toString("utf8"),
+            ) ??
+              new DriverError(
+                "CLI_FAILED",
+                "The CLI failed. Check its installed version, sign-in, and model access.",
+              ),
+          );
+        } catch (error) {
+          reject(error);
+        }
       else resolve(Buffer.concat(chunks).toString("utf8"));
     });
     try {

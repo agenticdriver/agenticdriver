@@ -56,6 +56,20 @@ still enter context, and these controls are not an OS isolation boundary. Keep
 untrusted tenants in separate restricted host processes/containers. Native CLI
 retries and provider-side limits retain the limitations in [provider setup](providers.md).
 
+Native invocation cleanup on POSIX reaps the owned process group as soon as the
+CLI parent exits, including children that still hold stdout/stderr open. Buffered
+parent output is drained before the operation settles. Explicit cancellation
+first sends `SIGTERM`, with a one-second `SIGKILL` cleanup grace for an unresponsive
+group; this grace is not a run or inactivity deadline. A process that creates a
+separate session/group can escape this mechanism. Windows process-tree cleanup
+and isolation between mutually untrusted accounts remain under AD-012; use
+separate restricted OS users/containers for that trust boundary.
+
+The synthetic [process cleanup regressions](../tests/cli-process.test.ts) cover
+normal/error parent exit with inherited pipes, explicit cancellation of a
+SIGTERM-resistant group, output/parser failure and throwing exit callbacks.
+They do not certify arbitrary native plugins or hostile-code containment.
+
 The [offline native report](validation/codex-application-tools-2026-09-26.md)
 records verified behavior. Capability availability does not qualify every model
 or account, and no fallback is introduced.

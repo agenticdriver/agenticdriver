@@ -18,6 +18,10 @@
 - Bounded disposable build-cache cleanup in the private Prometheus CI daemon.
   npm publication now uses the verified OIDC path introduced after alpha.4,
   avoiding member browser approval for supported workflow publication.
+- Fixed completed native CLI invocations hanging when a child retained an output
+  pipe. POSIX process groups are reaped on parent exit, buffered output is drained,
+  and exit/diagnostic callback failures reject after cleanup. This is process
+  cleanup, not isolation from descendants that escape their group.
 
 Wire protocol remains 1.0. Python uses 0.2.0a5. This candidate is not yet a
 published package; see [release status](docs/releases.md). Existing application
