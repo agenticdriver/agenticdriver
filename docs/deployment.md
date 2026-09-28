@@ -62,8 +62,7 @@ for shared container access according to local policy. Do not disable SELinux or
 relabel unrelated application directories.
 
 Both Docker build contexts deny files by default. Runtime secrets, private TLS
-keys, local accounts and the test auth fixture are excluded from production
-image layers. Supply secrets as mounted files, not Docker build arguments,
+keys and local accounts are excluded from production image layers. Supply secrets as mounted files, not Docker build arguments,
 committed JSON values or command-line bearer arguments.
 
 ## Provision service authorization

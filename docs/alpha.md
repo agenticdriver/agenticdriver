@@ -1,55 +1,44 @@
-# 0.2.0-alpha.5 application preview
+# 0.2.0-alpha.6 application preview
 
-This opt-in release packages the provider and connection component, refreshable
-account model catalogs, remote provider management, local/remote pairing, owned
-Codex device sign-in and the Linux desktop companion. Wire protocol stays **1.0**.
-Alpha.5 adds desktop-managed outbound SSH routes, same-port restart preserving
-paired grants, and native CLI process cleanup. The source evaluation suite covers
-76 synthetic brand, literature and email cases. Existing saved-host checks,
-credential recovery and shared-panel offline handling remain included.
+Alpha.6 removes mock providers, fake connections, the fake embedding adapter,
+canned example outputs and simulated provider acceptance harnesses. New desktop
+profiles start empty. CLI setup requires an explicit provider. Existing real
+accounts, catalog discovery, provider management, local/remote pairing and the
+Linux desktop remain supported. Wire protocol stays **1.0**, but management hosts
+and clients require the coordinated upgrade described below.
 
-The earlier [shared provider icons](provider-icons.md), monochrome/colour and
-product-mark choices, reported CLI/account details, strict style CSP and
-capability-gated provider removal remain included. Email/name stays masked until
-Reveal and is remasked on refresh or provider changes. Metadata availability does
-not establish successful model execution.
+The [shared provider icons](provider-icons.md), monochrome/colour and product-mark
+choices, reported CLI/account details, SSH routes and native process cleanup
+remain included. Account email/name stays masked until Reveal and is remasked on
+refresh or provider changes. Catalog availability, execution grants and successful
+model execution remain separate.
 
-Alpha.5 is published on npm, crates.io, Go and
-[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.5).
-The reviewed JavaScript archive, Python wheel/sdist and Linux desktop are public
-downloads. npm publication uses GitHub OIDC trusted publishing;
-PyPI organization approval remains pending. The
-[publication record](validation/release-0.2.0-alpha.5.md) preserves the immutable
-source, checksums and fresh installed-client verification. Stable npm `latest`
-remains `0.1.0`; opt into the exact alpha version below.
+The [release page](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.6)
+is the authority for published channels, immutable source and exact artifact
+checksums. npm publication uses GitHub OIDC trusted publishing. PyPI organization
+approval remains pending; Python uses the reviewed GitHub wheel/sdist. Stable npm
+`latest` remains `0.1.0`. Earlier releases and their historical evidence remain
+available; they do not establish current real-provider qualification.
 
 ## Install the exact alpha
 
-Pin the exact registry version; its package/import name remains `@agenticdriver/sdk`:
+After confirming channel availability on the release page, pin the exact version:
 
 ```sh
-npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.6
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.6
 ```
 
-For Rust, use `agenticdriver = "=0.2.0-alpha.5"` in `Cargo.toml`.
+For Rust, use `agenticdriver = "=0.2.0-alpha.6"` in `Cargo.toml`.
+Commit the version pin and lockfile integrity. Verify downloaded archives against
+`manifest.json` and `ASSET-SHA256SUMS` on the release page.
 
-Commit the version pin and lockfile integrity. The public GitHub archive remains
-available and is byte-identical to the npm registry archive. The JavaScript archive SHA-256 is
-`f8fbe71aaeb515aed1f082e8c463fbb23bd62ac6fca23133415bb1962902d9dd`;
-verify it against the release manifest. Registry publication used that exact
-reviewed archive. Earlier releases remain available with their
-[alpha.4 evidence](validation/release-0.2.0-alpha.4.md),
-[alpha.3 evidence](validation/release-0.2.0-alpha.3.md) and
-[alpha.2 evidence](validation/release-0.2.0-alpha.2.md).
-
-Python uses the canonical PEP 440 version **0.2.0a5**. PyPI organization approval
-is still pending; download `agenticdriver-0.2.0a5-py3-none-any.whl` from the
-prerelease, verify its SHA-256 against the release manifest, and install it in
-your virtual environment with `python -m pip install ./agenticdriver-0.2.0a5-py3-none-any.whl`.
+Python uses **0.2.0a6**. Download `agenticdriver-0.2.0a6-py3-none-any.whl` from the
+prerelease, verify its checksum, and install it in your virtual environment with
+`python -m pip install ./agenticdriver-0.2.0a6-py3-none-any.whl`.
 Do not substitute an unrelated PyPI package or a personal publisher.
 
-The Linux desktop archive is `AgenticDriver-0.2.0-alpha.5-linux-x64.tar.gz`.
+The Linux desktop archive is `AgenticDriver-0.2.0-alpha.6-linux-x64.tar.gz`.
 Extract it and run `agenticdriver-desktop`; Node and Electron are bundled.
 See [desktop setup](desktop.md) for private state, local installation and updating.
 There is no automatic updater, public relay, or Windows/macOS build in this alpha.
@@ -62,8 +51,9 @@ There is no automatic updater, public relay, or Windows/macOS build in this alph
    host URL, provider grants and saved model choices. No application auth
    migration, provider-account sign-in or new model call is required by this update.
 3. Check `client.protocol()` before enabling a feature. An updated client does
-   not upgrade a separately running host. Older protocol-1.0 hosts remain usable
-   for their advertised features; unavailable controls must stay disabled.
+   not upgrade a separately running host. Upgrade the host before alpha.6 management clients: old hosts advertise the
+   removed `fixture` definition category. See [migration notes](migrations.md).
+   Protocol 1.0 alone does not guarantee management compatibility.
 4. Embed the [provider component](provider-panel.md) in the authorized settings
    screen. Import browser code from `@agenticdriver/sdk/ui`; keep the native
    backend bridge from `@agenticdriver/sdk/panel` and long-lived credentials on
@@ -90,13 +80,15 @@ different environments. See [connection setup](connections.md).
 Upgrade a shared host only after checking active work, preserving its config,
 private credentials, Usagestat identities and durable state, and arranging a
 graceful restart. New management features do not justify expanding an existing
-app token's scope. Synthetic-validation credentials remain synthetic-only.
+app token's scope. Do not reuse historical validation credentials as production application grants.
 
 ## Qualification and compatibility limits
 
-Package verification exercises all four installed clients over verified HTTPS,
-the shared component and package/build checks on Prometheus. These
-checks do not certify every discovered model, all native versions, new accounts,
+Package verification installs and compiles all four clients and checks their
+shared component on Prometheus. Real inference is a separate explicit check;
+[alpha.6 evidence](validation/real-providers-alpha6-2026-09-28.md) records the actual
+Codex/Luna and Claude/Haiku requests. These checks do not certify every discovered
+model, all native versions, new accounts,
 or complete application workflows. Keep the qualified Codex/Claude versions and
 deployment limits in [compatibility](compatibility.md) and [native tools](native-tools.md).
 Provider setup does not install native binaries. There is no model, account or

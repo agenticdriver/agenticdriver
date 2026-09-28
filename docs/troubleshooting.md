@@ -44,7 +44,6 @@ in the qualified binary. See [provider evidence](providers.md).
 ## Report a reproducible problem
 
 Include the SDK commit/package version, negotiated protocol version, OS/runtime,
-adapter/native version, stable error code, and whether the example is synthetic
-or live. For live checks, identify the selected account with an opaque local label
-and the explicit model ID. Include sanitized event types and sequence numbers,
+adapter/native version and stable error code. Identify the actual selected
+account with an opaque local label and the explicit model ID. Include sanitized event types and sequence numbers,
 not authorization headers, document text or private reasoning.

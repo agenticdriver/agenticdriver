@@ -12,6 +12,29 @@ workflow uses, and check the [compatibility matrix](compatibility.md). Unknown
 required events or incompatible major wire versions must fail clearly.
 [Protocol rules](protocol.md) define optional-event negotiation and stable errors.
 
+## Alpha.6: remove mock providers and upgrade management together
+
+Back up a host's private configuration, then remove any provider entries whose
+`kind` is `mock` and the corresponding provider IDs from grants. Alpha.6 rejects
+that legacy configuration with `MOCK_PROVIDER_REMOVED`; it never silently turns
+a fake connection into a real account. Preserve actual providers, native account
+directories, Usagestat identities and application grants. Configure the intended
+real connection explicitly. New CLI setup requires `--provider`.
+
+The `mockProvider` export, `DeterministicEmbeddingAdapter`,
+`@agenticdriver/sdk/provider-conformance` subpath and simulated acceptance scripts
+have been removed. Replace fake embedding configuration with an actual supported
+embedding account before using vector indexing. Historical usage records remain
+readable; new adapters cannot emit `synthetic` usage provenance.
+
+Upgrade the execution host before its management clients, or coordinate both in
+one maintenance window after active work drains. Older hosts advertise the removed
+`fixture` provider-definition category, which alpha.6 management clients reject.
+Wire protocol 1.0 alone does not establish management compatibility. Older clients
+can read alpha.6's remaining categories. An SDK dependency update does not replace
+a running host or expand saved grants. Never restart another application's host
+without coordinating its active work.
+
 ## Organization package names before 0.1.0
 
 The SDK repository is now `agenticdriver/agenticdriver`. JavaScript applications
@@ -65,7 +88,8 @@ container recipe uses explicit Better Auth service clients.
   solely because the network connection was lost.
 
 Better Auth/AuthYard have their own compatibility matrix and database migrations.
-The SDK's tested auth fixture pins Better Auth/OAuth 1.7.3 and the AuthYard
-`@authplane/better-auth` 0.2.0 connector on Node 24+. Qualify the renamed
+The removed historical auth harness used Better Auth/OAuth 1.7.3 and the AuthYard
+`@authplane/better-auth` 0.2.0 connector on Node 24+. Those results are not current
+production qualification. For an explicitly requested auth migration, qualify the
 `@authyard/better-auth` artifact and control-plane version before adopting it;
 do not infer compatibility from a package rename.

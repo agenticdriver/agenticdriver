@@ -172,5 +172,5 @@ older hosts reject the new request field instead of silently ignoring approval.
 
 Client decision requests add no default deadline. Application cancellation and
 explicit transport timeouts remain available. The wire schemas are in
-[OpenAPI](../protocol/openapi.json); shared fixtures exercise malformed approval
-payloads, unnegotiated events and mismatched receipts in every client.
+[OpenAPI](../protocol/openapi.json). Validate approval behavior against the actual
+selected provider and application tool before enabling it in a consuming app.

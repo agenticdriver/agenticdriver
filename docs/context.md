@@ -55,7 +55,7 @@ The host configuration accepts the same `inputMediaTypes` mapping on API provide
 | xAI / compatible Chat Completions | Inline images; PDF requires explicitly supplied extracted text |
 | Codex / Claude Code / Gemini CLI  | Text and Markdown context; binary inputs rejected              |
 
-Mappings follow the provider documentation: [OpenAI images](https://developers.openai.com/api/docs/guides/images-vision), [OpenAI file inputs](https://developers.openai.com/api/docs/guides/file-inputs), [Anthropic images](https://platform.claude.com/docs/en/build-with-claude/vision), [Anthropic PDFs](https://platform.claude.com/docs/en/build-with-claude/pdf-support), and [Gemini media parts](https://ai.google.dev/api/generate-content#Part). Native reasoning blocks and tool IDs remain intact across subsequent model steps. This implementation is fixture-tested; a model entry is an operator's explicit support declaration, not a claim that every model/account has passed live certification.
+Mappings follow the provider documentation: [OpenAI images](https://developers.openai.com/api/docs/guides/images-vision), [OpenAI file inputs](https://developers.openai.com/api/docs/guides/file-inputs), [Anthropic images](https://platform.claude.com/docs/en/build-with-claude/vision), [Anthropic PDFs](https://platform.claude.com/docs/en/build-with-claude/pdf-support), and [Gemini media parts](https://ai.google.dev/api/generate-content#Part). Native reasoning blocks and tool IDs remain intact across subsequent model steps. A model entry is an operator's explicit support declaration. Validate the selected account, model and media type with real input before enabling it; historical simulated checks do not establish live support.
 
 ## Application references
 

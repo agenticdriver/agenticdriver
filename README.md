@@ -11,17 +11,16 @@ loop, normalized events, cancellation, transport, and usage reporting.
 
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
 The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
-PyPI organization approval is still pending. **The opt-in `0.2.0-alpha.5` preview**
-is available on npm, GitHub, crates.io and Go. npm releases use trusted
-publishing without per-release browser approval. It adds desktop-managed outbound
-SSH routes, native CLI process cleanup and shared application evaluations to the
-local desktop companion and four-language provider components. Shared provider icons
-and masked account details remain included. See
-[alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
-for exact versions, host compatibility and publication status.
-The current source uses real connections only. A fresh desktop starts empty and
-helps connect a real native session or API account. There is no mock provider,
-canned response mode or fake embedding adapter. [Real Prometheus checks](docs/validation/prometheus-real-2026-09-28.md)
+PyPI organization approval is still pending. The opt-in **`0.2.0-alpha.6` preview**
+removes mock providers, fake connections, canned responses and fake embeddings.
+Fresh desktop installations start empty and guide you through connecting a real
+native session or API account. The desktop companion, four-language provider
+components, remote management, SSH routes, provider icons and masked account
+details remain included. npm releases use trusted publishing without per-release
+browser approval. See [alpha adoption](docs/alpha.md) and the
+[release inventory](docs/releases.md) for channel availability, exact versions
+and the required host/client upgrade sequence.
+[Real Prometheus checks](docs/validation/real-providers-alpha6-2026-09-28.md)
 record the selected Codex/Luna and Claude/Haiku accounts and their limits.
 
 ## Local desktop companion

@@ -1,25 +1,24 @@
 # Install and connect
 
 Start with an explicitly selected real provider account and a meaningful prompt.
-AgenticDriver **0.2.0-alpha.5** uses protocol **1.0** and is published on npm, crates.io
-and the public Go module proxy. The Python wheel is available from the GitHub
-release while PyPI organization approval is pending. Applications do not need a
-sibling SDK checkout at runtime. The source repository is public and includes
-newer changes; the [release inventory](releases.md) identifies immutable published
-artifacts. This guide uses the published [0.2.0-alpha.5 release](alpha.md), including
-provider management, host invitations and the Linux desktop. The stable release
-remains 0.1.0.
+This guide targets AgenticDriver **0.2.0-alpha.6**, with wire protocol **1.0**,
+provider management, host invitations and the Linux desktop. Check the
+[release inventory](releases.md) and [alpha release](alpha.md) for published
+channels and immutable artifacts. PyPI organization approval remains pending;
+Python uses the reviewed GitHub wheel. Applications do not need a sibling SDK
+checkout at runtime. The stable release remains 0.1.0. Upgrade management clients
+and hosts together as described in the [migration notes](migrations.md).
 
 ## 1. Obtain the packages
 
-The examples below use these published package identities:
+The examples below use these exact package identities:
 
 | Language              | Package                                                             |
 | --------------------- | ------------------------------------------------------------------- |
-| JavaScript/TypeScript | `@agenticdriver/sdk@0.2.0-alpha.5` on npm                           |
-| Python                | `agenticdriver-0.2.0a5-py3-none-any.whl` from the GitHub prerelease |
-| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5`  |
-| Rust                  | `agenticdriver = "=0.2.0-alpha.5"` on crates.io                     |
+| JavaScript/TypeScript | `@agenticdriver/sdk@0.2.0-alpha.6` on npm                           |
+| Python                | `agenticdriver-0.2.0a6-py3-none-any.whl` from the GitHub prerelease |
+| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.6`  |
+| Rust                  | `agenticdriver = "=0.2.0-alpha.6"` on crates.io                     |
 
 For unreleased development changes, build from a reviewed SDK commit instead:
 
@@ -52,7 +51,7 @@ In a fresh application directory, install the published npm package:
 
 ```sh
 npm init -y
-npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.5
+npm install --save-exact @agenticdriver/sdk@0.2.0-alpha.6
 npx --no-install agenticdriver init --config ./driver/config.json \
   --provider codex --provider-id my-codex --account-id my-codex-account \
   --binary /absolute/path/to/codex \
@@ -131,14 +130,14 @@ TypeScript imports the same `AgenticClient`; see its [full guide](javascript.md)
 ### Python
 
 Requires Python 3.10+. Download the reviewed wheel from the
-[0.2.0-alpha.5 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.5),
-verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.5/ASSET-SHA256SUMS), and install it into
+[0.2.0-alpha.6 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.6),
+verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-alpha.6/ASSET-SHA256SUMS), and install it into
 the application's own environment:
 
 ```sh
 python3 -m venv .venv
 # Use .venv/Scripts/python.exe on Windows.
-.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.2.0a5-py3-none-any.whl
+.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.2.0a6-py3-none-any.whl
 .venv/bin/python client.py
 ```
 
@@ -156,7 +155,7 @@ Requires Go 1.22+. Install the published version:
 
 ```sh
 go mod init example.test/my-driver-client
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.5
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-alpha.6
 go run .
 ```
 
@@ -177,7 +176,7 @@ Requires Rust 1.89+. Use the published crate:
 
 ```toml
 [dependencies]
-agenticdriver = "=0.2.0-alpha.5"
+agenticdriver = "=0.2.0-alpha.6"
 ```
 
 Save the following as `src/main.rs` in a `cargo new` application and run
@@ -196,7 +195,7 @@ Provider instances belong to the host and have explicit account bindings.
 Refresh discovery, inspect the instance's health and capabilities, and select a
 model available to that account. A saved native sign-in does not prove model
 access or safe SDK integration. The [provider guide](providers.md) distinguishes
-API adapters, restricted CLI fixtures and observed native blockers.
+implemented adapters, recorded real checks and observed native blockers.
 
 There is **no default total run deadline or inactivity timeout**. Add a positive
 `idleTimeoutMs` only if your application wants to cancel stalled work; genuine
