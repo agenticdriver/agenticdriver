@@ -63,6 +63,5 @@ export const HostProviderConfigSchema = z.union([
       secretRefs: z.record(instance, SecretReferenceSchema).default({}),
     })
     .strict(),
-  z.object({ ...common, kind: z.literal("mock") }).strict(),
 ]);
 export type HostProviderConfig = z.infer<typeof HostProviderConfigSchema>;

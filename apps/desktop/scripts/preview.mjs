@@ -15,118 +15,6 @@ const directory = process.env.AGENTICDRIVER_DESKTOP_PREVIEW
   : await mkdtemp(join(tmpdir(), "driver-desktop-preview-"));
 await mkdir(directory, { recursive: true, mode: 0o700 });
 const controller = await desktopController(join(directory, "driver"));
-let fixture;
-if (process.argv.includes("--fixtures")) {
-  const now = new Date().toISOString();
-  fixture = createServer((req, res) => {
-    const payload =
-      req.url === "/v1/providers"
-        ? [
-            {
-              id: "openai",
-              displayName: "API account · fixture",
-              brandColor: "#9bcab8",
-            },
-          ]
-        : req.url === "/v1/usage"
-          ? [
-              {
-                providerId: "fixture-subscription",
-                displayName: "Subscription · synthetic fixture",
-                plan: "Example subscription",
-                fetchedAt: now,
-                source: "Synthetic visual QA",
-                state: "ready",
-                metrics: [
-                  {
-                    type: "progress",
-                    label: "Current session",
-                    used: 24,
-                    limit: 100,
-                    format: { kind: "percent" },
-                    resetsAt: new Date(Date.now() + 7200000).toISOString(),
-                  },
-                  {
-                    type: "progress",
-                    label: "Weekly allowance",
-                    used: 37,
-                    limit: 100,
-                    format: { kind: "percent" },
-                  },
-                ],
-              },
-              {
-                providerId: "fixture-api",
-                displayName: "API account · synthetic fixture",
-                plan: "Example API usage",
-                fetchedAt: now,
-                source: "Synthetic visual QA",
-                metrics: [
-                  {
-                    type: "text",
-                    label: "Input tokens",
-                    value: "18,400 tokens",
-                  },
-                  {
-                    type: "text",
-                    label: "Estimated cost",
-                    value: "$0.04",
-                    subtitle: "Example only · not billed usage",
-                  },
-                ],
-              },
-            ]
-          : req.url === "/v1/models"
-            ? { data: [{ id: "preview-small" }, { id: "preview-large" }] }
-            : undefined;
-    if (!payload) {
-      res.writeHead(404).end();
-      return;
-    }
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify(payload));
-  });
-  fixture.listen(0, "127.0.0.1");
-  await once(fixture, "listening");
-  const fixtureUrl = `http://127.0.0.1:${fixture.address().port}`;
-  await controller.request({ action: "usage-settings", url: fixtureUrl });
-  for (const provider of [
-    {
-      kind: "mock",
-      id: "offline-demo",
-      accountId: "synthetic-only",
-      name: "Offline sandbox",
-    },
-    {
-      kind: "openai-compatible",
-      id: "research-fixture",
-      name: "Research gateway · fixture",
-      accountId: "synthetic-api",
-      baseUrl: fixtureUrl + "/v1",
-      apiKeyRef: { env: "DESKTOP_UNUSED_FIXTURE" },
-    },
-  ]) {
-    const snapshot = await controller.request({
-      action: "panel",
-      hostId: "local",
-      request: { action: "snapshot" },
-    });
-    await controller.request({
-      action: "panel",
-      hostId: "local",
-      request: {
-        action: "configure",
-        change: {
-          revision: snapshot.management.revision,
-          provider,
-          ...(provider.apiKeyRef
-            ? { apiKey: "synthetic-fixture-key-no-provider-access" }
-            : {}),
-        },
-      },
-    });
-  }
-}
 const key = randomBytes(32).toString("base64url");
 const server = createServer((req, res) => {
   void (async () => {
@@ -231,7 +119,6 @@ console.log(
   JSON.stringify({
     url,
     launchFile: join(directory, "launch.json"),
-    synthetic: Boolean(fixture),
   }),
 );
 let stopping = false;
@@ -241,10 +128,6 @@ async function stop() {
   server.closeAllConnections();
   await new Promise((resolve) => server.close(resolve));
   await controller.close({ interrupt: true });
-  if (fixture) {
-    fixture.closeAllConnections();
-    await new Promise((resolve) => fixture.close(resolve));
-  }
   if (ownTemp) await rm(directory, { recursive: true, force: true });
 }
 process.once("SIGTERM", () => {

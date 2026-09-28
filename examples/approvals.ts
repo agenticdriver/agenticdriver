@@ -1,33 +1,20 @@
-/** Human review with no provider credentials and no writes outside this process. */
+/** A real provider proposes a brand direction; a human approves saving it in memory. */
 import { createInterface } from "node:readline/promises";
 import { AgenticDriver, type JsonObject } from "../src/index.js";
-import { mockProvider } from "../src/providers/mock.js";
+import { configuredProvider } from "./config.js";
+const { provider, model } = configuredProvider();
+if (!provider.info.capabilities.tools)
+  throw new Error(
+    "The selected real provider does not support application tools in this mode.",
+  );
 
 const proposals: JsonObject[] = [];
 const driver = new AgenticDriver({
-  providers: [
-    mockProvider((request) =>
-      request.messages.some((m) => m.role === "tool")
-        ? { text: "The reviewed proposal was saved in memory." }
-        : {
-            text: "Please review this proposal.",
-            toolCalls: [
-              {
-                id: "proposal-one",
-                name: "save_proposal",
-                arguments: {
-                  title: "Aurora",
-                  rationale: "A concise working name for the team to evaluate.",
-                },
-              },
-            ],
-          },
-    ),
-  ],
+  providers: [provider],
   tools: [
     {
       name: "save_proposal",
-      description: "Save a proposed brand name to this demo's memory",
+      description: "Save a proposed brand name to this application's memory",
       requiresApproval: true,
       inputSchema: {
         type: "object",
@@ -49,9 +36,10 @@ const driver = new AgenticDriver({
 const ui = createInterface({ input: process.stdin, output: process.stdout });
 try {
   for await (const event of driver.stream({
-    provider: "mock",
-    model: "demo",
-    input: "Propose a brand name",
+    provider: provider.info.id,
+    model,
+    input:
+      "Propose one brand direction for AgenticDriver, an SDK connecting application developers to their own local and remote AI accounts. Preserve the name AgenticDriver. Save a concise title and rationale using save_proposal, subject to human review.",
     tools: ["save_proposal"],
     approvals: { mode: "interactive", idlePolicy: "pause" },
   })) {

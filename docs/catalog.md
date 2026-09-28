@@ -117,7 +117,7 @@ Usagestat is optional: if metadata/assets or quotas are unavailable, use the hel
 
 ## Verification
 
-`tests/catalog.test.ts` covers identity, freshness, errors, variants, notices, caching and path boundaries. `npm run test:install` checks the installed catalog entry's DOM-only declarations and browser bundle without Node/server imports. To check actual native metadata and existing assets:
+`tests/catalog.test.ts` covers identity, freshness, errors, variants, notices, caching and path boundaries. `npm run test:package` verifies the actual installed npm artifact. To check actual native metadata and existing assets:
 
 ```sh
 npx tsx scripts/test-usagestat-assets.ts /path/to/usagestatd /path/to/usagestat/plugins

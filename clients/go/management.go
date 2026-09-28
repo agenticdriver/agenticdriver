@@ -73,7 +73,7 @@ func validProviderDefinition(d ProviderDefinition) bool {
 		return false
 	}
 	switch d.Category {
-	case "native", "api", "compatible", "fixture":
+	case "native", "api", "compatible":
 	default:
 		return false
 	}

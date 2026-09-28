@@ -1,5 +1,10 @@
 # AgenticDriver SDK implementation roadmap
 
+Current policy: mock providers, fake connections and their runnable acceptance harnesses
+were removed in issue #70. Older implementation notes below describe historical evidence.
+All new acceptance must use real connections and meaningful prompts; pure schema/unit
+checks remain separate from provider qualification.
+
 The live [organization project](https://github.com/orgs/agenticdriver/projects/1) tracks the work items and follow-ups. The canonical initial item data is in [roadmap.json](roadmap.json). Ongoing status and discussion live in GitHub Projects.
 
 This file preserves the original planning baseline, item descriptions and initial
@@ -311,7 +316,7 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 
 **Completion criteria:**
 
-- [ ] A fresh installation can run a mock workflow and connect an explicitly selected provider without editing SDK source.
+- [ ] A fresh installation can connect a real provider and connect an explicitly selected provider without editing SDK source.
 - [ ] Configuration separates non-secret settings from OS keychain or supplied secret-store references; diagnostics redact credentials.
 - [ ] Loopback is the default; non-loopback exposure requires the existing secure transport and authentication conditions.
 - [ ] Service installation and upgrades document the running user, config paths and shutdown/cancellation behavior.
@@ -875,7 +880,7 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 
 - [ ] Evaluate brand constraint adherence, literature evidence support and email action correctness separately from transport success.
 - [ ] Include malicious retrieved text, wrong-tenant access, unsupported capabilities and cancellation during tool work.
-- [ ] CI runs deterministic fixtures; paid live evaluations require explicitly supplied credentials and record model/version provenance.
+- [ ] CI runs pure contracts and builds; real provider evaluations use explicitly supplied connections and record model/version provenance.
 
 **Depends on:** [AD-002](#ad-002), [AD-033](#ad-033), [AD-035](#ad-035), [AD-037](#ad-037)
 
@@ -933,7 +938,7 @@ These are scope milestones, not calendar deadlines. P0 means a prerequisite or r
 
 **Completion criteria:**
 
-- [ ] Fresh external projects install each released language package and complete a documented mock workflow.
+- [ ] Fresh external projects install each released language package and complete a documented real provider workflow.
 - [ ] Release automation uses scoped publishing credentials or supported trusted publishing, and verifies the packaged contents.
 - [ ] Brandstorm, LitAgent and AI Workspace pin a published SDK version and work without a sibling checkout.
 - [ ] Document coordinated protocol compatibility even if client packages are versioned independently; registry publication is a deliberate release action.

@@ -134,18 +134,7 @@ and [device authentication implementation](https://github.com/openai/codex/blob/
 `account/login/completed` alone is insufficient: the SDK performs a separate
 native `account/read` before offering confirmation.
 
-The [dated validation record](validation/provider-sign-in-2026-09-26.md) separates
-the actual-native offline protocol check, HTTP/TLS client checks, UI fixtures and
-live-account qualification. The native fixture uses an isolated loopback test
-issuer and explicitly translates its verification URL for the production
-allowlist; it does not certify Google's, Anthropic's, or OpenAI's live login UI.
-
-```sh
-npm run build
-python3 scripts/test-codex-native.py \
-  --binary /absolute/path/to/native/codex --suite setup --receipt /tmp/setup.json
-```
-
-The test harness requires Linux, bubblewrap and the complete pinned native
-installation. It hides the real home, disables external networking, verifies
-native exchange/storage and caller-bound SDK lifecycle, and sends no model calls.
+The [dated validation record](validation/provider-sign-in-2026-09-26.md) describes
+historical checks. Its simulated issuer and native harness were removed. New sign-in
+qualification must use the selected provider's actual account flow; saved native
+sessions can be inspected without signing out or creating another account.

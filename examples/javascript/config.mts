@@ -6,8 +6,8 @@ import {
   geminiCli,
   openai,
   xai,
-} from "../src/providers/index.js";
-import type { ProviderAdapter } from "../src/types.js";
+} from "@agenticdriver/sdk/providers";
+import type { ProviderAdapter } from "@agenticdriver/sdk";
 
 export function configuredProvider(): {
   provider: ProviderAdapter;

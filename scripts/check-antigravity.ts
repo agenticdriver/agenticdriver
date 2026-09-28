@@ -61,7 +61,7 @@ const Init = z.object({
   }),
 });
 
-/** Exported for credential-free subprocess fixtures, not an inference API. */
+/** Inspect the actual native runtime without submitting an inference prompt. */
 export function inspectAntigravityStream(options: {
   binary: string;
   args: string[];

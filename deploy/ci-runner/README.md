@@ -41,7 +41,7 @@ See [GitHub's runner guidance](https://docs.github.com/en/actions/reference/runn
 
 Container tests use a separate Docker-in-Docker daemon. It listens only on the
 stack's loopback namespace and publishes no host ports. The runner shares that
-network namespace so loopback TLS fixtures work. Only CI work/temp volumes are
+network namespace for its build processes. Only CI work/temp volumes are
 shared for container bind mounts. Prometheus's Docker socket, SSH keys, provider
 sessions and deployment credentials are not mounted. The Docker daemon container
 is privileged; this configuration is therefore not a hostile-code sandbox.
@@ -140,20 +140,12 @@ Do not print or copy `.credentials*` from the runner volume.
 
 ## Checks and release limits
 
-The SDK workflow runs three Linux runtime combinations, documentation,
-container/TLS deployment fixtures and exact release-artifact installation.
-It also runs the pinned real Codex binary against offline synthetic fixtures.
-`codex-native.Dockerfile` verifies both native executable hashes. Its test
-container has no external network and receives only the checkout and receipt
-directory. `SYS_ADMIN`, `NET_ADMIN` and an unconfined seccomp profile let
-bubblewrap create the inner test namespaces and their isolated loopback inside
-the separate CI Docker daemon; these options
-are not added to the runner or a production SDK host. The fixtures do not use
-provider credentials and their watchdogs are not SDK timeout defaults.
-It uploads the same candidate manifests and checksums as before. A successful
-run validates its exact commit, not a package publication or production deploy.
-macOS and Windows checks are paused until compatible self-hosted capacity exists;
-the last hosted evidence remains historical.
+The SDK workflow runs three Linux runtime combinations, desktop packaging,
+documentation, pure validation/process checks and exact release-artifact installation.
+It has no fake model endpoint or provider credentials. Real account qualification
+runs separately on the authorized Prometheus execution host and records actual
+prompts, outputs, CLI versions and usage. A green build is not model qualification.
+macOS and Windows execution remain separately qualified.
 
 The manual publisher uses Prometheus for Python/Rust/Go and retains its existing
 environment and exact-candidate checks. Those publishing paths require their

@@ -1,0 +1,116 @@
+{
+  "date": "2026-09-28",
+  "version": "0.2.0-alpha.6",
+  "transport": "loopback HTTP through pinned OpenSSH tunnel to Prometheus",
+  "archiveSha256": "5b94592c8c18ff5b2194c36a61daf7d294720411b931cc6d357ac5e282a74a68",
+  "runs": [
+    {
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "runtime": {
+        "name": "Codex CLI",
+        "version": "0.157.0"
+      },
+      "runId": "87378058-641a-4ad7-96ee-847cb7f09114",
+      "example": "brandstorm",
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 256,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "catalogRefreshDuringRun": true
+    },
+    {
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "runtime": {
+        "name": "Codex CLI",
+        "version": "0.157.0"
+      },
+      "runId": "4932c95e-190d-4f8b-9bd0-fa7eed36c537",
+      "example": "literature",
+      "usage": {
+        "inputTokens": 6202,
+        "outputTokens": 219,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "catalogRefreshDuringRun": true
+    },
+    {
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "runtime": {
+        "name": "Codex CLI",
+        "version": "0.157.0"
+      },
+      "runId": "3f3f89b8-7f03-49aa-b9b3-d496341e5630",
+      "example": "workspace",
+      "usage": {
+        "inputTokens": 6203,
+        "outputTokens": 174,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "catalogRefreshDuringRun": true
+    },
+    {
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime": {
+        "name": "Claude Code",
+        "version": "2.1.282"
+      },
+      "runId": "68e2e016-f969-4d52-873a-ebe6705a53ce",
+      "example": "brandstorm",
+      "usage": {
+        "inputTokens": 3755,
+        "outputTokens": 1198,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.009745
+      },
+      "catalogRefreshDuringRun": true
+    },
+    {
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime": {
+        "name": "Claude Code",
+        "version": "2.1.282"
+      },
+      "runId": "e054aa70-cda1-4ae9-a623-0aff646594c3",
+      "example": "literature",
+      "usage": {
+        "inputTokens": 3846,
+        "outputTokens": 658,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.007136
+      },
+      "catalogRefreshDuringRun": true
+    },
+    {
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime": {
+        "name": "Claude Code",
+        "version": "2.1.282"
+      },
+      "runId": "f213b8a9-5d72-4ec0-aba7-6211ab4ad8ce",
+      "example": "workspace",
+      "usage": {
+        "inputTokens": 3848,
+        "outputTokens": 820,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.007948
+      },
+      "catalogRefreshDuringRun": true
+    }
+  ],
+  "limits": [
+    "Only selected Codex/Luna and Claude/Haiku text paths tested",
+    "No embedding account, vector retrieval, account-container or full consumer app qualification",
+    "Claude literature response added a qualifier about selection criteria not supported by the supplied notes; human review remains required"
+  ],
+  "savedCleanupCount": 10
+}

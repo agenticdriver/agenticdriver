@@ -107,8 +107,7 @@ wire version. There are no new advisory event types in the current host.
 
 The original v0.1 clients are supported through their existing request shape and
 event vocabulary. They need not understand the new discovery endpoint or
-optional-event convention. `protocol/fixtures/versioning.json` captures legacy,
-current and future-response examples consumed by the compatibility checks.
+optional-event convention. Qualify compatibility using installed client artifacts and the actual host; the former simulated response peer was removed.
 
 ## Errors and recovery
 

@@ -5,14 +5,14 @@
   "clientId": "REGISTERED_RESOURCE_SERVER_CLIENT_ID",
   "clientSecretRef": { "file": "/run/secrets/oauth-introspection-secret" },
   "scopes": {
-    "driver:demo": { "providers": ["demo"] }
+    "driver:inference": { "providers": ["CONFIGURED_PROVIDER_ID"] }
   },
   "services": [
     {
       "id": "app-backend-grant",
       "clientId": "REGISTERED_BACKEND_SERVICE_CLIENT_ID",
       "subject": "service:application-backend",
-      "scopes": ["driver:demo"]
+      "scopes": ["driver:inference"]
     }
   ]
 }

@@ -33,14 +33,14 @@ const help = `AgenticDriver — local and secure remote execution host
   agenticdriver run --provider ID --model ID [--input TEXT] [--config PATH] [--json]
 
 init also accepts --provider-id, --account-id, --api-key-env, --base-url, --account-directory,
---binary and --port. It creates a mock configuration unless a provider is selected.
+--binary and --port. Select a real provider explicitly with --provider.
 All reported models are exposed by default. --model restricts this connection;
 --catalog-only denies execution. Each run still requires an explicit model.
 run reads stdin when --input is omitted, and accepts --url, --token-id,
 --idempotency-key, --idle-timeout-ms and --max-attempts. Run inactivity timeouts
 and provider retries are disabled by default. --json streams JSONL events for run.
 
-Providers: mock, openai, anthropic, gemini, xai, xai-responses, openai-compatible, codex,
+Providers: openai, anthropic, gemini, xai, xai-responses, openai-compatible, codex,
 claude-code and gemini-cli.
 
 --config overrides AGENTICDRIVER_CONFIG and the OS user configuration directory.
@@ -136,7 +136,12 @@ function commandOptions(command: string) {
   );
 }
 async function initialize(path: string, values: Values) {
-  const kind = argument(values, "provider") ?? "mock";
+  const kind = argument(values, "provider");
+  if (!kind)
+    throw new DriverError(
+      "PROVIDER_REQUIRED",
+      "Select a real provider with --provider. Use the desktop for an empty host with guided provider setup.",
+    );
   const id = argument(values, "provider-id") ?? kind;
   const catalogOnly = values["catalog-only"] === true;
   if (catalogOnly && values.model !== undefined)

@@ -571,10 +571,7 @@ export type {
   VectorSearchResult,
 } from "./vector-store.js";
 export { SqliteVectorStore } from "./sqlite-vector-store.js";
-export {
-  OpenAIEmbeddingAdapter,
-  DeterministicEmbeddingAdapter,
-} from "./embeddings.js";
+export { OpenAIEmbeddingAdapter } from "./embeddings.js";
 export type {
   EmbeddingAdapter,
   EmbeddingResult,

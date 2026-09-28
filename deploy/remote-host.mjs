@@ -96,7 +96,7 @@ try {
     )
   )
     throw new Error(
-      "The stock remote image supports configured API and mock adapters.",
+      "The stock remote image supports configured API adapters.",
     );
   const policy = await readAuthorization(authorizationPath);
   for (const grant of Object.values(policy.scopes))

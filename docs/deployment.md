@@ -20,7 +20,7 @@ user/device grants. If selecting this recipe's OAuth integration, use
 `betterAuthAuthentication` and keep application users, organizations, credentials
 and sessions in its existing Better Auth database.
 
-The image contains configured API adapters and the mock adapter. It contains no
+The image contains configured API adapters. It contains no
 signed-in CLI account, arbitrary extension loader, auth server or management
 credential. Native agent isolation/certification and detached-job authority need
 a separately configured application host; the stock entry point rejects those
@@ -104,8 +104,8 @@ tracking and cancellation, as explained in the auth guide.
 
 `config.json` uses the [regular host schema](host.md). Leave `tokens` absent;
 this Compose entry point requires Better Auth and rejects static driver tokens. The example
-selects a synthetic mock provider. To run a real API account, change the provider
-kind, instance ID and explicit model list, set a private `apiKeyRef`, update the
+starts with no providers. To connect a real API account, add its provider
+kind, instance ID and model access policy, set a private `apiKeyRef`, update the
 scope's provider ID, and retain stable `usage.hostId` and `accountId` values.
 No live provider selection is inferred from secrets present on the machine.
 Configure the existing [Usagestat sink](usagestat.md) if desired; this recipe does
@@ -205,26 +205,13 @@ own application-owned backup and migration lifecycle.
 To roll back, stop the driver, restore a compatible state backup if the upgrade
 changed storage, select the previous reviewed image/configuration pair, and
 restart both services. Verify external TLS health and a deliberately selected
-mock or provider workflow. `docker compose down` preserves the named state
+real provider workflow. `docker compose down` preserves the named state
 volume; `down --volumes` deletes it and is reserved for disposable test data.
 
-## Reproduce the deployment gate
+## Qualify the deployment
 
-```bash
-npm ci
-npm run test:deployment
-```
-
-This requires Linux Docker/Compose, OpenSSL 3, Python, Go and the Rust toolchain
-from the compatibility matrix. The gate builds fresh local production/proxy
-images plus a **test-only** Better Auth/AuthYard application. It creates a private
-CA and native service credentials, starts an isolated Compose project, and uses
-installed npm/wheel/Go-module/crate artifacts from all four languages through
-verified HTTPS. It checks streaming before completion, disconnect cancellation,
-headers, admission limits, graceful SIGTERM, durable replay, policy revocation
-and absence of fixture credentials in logs. All model responses are synthetic.
-Cleanup removes only that disposable project's containers/network/volume.
-
-This gate establishes container and protocol behavior. A chosen public server,
-DNS/certificate renewal route, live AuthYard project and provider account need
-their own deployment qualification; none is provisioned by this test.
+Build the actual images and configure a real provider/account, TLS route and
+application authorization. Verify health, scoped catalog discovery, a meaningful
+model request, cancellation and revocation against that deployment. Use the
+[real connection guide](real-connections.md); the previous simulated deployment
+harness has been removed. Build success alone is not deployment qualification.

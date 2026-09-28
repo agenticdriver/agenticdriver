@@ -1,9 +1,23 @@
 /** A function stays in this application while a loopback host runs the model loop. */
 import { AgenticDriver, type ApplicationToolDefinition } from "../src/index.js";
 import { AgenticClient } from "../src/client.js";
-import { mockProvider } from "../src/providers/mock.js";
+import { configuredProvider } from "./config.js";
+const { provider, model } = configuredProvider();
+if (!provider.info.capabilities.tools)
+  throw new Error(
+    "The selected real provider does not support application tools in this mode.",
+  );
 import { serve } from "../src/server.js";
 import { randomBytes } from "node:crypto";
+import { readFile } from "node:fs/promises";
+const document = process.env.AGENTICDRIVER_INPUT_FILE;
+if (!document)
+  throw new Error(
+    "Set AGENTICDRIVER_INPUT_FILE to a permitted Markdown document.",
+  );
+const passages = (await readFile(document, "utf8"))
+  .split(/\n\s*\n/)
+  .filter(Boolean);
 
 const definition: ApplicationToolDefinition = {
   name: "search_passages",
@@ -22,23 +36,8 @@ const definition: ApplicationToolDefinition = {
   },
 };
 const driver = new AgenticDriver({
-  providers: [
-    mockProvider((input) =>
-      input.messages.some((message) => message.role === "tool")
-        ? { text: "The application returned its matching evidence." }
-        : {
-            text: "",
-            toolCalls: [
-              {
-                id: "lookup-one",
-                name: definition.name,
-                arguments: { query: "solar" },
-              },
-            ],
-          },
-    ),
-  ],
-  // This demo exposes only a read-only, in-memory lookup.
+  providers: [provider],
+  // Search only the explicitly selected document; no writes or implicit retrieval.
   applicationTools: { enabled: true, requireApproval: false },
 });
 const token = randomBytes(32).toString("base64url");
@@ -47,25 +46,23 @@ const host = await serve(driver, {
   tokens: [
     {
       token,
-      subject: "demo",
-      providers: ["mock"],
+      subject: "application-example",
+      providers: [provider.info.id],
       applicationTools: [{ name: definition.name, requiresApproval: false }],
     },
   ],
 });
 const controller = new AbortController();
 process.once("SIGINT", () => controller.abort());
-const passages = [
-  "Solar cells convert light into electricity.",
-  "Wind turbines convert moving air into electricity.",
-];
+
 try {
   const client = new AgenticClient({ url: host.url, token });
   for await (const event of client.stream(
     {
-      provider: "mock",
-      model: "demo",
-      input: "Find evidence about solar power",
+      provider: provider.info.id,
+      model,
+      input:
+        "Search the selected document for evidence about retrieval, then explain which claims are directly supported. Quote the matching passages and identify missing evidence. Do not invent a result if no passages match.",
       tools: [definition.name],
       applicationTools: [definition],
     },

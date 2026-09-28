@@ -1,6 +1,6 @@
 {
   "name": "@agenticdriver/sdk",
-  "version": "0.2.0-alpha.5",
+  "version": "0.2.0-alpha.6",
   "description": "Bring-your-own-agent SDK for local and remote applications",
   "type": "module",
   "license": "MIT",
@@ -48,10 +48,6 @@
     "./provider-kit": {
       "types": "./dist/provider-kit.d.ts",
       "import": "./dist/provider-kit.js"
-    },
-    "./provider-conformance": {
-      "types": "./dist/provider-conformance.d.ts",
-      "import": "./dist/provider-conformance.js"
     },
     "./diagnostics": {
       "types": "./dist/diagnostics.d.ts",
@@ -117,7 +113,7 @@
     "examples/quickstart"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/build-panel.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.build.json && node scripts/build-panel.mjs",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
@@ -126,20 +122,12 @@
     "test:clients": "python3 scripts/test-clients.py",
     "test:python": "python3 scripts/test-clients.py --python-only",
     "test:rust": "python3 scripts/test-clients.py --rust-only",
-    "test:install": "tsx scripts/test-install.ts",
-    "test:package": "tsx scripts/test-package.ts",
-    "test:codex-native": "npm run build && python3 scripts/test-codex-native.py",
-    "test:claude-catalog-native": "npm run build && python3 scripts/test-claude-catalog-native.py",
-    "test:gemini-catalog-native": "python3 scripts/test-gemini-catalog-native.py",
-    "test:auth": "npm run build && npm ci --prefix integrations/better-auth && npm test --prefix integrations/better-auth",
-    "test:deployment": "python3 scripts/test-deployment.py",
-    "test:soak": "node --expose-gc --import tsx scripts/operational-soak.ts",
-    "test:usagestat": "tsx scripts/test-usagestat.ts",
+    "test:package": "node scripts/test-package.mjs",
     "check:antigravity": "tsx scripts/check-antigravity.ts",
     "protocol": "tsx scripts/protocol.ts",
     "format": "prettier --write src tests examples protocol docs README.md package.json tsconfig*.json",
     "prepack": "npm run build",
-    "evaluate": "tsx scripts/evaluate.ts"
+    "test:real": "node examples/javascript/real-applications.mjs"
   },
   "dependencies": {
     "@agenticdriver/provider-icons": "https://github.com/agenticdriver/provider-icons/releases/download/v0.1.0-alpha.1/agenticdriver-provider-icons-0.1.0-alpha.1.tgz",

@@ -1,99 +1,20 @@
-# Protocol conformance
+# SDK verification
 
-The [compatibility matrix](compatibility.md) declares OS/runtime rows, artifact
-installation checks and proxy/TLS fault scenarios. Native account certification
-is separate from the credential-free matrix.
+The current SDK contains no mock provider, fake model server or simulated
+connection harness. `npm run check` runs type checks, pure validation and storage/
+process checks, then builds the runtime and portable provider component.
+`npm run test:package` installs an actual npm archive and checks its public exports.
+`npm run test:clients` installs the Python wheel and Rust crate, compiles their
+examples and runs pure client contracts, including Go's packaged component.
+Static schema inputs are validation data, never a connected provider.
 
-Run `npm run check` and `npm run test:clients` to verify the protocol and all four
-clients. The suite uses synthetic data and a local reference peer; it never
-loads an API key or starts a native agent.
+Run actual provider acceptance through [real connections](real-connections.md),
+with an explicit connection, account, exact model and meaningful prompt. Discovery,
+execution and application quality are separate results. Record CLI versions,
+transport, selected model, output and measured usage; do not infer successful
+execution from a green catalog status.
 
-[Diagnostics](diagnostics.md) checks use the real in-memory OpenTelemetry SDK,
-verify parent/child spans and fixed metric dimensions, and exercise hung/throwing
-exporters, queue/span/byte bounds, content redaction, HTTP correlation,
-cancellation and replay. Installed-package checks compile and run the optional
-diagnostics example without installing an OpenTelemetry runtime dependency.
-
-The real host uses a versioned fixture extension through the
-[provider extension kit](provider-extensions.md), so every language exercises
-that adapter boundary. `npm run test:install` separately compiles an independent
-NDJSON adapter from public package imports and runs its six fixture scenarios
-against a local endpoint, including upstream cancellation and host policy checks.
-
-Scheduling tests check tenant rotation, account alias isolation, bounded queues,
-cancellation, shutdown and control requests under saturation. Fake-clock checks
-keep queued work pending for 30 days without starting a configured inactivity
-timer. Resource tests cover unknown/partial usage, observed caps before tools,
-authority failures and the existing Usagestat quota API. These fixtures do not
-certify live provider costs, quota freshness or an external reservation service.
-
-`protocol/fixtures/versioning.json` supplies seven shared compatibility cases.
-`protocol/fixtures/conformance.json` supplies transport and payload cases that
-every client executes against identical responses from
-`tests/conformance-host.ts`. The host can fragment UTF-8 across writes, vary SSE
-line endings, send oversized frames, return invalid payloads, leave a stream
-open for cancellation, or attempt a redirect. Fixture bodies remain readable;
-large payloads are represented as repeat instructions.
-
-The same harness also starts the real SDK host. It checks provider/tool scopes,
-unknown or unauthorized tokens, quiet execution without a configured timeout,
-progress that outlives a configured idle interval, and a stalled run that expires
-only when an idle timeout is supplied. The runtime's fake-clock unit tests cover
-a week of silence with the default timer disabled and verify that transport
-pings cannot keep an idle run alive.
-
-Each language closes an unfinished reference stream; host metrics verify all
-four disconnects and assert that no redirect target was contacted. The harness
-runs over loopback HTTP and certificate-verified HTTPS using an ephemeral test
-certificate. It also checks certificate hostname mismatch, and clients with
-per-instance trust stores reject the certificate when the test CA is omitted.
-
-## Consumer rules
-
-- SSE accepts LF, CRLF and CR, including split delimiters, a leading UTF-8 BOM,
-  comments and multiline `data` fields. Invalid UTF-8 is rejected.
-- The 2 MB event bound counts UTF-8 bytes in the frame's lines, including field
-  names and comments but excluding line terminators and the leading BOM. It is
-  not a character count. JSON responses have a separate 2 MB byte bound.
-- `run.started` must come first and cannot repeat. Every event has a valid
-  timestamp and the next wire sequence, and belongs to the same run. Optional
-  extensions do not bypass these checks.
-- Known payloads are validated before delivery. A terminal result must belong
-  to the requested provider/model and the same run, and must include valid
-  usage, steps and finish reason. Missing or negative measurements are not
-  silently normalized into a successful result.
-- A client completes on its first valid terminal event and closes the response;
-  hosts must not emit further events. EOF before a terminal event produces
-  `INCOMPLETE_STREAM`. Cancellation by the application closes the connection.
-- Malformed JSON/event shapes produce `INVALID_RESPONSE` or `INVALID_STREAM`
-  according to the operation; event byte-limit failures produce
-  `RESPONSE_TOO_LARGE`. Provider error codes remain intact, including unknown
-  codes. Transport-library errors can still identify initial connection or TLS
-  failures; they never represent a successful run.
-
-The harness verifies behavior in the environment where it runs. It does not
-certify vendor accounts, operating systems outside the CI matrix, or package
-publication; those have separate roadmap items.
-
-## Application function bridge
-
-Each binding executes its own lookup function against the real host over HTTP
-and verified HTTPS, with both automatic read-only execution and interactive
-approval. The tests assert one invocation, accepted progress/results, the returned
-output, a successful terminal event and rejection of a stale result. Shared peer
-fixtures also reject malformed/unselected invocations, duplicate execution or call
-IDs, unnegotiated events and receipts with altered identities or status. Core tests
-cover scopes, host/token review requirements, input/output schemas, cancellation,
-explicit idle expiry, pending capacity and replay without redispatch.
-
-The shared suite also checks session metadata, identity/revision matching, visible-history shapes, deletion receipts and selected-run continuation. Every language creates a session, completes two turns through run/stream APIs, rejects a stale revision, reads its visible history and deletes it against HTTP and verified HTTPS hosts. Native API fixtures check private state preservation without including it in public history.
-
-Detached job checks cover submission deduplication, status, paginated replay and
-explicit cancellation in all four languages, including Python/Rust async APIs,
-over HTTP and verified HTTPS. Shared fixtures reject mismatched identities,
-malformed metadata, cursor gaps, incorrect terminal states and dispatch tickets
-in replay pages. Core tests kill a real worker process after a synthetic tool
-effect, then verify that completed work stays complete, interrupted work is not
-repeated, and only queued work starts under the replacement worker. Lease fencing,
-retention tombstones, revoked grants/account changes, storage bounds, source
-reauthorization and competition with foreground admission are covered separately.
+The previous simulated conformance suites were removed. Their old release reports
+under `docs/validation` remain historical evidence only. Features formerly covered
+by those suites need real qualification before a production support claim;
+build success alone does not establish streaming, tools, RAG or recovery behavior.

@@ -16,7 +16,7 @@ import { codexMcpBridge } from "./codex-mcp-bridge.js";
 import { cliVersion, codexAccount } from "./connection-metadata.js";
 import { codexHistory } from "./codex-history.js";
 
-// Pin the protocol whose environment and tool restrictions the native fixture audits.
+// Pin the protocol whose environment and tool restrictions the native protocol qualification.
 const supportedVersion = "codex-cli 0.157.0";
 const restrictions = [
   'model_provider="openai"',

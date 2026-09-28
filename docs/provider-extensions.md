@@ -8,9 +8,8 @@ not a JavaScript sandbox or a review of third-party code.
 
 `@agenticdriver/sdk/provider-kit` exports `defineProviderExtension`, its TypeScript
 contracts, `ProviderExtensionManifestSchema`, `providerEndpoint` and
-`readProviderResponse`. `@agenticdriver/sdk/provider-conformance` exports synthetic
-compatibility checks. The [manifest JSON Schema](../protocol/provider-extension.schema.json)
-is also included in the installed package. Both are Node host modules; browser applications continue
+`readProviderResponse`. The [manifest JSON Schema](../protocol/provider-extension.schema.json)
+is also included in the installed package. These are Node host modules; browser applications continue
 to import `@agenticdriver/sdk/client`.
 
 ## Construction and registration
@@ -18,9 +17,7 @@ to import `@agenticdriver/sdk/client`.
 The [independent NDJSON adapter](../examples/javascript/custom-provider.mts)
 demonstrates credential resolution, a host-owned endpoint, discovery, visible
 streaming, tools and private continuation state. The
-[runnable fixture host](../examples/javascript/provider-extension.mts) tests it
-against a local synthetic service. These examples import only installed public
-package exports. `npm run test:install` compiles and runs them outside this checkout.
+adapter requires an actual endpoint implementing that protocol. For a standard OpenAI-compatible gateway, use `openaiCompatible` instead.
 
 ```ts
 import {
@@ -120,7 +117,7 @@ The helper freezes instance models and capabilities, checks the explicit model,
 rejects undeclared tools/streaming and validates a bounded (2 MB) result. Inspection
 has the runtime's separate discovery timeout. **Runs have no default total or
 inactivity timeout.** An application's explicit inactivity policy resets on real
-progress. The conformance runner's deadline bounds a test, not an application run.
+progress.
 
 Unknown exceptions become the runtime's fixed `INTERNAL_ERROR`. A deliberately
 thrown `DriverError` is public: use fixed, actionable messages, never upstream
@@ -130,42 +127,10 @@ Usage identity and the [Usagestat integration](usagestat.md) remain host-owned.
 Text/Markdown context and scoped RAG use the ordinary driver request; capabilities
 must not imply unimplemented image/PDF or native-agent support.
 
-## Compatibility tests
+## Real qualification
 
-```ts
-import { testProviderConformance } from "@agenticdriver/sdk/provider-conformance";
-const report = await testProviderConformance({
-  mode: "fixture",
-  model: "fixture-model",
-  create: (scenario, { signal }) => makeSyntheticAdapter(scenario, signal),
-});
-```
-
-The factory must use synthetic responses and enable the fixture model. Each
-scenario gets a fresh adapter and a test cancellation signal. A bounded test
-timeout defaults to five seconds per scenario, including factory construction.
-Supply a longer `testTimeoutMs` for slow test infrastructure. Factory resources
-must honor their signal, which is aborted when the scenario ends.
-
-| Scenario/input              | Synthetic response                                                                                                                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `conformance:text`          | `Hello fixture`, with no usage measurements; stream it if supported.                                                                                                                  |
-| `conformance:structured`    | `{"ok":true}`, satisfying the requested JSON Schema.                                                                                                                                  |
-| `conformance:tools`         | One `conformance_lookup` call with `{ "value": 7 }`; consume the tool's `{ "receipt": 7 }` and finish with `tool receipt: 7`.                                                         |
-| `conformance:private-error` | Fail using a private body/exception containing `conformance-secret-marker`; it must not appear in public events.                                                                      |
-| `conformance:cancel`        | Report real fixture readiness with `reportProgress`, then remain pending until cancellation.                                                                                          |
-| `conformance:native`        | `first visible reply` and private JSON containing `private-state-marker`; on `conformance:native-followup`, verify the private state was retained and return `native state received`. |
-
-The report lists passed checks and explicitly skipped unsupported tools/native
-continuation. Assertions check event sequence, terminal behavior, unknown usage,
-one tool effect, structured output, cancellation and private-state redaction.
-Verify upstream cancellation/resource release in the adapter's own tests; a
-cancelled runtime result alone does not prove the underlying operation stopped.
-
-The installed NDJSON example passes all six scenarios and verifies upstream
-disconnect, restricted model discovery and rejection of remote endpoint changes.
-The shared HTTP/verified-HTTPS harness uses a separate versioned fixture extension
-through the kit for TypeScript, Python, Go and Rust, including sessions, tools,
-RAG and jobs. `npm run check`, `npm run test:clients` and `npm run test:install`
-cover these layers. Fixture results do not certify live accounts, costs, native
-process isolation or third-party package security.
+Register the extension against its actual service and run meaningful prompts with
+an explicitly selected account and inexpensive model. Check discovery, streaming,
+cancellation, tools and reported usage individually; unsupported features must be
+reported honestly. The simulated `provider-conformance` package entry was removed.
+See [real connection verification](real-connections.md).

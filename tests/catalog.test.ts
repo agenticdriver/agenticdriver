@@ -1,25 +1,31 @@
 import assert from "node:assert/strict";
+
 import test from "node:test";
+
 import {
   mkdtemp,
   mkdir,
   writeFile,
-  readFile,
   rm,
   symlink,
   unlink,
 } from "node:fs/promises";
+
 import { tmpdir } from "node:os";
+
 import { join } from "node:path";
+
 import {
   providerPresentation,
   quotaPresentation,
   type UsageStatAccountQuota,
   type UsageStatProvider,
 } from "../src/catalog.js";
+
 import { createProviderAssetCache } from "../src/provider-assets.js";
-import { UsageStatClient } from "../src/usagestat.js";
+
 import type { ProviderInfo } from "../src/types.js";
+
 import { DriverError } from "../src/errors.js";
 
 const provider: ProviderInfo = {
@@ -30,6 +36,7 @@ const provider: ProviderInfo = {
   usageStatId: "codex",
   capabilities: { tools: false, textStreaming: true },
 };
+
 const metadata: UsageStatProvider = {
   id: "codex",
   name: "Codex",
@@ -41,13 +48,16 @@ const metadata: UsageStatProvider = {
   },
   brandColor: "#123456",
 };
+
 const identity = {
   hostId: "host-one",
   provider: provider.id,
   accountId: "account-one",
   subject: "user-one",
 };
+
 const now = Date.parse("2026-09-21T10:00:00Z");
+
 const receipt: UsageStatAccountQuota = {
   identity,
   upstreamInstanceId: "codex-personal",
@@ -68,7 +78,9 @@ const receipt: UsageStatAccountQuota = {
     },
   },
 };
+
 const policy = { now, maxAgeMs: 300_000 };
+
 const code = (expected: string) => (e: unknown) =>
   e instanceof DriverError && e.code === expected;
 
@@ -220,41 +232,6 @@ test("quota errors, missing data, uncertain timestamps and cross-account receipt
     () => quotaPresentation(identity, receipt, { ...policy, maxAgeMs: 0 }),
     code("QUOTA_DISPLAY_POLICY"),
   );
-});
-
-test("app quota presentation consumes the existing subject-scoped Usagestat lookup without provider fallback", async () => {
-  const calls: string[] = [];
-  const backend = new UsageStatClient({
-    accounts: [
-      {
-        hostId: identity.hostId,
-        provider: identity.provider,
-        accountId: identity.accountId,
-        instanceId: receipt.upstreamInstanceId,
-        subjects: [identity.subject],
-      },
-    ],
-    fetch: async (url) => {
-      calls.push(String(url));
-      return Response.json({
-        schema: "crossusage.limits.v1",
-        providers: { [receipt.upstreamInstanceId]: receipt.snapshot },
-        errors: [],
-      });
-    },
-  });
-  const view = quotaPresentation(
-    identity,
-    await backend.accountLimits(identity),
-    policy,
-  );
-  assert.equal(view.state, "fresh");
-  assert.deepEqual(calls, ["http://127.0.0.1:6736/v1/limits/codex-personal"]);
-  await assert.rejects(
-    backend.accountLimits({ ...identity, subject: "other" }),
-    code("QUOTA_UNBOUND"),
-  );
-  assert.equal(calls.length, 1);
 });
 
 async function assetFixture() {

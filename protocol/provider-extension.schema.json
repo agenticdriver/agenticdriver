@@ -20,7 +20,7 @@
     },
     "usageSource": {
       "type": "string",
-      "enum": ["provider-response", "cli-report", "adapter-report", "synthetic"]
+      "enum": ["provider-response", "cli-report", "adapter-report"]
     },
     "capabilities": {
       "type": "object",

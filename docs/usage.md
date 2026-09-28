@@ -100,8 +100,7 @@ against a subscription. The SDK does not calculate another estimate from a price
 table. See [Claude Code cost reporting](https://code.claude.com/docs/en/costs).
 
 The `source` on a metering record identifies `provider-response`, `cli-report`,
-`adapter-report` (the default for custom adapters), or `synthetic`. This is
-provenance, not independent billing verification. Mock measurements are synthetic.
+`adapter-report` (the default for custom adapters). This is provenance, not independent billing verification. Historical records with `synthetic` provenance remain readable; live adapters cannot declare that source.
 
 Each record contains:
 
@@ -187,7 +186,7 @@ for the three operation labels.
 
 An embedding call is one metered step. OpenAI-compatible reported prompt tokens
 are input tokens with source `provider-response`; unreported measurements remain
-unknown. The deterministic adapter is marked `synthetic`. Failed/cancelled calls
+unknown. Failed/cancelled calls
 can still consume resources and have unknown final usage. Successful batches
 remain recorded even if a later batch fails and the index replacement rolls
 back. Reindexing identical content emits no duplicate embedding usage; ingestion

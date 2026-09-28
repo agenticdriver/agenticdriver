@@ -65,7 +65,7 @@ required-features = ["async", "blocking"]
 ''')
     shutil.copyfile(package / "examples/installed_app.rs", application / "src/main.rs")
     (application / "src/lib.rs").write_text('''use agenticdriver::{Event, EventPayload, RunRequest};
-pub fn request() -> RunRequest { RunRequest::new("mock", "demo", "Hello") }
+pub fn request() -> RunRequest { RunRequest::new("selected", "selected", "Question") }
 pub fn text(event: &Event) -> agenticdriver::Result<Option<&str>> {
     Ok(match event.payload()? {
         EventPayload::TextDelta { text } => Some(text),

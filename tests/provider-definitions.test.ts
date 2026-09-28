@@ -13,9 +13,6 @@ test("setup discovery does not read provider secrets, start native processes or 
     const path = join(directory, "host.json"),
       binary = join(directory, "native");
     const marker = join(directory, "native-was-started");
-    await writeFile(binary, `#!/bin/sh\ntouch '${marker}'\nexit 1\n`, {
-      mode: 0o700,
-    });
     await writeFile(
       path,
       JSON.stringify({

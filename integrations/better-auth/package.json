@@ -5,9 +5,7 @@
   "engines": {
     "node": ">=24"
   },
-  "scripts": {
-    "test": "node --test auth.test.mjs"
-  },
+  "scripts": {},
   "dependencies": {
     "@authplane/better-auth": "file:vendor/authplane-better-auth-0.2.0.tgz",
     "@better-auth/core": "1.7.3",

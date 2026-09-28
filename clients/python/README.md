@@ -114,12 +114,9 @@ for execution and uses its [response close lifecycle](https://www.python-httpx.o
 
 ## Verification
 
-From the SDK repository, `npm run test:python` builds a wheel, installs it in a
-fresh application environment, checks base and async dependencies and type
-exports, then exercises both styles against local HTTP and certificate-verified
-HTTPS hosts. It runs shared protocol fixtures, scoped RAG/ingestion, cancellation,
-host inactivity, and TLS rejection checks. `npm run test:clients` includes these
-same installed-wheel checks with TypeScript, Go and Rust conformance.
+`npm run test:clients` builds and installs the actual language packages, compiles
+examples and runs pure contracts. It does not simulate connections or model answers.
+Use [real connection checks](../../docs/real-connections.md) for provider execution.
 
 ## Interactive approvals
 

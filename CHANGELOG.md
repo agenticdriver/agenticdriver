@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0-alpha.6
+
+- Removed mock providers, offline setup options, fake embedding adapters and the simulated provider-conformance export.
+- Fresh desktop profiles start empty. CLI initialization and application examples require an explicit real provider; legacy mock host configurations report `MOCK_PROVIDER_REMOVED`.
+- Removed canned provider/connection/usage preview and acceptance harnesses. Package and pure contract checks remain; model acceptance uses actual selected accounts and prompts.
+- Clean build output before compilation so deleted adapters cannot survive in packaged artifacts.
+
 ## 0.2.0-alpha.5 — 2026-09-28
 
 - Added desktop-managed outbound OpenSSH routes on Linux: save/edit destinations,

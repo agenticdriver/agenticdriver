@@ -24,7 +24,6 @@ import {
   codex,
   gemini,
   geminiCli,
-  mockProvider,
   openai,
   openaiCompatible,
   xai,
@@ -206,6 +205,23 @@ export function validateHostConfig(input: unknown): HostConfig {
       "INVALID_CONFIG",
     );
   }
+  if (
+    input &&
+    typeof input === "object" &&
+    "providers" in input &&
+    Array.isArray(input.providers) &&
+    input.providers.some(
+      (provider: unknown) =>
+        provider &&
+        typeof provider === "object" &&
+        "kind" in provider &&
+        provider.kind === "mock",
+    )
+  )
+    throw new DriverError(
+      "MOCK_PROVIDER_REMOVED",
+      "Mock providers are no longer supported. Remove entries with kind 'mock' from this configuration, then connect a real provider in the desktop or with agenticdriver init --provider.",
+    );
   const parsed = HostConfigSchema.safeParse(input);
   if (!parsed.success)
     throw new DriverError(
@@ -393,18 +409,6 @@ export function configuredProviders(
       return p.enabled === false
         ? { ...adapter, info: { ...adapter.info, models: [] } }
         : adapter;
-    }
-    if (p.kind === "mock") {
-      const adapter = mockProvider();
-      return {
-        ...adapter,
-        info: { ...adapter.info, ...shared, name: p.name ?? adapter.info.name },
-        inspect: async () => ({
-          code: "CATALOG_AVAILABLE",
-          models: [...(p.models ?? adapter.info.models ?? [])],
-          complete: true,
-        }),
-      };
     }
     if ("apiKeyRef" in p) {
       const values = {

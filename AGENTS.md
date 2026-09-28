@@ -3,6 +3,7 @@
 ## Use real connections and real example prompts
 
 - Use real provider connections and the actual connected accounts when developing, demonstrating and validating functionality.
+- Ship no mock/demo provider, fake connection, seeded account or invented usage in the SDK, desktop, provider components or setup flows. Fresh installations start empty. Do not reintroduce removed mocks under another name.
 - Do not add or run mock providers, mock model servers, canned model responses or synthetic provider substitutes. Mock-only checks are not evidence that a feature works.
 - Use meaningful, realistic example prompts for the applications this SDK serves: brand brainstorming from a concrete brief, literature questions grounded in actual public papers or documents, and email summaries or reply drafts from realistic example threads. A trivial “say hello” prompt is not sufficient application validation.
 - Use an inexpensive model for each provider being tested. Keep the provider, account, exact model and billing mode explicit; preserve existing selections and never silently fall back to a different connection.

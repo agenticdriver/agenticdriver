@@ -99,7 +99,7 @@ fn valid_definition(d: &ProviderDefinition) -> bool {
         && text(&d.protocol, 100)
         && matches!(
             d.category.as_str(),
-            "native" | "api" | "compatible" | "fixture"
+            "native" | "api" | "compatible"
         )
         && (1..=8).contains(&d.methods.len())
         && d.requirements.as_ref().is_none_or(|s| text(s, 2000))

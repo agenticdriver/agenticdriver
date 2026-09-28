@@ -69,12 +69,12 @@ write access. crates.io ownership includes `github:agenticdriver:maintainers`
 and `hashimkarim` as individual administrator. Both registry publishers are bound
 to this organization repository. PyPI organization approval is pending.
 
-| Channel   | Candidate identity                                  | Version source                  | Current state                                               |
-| --------- | --------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
-| npm       | `@agenticdriver/sdk`                                | Root `package.json`             | 0.1.0 published; fresh registry installation passed          |
-| PyPI      | `agenticdriver`                                     | `clients/python/pyproject.toml` | Organization approval pending; no PyPI upload                |
+| Channel   | Candidate identity                                  | Version source                  | Current state                                        |
+| --------- | --------------------------------------------------- | ------------------------------- | ---------------------------------------------------- |
+| npm       | `@agenticdriver/sdk`                                | Root `package.json`             | 0.1.0 published; fresh registry installation passed  |
+| PyPI      | `agenticdriver`                                     | `clients/python/pyproject.toml` | Organization approval pending; no PyPI upload        |
 | crates.io | `agenticdriver`                                     | `clients/rust/Cargo.toml`       | 0.1.0 published; team ownership and install verified |
-| Go        | `github.com/agenticdriver/agenticdriver/clients/go` | `release/config.json`           | v0.1.0 tagged; public proxy installation passed           |
+| Go        | `github.com/agenticdriver/agenticdriver/clients/go` | `release/config.json`           | v0.1.0 tagged; public proxy installation passed      |
 
 These channels match the SDK's language packages. Node also supplies the host
 CLI; Python and Rust are libraries, not `pipx`/`cargo install` apps. OS package
@@ -135,7 +135,7 @@ configuration filenames, links, traversal, duplicate members and oversized
 archives. Installation runs three npm recipes plus the four language quickstarts
 against the installed npm host through verified HTTPS. Python runs from wheel
 and sdist; Go uses the packaged proxy without `replace`; Rust uses the extracted
-crate. The checkout's dev dependencies are test tooling only. Model work is synthetic.
+crate. The checkout's dev dependencies are build tooling only. This gate checks installation and compilation; real model acceptance is separate.
 
 For tooling development, `build --allow-dirty` creates an explicitly dirty
 candidate. `verify --require-clean` rejects it. New source inputs must be added
@@ -172,7 +172,6 @@ explicitly disabled: npm's automatic attestation identifies the workflow revisio
 which would otherwise misidentify those older bytes. The exact CI source and
 archive checks still apply. No workflow SHA or OIDC claim is rewritten.
 [npm provenance configuration](https://docs.npmjs.com/trusted-publishers/#disabling-provenance-generation)
-
 
 AD-042 remains open until registry installation and all three app migrations
 are verified. The selected release target is 0.1.0 under `agenticdriver`, with public
@@ -274,7 +273,7 @@ digests. A timeout, 401 or outage is not evidence of absence. Never overwrite a
 tag, unpublish, yank or use `--skip-existing` to conceal a mismatch. Fix defects
 in a new version with a changelog entry.
 
-Install each exact registry version in a fresh app and run its synthetic workflow,
+Install each exact registry version in a fresh app and run an explicitly selected real provider workflow,
 TLS and cancellation checks. Coordinate the three app agents to pin coordinates
 and lockfiles, rerun integrations, then remove development archives/source aliases.
 The same installation harness can select published channels after verifying

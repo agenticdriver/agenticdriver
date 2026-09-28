@@ -122,22 +122,6 @@ const definitions: ProviderDefinition[] = [
     requirements:
       "An endpoint URL is required. This connection identifies the gateway account; the gateway controls its own upstream routing, credentials and billing. Configure those policies there before relying on a particular upstream account. No vendor compatibility or model availability is implied by saving a URL.",
   },
-  {
-    kind: "mock",
-    name: "Offline demo",
-    category: "fixture",
-    protocol: "Synthetic fixture",
-    description: "Try the SDK without an external provider or model usage.",
-    methods: [
-      {
-        id: "offline",
-        label: "Use the offline fixture",
-        description: "No sign-in, credentials or external model calls.",
-        interaction: "none",
-        credentialOwner: "none",
-      },
-    ],
-  },
 ];
 
 /** Pure metadata. Does not inspect credentials, start a process or contact a provider. */

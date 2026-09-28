@@ -25,7 +25,7 @@ An extension is executable host code, not a sandboxed package. A compromised hos
 account or plugin can access its process's secrets; API scopes do not isolate
 mutually untrusted OS users or native agents. Use separately qualified OS/container
 boundaries for those cases. The stock Linux deployment currently permits only
-configured API/mock providers and explicit service clients.
+configured API providers and explicit service clients.
 
 | Boundary             | Enforcement                                                                                                                                | Evidence                                                                         |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
@@ -123,31 +123,9 @@ URL, rejects an unselected tool emitted after hostile document content, and
 records the configured canonical usage identity. Existing tests cover argument
 substitution, replay, revoked evidence and credential/error leakage.
 
-Run the review checks from the SDK checkout:
-
-```sh
-npm ci
-npm run check
-npm run test:auth
-npm run test:clients
-npm run test:deployment
-```
-
-The auth and container checks require Node 24+; container testing also requires
-Docker Compose and the four language toolchains. See [compatibility](compatibility.md).
-Fixture deadlines protect test infrastructure. Header/body ingress limits,
-authentication exchange timeouts and operator shutdown grace do not add a default
-SDK run deadline or inactivity timeout. An operator still needs appropriate
-connection/auth rate controls for its actual public ingress and auth service.
-
-Remaining gates include AD-012's native account/process isolation and platform
-qualification, provider-specific certifications, the selected Antigravity
-tool-isolation blocker, Grok Build's idle/side-work controls, PyPI organization
-approval, and the complete application/production workload requirements of v1.
-The [current release evidence](validation/release-0.2.0-alpha.5.md) records the
-passing Prometheus Linux CI, published packages and installed-package checks;
-macOS/Windows execution remains unqualified without the corresponding runners.
-GitHub-hosted compute is used only for npm's public OIDC publish-only job.
-The [synthetic operational qualification](operational-qualification.md) closes a
-specific Linux workload gate, not all v1 requirements. Fixture success never
-authorizes automatic fallback to another model or account.
+Current [package and pure contract checks](conformance.md) run without model
+substitutes. The former simulated suites described above are historical evidence;
+qualify actual scoped connections and deployment controls before production use.
+See [real Prometheus validation](validation/prometheus-real-2026-09-28.md) for the
+specific account/model and control-plane checks performed. That evidence does not
+qualify every native tool mode, account-container isolation or operating system.

@@ -102,8 +102,7 @@ export const UsageSchema = z.object({
   apiEquivalentCostUsd: z.number().nonnegative().optional(),
 });
 export type Usage = z.infer<typeof UsageSchema>;
-export type UsageSource =
-  "provider-response" | "cli-report" | "adapter-report" | "synthetic";
+export type UsageSource = "provider-response" | "cli-report" | "adapter-report";
 export interface ToolCall {
   id: string;
   name: string;
@@ -336,7 +335,8 @@ export interface UsageRecord {
   model: string;
   authMode: AuthMode;
   status: "completed" | "failed" | "cancelled";
-  source: UsageSource;
+  /** Historical records can still be read; live adapters cannot emit synthetic usage. */
+  source: UsageSource | "synthetic";
   startedAt: string;
   finishedAt: string;
   /** Sink deletion policy; omitted means the sink must choose its own retention. */

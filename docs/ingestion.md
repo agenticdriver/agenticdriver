@@ -127,4 +127,4 @@ let receipt = client.ingest_context(&agenticdriver::IngestRequest {
 })?;
 ```
 
-Embedding usage is separately attributed to its configured provider/account and forwarded through the existing [Usagestat dependency](usage.md#embedding-usage). It does not inflate generation token totals. Fixture embeddings and fixture PDF/OCR adapters remain test fixtures; the Poppler integration has a separate test using actual digital PDFs.
+Embedding usage is separately attributed to its configured provider/account and forwarded through the existing [Usagestat dependency](usage.md#embedding-usage). It does not inflate generation token totals. Use a real embedding account and extractor; the Poppler integration has a separate test using actual digital PDFs.

@@ -72,16 +72,9 @@ A stream owns its response body and derived cancellation context. Terminal succe
 
 HTTPS is required away from loopback, and redirects never forward credentials. For a custom CA, mTLS or proxy policy, configure a verified `http.Transport` and pass it to `NewWithTransport`. The caller owns that transport and any `CloseIdleConnections` lifecycle. Do not disable TLS verification. No HTTP-client execution timeout is installed. Caller context deadlines are explicit application choices; runs can separately opt in to host-enforced `IdleTimeoutMs` based on real model/tool/context progress. Discovery has a bounded ten-second I/O timeout. A background context gives an execution request no default deadline.
 
-Development checks in the SDK repository:
-
-```sh
-# Pure Go framing/cleanup checks (including the EOF+CRLF regression):
-go test -race ./...                    # from clients/go
-# All language clients over HTTP and verified HTTPS, with Go's race detector:
-npm run test:clients                   # from repository root
-# Fetch a pushed client into a separate module, without relative replacements:
-python3 scripts/test-go-install.py COMMIT_SHA
-```
+`npm run test:clients` builds and installs the actual language packages, compiles
+examples and runs pure contracts. It does not simulate connections or model answers.
+Use [real connection checks](../../docs/real-connections.md) for provider execution.
 
 ## Interactive approvals
 

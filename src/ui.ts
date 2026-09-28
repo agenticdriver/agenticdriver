@@ -90,7 +90,6 @@ const labels: Record<string, string> = {
   xai: "xAI API",
   "xai-responses": "xAI Responses",
   "openai-compatible": "Compatible API",
-  mock: "Offline demo",
 };
 const native = (kind: string) =>
   ["codex", "claude-code", "gemini-cli"].includes(kind);
@@ -98,7 +97,6 @@ const categories: Record<string, string> = {
   native: "Native account",
   api: "API account",
   compatible: "Custom endpoint",
-  fixture: "Offline",
 };
 const setupInteractions = new Set([
   "device-code",
@@ -595,7 +593,7 @@ export function registerProviderPanel(
         this.draft = {
           id,
           kind,
-          ...(native(kind) || kind === "mock"
+          ...(native(kind)
             ? {}
             : { apiKeyRef: { env: keyEnv[kind] ?? "PROVIDER_API_KEY" } }),
         } as HostProviderConfig;
@@ -718,7 +716,7 @@ export function registerProviderPanel(
           id,
           kind: definition.kind,
           name: definition.name,
-          ...(native(definition.kind) || definition.kind === "mock"
+          ...(native(definition.kind)
             ? {}
             : {
                 apiKeyRef: {
@@ -1401,7 +1399,7 @@ export function registerProviderPanel(
             const config = state.management?.providers.find(
               (p) => p.id === provider.id,
             );
-            return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` · ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
+            return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` · ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Provider connection"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
           })
           .join(
             "",

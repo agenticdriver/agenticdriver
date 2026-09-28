@@ -119,11 +119,9 @@ This adds a trusted CA and preserves certificate and hostname checks. Never send
 provider API keys as driver bearer tokens. Keep the driver token in server-side
 configuration or the application's credential store.
 
-`npm run test:rust` builds a `.crate`, verifies its contents, installs the extracted
-archive into a separate application, checks every feature combination on Rust
-1.89, and exercises both clients over HTTP and verified HTTPS. It also runs
-shared wire/version fixtures, cancellation/disconnection checks, scoped RAG and
-ingestion round trips. It does not publish to a registry or call a live model.
+`npm run test:clients` builds and installs the actual language packages, compiles
+examples and runs pure contracts. It does not simulate connections or model answers.
+Use [real connection checks](../../docs/real-connections.md) for provider execution.
 
 ## Interactive approvals
 

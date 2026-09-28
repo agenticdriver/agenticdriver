@@ -2,14 +2,13 @@
 
 By default, use candidate archives. --registry selects already published
 channels, whose remote contents must match the candidate before installation.
-No registry upload, real account, provider API or sibling checkout is used.
+This checks installation and compilation only. Real model acceptance is a separate explicit check.
 Infrastructure watchdogs below do not change SDK run/inactivity defaults.
 """
 import argparse
 import json
 import os
 from pathlib import Path
-import secrets
 import shutil
 import subprocess
 import sys
@@ -18,7 +17,6 @@ import tempfile
 
 from release import ROOT, verify
 from publish import check_registry
-from tls_fixture import create_tls_fixture
 
 
 def run(args, cwd, env):
@@ -59,24 +57,7 @@ with tempfile.TemporaryDirectory(prefix="agenticdriver-release-test-") as direct
         lock = json.loads((javascript / "package-lock.json").read_text())
         dependency = lock["packages"]["node_modules/@agenticdriver/sdk"]
         assert dependency["resolved"].startswith("https://registry.npmjs.org/")
-    for name in ["brandstorm", "literature-review", "email-workspace"]:
-        shutil.copyfile(installed / f"examples/javascript/{name}.mts", javascript / f"{name}.mts")
-        result = run(["node", "--experimental-strip-types", f"{name}.mts"], javascript, env)
-        assert result.stdout.strip()
-    shutil.copyfile(installed / "examples/quickstart/client.mjs", javascript / "client.mjs")
-    (javascript / "host.mjs").write_text('''
-import { readFile } from 'node:fs/promises';
-import { AgenticDriver } from '@agenticdriver/sdk';
-import { mockProvider } from '@agenticdriver/sdk/providers';
-import { serve } from '@agenticdriver/sdk/server';
-const host = await serve(new AgenticDriver({providers:[mockProvider()]}), {
-  port: 0,
-  tokens: [{token: process.env.FIXTURE_TOKEN, subject:'fixture', providers:['mock']}],
-  tls: {cert: await readFile(process.env.FIXTURE_CERT), key: await readFile(process.env.FIXTURE_KEY)},
-});
-console.log(JSON.stringify({url: host.url}));
-process.on('SIGTERM', () => { void host.close().then(() => process.exit(0)); });
-''')
+    run(["node", "--input-type=module", "-e", "import('@agenticdriver/sdk/providers').then(p => { if ('mockProvider' in p) throw Error('Removed export was packaged'); })"], javascript, env)
     applications = [(["node", "client.mjs"], javascript)]
     for kind in ["wheel", "sdist"]:
         application = work / ("python-" + kind)
@@ -133,29 +114,5 @@ agenticdriver = {rust_dependency}
         assert sdk["version"] == packages["rust"]["version"]
         assert sdk["source"] == "registry+https://github.com/rust-lang/crates.io-index"
     applications.append((["cargo", "+1.89.0", "run", "--locked", "--quiet"], rust))
-    ca, cert, key = create_tls_fixture(work)
-    token = secrets.token_urlsafe(32)
-    token_file = work / "token"
-    token_file.write_text(token)
-    token_file.chmod(0o600)
-    host = subprocess.Popen(["node", "host.mjs"], cwd=javascript,
-                            env={**env, "FIXTURE_TOKEN": token, "FIXTURE_CERT": cert, "FIXTURE_KEY": key},
-                            text=True, stdout=subprocess.PIPE, stderr=sys.stderr)
-    try:
-        url = json.loads(host.stdout.readline())["url"]
-        client_env = {**rust_env, "AGENTICDRIVER_URL": url,
-                      "AGENTICDRIVER_TOKEN_FILE": str(token_file), "AGENTICDRIVER_PROVIDER": "mock",
-                      "AGENTICDRIVER_MODEL": "demo", "AGENTICDRIVER_CA": ca, "NODE_EXTRA_CA_CERTS": ca}
-        for command, application in applications:
-            result = run(command, application, client_env)
-            assert result.stdout.strip() == "AgenticDriver is connected.", application.name
-            print("Reviewed package quickstart passed over verified HTTPS: " + application.name, flush=True)
-    finally:
-        host.terminate()
-        try:
-            host.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            host.kill()
-            host.wait()
-print("npm, Python wheel+sdist, Go module and Rust crate passed; registry installs: "
-      + (", ".join(sorted(registries)) or "none (candidate archives)") + ". No upload performed.")
+    print("Exact npm, Python, Go and Rust artifacts installed and compiled. No model execution was attempted.")
+print("Registry installs: " + (", ".join(sorted(registries)) or "none (candidate archives)") + ". No upload performed.")

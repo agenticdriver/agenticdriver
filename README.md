@@ -19,10 +19,10 @@ local desktop companion and four-language provider components. Shared provider i
 and masked account details remain included. See
 [alpha adoption](docs/alpha.md) and the [release inventory](docs/releases.md)
 for exact versions, host compatibility and publication status.
-The TypeScript runtime, four language clients and three application examples have
-fixture coverage. The selected local Codex route has passed
-[live text and cancellation checks](docs/validation/codex-2026-09-25.md);
-other provider and full application qualifications remain separate work.
+The current source uses real connections only. A fresh desktop starts empty and
+helps connect a real native session or API account. There is no mock provider,
+canned response mode or fake embedding adapter. [Real Prometheus checks](docs/validation/prometheus-real-2026-09-28.md)
+record the selected Codex/Luna and Claude/Haiku accounts and their limits.
 
 ## Local desktop companion
 
@@ -34,7 +34,7 @@ builds include the SDK runtime. See its setup and lifecycle guide and
 ## What works
 
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
-- A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent local endpoint example and synthetic compatibility checks.
+- A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent endpoint adapter example.
 - Optional [operational diagnostics and OpenTelemetry](docs/diagnostics.md), with content redaction, bounded export and no additional usage backend.
 - Text adapters for installed Codex, Claude Code, and Gemini CLI sessions, plus
   an opt-in [Codex application-tool bridge](docs/native-tools.md).
@@ -81,25 +81,17 @@ Start with the [install-first quickstart](docs/quickstart.md),
 
 ## Try all three examples
 
-Requires Node.js 22.13+ and npm. These examples use deterministic fixtures by default
-and require no credentials. The literature and email inputs are explicitly synthetic.
+Follow [real connection setup](docs/real-connections.md), then run:
 
-```bash
-npm install
-npm run check
-npm run demo
-npx tsx examples/literature-review.ts
-npx tsx examples/email-workspace.ts
+```sh
+npm run test:real -- --connection /private/app/profile.json \
+  --provider YOUR_CONNECTED_INSTANCE --model YOUR_SELECTED_MODEL \
+  --case all --receipt /private/results.json
 ```
 
-To use a real provider, set `AGENTICDRIVER_PROVIDER` and an explicit
-`AGENTICDRIVER_MODEL`. API adapters also require their usual key on the host:
-`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or `XAI_API_KEY`.
-CLI adapters use the installed CLI's own sign-in. See [provider setup](docs/providers.md).
-
-```bash
-AGENTICDRIVER_PROVIDER=codex AGENTICDRIVER_MODEL=YOUR_MODEL npm run demo
-```
+The examples cover a real product brand brief, public research notes and an actual
+release handoff draft. They consume the selected account's allowance and require
+explicit provider/model selection. See [application recipes](docs/applications.md).
 
 ## Embed in TypeScript
 
@@ -140,7 +132,7 @@ keys or explicitly configured CLI account directories.
 Functions can also stay in your TypeScript, Python, Go or Rust application while
 a local or remote host drives the model loop. The [application tool bridge](docs/application-tools.md)
 provides scoped invocation tickets, schema validation, approvals, progress and
-result submission. Run `npx tsx examples/application-tools.ts` for a mock example.
+result submission. Run `npx tsx examples/application-tools.ts` with an explicitly configured real provider and a permitted Markdown document.
 
 API adapters can execute registered application tools. A request must select each
 tool by name. The runtime validates all arguments in a batch before executing any
@@ -214,7 +206,7 @@ export AGENTICDRIVER_TOKEN="$(openssl rand -hex 32)"
 npm run demo:server
 ```
 
-This starts a mock provider on `http://127.0.0.1:7433`. Change the provider/model
+This requires an explicitly configured real provider on `http://127.0.0.1:7433`. Set the provider/model
 environment variables to expose a real adapter. Tokens authenticate to the driver;
 provider keys and CLI sessions stay on the execution host.
 
@@ -241,8 +233,8 @@ const client = new AgenticClient({
 });
 
 for await (const event of client.stream({
-  provider: "mock",
-  model: "demo",
+  provider: selectedProviderId,
+  model: selectedModelId,
   input: "Hello",
 })) {
   if (event.type === "text.delta") process.stdout.write(event.text);
@@ -287,7 +279,7 @@ read closes the response. The optional blocking API retains callback cancellatio
 from agenticdriver import AgenticClient
 
 with AgenticClient("http://127.0.0.1:7433", token="YOUR_DRIVER_TOKEN") as client:
-    print(client.run(provider="mock", model="demo", input="Hello")["text"])
+    print(client.run(provider=selected_provider_id, model=selected_model_id, input=prompt)["text"])
 ```
 
 For private CAs, Python accepts `ca_file`, Rust accepts `with_ca_pem`, Go accepts
@@ -313,8 +305,7 @@ and [architecture and boundaries](docs/architecture.md).
 npm run check
 npm run test:clients   # Node, Python, Go, Rust, and OpenSSL required
 npm run test:python    # Installed wheel, sync/async, typing, HTTP and verified HTTPS
-npm run test:install   # Packed SDK, JS/TS examples, browser bundle and CLI
-npm run test:auth      # Node 24+, real pinned Better Auth + AuthYard contracts
+npm run test:package   # Fresh npm archive installation and public exports
 ```
 
 The client suite starts temporary hosts and verifies all four clients over HTTP

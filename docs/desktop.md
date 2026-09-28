@@ -261,39 +261,14 @@ protocol, and new windows/navigation are denied except selected documentation
 links and the exact official Codex device page opened by the user. This is local transport access control; applications
 retain their existing authentication stack.
 
-## Validation
+## Verification and preview
 
-The [dated validation record](validation/desktop-2026-09-26.md) describes the
-backend, native launch, portable artifact and visual checks for this preview.
+The desktop starts an empty actual local host. Add a real provider through the
+provider panel or pair with an existing host. Account status and usage come from
+those real connections. A connection check is distinct from a completed model run.
 
-```sh
-npm test --prefix apps/desktop
-npm run test:native --prefix apps/desktop
-npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
-node apps/desktop/scripts/native-smoke.mjs /absolute/path/to/linux-unpacked/agenticdriver-desktop
-```
-
-For an explicitly selected remote machine with existing pinned SSH access and
-Python 3, the optional transport check is
-`node apps/desktop/scripts/test-ssh-connection.mjs YOUR_SSH_ALIAS`. It creates a
-temporary mock-only host and a remote loopback reverse tunnel, verifies pairing
-and metadata access without running a model, then revokes the grant and removes
-its state. It does not change the remote SSH server or install a service. This
-check is opt-in and never runs as part of ordinary SDK tests or CI.
-
-Tests cover actual SDK hosts, private file permissions, durable endpoint/profile
-restoration, remote management, grant rejection/revocation, write-only credentials,
-metadata refresh during a streamed fixture run and protected shutdown. The native
-smoke launches Electron and exercises renderer → IPC → Node → SDK management with
-a synthetic provider, checking sandbox/context isolation and no renderer Node
-API. The Usagestat check runs the real dependency in an isolated `--no-poll` profile.
-
-Prometheus builds the Linux archive and launches it as a non-root user under Xvfb
-in an offline container, with Electron's sandbox enabled. Windows, macOS, Linux
-ARM, signed installers, automatic updates, relay hosting and native browser login
-are not qualified by this preview.
-
-For visual development, `npm run preview --prefix apps/desktop -- --fixtures`
-starts an isolated HTTP preview with clearly synthetic usage and provider records.
-It writes a private `launch.json`; use that URL in T3's collaborative browser.
-This development bridge is not part of the shipped desktop runtime.
+`npm run preview --prefix apps/desktop` opens a separate development profile with
+the actual controller and SDK. It does not seed providers, usage or connections.
+The former `--fixtures` mode and embedded simulated renderer smoke harness were
+removed. Pure IPC/security and packaging checks remain in `npm test --prefix apps/desktop`.
+Use [real connection checks](real-connections.md) for provider acceptance.

@@ -1,27 +1,22 @@
 {
   "version": 1,
   "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "supportedKinds": [
-    "mock",
-    "openai"
-  ],
+  "supportedKinds": ["codex", "openai"],
   "providers": [
     {
-      "kind": "mock",
+      "kind": "codex",
       "id": "unrestricted",
       "accountId": "one"
     },
     {
-      "kind": "mock",
+      "kind": "codex",
       "id": "denied",
       "models": []
     },
     {
-      "kind": "mock",
+      "kind": "codex",
       "id": "restricted",
-      "models": [
-        "explicit"
-      ]
+      "models": ["explicit"]
     }
   ]
 }

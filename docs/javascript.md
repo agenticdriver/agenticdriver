@@ -1,19 +1,17 @@
 # JavaScript and TypeScript
 
 Node.js applications can opt into [diagnostics and OpenTelemetry](diagnostics.md)
-through separate package entries. The [diagnostics example](../examples/javascript/diagnostics.mts)
-is compiled and run against the installed package, with no telemetry SDK required.
+through separate package entries; no telemetry SDK is required by default.
 
 Use `@agenticdriver/sdk/client` in browsers and servers that connect to an execution host. Use the main `@agenticdriver/sdk` entry on a Node.js 22.13+ server to embed the runtime. The package is ESM and includes declarations for every public entry; browser code must import the client entry to keep native processes, provider adapters and host configuration out of the bundle. See the [compatibility matrix](compatibility.md) for tested runtime combinations and platform limits.
 
 Optional [detached jobs](jobs.md) add `submitJob`, `readJob`, `cancelJob` and
 `jobEvents` to the browser-safe client. `JobService` and `SqliteJobStore` belong
-to the Node.js main entry. The installed [jobs example](../examples/javascript/jobs.mts)
-submits a synthetic job, reopens its database, and replays its result once.
+to the Node.js main entry.
 
 ## Install a built artifact
 
-Package registries are not published yet. From a reviewed SDK checkout, create an archive and install that archive in your application:
+npm packages are published under stable and alpha tags. To test source changes from a reviewed SDK checkout, create an archive and install that archive in your application:
 
 ```sh
 # SDK checkout: npm pack runs the build first.
@@ -101,7 +99,7 @@ There is no default run duration limit or inactivity timeout. Applications may s
 
 ## Browser example and boundary
 
-The archive includes [a plain JavaScript client](../examples/javascript/client.mjs), [a TypeScript server](../examples/javascript/server.mts), and [a browser example](../examples/javascript/browser.ts) with [an HTML form](../examples/javascript/index.html). The JavaScript and browser examples demonstrate a run followed by a second streamed request; using a paid provider may charge for both. The server example is an explicit offline mock.
+The archive includes [a plain JavaScript client](../examples/javascript/client.mjs), [a TypeScript server](../examples/javascript/server.mts), and [a browser example](../examples/javascript/browser.ts) with [an HTML form](../examples/javascript/index.html). The JavaScript and browser examples demonstrate a run followed by a second streamed request; using a paid provider may charge for both. The server example requires a real provider/account/model configuration.
 
 To build the installed browser example with esbuild:
 
@@ -117,4 +115,4 @@ Use a scoped **driver token** supplied by your application's connection flow. Ne
 
 ## Package verification
 
-`npm run test:install` packs the SDK and installs it into a temporary application. It runs the shipped JavaScript and compiled TypeScript examples, checks all export/declaration files, compiles browser types with only DOM libraries, and bundles the browser example using [esbuild's browser platform](https://esbuild.github.io/api/#platform). Checks reject Node imports, host modules, external imports and references back to repository source in the browser artifact. The installed client also exercises typed errors and cancellation against an installed fixture host. Compilers come from development tooling; the code under test resolves exclusively from the installed archive.
+`npm run test:package` installs an actual archive and verifies its public exports and provider component. `npm run test:clients` checks the other installed language packages. Use [real connection checks](real-connections.md) for model execution; package checks do not simulate a provider.

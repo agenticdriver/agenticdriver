@@ -34,7 +34,7 @@ class ProviderDefinition(TypedDict):
     kind: str
     name: str
     description: str
-    category: Literal["native", "api", "compatible", "fixture"]
+    category: Literal["native", "api", "compatible"]
     protocol: str
     methods: list[ProviderConnectionMethod]
     requirements: NotRequired[str]
@@ -60,7 +60,7 @@ def _definition(value: Any) -> bool:
         return isinstance(obj.get(key), str) and 0 < len(obj[key]) <= limit
     if not isinstance(value, dict) or not all(text(value, key, limit) for key, limit in [("kind", 80), ("name", 100), ("description", 1000), ("protocol", 100)]):
         return False
-    if value.get("category") not in ("native", "api", "compatible", "fixture") or not isinstance(value.get("methods"), list) or not 1 <= len(value["methods"]) <= 8:
+    if value.get("category") not in ("native", "api", "compatible") or not isinstance(value.get("methods"), list) or not 1 <= len(value["methods"]) <= 8:
         return False
     if "requirements" in value and not text(value, "requirements", 2000):
         return False

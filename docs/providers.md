@@ -9,18 +9,17 @@ This limitation does not require signing in again or switching to API billing.
 Documentation reviewed on 2026-09-21. Model IDs are deliberately supplied by the
 application or host; this SDK does not silently pick a model or change billing modes.
 
-| Factory                                 | Instance default    | Authentication                          | Application tool loop                                 |
-| --------------------------------------- | ------------------- | --------------------------------------- | ----------------------------------------------------- |
-| `openai({ apiKey })`                    | `openai`            | OpenAI API key; Responses API           | Yes                                                   |
-| `anthropic({ apiKey })`                 | `anthropic`         | Anthropic API key; Messages API         | Yes                                                   |
-| `gemini({ apiKey })`                    | `gemini`            | Gemini API key; streamGenerateContent   | Yes                                                   |
-| `xai({ apiKey })`                       | `xai`               | xAI API key; Chat Completions           | Yes                                                   |
-| `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                  | Yes                                                   |
-| `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                      | Yes, if endpoint supports functions                   |
-| `codex()`                               | `codex`             | Official CLI's existing session         | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session         | Text only                                             |
-| `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication    | Text only                                             |
-| `mockProvider()`                        | `mock`              | None; deterministic development fixture | Yes                                                   |
+| Factory                                 | Instance default    | Authentication                        | Application tool loop                                 |
+| --------------------------------------- | ------------------- | ------------------------------------- | ----------------------------------------------------- |
+| `openai({ apiKey })`                    | `openai`            | OpenAI API key; Responses API         | Yes                                                   |
+| `anthropic({ apiKey })`                 | `anthropic`         | Anthropic API key; Messages API       | Yes                                                   |
+| `gemini({ apiKey })`                    | `gemini`            | Gemini API key; streamGenerateContent | Yes                                                   |
+| `xai({ apiKey })`                       | `xai`               | xAI API key; Chat Completions         | Yes                                                   |
+| `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
+| `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
+| `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text only                                             |
+| `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
 a secrets manager. Options also include `id`, `name`, `models`, and an optional
@@ -30,7 +29,7 @@ requests cannot choose binaries, arguments, environment variables, or directorie
 
 Custom local or enterprise integrations can use the [provider extension kit](provider-extensions.md).
 It supplies a versioned construction contract, trusted host registration and
-fixture checks without changes to the runtime or language clients.
+real service integration without changes to the runtime or language clients.
 
 ## Subscription mode is provider-specific
 

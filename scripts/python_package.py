@@ -114,8 +114,8 @@ else:
     (application / "invalid.py").write_text(
         """from agenticdriver import AgenticClient, RunEvent
 client = AgenticClient('https://driver.example', 'test-only')
-client.run(providre='mock', model='demo', input='Hello')
-client.run(provider='mock', model=123, input='Hello')
+client.run(providre='selected', model='selected', input='Question')
+client.run(provider='selected', model=123, input='Question')
 def incorrect(event: RunEvent) -> None:
     if event['type'] == 'text.delta':
         print(event['result'])

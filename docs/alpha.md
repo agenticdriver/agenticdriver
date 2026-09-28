@@ -69,7 +69,7 @@ There is no automatic updater, public relay, or Windows/macOS build in this alph
    backend bridge from `@agenticdriver/sdk/panel` and long-lived credentials on
    the server. Python, Go and Rust ship the same component with native bindings.
 5. Test connection save/reload, catalog refresh, explicit selection, denied
-   execution and backwards compatibility with synthetic fixtures. Keep catalog
+   execution and backwards compatibility with real selected connections. Keep catalog
    availability, host execution grants, application enablement and live-model
    qualification separate. Refresh must retain choices and leave runs running. Test an
    unreachable saved host and explicit retry through the real settings/backend
@@ -95,7 +95,7 @@ app token's scope. Synthetic-validation credentials remain synthetic-only.
 ## Qualification and compatibility limits
 
 Package verification exercises all four installed clients over verified HTTPS,
-the shared component and offline native-provider fixtures on Prometheus. These
+the shared component and package/build checks on Prometheus. These
 checks do not certify every discovered model, all native versions, new accounts,
 or complete application workflows. Keep the qualified Codex/Claude versions and
 deployment limits in [compatibility](compatibility.md) and [native tools](native-tools.md).

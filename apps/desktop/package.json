@@ -1,6 +1,6 @@
 {
   "name": "@agenticdriver/desktop",
-  "version": "0.2.0-alpha.5",
+  "version": "0.2.0-alpha.6",
   "private": true,
   "description": "The local AgenticDriver companion",
   "author": "AgenticDriver contributors",
@@ -11,7 +11,6 @@
     "prepare:runtime": "node scripts/prepare.mjs && install-electron",
     "start": "node scripts/start.mjs",
     "test": "node --test --test-timeout=30000 tests/*.test.mjs",
-    "test:native": "node scripts/native-smoke.mjs",
     "preview": "node scripts/preview.mjs",
     "package:linux": "npm run prepare:runtime && electron-builder --linux tar.gz --x64 --publish never",
     "test:usagestat": "node scripts/test-usagestat.mjs"

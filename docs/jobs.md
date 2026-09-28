@@ -20,7 +20,7 @@ or advancing execution past an event. It does not install a database service.
 ```ts
 import { AgenticDriver, SqliteJobStore } from "@agenticdriver/sdk";
 import { serve } from "@agenticdriver/sdk/server";
-import { mockProvider } from "@agenticdriver/sdk/providers";
+import { openai } from "@agenticdriver/sdk/providers";
 
 const store = await SqliteJobStore.open("/private/driver/jobs.sqlite", {
   retentionMs: 7 * 24 * 60 * 60 * 1000,
@@ -30,8 +30,17 @@ const store = await SqliteJobStore.open("/private/driver/jobs.sqlite", {
   maxJobBytes: 8_000_000,
 });
 const driver = new AgenticDriver({
-  providers: [mockProvider()],
-  usage: { hostId: "review-host", accounts: { mock: "synthetic-account" } },
+  providers: [
+    openai({
+      id: "research-api",
+      apiKey: process.env.OPENAI_API_KEY!,
+      models: [process.env.AGENTICDRIVER_MODEL!],
+    }),
+  ],
+  usage: {
+    hostId: "review-host",
+    accounts: { "research-api": "research-account" },
+  },
 });
 const host = await serve(driver, {
   port: 7433,
@@ -39,7 +48,7 @@ const host = await serve(driver, {
     {
       token: process.env.DRIVER_TOKEN!,
       subject: "review-service",
-      providers: ["mock"],
+      providers: ["research-api"],
       jobs: ["submit", "read", "cancel"],
     },
   ],
@@ -80,8 +89,8 @@ config file. `doctor` validates configuration without opening the database;
 const job = await client.submitJob({
   key: "review-42-extraction-v3",
   request: {
-    provider: "mock",
-    model: "demo",
+    provider: "research-api",
+    model: process.env.AGENTICDRIVER_MODEL!,
     input: "Summarize selected evidence",
   },
 });
@@ -198,7 +207,5 @@ For embedding, `JobService.open(driver, {store, resolvePrincipal, ...worker})`
 requires a resolver for current trusted permissions. `JobStore` is a public
 interface for custom stores. Implementations must atomically claim accepted
 keys, fence expired/released workers, persist before acknowledgement, retain
-tombstones, and never return started work to the queue. The built-in store tests
-exercise these boundaries. Run the installed package example
-[`examples/javascript/jobs.mts`](../examples/javascript/jobs.mts) for a synthetic
-submission, replay and store reopen without vendor credentials.
+tombstones, and never return started work to the queue. Production qualification must exercise these boundaries against a selected real
+provider and deployment. The old canned-response jobs example was removed.

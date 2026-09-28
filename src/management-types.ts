@@ -22,7 +22,7 @@ export const ProviderDefinitionSchema = z.object({
   kind: z.string().min(1).max(80),
   name: z.string().min(1).max(100),
   description: z.string().min(1).max(1000),
-  category: z.enum(["native", "api", "compatible", "fixture"]),
+  category: z.enum(["native", "api", "compatible"]),
   protocol: z.string().min(1).max(100),
   methods: z.array(ProviderConnectionMethodSchema).min(1).max(8),
   requirements: z.string().min(1).max(2000).optional(),

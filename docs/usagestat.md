@@ -157,17 +157,14 @@ rotation, deletion, synchronization or offline-delivery guarantee. Prefer the
 native backend for durable usage collection. It does not add SDK records to
 Usagestat's daily-import/provider-probe totals, which could double-count usage.
 
-Validate the real dependency locally:
+Validate the existing backend using its own native checks. The desktop read
+integration can be exercised with the actual binary:
 
 ```sh
-# In Usagestat:
-cargo test -p usagestat-core -p usagestat-daemon
-cargo build -p usagestat-daemon
-# In AgenticDriver:
-npm run test:usagestat -- /absolute/path/usagestat/target/debug/usagestatd
+npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
 ```
 
-The SDK test launches the supplied native binary with isolated fixture credentials,
-private data and polling disabled. It verifies actual usage capture, schema/receipt
-compatibility, host secret references, scoped reconciliation, backend restart and
-failure without repeated generation, and separately attributed indexing/query embedding records. No live provider account is used.
+That check starts a private actual Usagestat instance with polling disabled and
+verifies its empty read contract. It does not invent accounts or run measurements.
+To verify usage ingestion, run meaningful prompts on an explicitly configured real
+provider and reconcile the host's actual usage records with the existing backend.

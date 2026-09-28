@@ -9,7 +9,7 @@ import {
   shell,
 } from "electron";
 import { mkdirSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startWorker } from "./worker-client.mjs";
@@ -35,7 +35,6 @@ protocol.registerSchemesAsPrivileged([
     privileges: { standard: true, secure: true, supportFetchAPI: true },
   },
 ]);
-const smoke = process.argv.includes("--smoke-test");
 let window,
   worker,
   quitting = false,
@@ -121,74 +120,6 @@ else {
         clipboard.writeText(value);
         return true;
       });
-      if (smoke) {
-        ipcMain.handle("desktop:smoke-enter", (event) => {
-          authorize(event);
-          window.webContents.focus();
-          window.webContents.sendInputEvent({
-            type: "keyDown",
-            keyCode: "Enter",
-          });
-          window.webContents.sendInputEvent({ type: "char", keyCode: "\r" });
-          window.webContents.sendInputEvent({
-            type: "keyUp",
-            keyCode: "Enter",
-          });
-          return true;
-        });
-        ipcMain.handle("desktop:smoke", async (event, evidence) => {
-          authorize(event);
-          const prefs = window.webContents.getLastWebPreferences();
-          const valid =
-            evidence?.sandboxed &&
-            evidence.contextIsolated &&
-            evidence.nodeUnavailable &&
-            evidence.providerAdded &&
-            evidence.providerSetupUi &&
-            evidence.providerDetailsUi &&
-            evidence.providerRemovalUi &&
-            evidence.remoteConnectionUi &&
-            evidence.invitationDestinationUi &&
-            evidence.managedSshUi &&
-            evidence.panelRecoveryUi &&
-            evidence.keyboardUi &&
-            evidence.strictStyleCsp &&
-            prefs.sandbox &&
-            prefs.contextIsolation &&
-            !prefs.nodeIntegration &&
-            prefs.webSecurity;
-          console.log(
-            JSON.stringify({
-              desktopSmoke: valid ? "passed" : "failed",
-              rendererIsolated: Boolean(valid),
-              providerSetupUi: evidence.providerSetupUi === true,
-              providerDetailsUi: evidence.providerDetailsUi === true,
-              providerRemovalUi: evidence.providerRemovalUi === true,
-              remoteConnectionUi: evidence.remoteConnectionUi === true,
-              panelRecoveryUi: evidence.panelRecoveryUi === true,
-              keyboardUi: evidence.keyboardUi === true,
-              invitationDestinationUi:
-                evidence.invitationDestinationUi === true,
-              managedSshUi: evidence.managedSshUi === true,
-              viewport: window.getContentSize(),
-              strictStyleCsp: evidence.strictStyleCsp === true,
-              runtime: "v24.21.0",
-              ...(evidence.startupError
-                ? { startupError: evidence.startupError }
-                : {}),
-            }),
-          );
-          if (valid && process.env.AGENTICDRIVER_DESKTOP_SMOKE_SCREENSHOT)
-            await writeFile(
-              process.env.AGENTICDRIVER_DESKTOP_SMOKE_SCREENSHOT,
-              (await window.webContents.capturePage()).toPNG(),
-              { mode: 0o600 },
-            );
-          process.exitCode = valid ? 0 : 1;
-          setImmediate(() => app.quit());
-          return true;
-        });
-      }
       worker = startWorker(
         join(app.getPath("userData"), "driver"),
         join(root, "runtime", "node"),
@@ -203,7 +134,7 @@ else {
         minWidth: 360,
         minHeight: 520,
         backgroundColor: "#151a28",
-        show: !smoke,
+        show: true,
         autoHideMenuBar: true,
         webPreferences: {
           preload: join(root, "src", "preload.cjs"),
@@ -212,11 +143,8 @@ else {
           nodeIntegration: false,
           webSecurity: true,
           webviewTag: false,
-          additionalArguments: smoke ? ["--desktop-smoke"] : [],
         },
       });
-      if (smoke && process.env.AGENTICDRIVER_DESKTOP_SMOKE_NARROW === "1")
-        window.setContentSize(390, 844);
       window.webContents.on("will-navigate", (event, url) => {
         if (url !== APP_URL) event.preventDefault();
       });

@@ -55,8 +55,6 @@ export async function providerSetup(options: {
   configure: ProviderManagement["configure"];
   /** Pure configuration checks run before any native credential interaction. */
   preflight?(provider: ProviderSetupConfig, revision: string): Promise<void>;
-  /** Trusted in-process fixture seam; never accepted from configuration or HTTP. */
-  native?: typeof codexDeviceSignIn;
 }): Promise<ProviderSetup> {
   const root = join(options.directory, "provider-accounts");
   await mkdir(root, { recursive: true, mode: 0o700 });
@@ -191,7 +189,7 @@ export async function providerSetup(options: {
     }, 15 * 60_000);
     entry.timer.unref();
     const native = Promise.resolve().then(() =>
-      (options.native ?? codexDeviceSignIn)({
+      codexDeviceSignIn({
         binary: input.provider.binary,
         accountDirectory: directory,
         signal: entry.abort.signal,

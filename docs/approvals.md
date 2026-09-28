@@ -21,9 +21,9 @@ Applications retain control of presentation, the human's decision and canonical
 state. Native CLI agents' internal tool policies are separate; this extension
 currently gates registered tools executed by the SDK's application tool loop.
 
-The [runnable embedded example](../examples/approvals.ts) uses only a mock model
-and an in-memory proposal list. Run `npx tsx examples/approvals.ts` to review a
-proposed action in a terminal.
+The [runnable embedded example](../examples/approvals.ts) uses an explicitly
+configured real model to propose a brand direction. Human approval controls
+whether its proposal is saved in application memory.
 
 ## Host and token configuration
 

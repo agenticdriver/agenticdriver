@@ -52,7 +52,7 @@ protected by the same `manageProviders` grant as settings. It does not claim tha
 the runtime is installed, the account is signed in, or a model has passed a test.
 
 Each `ProviderDefinition` contains `kind`, `name`, `description`, `category`
-(`native`, `api`, `compatible` or `fixture`), `protocol`, `methods`, and optional
+(`native`, `api` or `compatible`), `protocol`, `methods`, and optional
 `requirements`/HTTPS `docsUrl`. A `ProviderConnectionMethod` contains `id`,
 `label`, `description`, `interaction` and `credentialOwner`:
 
@@ -62,7 +62,6 @@ Each `ProviderDefinition` contains `kind`, `name`, `description`, `category`
 | `device-code`      | Owned Codex device sign-in, native verification and explicit confirmation | `native-runtime` |
 | `api-key`          | Supply the write-only `apiKey` when saving a connection                   | `host`           |
 | `secret-reference` | Set `apiKeyRef` to an existing host credential                            | `host`           |
-| `none`             | Configure the offline fixture                                             | `none`           |
 
 TypeScript exports both types from `@agenticdriver/sdk/client` and
 `@agenticdriver/sdk/management`; Python, Go and Rust expose the same names.

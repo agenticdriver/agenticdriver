@@ -87,15 +87,13 @@ var labels = {
   gemini: "Gemini API",
   xai: "xAI API",
   "xai-responses": "xAI Responses",
-  "openai-compatible": "Compatible API",
-  mock: "Offline demo"
+  "openai-compatible": "Compatible API"
 };
 var native = (kind) => ["codex", "claude-code", "gemini-cli"].includes(kind);
 var categories = {
   native: "Native account",
   api: "API account",
-  compatible: "Custom endpoint",
-  fixture: "Offline"
+  compatible: "Custom endpoint"
 };
 var setupInteractions = /* @__PURE__ */ new Set([
   "device-code",
@@ -490,7 +488,7 @@ function registerProviderPanel(registry = customElements) {
         this.draft = {
           id,
           kind,
-          ...native(kind) || kind === "mock" ? {} : { apiKeyRef: { env: keyEnv[kind] ?? "PROVIDER_API_KEY" } }
+          ...native(kind) ? {} : { apiKeyRef: { env: keyEnv[kind] ?? "PROVIDER_API_KEY" } }
         };
         this.apiKey = "";
         this.render();
@@ -587,7 +585,7 @@ function registerProviderPanel(registry = customElements) {
           id,
           kind: definition.kind,
           name: definition.name,
-          ...native(definition.kind) || definition.kind === "mock" ? {} : {
+          ...native(definition.kind) ? {} : {
             apiKeyRef: {
               env: keyEnv[definition.kind] ?? "PROVIDER_API_KEY"
             }
@@ -990,7 +988,7 @@ function registerProviderPanel(registry = customElements) {
       else
         content = `<div class="layout"><aside class="sidebar" aria-label="Provider instances"><div class="side-label">${state.providers.length} connected instances</div>${state.providers.map((provider) => {
           const config = state.management?.providers.find((p) => p.id === provider.id);
-          return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` \xB7 ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Offline fixture"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
+          return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` \xB7 ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Provider connection"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
         }).join("")}${state.management ? '<button class="new-provider" data-action="add">\uFF0B Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? (state.management ? "No providers configured" : "No providers granted"))}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? (state.management ? "Configure an account on the connected host." : "Ask the host operator for a provider grant."))}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} \xB7 Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? this.connectionDetails(selected) : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding && selected ? this.modelList(selected) : this.appearance(selected) + this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.removalSection()}${this.connectionSection()}</main></div>`;
       this.root.innerHTML = `<section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
       if (focusField === "query" || focusField === "provider-query") {

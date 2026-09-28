@@ -54,7 +54,7 @@ The embedding provider instance, vendor, account, authentication mode, model, di
 
 The embedding adapter uses [OpenAI's embeddings request and response format](https://developers.openai.com/api/reference/resources/embeddings/methods/create): explicit model, float vectors, response index ordering and optional reported input tokens. It rejects a different returned model, dimensions, duplicate response indices, non-finite values and zero vectors. Set `sendDimensions: false` for models that require native dimensions and reject the request parameter. The configured output dimension is still checked. Provider input/token limits also apply. No subscription embedding entitlement is inferred, and neither failed embedding requests nor uncertain mutations are automatically retried.
 
-`DeterministicEmbeddingAdapter(dimensions)` is a reproducible lexical hashing fixture for offline tests and examples. It is not a semantic model or evidence of live provider certification. Apps can implement `EmbeddingAdapter` and `VectorStore` for existing infrastructure. SQLite is the supplied persistent adapter; Qdrant, pgvector and other external databases are not built-in adapters yet.
+Embedding requires a real explicitly selected account/model. Apps can implement `EmbeddingAdapter` and `VectorStore` for existing infrastructure. SQLite is the supplied persistent adapter; Qdrant, pgvector and other external databases are not built-in adapters yet.
 
 ## Index, search and ask
 

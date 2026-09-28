@@ -263,8 +263,7 @@ execution permissions and a successful model run remain distinct; refreshing
 this card never invokes a model. See [discovery](discovery.md#connection-details)
 for the typed metadata contract and runtime limitations.
 
-For a repeatable visual fixture with synthetic identities only, run `npm run
-build` then `node scripts/preview-provider-details.mjs`. Check reveal/hide by
-keyboard, refresh and provider-switch masking, icon preferences through reload,
-light/dark themes, and 390px/1920px layouts. This fixture has no provider calls
-and disallows network connections in its content security policy.
+For visual verification, build the SDK and run `npm run preview --prefix apps/desktop`.
+The separate preview profile starts empty. Connect a real account or pair with an
+actual remote host; verify reveal/hide, refresh masking and narrow/desktop layouts
+using the metadata that host reports. No fake identities or usage are injected.

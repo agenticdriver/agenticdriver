@@ -32,9 +32,7 @@ await diagnostics.close();
 ```
 
 `configuredDriver(config, { diagnostics })` provides the same integration for a
-custom host using the normal validated configuration. The runnable
-[installed package example](../examples/javascript/diagnostics.mts) needs no
-credentials or OpenTelemetry packages.
+custom host using the normal validated configuration. Diagnostics need no OpenTelemetry dependency unless its exporter is selected. Validate them using actual runs on the configured host.
 
 ## Content and correlation
 

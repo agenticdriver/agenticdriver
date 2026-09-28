@@ -28,12 +28,7 @@ export const ProviderExtensionManifestSchema = z
     contractVersion: z.literal(PROVIDER_CONTRACT_VERSION),
     vendor: id,
     authMode: z.enum(["api-key", "cli-session", "none"]),
-    usageSource: z.enum([
-      "provider-response",
-      "cli-report",
-      "adapter-report",
-      "synthetic",
-    ]),
+    usageSource: z.enum(["provider-response", "cli-report", "adapter-report"]),
     capabilities: z
       .object({ tools: z.boolean(), textStreaming: z.boolean() })
       .catchall(z.boolean()),

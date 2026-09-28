@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { abortable, DriverError, publicError } from "./errors.js";
 import { readLimited, secureBaseUrl } from "./security.js";
@@ -172,44 +171,6 @@ export class OpenAIEmbeddingAdapter implements EmbeddingAdapter {
         "The embedding request failed. Inspect the host's private diagnostics; no automatic retry was attempted.",
       );
     }
-  }
-}
-
-/** Reproducible lexical-hash fixture for tests and demos; not a semantic embedding model. */
-export class DeterministicEmbeddingAdapter implements EmbeddingAdapter {
-  readonly usageSource = "synthetic" as const;
-  readonly info: EmbeddingIdentity;
-  constructor(dimensions: number) {
-    this.info = Object.freeze(
-      EmbeddingIdentitySchema.parse({
-        providerId: "fixture-embedding",
-        vendor: "fixture",
-        accountId: "fixture",
-        authMode: "none",
-        model: "lexical-hash-v1",
-        dimensions,
-      }),
-    );
-  }
-  async embed(
-    texts: readonly string[],
-    context: ExecutionContext,
-  ): Promise<EmbeddingResult> {
-    validateEmbeddingInput(texts);
-    const vectors = texts.map((text) => {
-      context.signal.throwIfAborted();
-      const vector = Array<number>(this.info.dimensions).fill(0);
-      for (const token of text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [
-        text,
-      ]) {
-        const hash = createHash("sha256").update(token).digest();
-        const index = hash.readUInt32BE() % vector.length;
-        vector[index] = vector[index]! + 1;
-      }
-      context.reportProgress();
-      return normalizedVector(vector, this.info.dimensions);
-    });
-    return { vectors };
   }
 }
 

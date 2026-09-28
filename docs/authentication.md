@@ -283,12 +283,8 @@ OAuth-device management feature it has not implemented.
 
 ## Verification
 
-Run `npm run test:auth` with Node 24+. It installs pinned real packages from the
-integration lockfile and exercises persistent native SQLite, real loopback HTTP,
-two users/devices, deliberate consent, unrelated origins, scoped SDK access,
-rotation/reuse/revocation, service identity/expiry and AuthYard outage behavior.
-The [fixture artifact provenance](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/integrations/better-auth/vendor/README.md)
-records the exact connector revision and checksum. CI runs these contracts on
-the Node 24/26 platform rows; ordinary SDK tests also cover malformed introspection,
-auth cancellation, scope changes while queued, polling intervals and job grants.
-No live AuthYard project, external account or model inference is used by these tests.
+Applications qualify their own existing authentication runtime, connector and SDK
+host using actual scoped credentials. The previous simulated-provider integration
+suite is removed. Historical connector provenance remains in
+[integrations/better-auth/vendor/README.md](../integrations/better-auth/vendor/README.md).
+No application auth migration or identity system is required merely to use the SDK.

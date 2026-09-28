@@ -2,8 +2,7 @@
 
 **Unreleased source addition after 0.1.0.** The published
 `@agenticdriver/sdk@0.1.0` package uses Chat Completions through `xai()`.
-Use a reviewed development build for the new `xaiResponses()` factory. Protocol
-fixtures pass; no live xAI account or model has been selected for certification.
+Use a reviewed development build for the new `xaiResponses()` factory. No live xAI account or model has been selected for certification.
 
 xAI's Responses endpoint supports function calls, streamed text and encrypted
 reasoning continuation. Its storage defaults to enabled; this adapter explicitly
@@ -80,9 +79,7 @@ vendor, endpoint, usage identity and function declaration format. Its explicit
 media policy currently excludes direct PDF input; PDF retrieval can use the
 existing ingestion and source-scoped context workflow.
 
-Verification includes stateless tool/state round trips with approval and usage,
-private native-session continuation, model discovery, streamed visibility,
-caller cancellation, error/truncation behavior, and CLI-created configuration
-against a local HTTP fixture. All model results are synthetic. AD-020 remains
-open until an explicitly selected xAI account/model passes the live checks.
-The Grok Build subscription adapter has separate native isolation requirements.
+Historical parser checks are not current live qualification. The old simulated
+endpoint was removed. AD-020 remains open until an explicitly selected xAI
+account/model passes real checks. The Grok Build subscription adapter has separate
+native isolation requirements.
