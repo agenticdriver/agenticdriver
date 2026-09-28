@@ -1,5 +1,6 @@
 """The runner must reject untrusted events before any repository checkout."""
 import json
+import re
 import tempfile
 from pathlib import Path
 import subprocess
@@ -9,6 +10,13 @@ HOOK = Path(__file__).resolve().parents[1] / "deploy/ci-runner/job-started.py"
 
 
 class RunnerBoundaryTests(unittest.TestCase):
+    def test_workflow_script_entrypoints_exist(self):
+        root = HOOK.parents[2]
+        for workflow in (root / ".github/workflows").glob("*.yml"):
+            for name in set(re.findall(r"\b(?:scripts|deploy)/[A-Za-z0-9_./-]+\.(?:py|mjs|ts)\b", workflow.read_text())):
+                with self.subTest(workflow=workflow.name, script=name):
+                    self.assertTrue((root / name).is_file(), "Workflow references a removed script")
+
     def invoke(self, policy=None, **overrides):
         env = {"GITHUB_REPOSITORY": "agenticdriver/agenticdriver", "GITHUB_REF": "refs/heads/sdk-roadmap",
                "GITHUB_EVENT_NAME": "push", **overrides}

@@ -31,7 +31,7 @@ by the supplied notes, and its email phrasing was broader than necessary. Succes
 transport is not an editorial or application acceptance pass.
 
 TypeScript and the remaining 23 pure/process/validation tests passed, along with
-three desktop security/packaging checks, seven CI-boundary checks, eleven release
+three desktop security/packaging checks, eight CI-boundary checks, eleven release
 archive checks, the documentation build and fresh npm artifact installation.
 The simulated suites are removed, so these counts must not be presented as equivalent
 to their previous coverage. Real RAG/embedding, native tools, container isolation,
