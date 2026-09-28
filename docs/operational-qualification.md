@@ -10,12 +10,22 @@ node --expose-gc --import tsx scripts/operational-soak.ts \
   --cycles 100 --output /tmp/agenticdriver-operational.json
 ```
 
-Use a current maintained Node LTS runtime and record its patch version. The local
-Linux x64 development run on **Node 24.21.0** passed 100 measured cycles plus
-warmup: 35,496 completed streams, 1,224 cancellations, 102 rejections, no retained
-heap growth above warmup and at most 29.32 MiB RSS growth. It exercised the
-development harness, not a clean committed CI artifact; the issue and workflow
-receipts track subsequent exact-source qualification.
+Use a current maintained Node LTS runtime and record its patch version. The
+[Prometheus qualification](https://github.com/agenticdriver/agenticdriver/actions/runs/36432407893)
+passed on Linux x64 with **Node 24.21.0**, from clean source
+`d76d9cdacf09c4fe825ef37d33c7ef8c4b160513`. Its 100 measured cycles plus warmup
+completed **35,496 streams**, explicitly cancelled **1,224**, and rejected **102**
+requests at capacity. Retained heap never exceeded the warmup checkpoint; maximum
+RSS growth was **25.24 MiB**. Every checkpoint met the 8 MiB heap / 256 MiB RSS
+gates. Final active/queued work and diagnostic drops/export failures were zero.
+
+The [complete report](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/release/operational/2026-09-28-linux-node24/report.json)
+preserves all 101 memory checkpoints; its
+[verification receipt](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/release/operational/2026-09-28-linux-node24/verification.json)
+records the report checksum, runner and job. This qualifies this synthetic
+workload and runtime patch. It does not qualify other runtimes or real providers.
+The harness was added after the immutable alpha.5 source and is available from
+the source checkout.
 
 The same workload on the machine's older **Node 26.0.0** showed approximately
 10.20 MiB retained heap growth after 100 cycles. Heap inspection found growing

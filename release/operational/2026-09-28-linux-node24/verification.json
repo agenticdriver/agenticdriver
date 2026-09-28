@@ -1,0 +1,43 @@
+{
+  "run": 36432407893,
+  "source": "d76d9cdacf09c4fe825ef37d33c7ef8c4b160513",
+  "runtime": {
+    "node": "v24.21.0",
+    "platform": "linux",
+    "architecture": "x64"
+  },
+  "reportSha256": "3366094477cc6819633c6a4b6814390965c268b4bd34adf874e9c257f3b6c4ad",
+  "completed": 35496,
+  "cancelled": 1224,
+  "queueRejections": 102,
+  "durationMs": 188536,
+  "maxRetainedHeapGrowthBytes": 0,
+  "maxRssGrowthBytes": 26464256,
+  "runner": "prometheus-agenticdriver-01",
+  "job": 108961656815,
+  "final": {
+    "scheduler": {
+      "active": 0,
+      "queued": 0
+    },
+    "providerActive": 0,
+    "diagnostics": {
+      "droppedRecords": 0,
+      "droppedRuns": 0,
+      "exportedRecords": 73542,
+      "exportFailures": 0,
+      "exportTimeouts": 0,
+      "activeRuns": 0,
+      "queuedRecords": 0,
+      "queuedBytes": 0,
+      "exporterDisabled": false
+    }
+  },
+  "workflowUrl": "https://github.com/agenticdriver/agenticdriver/actions/runs/36432407893",
+  "limitations": [
+    "Combined fixture client/server process measurements",
+    "No real model latency or billing",
+    "No native OS isolation qualification",
+    "No process restart or production workload qualification"
+  ]
+}
