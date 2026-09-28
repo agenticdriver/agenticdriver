@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.2.0-alpha.5 — 2026-09-28 (candidate)
+
+- Added desktop-managed outbound OpenSSH routes on Linux: save/edit destinations,
+  explicit start/stop, connection-state and recovery messages, and invitation
+  routing to the application server's loopback port. Existing SSH identities and
+  host trust are reused; keys stay outside the renderer and remote SDK API.
+- Preserved paired application grants through same-port tunnel restart. Native
+  forwarding acknowledges setup separately from application/provider readiness;
+  stopped routes cannot issue managed-tunnel invitations. Active-request guards,
+  worker-loss cleanup and explicit reconnection have real OpenSSH coverage.
+- Added 76 deterministic brand, literature and email evaluation cases over local
+  and authenticated HTTP execution, with a reopened persistent vector store.
+  Quality, evidence and action correctness are scored separately from transport.
+  Optional live evaluations require explicit paid-call configuration; CI uses no
+  model credentials or live inference.
+- Bounded disposable build-cache cleanup in the private Prometheus CI daemon.
+  npm publication now uses the verified OIDC path introduced after alpha.4,
+  avoiding member browser approval for supported workflow publication.
+
+Wire protocol remains 1.0. Python uses 0.2.0a5. This candidate is not yet a
+published package; see [release status](docs/releases.md). Existing application
+authentication, provider/model/account selection and execution grants remain
+unchanged. No default inference deadline or inactivity timeout is introduced.
+
 ## 0.2.0-alpha.4 — 2026-09-27
 
 - Added local, HTTPS and existing SSH-tunnel invitation destinations to the

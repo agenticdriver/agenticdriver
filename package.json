@@ -1,6 +1,6 @@
 {
   "name": "@agenticdriver/sdk",
-  "version": "0.2.0-alpha.4",
+  "version": "0.2.0-alpha.5",
   "description": "Bring-your-own-agent SDK for local and remote applications",
   "type": "module",
   "license": "MIT",

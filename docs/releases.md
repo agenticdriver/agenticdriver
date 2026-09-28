@@ -7,6 +7,12 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
+**0.2.0-alpha.5 is the next candidate**, including desktop-managed outbound SSH
+routes and the SDK repository's shared application evaluation suite. Its manifests
+are being checked before publication. The available alpha.4 coordinates below
+remain valid; do not assume alpha.5 registry/download availability until a
+publication receipt is recorded.
+
 The opt-in **0.2.0-alpha.4** preview (Python **0.2.0a4**) is published on npm, GitHub,
 crates.io and Go with desktop connection destinations, credential recovery and
 shared-panel offline states. All nine exact-source checks passed on Prometheus.
