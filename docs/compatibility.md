@@ -9,6 +9,10 @@ commit/dependency resolutions, not other OS releases or vendor accounts.
 Minimum versions are compatibility targets; upstream maintained releases remain
 the deployment choices.
 
+The separate [operational workload](operational-qualification.md) records retained
+memory, queue and cancellation behavior for an exact runtime patch. Short fixture
+success at a minimum version does not qualify its long-running memory behavior.
+
 | Status | Runner | Node.js | Python | Go | Rust | Checks |
 | --- | --- | --- | --- | --- | --- | --- |
 | Active | Prometheus Linux x64 | 22.13.0 | 3.10 | 1.22 | 1.89.0 | Complete host/package suite and all four clients |

@@ -1,0 +1,43 @@
+name: Synthetic operational qualification
+on:
+  workflow_dispatch:
+    inputs:
+      cycles:
+        description: Count-driven workload cycles (3 to 500, after two warmup cycles)
+        type: string
+        default: "100"
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: sdk-operational-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  soak:
+    if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
+    name: Concurrent synthetic streams and memory
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Bound private CI build cache
+        run: python3 deploy/ci-runner/cache-maintenance.py
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - name: Exercise authenticated synthetic traffic
+        env:
+          SOAK_CYCLES: ${{ inputs.cycles }}
+          SOAK_REPORT: ${{ runner.temp }}/agenticdriver-operational.json
+        run: node --expose-gc --import tsx scripts/operational-soak.ts --cycles "$SOAK_CYCLES" --output "$SOAK_REPORT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: operational-qualification-${{ github.sha }}
+          path: ${{ runner.temp }}/agenticdriver-operational.json
+          if-no-files-found: error
+          retention-days: 14

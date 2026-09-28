@@ -96,6 +96,7 @@ export default defineConfig({
           { text: "Architecture", link: "/architecture" },
           { text: "Security boundaries", link: "/security" },
           { text: "Application evaluations", link: "/evaluations" },
+          { text: "Operational qualification", link: "/operational-qualification" },
           { text: "Protocol", link: "/protocol" },
           { text: "Compatibility", link: "/compatibility" },
           { text: "Migration notes", link: "/migrations" },

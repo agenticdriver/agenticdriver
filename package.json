@@ -133,6 +133,7 @@
     "test:gemini-catalog-native": "python3 scripts/test-gemini-catalog-native.py",
     "test:auth": "npm run build && npm ci --prefix integrations/better-auth && npm test --prefix integrations/better-auth",
     "test:deployment": "python3 scripts/test-deployment.py",
+    "test:soak": "node --expose-gc --import tsx scripts/operational-soak.ts",
     "test:usagestat": "tsx scripts/test-usagestat.ts",
     "check:antigravity": "tsx scripts/check-antigravity.ts",
     "protocol": "tsx scripts/protocol.ts",
