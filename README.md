@@ -23,6 +23,11 @@ and the required host/client upgrade sequence.
 [Real Prometheus checks](docs/validation/real-providers-alpha6-2026-09-28.md)
 record the selected Codex/Luna and Claude/Haiku accounts and their limits.
 
+The **0.2.0-rc.1** source adds optional real local embeddings, persistent scoped
+retrieval and citation-ID helpers in all four languages. [The RC gate](docs/release-candidate.md)
+records current artifact/app qualification; check [publication status](docs/releases.md)
+before using the RC coordinates in the quickstart. Stable latest stays 0.1.0.
+
 ## Local desktop companion
 
 The [desktop preview](docs/desktop.md) manages providers, Usagestat usage,

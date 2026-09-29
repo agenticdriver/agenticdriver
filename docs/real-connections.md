@@ -7,7 +7,7 @@ through local loopback, verified HTTPS or loopback behind an SSH tunnel.
 
 ## Start the host beside the account
 
-Install the [published alpha](alpha.md), then follow the [real-provider
+Check [release availability](releases.md), then install the selected candidate, then follow the [real-provider
 quickstart](quickstart.md#_2-connect-your-provider-account). Select a supported
 native runtime and the intended account directory explicitly. Installing a
 qualified CLI in a separate directory lets an existing installation keep its
@@ -74,7 +74,7 @@ reconnection; never replay uncertain model work automatically.
 
 The repository includes a [real-example runner](../examples/javascript/real-applications.mjs)
 and its [public prompts](../examples/javascript/real-application-prompts.mjs).
-Copy both files into an application directory with `@agenticdriver/sdk@0.2.0-alpha.6`
+Copy both files into an application directory with `@agenticdriver/sdk@0.2.0-rc.1`
 installed. Choose an inexpensive model actually reported by the selected account:
 
 ```sh
