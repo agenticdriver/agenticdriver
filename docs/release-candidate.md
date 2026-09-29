@@ -4,6 +4,13 @@ Tracking: [#71](https://github.com/agenticdriver/agenticdriver/issues/71).
 Target: **0.2.0-rc.1** (Python **0.2.0rc1**). Candidate artifacts are being prepared;
 final artifact acceptance and publication are pending.
 
+The first final-artifact check exposed an actual Claude subscription limit. Its
+generic error is corrected in [#75](https://github.com/agenticdriver/agenticdriver/issues/75),
+with [real failure-path evidence](validation/claude-limit-2026-09-29.md). The
+earlier `d2d91ad` candidate is superseded. Successful Claude execution and final
+consumer acceptance await the selected account's reported allowance reset;
+no account, model or billing fallback is inferred.
+
 The candidate targets the Linux x64 host and desktop, all four language clients,
 and explicitly selected Codex/Claude subscription accounts through local or
 secured remote connections. Catalogs still expose all account-reported models;

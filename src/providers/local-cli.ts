@@ -10,6 +10,7 @@ import { z } from "zod";
 import { sumKnownCounts } from "../usage.js";
 import { DriverError } from "../errors.js";
 import { codexCliFailure } from "./codex-cli-errors.js";
+import { claudeCliFailure } from "./claude-cli-errors.js";
 import { geminiCliFailure } from "./gemini-cli-errors.js";
 import type {
   ProviderAdapter,
@@ -393,6 +394,8 @@ export function createCliStream(vendor: Vendor, context: ProviderContext) {
           }
         }
       } else if (vendor === "claude-code") {
+        const failure = claudeCliFailure(event);
+        if (failure) throw failure;
         if (event.type === "stream_event") {
           const part = object(event.event);
           if (part.type === "message_start") partialMessage = false;
@@ -556,6 +559,9 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
       return { text, usage };
     }
     if (vendor === "claude-code") {
+      const event: unknown = JSON.parse(output);
+      const failure = claudeCliFailure(event);
+      if (failure) throw failure;
       const result = z
         .object({
           type: z.literal("result"),
@@ -571,7 +577,7 @@ export function normalizeCli(vendor: Vendor, output: string): ProviderTurn {
             })
             .optional(),
         })
-        .parse(JSON.parse(output));
+        .parse(event);
       if (result.is_error || result.result === undefined)
         throw new DriverError(
           "CLI_FAILED",

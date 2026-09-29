@@ -136,6 +136,12 @@ on failed exits, bounded to 64 KiB for classification, and is never copied into
 public error messages. CLI JSON result failures are classified before a nonzero
 exit can obscure them. These mappings do not add automatic retries.
 
+Claude Code's structured session-limit rejection maps to `RATE_LIMITED`, before
+the native process's nonzero exit can obscure it. The SDK returns fixed text;
+raw native diagnostics and local reset-time details stay private. Ordinary
+assistant text and nonterminal quota warnings do not become failures. Catalog
+availability can remain visible while the selected subscription is exhausted.
+
 Codex's recognized native HTTP 401 and permanent session-refresh failures,
 rate-limit and missing-model diagnostics map
 to `CLI_AUTH_REQUIRED`, `RATE_LIMITED` and `UNSUPPORTED_MODEL`. Unknown errors
