@@ -99,3 +99,10 @@ Local typechecking, 27 pure SDK tests, installed Python/Rust/Go contract checks,
 fresh npm installation without the optional model runtime, and the documentation
 build passed separately. Integrated security review and final RC artifact/app
 acceptance remain [release gates](../release-candidate.md).
+
+The implementation commit `a8c53a6a23e3d961aa9659d9ac7c51f795f1b34d` passed all
+seven checks in [Prometheus run 36562335687, attempt 2](https://github.com/agenticdriver/agenticdriver/actions/runs/36562335687).
+The first attempt stopped four jobs at the private disk-space guard; SDK-owned
+retired temporary archives and unused CI images were cleaned before rerunning.
+Successful jobs were retained, failed jobs reran successfully. No credentials or
+model requests were added to CI. Final RC artifact acceptance remains #71.
