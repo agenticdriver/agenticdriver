@@ -33,3 +33,7 @@ account, CLI version, OS, tool mode or modality works. Unsupported native contro
 must fail closed; there is no provider/account/model or billing fallback.
 See [native restrictions](native-tools.md), [provider discovery](discovery.md),
 and [current real evidence](validation/prometheus-real-2026-09-28.md).
+
+The opt-in [Linux account-container recipe](account-isolation.md) has
+[real Codex/Claude isolation evidence](validation/account-isolation-2026-09-29.md).
+This qualifies a dedicated Linux account boundary, not macOS/Windows isolation.

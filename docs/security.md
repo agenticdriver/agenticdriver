@@ -128,4 +128,7 @@ substitutes. The former simulated suites described above are historical evidence
 qualify actual scoped connections and deployment controls before production use.
 See [real Prometheus validation](validation/prometheus-real-2026-09-28.md) for the
 specific account/model and control-plane checks performed. That evidence does not
-qualify every native tool mode, account-container isolation or operating system.
+qualify every native tool mode or operating system. The separate
+[Linux account-container checks](validation/account-isolation-2026-09-29.md)
+record actual native execution and account separation. The integrated review
+remains open until its remaining RC gates pass.

@@ -1,0 +1,305 @@
+{
+  "date": "2026-09-29",
+  "platform": "Prometheus Linux x64, existing isolated CI Docker daemon",
+  "nativeCredentials": "Explicitly authorized private snapshots in separate disposable account volumes; original sign-ins and shared services unchanged",
+  "runs": [
+    {
+      "mode": "probe",
+      "provider": "agenticdriver-rc-70fb61c045-codex",
+      "model": "gpt-6-luna",
+      "temporaryInvocationDirectories": [],
+      "nonRoot": true,
+      "readOnlyRoot": true,
+      "noNewPrivileges": true,
+      "noCapabilities": true,
+      "defaultSeccomp": true,
+      "siblingAccountAbsent": true
+    },
+    {
+      "mode": "run",
+      "provider": "agenticdriver-rc-70fb61c045-codex",
+      "model": "gpt-6-luna",
+      "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+      "runId": "d23aa1d0-0c95-4788-83c2-629737fc6aa0",
+      "usage": {
+        "inputTokens": 6090,
+        "outputTokens": 281,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 10,
+        "text.delta": 1,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "responseSha256": "5f61d94fef88d7bacc5bb7e02d2fe6cce4fb35df90204295f8b1b45c5e1a9278"
+    },
+    {
+      "mode": "cancel",
+      "provider": "agenticdriver-rc-70fb61c045-codex",
+      "model": "gpt-6-luna",
+      "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+      "runId": "6b2c31fb-1e60-4376-84ed-d8f7468280ce",
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 1
+      },
+      "cancelledAfterProgress": true
+    },
+    {
+      "mode": "probe",
+      "provider": "agenticdriver-rc-70fb61c045-codex",
+      "model": "gpt-6-luna",
+      "temporaryInvocationDirectories": [],
+      "nonRoot": true,
+      "readOnlyRoot": true,
+      "noNewPrivileges": true,
+      "noCapabilities": true,
+      "defaultSeccomp": true,
+      "siblingAccountAbsent": true
+    },
+    {
+      "mode": "probe",
+      "provider": "agenticdriver-rc-70fb61c045-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "temporaryInvocationDirectories": [],
+      "nonRoot": true,
+      "readOnlyRoot": true,
+      "noNewPrivileges": true,
+      "noCapabilities": true,
+      "defaultSeccomp": true,
+      "siblingAccountAbsent": true
+    },
+    {
+      "mode": "run",
+      "provider": "agenticdriver-rc-70fb61c045-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+      "runId": "40cdd1e1-7be4-44fd-8e12-32e08272b96b",
+      "usage": {
+        "inputTokens": 3710,
+        "outputTokens": 632,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.006869999999999999
+      },
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 2,
+        "text.delta": 169,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "responseSha256": "e8aeaafa56efb8d1739342d71fece760df1d8210929c962feb8b4897365c447e"
+    },
+    {
+      "mode": "cancel",
+      "provider": "agenticdriver-rc-70fb61c045-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+      "runId": "eb2c7c18-a030-4b14-bd29-6c356bcf6b60",
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 1
+      },
+      "cancelledAfterProgress": true
+    },
+    {
+      "mode": "probe",
+      "provider": "agenticdriver-rc-70fb61c045-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "temporaryInvocationDirectories": [],
+      "nonRoot": true,
+      "readOnlyRoot": true,
+      "noNewPrivileges": true,
+      "noCapabilities": true,
+      "defaultSeccomp": true,
+      "siblingAccountAbsent": true
+    }
+  ],
+  "boundaries": {
+    "schema": "agenticdriver.real-account-isolation.v1",
+    "status": "passed",
+    "startedAt": "2026-09-29T10:48:45.942551+00:00",
+    "modelRequests": 0,
+    "checks": {
+      "separateNamespacesAndVolumes": true,
+      "codexOtherTokenRejected": true,
+      "codexDetachedProcessStopped": true,
+      "codexCatalogAfterRestart": {
+        "mode": "catalog",
+        "provider": "agenticdriver-rc-70fb61c045-codex",
+        "model": "gpt-6-luna",
+        "runtime": {
+          "name": "Codex CLI",
+          "version": "0.157.0"
+        },
+        "account": {
+          "status": "signed-in",
+          "subscription": "pro",
+          "hasIdentity": true
+        },
+        "reportedModels": [
+          "gpt-6-astra",
+          "gpt-6-sol",
+          "gpt-6-luna",
+          "gpt-reserve",
+          "gpt-5.6-sol",
+          "gpt-5.6-terra",
+          "gpt-5.6-luna",
+          "gpt-5.5",
+          "codex-auto-review"
+        ]
+      },
+      "codexStopRestartBoundary": true,
+      "claudeOtherTokenRejected": true,
+      "claudeDetachedProcessStopped": true,
+      "claudeCatalogAfterRestart": {
+        "mode": "catalog",
+        "provider": "agenticdriver-rc-70fb61c045-claude",
+        "model": "claude-haiku-4-5-20251001",
+        "runtime": {
+          "name": "Claude Code",
+          "version": "2.1.282"
+        },
+        "account": {
+          "status": "signed-in",
+          "subscription": "pro",
+          "hasIdentity": true
+        },
+        "reportedModels": [
+          "default",
+          "claude-opus-5-5",
+          "opus",
+          "claude-fable-5-1",
+          "haiku",
+          "claude-haiku-4-5-20251001",
+          "sonnet",
+          "claude-sonnet-5",
+          "claude-opus-5",
+          "claude-fable-5",
+          "claude-opus-4-8",
+          "claude-opus-4-7",
+          "claude-opus-4-6",
+          "claude-sonnet-4-6"
+        ]
+      },
+      "claudeStopRestartBoundary": true
+    },
+    "containers": [
+      {
+        "kind": "codex",
+        "image": "sha256:95c0a74aaaaea325e5c17387ee55417a2b4bf0c42b290f07f4adeb87de8945d8",
+        "volumes": [
+          "agenticdriver-rc-70fb61c045-codex_account-state",
+          "agenticdriver-rc-70fb61c045-codex_account-home"
+        ],
+        "pidNamespace": "pid:[4026533910]",
+        "probe": {
+          "mode": "probe",
+          "provider": "agenticdriver-rc-70fb61c045-codex",
+          "model": "gpt-6-luna",
+          "temporaryInvocationDirectories": [],
+          "nonRoot": true,
+          "readOnlyRoot": true,
+          "noNewPrivileges": true,
+          "noCapabilities": true,
+          "defaultSeccomp": true,
+          "siblingAccountAbsent": true
+        },
+        "catalog": {
+          "mode": "catalog",
+          "provider": "agenticdriver-rc-70fb61c045-codex",
+          "model": "gpt-6-luna",
+          "runtime": {
+            "name": "Codex CLI",
+            "version": "0.157.0"
+          },
+          "account": {
+            "status": "signed-in",
+            "subscription": "pro",
+            "hasIdentity": true
+          },
+          "reportedModels": [
+            "gpt-6-astra",
+            "gpt-6-sol",
+            "gpt-6-luna",
+            "gpt-reserve",
+            "gpt-5.6-sol",
+            "gpt-5.6-terra",
+            "gpt-5.6-luna",
+            "gpt-5.5",
+            "codex-auto-review"
+          ]
+        }
+      },
+      {
+        "kind": "claude",
+        "image": "sha256:657034352049521ace9ff98477c67841a9b00484afaf5730affd8ca1888b9b9e",
+        "volumes": [
+          "agenticdriver-rc-70fb61c045-claude_account-state",
+          "agenticdriver-rc-70fb61c045-claude_account-home"
+        ],
+        "pidNamespace": "pid:[4026533997]",
+        "probe": {
+          "mode": "probe",
+          "provider": "agenticdriver-rc-70fb61c045-claude",
+          "model": "claude-haiku-4-5-20251001",
+          "temporaryInvocationDirectories": [],
+          "nonRoot": true,
+          "readOnlyRoot": true,
+          "noNewPrivileges": true,
+          "noCapabilities": true,
+          "defaultSeccomp": true,
+          "siblingAccountAbsent": true
+        },
+        "catalog": {
+          "mode": "catalog",
+          "provider": "agenticdriver-rc-70fb61c045-claude",
+          "model": "claude-haiku-4-5-20251001",
+          "runtime": {
+            "name": "Claude Code",
+            "version": "2.1.282"
+          },
+          "account": {
+            "status": "signed-in",
+            "subscription": "pro",
+            "hasIdentity": true
+          },
+          "reportedModels": [
+            "default",
+            "claude-opus-5-5",
+            "opus",
+            "claude-fable-5-1",
+            "haiku",
+            "claude-haiku-4-5-20251001",
+            "sonnet",
+            "claude-sonnet-5",
+            "claude-opus-5",
+            "claude-fable-5",
+            "claude-opus-4-8",
+            "claude-opus-4-7",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6"
+          ]
+        }
+      }
+    ],
+    "runs": [],
+    "limitations": [
+      "Trusted operator and shared Linux kernel; no hostile-kernel escape claim.",
+      "Whole-container shutdown, not SDK process-group cancellation, removes deliberately detached processes.",
+      "No macOS or Windows qualification."
+    ],
+    "finishedAt": "2026-09-29T10:48:57.991709+00:00"
+  },
+  "runtimeSource": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "recipeSource": "New account deployment recipe on top of 8bfc5cc; image digests identify exercised builds. The added nonempty exact-provider grant rule is also covered by pure schema/policy tests.",
+  "sourceArchiveSha256": "a76f32b62813c45ae8a88dd999a637470655759d6415aad01854aef76a0175df",
+  "qualityReview": "Both completed outputs kept the pending PyPI status and framed the release as a candidate needing app checks. Cancellation requests have no completed usage claim. Model-reported API equivalent cost is not a subscription invoice."
+}

@@ -39,7 +39,7 @@ jobs:
     if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     uses: ./.github/workflows/release-candidate.yml
   documentation:
-    needs: verify
+    needs: account-deployment
     if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Documentation site
     runs-on: [self-hosted, linux, x64, prometheus-ci]
@@ -62,6 +62,30 @@ jobs:
           path: site/.vitepress/dist
           if-no-files-found: error
           retention-days: 7
+  account-deployment:
+    needs: verify
+    if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
+    name: Linux account deployment
+    runs-on: [self-hosted, linux, x64, prometheus-ci]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Bound private CI build cache
+        run: python3 deploy/ci-runner/cache-maintenance.py
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci && npm run build
+      - run: node --test deploy/account/policy.test.mjs
+      - name: Build actual deployment images without account credentials
+        run: |
+          docker build --target runtime -t agenticdriver:ci-account-base .
+          docker build --build-arg AGENTICDRIVER_IMAGE=agenticdriver:ci-account-base -t agenticdriver-account:ci-base deploy/account
+          docker build --build-arg AGENTICDRIVER_ACCOUNT_IMAGE=agenticdriver-account:ci-base -f deploy/account/Dockerfile.codex -t agenticdriver-account:ci-codex deploy/account
+          docker build --build-arg AGENTICDRIVER_ACCOUNT_IMAGE=agenticdriver-account:ci-base -f deploy/account/Dockerfile.claude -t agenticdriver-account:ci-claude deploy/account
+          docker build -f deploy/Dockerfile.proxy -t agenticdriver-proxy:ci-account deploy
   verify:
     needs: desktop
     if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}

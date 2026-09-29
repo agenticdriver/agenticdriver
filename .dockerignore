@@ -8,6 +8,7 @@
 !src/**
 !scripts
 !scripts/build-panel.mjs
+!scripts/clean-dist.mjs
 !deploy
 !deploy/remote-host.mjs
 !Dockerfile

@@ -1,0 +1,48 @@
+# One unique Compose project and runtime directory per provider account.
+services:
+  proxy:
+    image: ${AGENTICDRIVER_PROXY_IMAGE:-agenticdriver-proxy:local}
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+    ports:
+      - "${AGENTICDRIVER_BIND_ADDRESS:-127.0.0.1}:${AGENTICDRIVER_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./runtime/tls:/run/tls:ro
+    tmpfs:
+      - /data:uid=1000,gid=1000,mode=0700,size=16m
+      - /config:uid=1000,gid=1000,mode=0700,size=16m
+      - /tmp:uid=1000,gid=1000,mode=0700,size=16m
+    restart: "no"
+    stop_grace_period: 30s
+  driver:
+    image: ${AGENTICDRIVER_ACCOUNT_IMAGE:-agenticdriver-account:local}
+    init: true
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 1g
+    memswap_limit: 1g
+    network_mode: service:proxy
+    depends_on:
+      proxy:
+        condition: service_started
+        restart: true
+    volumes:
+      - ./runtime/config:/etc/agenticdriver:ro
+      - ./runtime/secrets:/run/secrets:ro
+      - account-home:/home/node
+      - account-state:/var/lib/agenticdriver
+    tmpfs:
+      - /tmp:uid=1000,gid=1000,mode=0700,size=128m,nosuid,nodev
+    restart: "no"
+    stop_grace_period: 30s
+volumes:
+  account-home:
+  account-state:

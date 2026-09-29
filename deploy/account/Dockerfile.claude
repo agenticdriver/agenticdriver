@@ -1,0 +1,11 @@
+ARG AGENTICDRIVER_ACCOUNT_IMAGE=agenticdriver-account:local
+FROM ${AGENTICDRIVER_ACCOUNT_IMAGE}
+USER root
+RUN npm install --prefix /opt/claude --ignore-scripts --no-audit --no-fund @anthropic-ai/claude-code-linux-x64@2.1.282 \
+    && node --input-type=module -e '\
+      import {readFileSync} from "node:fs"; \
+      import {createHash} from "node:crypto"; \
+      import assert from "node:assert/strict"; \
+      assert.equal(createHash("sha256").update(readFileSync("/opt/claude/node_modules/@anthropic-ai/claude-code-linux-x64/claude")).digest("hex"),"3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3");' \
+    && ln -s /opt/claude/node_modules/@anthropic-ai/claude-code-linux-x64/claude /usr/local/bin/claude
+USER node

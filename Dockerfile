@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
-COPY scripts/build-panel.mjs ./scripts/build-panel.mjs
+COPY scripts/build-panel.mjs scripts/clean-dist.mjs ./scripts/
 RUN npm run build && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
 FROM node:24-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS runtime
@@ -18,6 +18,7 @@ COPY --from=build /opt/agenticdriver/node_modules ./node_modules
 COPY --from=build /opt/agenticdriver/dist ./dist
 COPY LICENSE ./
 COPY deploy/remote-host.mjs ./deploy/remote-host.mjs
+RUN chmod -R a+rX /opt/agenticdriver
 USER node
 ENV NODE_ENV=production
 STOPSIGNAL SIGTERM

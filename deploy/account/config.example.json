@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "listen": {
+    "host": "127.0.0.1",
+    "port": 7433
+  },
+  "providers": [
+    {
+      "id": "selected-codex",
+      "kind": "codex",
+      "accountId": "selected-account",
+      "accountDirectory": "/home/node/.codex",
+      "binary": "/usr/local/bin/codex",
+      "reasoningEffort": "medium"
+    }
+  ],
+  "tokens": [
+    {
+      "subject": "selected-application",
+      "providers": ["selected-codex"],
+      "tokenRef": {
+        "file": "/run/secrets/driver-token"
+      },
+      "id": "selected-application"
+    }
+  ],
+  "usage": {
+    "hostId": "selected-account-host"
+  },
+  "operations": {
+    "directory": "/var/lib/agenticdriver/operations"
+  },
+  "usageLog": "/var/lib/agenticdriver/usage.jsonl",
+  "concurrency": {
+    "total": 2,
+    "perSubject": 1
+  }
+}
