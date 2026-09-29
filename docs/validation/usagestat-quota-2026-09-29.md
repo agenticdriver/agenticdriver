@@ -10,6 +10,16 @@ The focused source correction adapts prepared commit
 `agenticdriver-usage-api` checkout. It preserves subsequent SDK changes and does
 not modify the backend checkout or its active development branches.
 
+Integrated source:
+[`88daf7e52a956621389846e997a275ad97f9ae4a`](https://github.com/agenticdriver/agenticdriver/commit/88daf7e52a956621389846e997a275ad97f9ae4a).
+All seven checks passed in
+[Prometheus run 36594840281](https://github.com/agenticdriver/agenticdriver/actions/runs/36594840281):
+desktop, minimum runtimes, current language clients, current Node, account
+deployment, documentation and exact package installation. Local typecheck,
+unit/process checks and build also passed. The live account test described below
+was run explicitly; it is skipped by CI without an explicitly configured daemon
+and private account bindings. CI success does not substitute for that live check.
+
 ## Behavior
 
 `limits()` derives quota resources from `GET /v1/usage`; `accountLimits()` reads
