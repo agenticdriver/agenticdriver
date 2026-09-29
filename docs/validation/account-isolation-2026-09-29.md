@@ -42,3 +42,15 @@ kernel. It is not hostile-kernel escape resistance, mutually untrusted tools
 inside one account, an independent security audit, or macOS/Windows support.
 The cross-platform AD-012 parent and integrated #35 review remain separate work.
 Final RC images must be checked again when their runtime changes.
+
+## Exact-source CI
+
+Commit `5e7589290bad4806367f0f00eb995c540d400107` passed all seven jobs in
+[Prometheus run 36558265945, attempt 2](https://github.com/agenticdriver/agenticdriver/actions/runs/36558265945):
+Linux desktop, three client/runtime matrices, actual account-image builds,
+documentation, and exact release-artifact installation. The first attempt
+stopped at the disk-space guard before source verification. Removing unused
+SDK-owned audit images and the retired SDK fixture deployment recovered space;
+application hosts and other projects' CI services were preserved. CI contains
+no native account credentials and performs no model requests; the real account
+results above remain separate evidence.
