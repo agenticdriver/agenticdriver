@@ -27,6 +27,7 @@ import {
 } from "./setup-types.js";
 export type * from "./setup-types.js";
 import { z } from "zod";
+export { validateSourceCitations } from "./citations.js";
 import {
   SessionInfoSchema,
   SessionSnapshotSchema,

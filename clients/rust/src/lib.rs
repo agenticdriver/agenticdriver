@@ -10,7 +10,9 @@ pub use blocking::AgenticClient;
 mod async_client;
 #[cfg(feature = "async")]
 pub use async_client::{AsyncAgenticClient, EventStream};
+mod citations;
 pub mod context;
+pub use citations::validate_source_citations;
 pub use context::{
     ArtifactRequest, ContextInput, ContextManifest, ContextSource, DraftArtifact, SourceLocation,
 };

@@ -43,10 +43,13 @@ try {
    import assert from 'node:assert/strict';
    import * as providers from '@agenticdriver/sdk/providers';
    import * as retrieval from '@agenticdriver/sdk/retrieval';
+   import { createRequire } from 'node:module';
    import { validateHostConfig } from '@agenticdriver/sdk/host';
    import { providerPanelHtml } from '@agenticdriver/sdk/ui';
    assert(!('mockProvider' in providers));
    assert(!('DeterministicEmbeddingAdapter' in retrieval));
+   assert.equal(typeof retrieval.LocalEmbeddingAdapter, 'function');
+   assert.throws(() => createRequire(import.meta.url).resolve('@huggingface/transformers'), {code:'MODULE_NOT_FOUND'});
    assert(providerPanelHtml().includes('agenticdriver-providers'));
    assert.deepEqual(validateHostConfig({version:1,providers:[]}).providers,[]);
    await assert.rejects(import('@agenticdriver/sdk/provider-conformance'),{code:'ERR_PACKAGE_PATH_NOT_EXPORTED'});

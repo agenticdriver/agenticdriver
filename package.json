@@ -110,6 +110,7 @@
     "LICENSE",
     "docs",
     "examples/javascript",
+    "examples/retrieval",
     "examples/quickstart"
   ],
   "scripts": {
@@ -148,5 +149,13 @@
   "publishConfig": {
     "access": "public",
     "tag": "alpha"
+  },
+  "peerDependencies": {
+    "@huggingface/transformers": "4.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": true
+    }
   }
 }

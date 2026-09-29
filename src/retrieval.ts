@@ -572,6 +572,8 @@ export type {
 } from "./vector-store.js";
 export { SqliteVectorStore } from "./sqlite-vector-store.js";
 export { OpenAIEmbeddingAdapter } from "./embeddings.js";
+export { LocalEmbeddingAdapter } from "./local-embeddings.js";
+export type { LocalEmbeddingOptions } from "./local-embeddings.js";
 export type {
   EmbeddingAdapter,
   EmbeddingResult,

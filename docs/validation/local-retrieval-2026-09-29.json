@@ -1,0 +1,311 @@
+{
+  "recordedAt": "2026-09-29T11:09:58.624Z",
+  "scope": "Development qualification for SDK issue 72; not final RC artifact acceptance",
+  "model": {
+    "providerId": "local-cpu",
+    "vendor": "huggingface",
+    "accountId": "rc-local-embeddings",
+    "authMode": "none",
+    "model": "Xenova/all-MiniLM-L6-v2:751bff37182d3f1213fa05d7196b954e230abad9:q8:mean",
+    "dimensions": 384
+  },
+  "runtime": "@huggingface/transformers@4.3.0",
+  "sdkDevelopmentArchiveSha256": "09ad2afc44192765538e11c7ea88660e2c1740ee94e9b28940aea83c70f8d1fb",
+  "generationHost": "Prometheus separate loopback host over verified SSH",
+  "checks": {
+    "semantic": {
+      "related": 0.6277810305927293,
+      "unrelated": -0.0024473519735368644,
+      "usage": {
+        "inputTokens": 45
+      }
+    },
+    "cancellationAndRecovery": true,
+    "noSilentTruncation": true,
+    "noModelFallback": true,
+    "idempotentIndexWithoutEmbedding": true,
+    "namespaceAndSelectedSourceBoundaries": true,
+    "immutableRevision": true,
+    "restartPersistence": true,
+    "revisionChangeAndStaleEvidence": true,
+    "deletion": true,
+    "incompatibleIndex": true
+  },
+  "preparation": {
+    "queueStatuses": ["fulfilled", "rejected", "fulfilled", "fulfilled"],
+    "queueOverflow": "EMBEDDING_BUSY",
+    "queuedCancellation": "CANCELLED",
+    "preparedModel": {
+      "providerId": "local-cpu",
+      "vendor": "huggingface",
+      "accountId": "rc-local-embeddings",
+      "authMode": "none",
+      "model": "Xenova/all-MiniLM-L6-v2:751bff37182d3f1213fa05d7196b954e230abad9:q8:mean",
+      "dimensions": 384
+    },
+    "preparedUsage": {
+      "inputTokens": 14
+    }
+  },
+  "documents": [
+    {
+      "corpus": "release-library",
+      "sourceId": "paper",
+      "revision": "arxiv-2005.11401v4",
+      "documentSha256": "e366332e9619ce2e98f7f8b75fa8523e66143aa0a07bee9710bb2a75b7b8f3b3",
+      "chunks": 191,
+      "status": "indexed",
+      "ingestion": {
+        "format": "pdf",
+        "inputSha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233",
+        "inputBytes": 885323,
+        "extractor": {
+          "id": "poppler-layout",
+          "version": "26.01.0"
+        },
+        "chunker": {
+          "id": "source-lines-v1",
+          "maxBytes": 512
+        },
+        "extractedTextBytes": 85028,
+        "indexedTextBytes": 85028,
+        "chunks": 191,
+        "pages": {
+          "total": 19,
+          "ocr": [],
+          "empty": []
+        }
+      },
+      "inputSha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233"
+    },
+    {
+      "corpus": "release-library",
+      "sourceId": "guide",
+      "revision": "rc-guide-v1",
+      "documentSha256": "013dd4e65b75136a3a03083af4530f09bc45134282f187dd7c55b2904a3b4a77",
+      "chunks": 8,
+      "status": "indexed",
+      "ingestion": {
+        "format": "markdown",
+        "inputSha256": "9b6ea036167713e94b345128500896ced26e163fe418ec1ad3d39e45ae6c37b8",
+        "inputBytes": 2872,
+        "extractor": {
+          "id": "markdown-sections",
+          "version": "1"
+        },
+        "chunker": {
+          "id": "source-lines-v1",
+          "maxBytes": 512
+        },
+        "extractedTextBytes": 2872,
+        "indexedTextBytes": 2872,
+        "chunks": 8
+      }
+    },
+    {
+      "corpus": "release-library",
+      "sourceId": "email",
+      "revision": "handoff-v1",
+      "documentSha256": "3410b2ba28455747e40d4b5b621dcf2968fd8a4ce2f14c2e2026fef65fa20711",
+      "chunks": 2,
+      "status": "indexed",
+      "ingestion": {
+        "format": "email",
+        "inputSha256": "553bbb47b714b7294c1f8fedfef16fba8df666898aba3b207b4be6171ddc6f3e",
+        "inputBytes": 717,
+        "extractor": {
+          "id": "email-plain-text",
+          "version": "1"
+        },
+        "chunker": {
+          "id": "source-lines-v1",
+          "maxBytes": 512
+        },
+        "extractedTextBytes": 617,
+        "indexedTextBytes": 617,
+        "chunks": 2,
+        "messages": {
+          "total": 2,
+          "empty": 0
+        }
+      }
+    }
+  ],
+  "localEmbeddingUsage": {
+    "records": 18,
+    "inputTokens": 19610,
+    "source": "adapter-report",
+    "authMode": "none"
+  },
+  "clients": [
+    {
+      "language": "TypeScript",
+      "package": "development npm archive",
+      "hits": 4,
+      "topChunkId": "p-330f16e049f1579a4019bc9a768f0bbaf4a2ed79511f4238ea25a4a51d447eba",
+      "resultSha256": "bfd38683a91a9b08faca24acf7160c2813cfce4220e29edbd52c2eb9c127068a"
+    },
+    {
+      "language": "Python",
+      "package": "0.2.0a6 wheel built from unchanged client source",
+      "hits": 4,
+      "topChunkId": "p-330f16e049f1579a4019bc9a768f0bbaf4a2ed79511f4238ea25a4a51d447eba",
+      "resultSha256": "bfd38683a91a9b08faca24acf7160c2813cfce4220e29edbd52c2eb9c127068a"
+    },
+    {
+      "language": "Go",
+      "package": "published v0.2.0-alpha.6",
+      "hits": 4,
+      "topChunkId": "p-330f16e049f1579a4019bc9a768f0bbaf4a2ed79511f4238ea25a4a51d447eba",
+      "resultSha256": "bfd38683a91a9b08faca24acf7160c2813cfce4220e29edbd52c2eb9c127068a"
+    },
+    {
+      "language": "Rust",
+      "package": "development source with new result Serialize support",
+      "hits": 4,
+      "topChunkId": "p-330f16e049f1579a4019bc9a768f0bbaf4a2ed79511f4238ea25a4a51d447eba",
+      "resultSha256": "bfd38683a91a9b08faca24acf7160c2813cfce4220e29edbd52c2eb9c127068a"
+    }
+  ],
+  "runs": [
+    {
+      "runId": "45bda284-56c6-4d5a-ba40-aecc1307b47b",
+      "selection": {
+        "provider": "prometheus-codex",
+        "model": "gpt-6-luna",
+        "authMode": "cli-session",
+        "runtime": {
+          "name": "Codex CLI",
+          "version": "0.157.0"
+        },
+        "subscription": "pro"
+      },
+      "input": "Using only the retrieved passages from the selected Lewis et al. paper, explain how RAG-Sequence and RAG-Token differ. Give one implication for evidence attribution. Keep the answer under 180 words, cite the supplied passage IDs using [source:ID], and mark any inference as an inference. Do not use tools, browse, or access files.",
+      "retrieval": {
+        "corpus": "release-library",
+        "sourceIds": ["paper"],
+        "limit": 6
+      },
+      "resultStatus": "completed",
+      "citationAcceptance": false,
+      "sourceCount": 6,
+      "citations": [],
+      "usage": {
+        "inputTokens": 7868,
+        "outputTokens": 189,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "responseSha256": "fdbcb269f481a71589a010798cd77181f8cb1105a407972a6ec2f9bc473eb02f",
+      "events": {
+        "run.started": 1,
+        "run.progress": 6,
+        "step.started": 1,
+        "text.delta": 1,
+        "usage.reported": 1,
+        "run.completed": 1
+      }
+    },
+    {
+      "runId": "12a2607b-61c9-4b08-a649-169cd4244eff",
+      "selection": {
+        "provider": "prometheus-codex",
+        "model": "gpt-6-luna",
+        "authMode": "cli-session",
+        "runtime": {
+          "name": "Codex CLI",
+          "version": "0.157.0"
+        },
+        "subscription": "pro"
+      },
+      "input": "Using only the retrieved passages from the selected Lewis et al. paper, explain how RAG-Sequence and RAG-Token differ. Give one implication for evidence attribution. Keep the answer under 180 words, cite the supplied passage IDs using [source:ID], and mark any inference as an inference. Do not use tools, browse, or access files.",
+      "retrieval": {
+        "corpus": "release-library",
+        "sourceIds": ["paper"],
+        "limit": 4,
+        "query": "How do RAG-Sequence and RAG-Token differ?"
+      },
+      "resultStatus": "completed",
+      "citationAcceptance": true,
+      "sourceCount": 4,
+      "citations": [
+        "p-a36e34debbe3d02ab2b3d4f09e80063a2b874d1524453e87b0427a7d195c0e35"
+      ],
+      "usage": {
+        "inputTokens": 7289,
+        "outputTokens": 186,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "responseSha256": "8a81367d377853c547fd797c60b40f9d275b3b88f78f9bcb7cf62b9d17707199",
+      "events": {
+        "run.started": 1,
+        "run.progress": 5,
+        "step.started": 1,
+        "text.delta": 1,
+        "usage.reported": 1,
+        "run.completed": 1
+      }
+    },
+    {
+      "runId": "a9dd648d-9803-4ff5-b6a6-ac629bc70d64",
+      "selection": {
+        "provider": "prometheus-claude",
+        "model": "claude-haiku-4-5-20251001",
+        "authMode": "cli-session",
+        "runtime": {
+          "name": "Claude Code",
+          "version": "2.1.282"
+        },
+        "subscription": "pro"
+      },
+      "input": "Using only the selected release-handoff email thread, draft a reply of at most 140 words confirming the app maintainer's review commitments. Preserve the pending PyPI approval and the prohibition on sending email or using private mailbox data. Cite the relevant supplied message passages using [source:ID]. This is a reviewable draft, not a sent email. Do not use tools, browse, or access files.",
+      "retrieval": {
+        "corpus": "release-library",
+        "sourceIds": ["email"],
+        "limit": 6
+      },
+      "resultStatus": "completed",
+      "citationAcceptance": true,
+      "sourceCount": 2,
+      "citations": [
+        "p-82aaa2afc2fce58f38236f67725b4c417be08305420106232a59968417ee9c30",
+        "p-750803b70715706f3e863d0fcdccf973b9ebf5a1fabee99dba84484975454995"
+      ],
+      "usage": {
+        "inputTokens": 4200,
+        "outputTokens": 2648,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.021630000000000003
+      },
+      "responseSha256": "6f5798dba503231e7152ad8f5153c8e3db418828106f1430f575f8b015b5a770",
+      "events": {
+        "run.started": 1,
+        "run.progress": 3,
+        "step.started": 1,
+        "text.delta": 42,
+        "usage.reported": 1,
+        "run.completed": 1
+      }
+    }
+  ],
+  "privateReceiptSha256": {
+    "node-real-search.json": "00d1373c3a0e1328926fd0421a6b7c22af90199b81583a1620dcdbc23142e9df",
+    "python-real-search-2.json": "136a74f006ec89f050c93b595c589cc50622a6dd4a4074e63719061eba83ca6f",
+    "go-real-search-2.json": "3eb408d75a84d1f3240867ac3f658c2ae620a060782ab2942fafe1da0cc60512",
+    "rust-real-search.json": "f9defdbba488db013547315a513c979d465fe4e718780bebd0fb2e3ec6d7a2a3",
+    "remote-rag-codex.json": "b8970bdabb9988b2ba266b742df307ee0f274155abbcd4dd2e51f6f9874c4798",
+    "remote-rag-codex-query.json": "d2ada46ff4eb15b173afaee73aba431b933df27559357ebf3e10ee61818a236d",
+    "remote-rag-claude.json": "f9cb3ad1bc28272a305bbf5e54599480ec2c5661fa3710f06a6a921d12f14df2",
+    "local-retrieval-3.json": "e215418f50f9f097c48e1c3f6f2b106f49b674adf09ecd34d8639ff77a1b19ce",
+    "local-embedding-preparation.json": "cd7cc4e2df7e1f834c9e3ea469961ad90da2680223fe2cd8348d0efa8532a1e8",
+    "actual-citation-validation.json": "2de789dd2415ec370dd67b9572f35ed36a8ac9e593a4b8bb543994a5e8f5d0eb",
+    "remote-retrieval-restart.json": "6a1f2cdf3e5a6f985d296c7e7f13be4d235f7f76ac47e341b7c9a150e01c30d6"
+  },
+  "remoteRestart": {
+    "success": true,
+    "hits": 4,
+    "sameExactEvidence": true,
+    "at": "2026-09-29T11:28:10.285Z"
+  }
+}

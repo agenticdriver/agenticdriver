@@ -3,6 +3,7 @@
 from .client import AgenticClient, RunStream
 from .async_client import AsyncAgenticClient, AsyncRunStream
 from ._errors import DriverError
+from .citations import validate_source_citations
 from ._protocol import PROTOCOL_VERSION
 
 from .context import (
@@ -22,6 +23,7 @@ from .context import (
 __all__ = [
     "AgenticClient",
     "DriverError",
+    "validate_source_citations",
     "PROTOCOL_VERSION",
     "ArtifactRequest",
     "ContextInput",

@@ -12,6 +12,7 @@ import {
 } from "./context-types.js";
 import type { ExecutionContext, Json } from "./types.js";
 export * from "./context-types.js";
+export { validateSourceCitations } from "./citations.js";
 
 const HARD_BYTES = 32 * 1024 * 1024;
 const INLINE_BYTES = 512 * 1024;

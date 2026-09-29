@@ -48,10 +48,14 @@ pub struct RetrievalIndexRequest {
     pub source: ContextSource,
     pub chunks: Vec<RetrievalChunk>,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrievalHit {
-    #[serde(default, deserialize_with = "crate::ingestion::optional")]
+    #[serde(
+        default,
+        deserialize_with = "crate::ingestion::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ingestion: Option<crate::IngestionManifest>,
     pub chunk_id: String,
     pub source: ContextSource,
@@ -59,17 +63,21 @@ pub struct RetrievalHit {
     pub score: f64,
     pub document_sha256: String,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RetrievalResult {
     pub corpus: String,
     pub index: VectorIndex,
     pub hits: Vec<RetrievalHit>,
     pub truncated: bool,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetrievalIndexResult {
-    #[serde(default, deserialize_with = "crate::ingestion::optional")]
+    #[serde(
+        default,
+        deserialize_with = "crate::ingestion::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ingestion: Option<crate::IngestionManifest>,
     pub corpus: String,
     pub source_id: String,
@@ -85,7 +93,7 @@ pub struct RetrievalDelete {
     pub source_id: String,
     pub revision: String,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RetrievalDeleteResult {
     #[serde(flatten)]
     pub request: RetrievalDelete,
