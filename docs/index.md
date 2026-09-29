@@ -27,8 +27,9 @@ features:
 
 ## Build with a tested foundation
 
-The **0.2.0-rc.1** packages are published on npm, crates.io and the public Go
-module proxy. Follow [RC adoption](rc.md) for exact versions, host upgrades and
+The **0.2.0-rc.2** candidate adds the native Usagestat quota fix and stable
+Usagestat 2.0.0 integration. Publication and app upgrades are in progress;
+RC.1 remains the published baseline until verification completes. Follow [RC adoption](rc.md) for exact versions, host upgrades and
 connection setup. Stable npm `latest` remains **0.1.0**. Python uses reviewed
 archives while approval of the selected PyPI organization remains pending.
 The [release inventory](releases.md) records download availability; the

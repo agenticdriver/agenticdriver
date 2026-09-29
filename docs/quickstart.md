@@ -1,7 +1,7 @@
 # Install and connect
 
 Start with an explicitly selected real provider account and a meaningful prompt.
-This guide targets AgenticDriver **0.2.0-rc.1**, with wire protocol **1.0**,
+This guide targets AgenticDriver **0.2.0-rc.2**, with wire protocol **1.0**,
 provider management, host invitations and the Linux desktop. Check the
 [release inventory](releases.md) and [RC gate](release-candidate.md) for
 publication availability and immutable artifacts before installing. Candidate
@@ -16,10 +16,10 @@ The examples below use these exact package identities:
 
 | Language              | Package                                                              |
 | --------------------- | -------------------------------------------------------------------- |
-| JavaScript/TypeScript | `@agenticdriver/sdk@0.2.0-rc.1` on npm                               |
-| Python                | `agenticdriver-0.2.0rc1-py3-none-any.whl` from the GitHub prerelease |
-| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.1`      |
-| Rust                  | `agenticdriver = "=0.2.0-rc.1"` on crates.io                         |
+| JavaScript/TypeScript | `@agenticdriver/sdk@0.2.0-rc.2` on npm                               |
+| Python                | `agenticdriver-0.2.0rc2-py3-none-any.whl` from the GitHub prerelease |
+| Go                    | `github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.2`      |
+| Rust                  | `agenticdriver = "=0.2.0-rc.2"` on crates.io                         |
 
 For unreleased development changes, build from a reviewed SDK commit instead:
 
@@ -52,7 +52,7 @@ In a fresh application directory, install the published npm package:
 
 ```sh
 npm init -y
-npm install --save-exact @agenticdriver/sdk@0.2.0-rc.1
+npm install --save-exact @agenticdriver/sdk@0.2.0-rc.2
 npx --no-install agenticdriver init --config ./driver/config.json \
   --provider codex --provider-id my-codex --account-id my-codex-account \
   --binary /absolute/path/to/codex \
@@ -131,14 +131,14 @@ TypeScript imports the same `AgenticClient`; see its [full guide](javascript.md)
 ### Python
 
 Requires Python 3.10+. Download the reviewed wheel from the
-[0.2.0-rc.1 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.1),
-verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.1/ASSET-SHA256SUMS), and install it into
+[0.2.0-rc.2 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.2),
+verify its [published checksum](https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.2/ASSET-SHA256SUMS), and install it into
 the application's own environment:
 
 ```sh
 python3 -m venv .venv
 # Use .venv/Scripts/python.exe on Windows.
-.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.2.0rc1-py3-none-any.whl
+.venv/bin/python -m pip install /absolute/path/to/agenticdriver-0.2.0rc2-py3-none-any.whl
 .venv/bin/python client.py
 ```
 
@@ -156,7 +156,7 @@ Requires Go 1.22+. Install the published version:
 
 ```sh
 go mod init example.test/my-driver-client
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.1
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.2
 go run .
 ```
 
@@ -177,7 +177,7 @@ Requires Rust 1.89+. Use the published crate:
 
 ```toml
 [dependencies]
-agenticdriver = "=0.2.0-rc.1"
+agenticdriver = "=0.2.0-rc.2"
 ```
 
 Save the following as `src/main.rs` in a `cargo new` application and run

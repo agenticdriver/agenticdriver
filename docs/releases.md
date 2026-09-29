@@ -1,5 +1,10 @@
 # Release candidates and publication
 
+**0.2.0-rc.2 is being qualified** with the native Usagestat quota correction and
+Usagestat 2.0.0 stable integration. Follow [#77](https://github.com/agenticdriver/agenticdriver/issues/77)
+for exact-source Prometheus checks, registry publication and the three app
+upgrades. RC.1 remains available unchanged.
+
 **0.2.0-rc.1 is published on npm, crates.io, Go and
 [GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.1).**
 Fresh public installations, exact artifact hashes and npm's same-source provenance

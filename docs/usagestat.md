@@ -2,16 +2,20 @@
 
 AgenticDriver uses Usagestat as an optional local or remote service dependency for usage storage, retention, forwarding, quotas and provider metadata.
 It does not fork its provider probes, credential discovery, or logo collection.
-Released native readback is supported by Usagestat **`v2.0.0-alpha.4`**
-(`bd5b7a162d7a3ddcf17995d3d20cb4b8cbd6d64b`). This release does not include
-the optional run-ingestion service described below. Development builds may report
-the same version, so a version string is not a capability handshake.
+Pin Usagestat **[`v2.0.0`](https://github.com/hashimkarim/usagestat/releases/tag/v2.0.0)**
+(`fbf84796d80fd5567516cec2e11b0784e7c187db`) for native readback and optional
+durable run ingestion. Ingestion is disabled unless explicitly configured;
+even a stable version string does not establish that the running service enables
+it. Check the ingestion protocol before capture. The stable native Linux builds
+require glibc 2.39 or later; its optional npm installer requires Node 24 or later.
+This does not change the SDK's own Node requirement.
 
-**SDK 0.2.0-rc.1 limitation:** desktop readback uses the correct native routes,
-but `limits()` and `accountLimits()` in the published SDK call nonexistent
-`/v1/limits` routes. The source correction tracked in
-[#76](https://github.com/agenticdriver/agenticdriver/issues/76) uses native usage
-snapshots as described here; it requires a subsequent package release.
+**Upgrade from SDK 0.2.0-rc.1:** desktop readback already uses native routes,
+but that SDK's `limits()` and `accountLimits()` call nonexistent `/v1/limits`
+routes. **0.2.0-rc.2** includes the [#76 correction](https://github.com/agenticdriver/agenticdriver/issues/76)
+described here. Applications validating the derived schema must use
+`agenticdriver.usagestat-limits.v1`. Updating Usagestat alone cannot repair an
+older installed SDK client.
 
 The inspected Usagestat endpoints are:
 
@@ -110,18 +114,32 @@ The existing brand assets remain owned by Usagestat and their respective licenso
 
 ## Per-run usage
 
-Usagestat's development branch implements an optional native run-ingestion
-contract (AD-030, commit `e3330d6f454d6b67f6b58247aeff78e84c3873d0`). **It is not
-in a published backend release or the inspected live `main`.** Enable it with
+Usagestat **2.0.0** includes the optional native run-ingestion contract (AD-030).
+Enable it with
 `usagestatd --run-usage-config /absolute/path/run-usage.json`; add `--no-poll` for
 an ingestion-only service. The backend configuration, account bindings and
-forwarding controls are documented in Usagestat's `docs/run-ingestion.md`. This
-requires that backend implementation; installations without the route fail
-explicitly. Qualify a subsequent tested backend release before claiming released
-ingestion compatibility. Always call `ingestionProtocol()` to verify
+forwarding controls are documented in Usagestat's
+[`docs/run-ingestion.md`](https://github.com/hashimkarim/usagestat/blob/v2.0.0/docs/run-ingestion.md).
+An installation without the enabled route fails explicitly. Always call
+`ingestionProtocol()` to verify
 `usagestat.run-ingestion.v1` accepting `agenticdriver.usage.v2`; these are separate
 contract versions, not a requirement for a `/v2` HTTP API. The native ingestion
 daemon requires a loopback listener and its separate configured bearer credential.
+
+Prefer a separate ingestion-only service alongside the execution host. Keep the
+existing quota/readback daemon and its provider account setup intact. Configure
+bindings from that host's actual `usage.hostId`, provider instance `id`, explicit
+`accountId` and authenticated connection subject. Do not infer any of these from
+a display name or a provider family. Provider credentials remain on the execution
+host; the ingestion credential is a different service secret. A connection's
+execution permissions and expiry are still enforced by AgenticDriver.
+
+Usagestat's stable release reconciled unchanged real SDK execution and embedding
+records, including duplicate delivery, scoped reads and restart. See its
+[release handoff](https://github.com/hashimkarim/usagestat/blob/1de16b94b8992c36fd22606518c0996f1ac2de6e/docs/releases/v2.0.0-agenticdriver-handoff.md).
+That is backend qualification, not evidence that an arbitrary application host
+already has ingestion configured. Verify the actual host's new records after
+connecting it.
 
 Records now carry `agenticdriver.usage.v2`, stable host and optional account
 identity, authenticated subject, timestamps, source, coverage, known subtotals,
@@ -201,8 +219,8 @@ npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
 
 That check copies the actual daemon into a temporary profile with no provider
 plugins and verifies its empty read contract. No provider can be polled. It works
-with released alpha.4, which has no `--no-poll` flag, as well as the development
-daemon. It does not invent accounts or run measurements.
+with stable 2.0.0 and older alpha.4, which has no `--no-poll` flag. It does not
+invent accounts or run measurements.
 To verify usage ingestion, run meaningful prompts on an explicitly configured real
 provider and reconcile the host's actual usage records with the existing backend.
 

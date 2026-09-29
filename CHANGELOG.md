@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.0-rc.2 — 2026-09-30
 
 - Corrected Usagestat quota reads to derive resources from native `/v1/usage` snapshots. Published SDK 0.2.0-rc.1 calls `/v1/limits`, which the backend never served; desktop usage display is unaffected. Account bindings, freshness and failure handling remain explicit. The derived schema is `agenticdriver.usagestat-limits.v1`, replacing the never-served `crossusage.limits.v1` literal.
-- Clarified that Usagestat alpha.4 supports native readback while AD-030 run ingestion is unreleased and requires its separate protocol handshake and qualification.
+- Updated integration guidance to released Usagestat **2.0.0**, including optional durable run ingestion, explicit account/subject bindings and the required capability handshake. Native usage reads remain administrative; per-run capture uses a separate credential.
+- Kept wire protocol 1.0, selected provider accounts, application authentication and disabled default inactivity timeout unchanged. Registry publication and app adoption are tracked in #77.
 
 ## 0.2.0-rc.1 — 2026-09-29
 

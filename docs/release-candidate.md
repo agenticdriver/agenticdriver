@@ -1,5 +1,14 @@
 # Release candidate gate
 
+**0.2.0-rc.2 is in qualification** for the native Usagestat quota fix and the
+released 2.0.0 ingestion contract. Python uses **0.2.0rc2**; protocol stays **1.0**.
+Tracking: [#77](https://github.com/agenticdriver/agenticdriver/issues/77).
+Build, stable-backend reconciliation, publication and app migration receipts are
+required before marking this update accepted. The RC.1 evidence below remains
+historical evidence; it does not claim a new RC.2 app run.
+
+## RC.1 accepted baseline
+
 **0.2.0-rc.1 passed its scoped release gates and was published on 2026-09-29.**
 Python uses **0.2.0rc1**; wire protocol remains **1.0**. Tracking:
 [#71](https://github.com/agenticdriver/agenticdriver/issues/71).

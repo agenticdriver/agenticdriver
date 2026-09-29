@@ -74,7 +74,7 @@ reconnection; never replay uncertain model work automatically.
 
 The repository includes a [real-example runner](../examples/javascript/real-applications.mjs)
 and its [public prompts](../examples/javascript/real-application-prompts.mjs).
-Copy both files into an application directory with `@agenticdriver/sdk@0.2.0-rc.1`
+Copy both files into an application directory with `@agenticdriver/sdk@0.2.0-rc.2`
 installed. Choose an inexpensive model actually reported by the selected account:
 
 ```sh
