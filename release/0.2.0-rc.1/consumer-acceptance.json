@@ -1,0 +1,140 @@
+{
+  "brandstorm": {
+    "repository": "hashimkarim/brandstorm",
+    "source": "551005874da64c464e53aeea89f9d6d637c90fc7",
+    "ciRun": 36573455828,
+    "ciUrl": "https://github.com/hashimkarim/brandstorm/actions/runs/36573455828",
+    "jobs": [
+      {
+        "id": 109422937232,
+        "name": "verify",
+        "conclusion": "success",
+        "runner_name": "prometheus-brandstorm-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ],
+    "exactSdkVersion": "0.2.0-rc.1",
+    "mountedGeneration": true,
+    "record": "docs/validation/agenticdriver-rc1-2026-09-29.md",
+    "recordSource": "df8db518e431c8b1176b569a693f6dcd5d52413c",
+    "recordUrl": "https://github.com/hashimkarim/brandstorm/blob/df8db518e431c8b1176b569a693f6dcd5d52413c/docs/validation/agenticdriver-rc1-2026-09-29.md"
+  },
+  "workspace": {
+    "repository": "hashimkarim/ai-workspace",
+    "source": "a9fc615bb00893049dff50eb576ddb741cbf5ce4",
+    "ciRun": 36573338840,
+    "ciUrl": "https://github.com/hashimkarim/ai-workspace/actions/runs/36573338840",
+    "jobs": [
+      {
+        "id": 109422536420,
+        "name": "core (24.13.0)",
+        "conclusion": "success",
+        "runner_name": "prometheus-workspace-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109422536680,
+        "name": "core (22.22.0)",
+        "conclusion": "success",
+        "runner_name": "prometheus-workspace-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109423220766,
+        "name": "browser",
+        "conclusion": "success",
+        "runner_name": "prometheus-workspace-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109423496796,
+        "name": "android",
+        "conclusion": "success",
+        "runner_name": "prometheus-workspace-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109423759404,
+        "name": "desktop-check",
+        "conclusion": "success",
+        "runner_name": "prometheus-workspace-01",
+        "runner_id": 21,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ],
+    "exactSdkVersion": "0.2.0-rc.1",
+    "mountedGeneration": true,
+    "record": "docs/validation/mail-ui-rc1-2026-09-29.md",
+    "recordSource": "6cd2b84692bb70d41c6ce2a73bb9861754c5598d",
+    "recordUrl": "https://github.com/hashimkarim/ai-workspace/blob/6cd2b84692bb70d41c6ce2a73bb9861754c5598d/docs/validation/mail-ui-rc1-2026-09-29.md"
+  },
+  "literature": {
+    "repository": "hashimkarim/agentic-literature-review",
+    "source": "dd7ff9d2db99bdf50573773de3585b8a215a513e",
+    "ciRun": 36590244371,
+    "ciUrl": "https://github.com/hashimkarim/agentic-literature-review/actions/runs/36590244371",
+    "jobs": [
+      {
+        "id": 109481145736,
+        "name": "check",
+        "conclusion": "success",
+        "runner_name": "prometheus-literature-01",
+        "runner_id": 2,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ],
+    "exactSdkVersion": "0.2.0-rc.1",
+    "mountedGeneration": true,
+    "record": "docs/validation/driver-rc-consumer-2026-09-29.md",
+    "liveWorkflowSource": "ffdd6e383bca2fb4eb759ac3e26b814491a471a5",
+    "recordSource": "dd7ff9d2db99bdf50573773de3585b8a215a513e",
+    "recordUrl": "https://github.com/hashimkarim/agentic-literature-review/blob/dd7ff9d2db99bdf50573773de3585b8a215a513e/docs/validation/driver-rc-consumer-2026-09-29.md",
+    "limits": [
+      "The first source-section-constrained question was rejected; its requests were retained.",
+      "The accepted disposable TeX draft has advisory percent-sign warnings and is not certified compilation-ready.",
+      "Support-review prose mislabels a section; original quoted passages/source IDs remain correct.",
+      "Browser inspected persisted mounted states; acceptance and cancellation actions were exercised through actual app APIs.",
+      "No SDK vector retrieval, private library content, email sending, or Usagestat ingestion claim."
+    ]
+  }
+}

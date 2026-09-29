@@ -9,7 +9,7 @@ The live [organization project](https://github.com/orgs/agenticdriver/projects/1
 
 This file preserves the original planning baseline, item descriptions and initial
 checkboxes; they are not the current completion status. See the
-[release inventory](releases.md), [alpha.6 qualification](validation/release-0.2.0-alpha.6.md)
+[release inventory](releases.md), [current RC gate](release-candidate.md)
 and project for implemented features, published artifacts and remaining gates.
 
 ## Decisions

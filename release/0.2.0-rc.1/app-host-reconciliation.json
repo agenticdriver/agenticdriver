@@ -1,0 +1,374 @@
+{
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "evidence": "Existing isolated RC host JSONL, read only; no rerun",
+  "rows": [
+    {
+      "runId": "225143d1-88e1-493f-9c42-5f1a243a303f",
+      "status": "cancelled",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc1-brandstorm",
+      "usage": {},
+      "durationMs": 310,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 0,
+        "reportedSteps": {}
+      }
+    },
+    {
+      "runId": "d1063e64-b86f-419e-93ab-18a89d45c9fd",
+      "status": "completed",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc1-workspace",
+      "usage": {
+        "inputTokens": 6608,
+        "outputTokens": 218,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "durationMs": 8333,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      }
+    },
+    {
+      "runId": "bca1e3c9-b219-436c-9ff4-01440b629bbe",
+      "status": "completed",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc1-brandstorm",
+      "usage": {
+        "inputTokens": 7872,
+        "outputTokens": 170,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "durationMs": 6182,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      }
+    },
+    {
+      "runId": "794febe8-3b00-412d-8e7e-4116a18ddfcf",
+      "status": "completed",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc1-workspace",
+      "usage": {
+        "inputTokens": 6608,
+        "outputTokens": 212,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "durationMs": 6492,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      }
+    },
+    {
+      "runId": "7a175a97-ee2d-4fe9-9de0-7458bcaeb089",
+      "status": "cancelled",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc1-workspace",
+      "usage": {},
+      "durationMs": 1651,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 0,
+        "reportedSteps": {}
+      }
+    },
+    {
+      "runId": "0b80832d-e0a4-481f-8d05-ab0a97bcedbd",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 30289,
+        "outputTokens": 1994,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.070538
+      },
+      "durationMs": 21080,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "b48bda20-405b-4ab6-8032-646a842635ee",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 31242,
+        "outputTokens": 11059,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.117769
+      },
+      "durationMs": 109824,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "c0e4455d-81dd-4729-8a3f-e392bf117473",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 30876,
+        "outputTokens": 2970,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.07659200000000001
+      },
+      "durationMs": 32088,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "3996b46f-de19-4bb5-9031-67da69759a9d",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 30895,
+        "outputTokens": 4660,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.08508
+      },
+      "durationMs": 43783,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "3ebac6e4-6792-40e4-b294-db24ea0c114d",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 30307,
+        "outputTokens": 2499,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.073099
+      },
+      "durationMs": 28861,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "22feafeb-499a-459b-a23f-9ae4f225ab5c",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 31270,
+        "outputTokens": 3045,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.077755
+      },
+      "durationMs": 26631,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "3fcbac8e-f814-4f41-a0d6-b00c7680ad3b",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 30649,
+        "outputTokens": 6772,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.09514800000000001
+      },
+      "durationMs": 64942,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "55a1f102-25cf-4d29-9570-b8755f9369a6",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 31268,
+        "outputTokens": 1833,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.071691
+      },
+      "durationMs": 20437,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "4c979040-8c11-4b76-800a-e31c8619fd05",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 32669,
+        "outputTokens": 2791,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.079283
+      },
+      "durationMs": 28980,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "683b2aa5-62f7-4d79-b62a-c0deba7f9eb4",
+      "status": "completed",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {
+        "inputTokens": 32891,
+        "outputTokens": 1573,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.07363700000000001
+      },
+      "durationMs": 18471,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      }
+    },
+    {
+      "runId": "306210b1-723f-4efc-a9b4-e9db6eae0a00",
+      "status": "cancelled",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {},
+      "durationMs": 101,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 0,
+        "reportedSteps": {}
+      }
+    },
+    {
+      "runId": "e04cf004-28d1-4dc3-90f6-b03baaac5a50",
+      "status": "cancelled",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc1-literature",
+      "usage": {},
+      "durationMs": 108,
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 0,
+        "reportedSteps": {}
+      }
+    }
+  ]
+}

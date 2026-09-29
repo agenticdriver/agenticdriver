@@ -1,0 +1,136 @@
+{
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "date": "2026-09-29T13:02:36.476278+00:00",
+  "connection": "Prometheus native account through pinned SSH loopback route",
+  "runtime": "Codex CLI 0.157.0",
+  "reasoning": "medium",
+  "authMode": "cli-session",
+  "subscription": "pro",
+  "runs": [
+    {
+      "language": "javascript",
+      "case": "brandstorm",
+      "runId": "04a66a93-0c3e-4a6e-a0b6-ec9ad22235a0",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "usage": {
+        "inputTokens": 6121,
+        "outputTokens": 256,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "responseSha256": "8324989de9e8b848be355a719bd3ff73c35b2a7c5afb9708637fa82840bdd4e6",
+      "receiptSha256": "f75a6e8ee06f7d96c70e6248721afddbd2cd6b047516c0a76c1e4ab00701df5a",
+      "reviewed": true,
+      "editorialNotes": [],
+      "promptId": "brandstorm"
+    },
+    {
+      "language": "go",
+      "case": "brandstorm",
+      "runId": "3746ccd4-e275-4dfb-a65d-7c62048c0abe",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "usage": {
+        "inputTokens": 6121,
+        "outputTokens": 266,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "responseSha256": "51faa49c4101a28116e72144bc597e7be925a4fd4643b6ae094093bb446022ba",
+      "receiptSha256": "b0d3ba36146a3c8b34d918d4dbfb21bf88b4977e38344af8a2514c09a4821af8",
+      "reviewed": true,
+      "editorialNotes": [],
+      "promptId": "brandstorm"
+    },
+    {
+      "language": "python",
+      "case": "literature",
+      "runId": "a6b44b96-0e71-40ce-86ee-2903f03bb5ad",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "usage": {
+        "inputTokens": 6202,
+        "outputTokens": 216,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "responseSha256": "d17b0d7c26a257dafcdf1c00dfbcaebbe27da3d81a25e828d30d95d2cc7081c2",
+      "receiptSha256": "15aed3fa22bd133b834dfdd0bfdc4348b8f7e14f51d3c1ef40fe520395fd9b8b",
+      "reviewed": true,
+      "editorialNotes": [
+        "Per-token retrieval is a proposed architectural experiment, not an established app implementation."
+      ],
+      "promptId": "literature"
+    },
+    {
+      "language": "rust",
+      "case": "workspace",
+      "runId": "f11c34eb-26d8-4d84-a4f6-1ad6f7f7fbae",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "usage": {
+        "cachedInputTokens": 4864,
+        "inputTokens": 6203,
+        "outputTokens": 215,
+        "reasoningTokens": 13
+      },
+      "responseSha256": "e115dc7122d929b5810b5de2c1228ebdea591c4e5467551a3a5493956f7317db",
+      "receiptSha256": "afe6931b2ec645fc41595eed30e89a6ee65e6329979cb4ba02e857053d11871b",
+      "reviewed": true,
+      "editorialNotes": [
+        "Email prompt is the historical alpha.5 release handoff, not current adoption status."
+      ],
+      "promptId": "workspace"
+    }
+  ],
+  "earlierJavaScriptEvidence": "JavaScript run predates the Claude-only classification correction; all client and Codex execution files are byte-identical.",
+  "claude": {
+    "language": "python",
+    "case": "brandstorm",
+    "runId": "b9fa7219-8d60-4c09-8d48-d605dda33b86",
+    "provider": "prometheus-claude",
+    "model": "claude-haiku-4-5-20251001",
+    "runtime": {
+      "name": "Claude Code",
+      "version": "2.1.282"
+    },
+    "authMode": "cli-session",
+    "subscription": "pro",
+    "afterReportedReset": true,
+    "accountIdentityUnchanged": true,
+    "usage": {
+      "inputTokens": 3750,
+      "outputTokens": 967,
+      "cachedInputTokens": 0,
+      "apiEquivalentCostUsd": 0.008584999999999999
+    },
+    "wordCount": 171,
+    "responseSha256": "999ba4d89e20b7eaaaed984b832f6417c9ee7f67a9c306ba91f118e5b63918d2",
+    "receiptSha256": "43f0f1b55b48cc4d8246361723b2efcc45a9a0c785a2da22f5aff4df3c846f79",
+    "reviewed": true,
+    "editorialNotes": [
+      "Three distinct creative directions, each with a tagline, two valid hex colours and a visual motif.",
+      "Marketing phrases such as without compromise are creative suggestions, not verified capability guarantees.",
+      "API-equivalent amount is reported metadata, not a subscription charge."
+    ],
+    "promptId": "brandstorm"
+  },
+  "prompts": {
+    "brandstorm": {
+      "input": "Develop three distinct brand directions for AgenticDriver (agenticdriver.dev).\nIt is an SDK for TypeScript, Python, Go and Rust applications. Developers connect\ntheir own provider API accounts or supported native subscription sessions.\nExecution can happen locally or through a secure connection to a remote host.\nApplications explicitly select a provider, account connection and model.\nThe audience is developers building research assistants, email workspaces and\ncreative tools. Keep the name AgenticDriver. Do not promise universal provider\ncompatibility, unlimited usage, automatic model routing or guaranteed accuracy.\nFor each direction, give a tagline, two hex colours, a visual motif and one\nsentence explaining why it fits the audience. Stay below 220 words in total.\n",
+      "source": "examples/quickstart/brand-brief.txt",
+      "sha256": "8b8ed74bb0d9d82135e710f0cd0e94d297ab9cfc86845966e05f467ed47f4043"
+    },
+    "literature": {
+      "input": "Answer using only these notes from two real papers; cite the arXiv IDs.\n[2005.11401] Lewis et al., Retrieval-Augmented Generation for Knowledge-Intensive\nNLP Tasks (NeurIPS 2020). The work combines a pretrained sequence-to-sequence model\nwith neural retrieval over a Wikipedia vector index. It compares shared passages\nthroughout generation with passages that can change per token. Evaluations found\nbetter factuality than the tested parametric-only baseline.\n[2307.03172] Liu et al., Lost in the Middle: How Language Models Use Long Contexts\n(TACL 2023). On multi-document question answering and key-value retrieval tasks,\nperformance depended on where relevant information appeared. It was often better\nnear either end than in the middle, including for models designed for long context.\nQuestion: What two design experiments should a literature assistant run for evidence\nselection and ordering? Separate reported findings from your proposed experiments.\nExplain why neither paper establishes that every generated answer will be correct.\nUse at most 160 words. Do not invent results, statistics or additional references.",
+      "source": "examples/javascript/real-application-prompts.mjs#literature",
+      "sha256": "79ceda1afd3245763038bafe8557b82607d575092388d8329ca65cb79417ecab"
+    },
+    "workspace": {
+      "input": "Draft an email from these AgenticDriver release handoff notes dated\n2026-09-28. This is a draft only; no email will be sent.\nThe npm package @agenticdriver/sdk@0.2.0-alpha.5 is published under the alpha tag.\nRust agenticdriver 0.2.0-alpha.5 and the Go clients/go/v0.2.0-alpha.5 tag are published.\nPython 0.2.0a5 wheel and source archives are on the GitHub prerelease; PyPI organization\napproval is still pending. Brandstorm, LitAgent and AI Workspace should pin alpha.5,\nrefresh their connected host's provider catalog, then validate an explicitly selected\nprovider and inexpensive model. Application authentication stays owned by each app.\nCatalog discovery alone does not prove model execution. Adoption by all three apps\nhas not yet been confirmed. Do not claim the Python package is on PyPI or that the\napps have already upgraded. Produce a subject, a concise body and three action items,\nbelow 170 words total. Do not invent recipients, deadlines or completed checks.",
+      "source": "examples/javascript/real-application-prompts.mjs#workspace",
+      "sha256": "baf1da2d5bf632efde66b0015a8817a0c2eba8d387c77ac32101ef1974b19295"
+    }
+  }
+}

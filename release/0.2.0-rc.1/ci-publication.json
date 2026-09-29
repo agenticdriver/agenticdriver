@@ -1,0 +1,389 @@
+{
+  "ci": {
+    "conclusion": "success",
+    "databaseId": 36569610094,
+    "headSha": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+    "jobs": [
+      {
+        "databaseId": 109410034726,
+        "name": "Linux desktop companion",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109410034726",
+        "startedAt": "2026-09-29T12:39:50Z",
+        "completedAt": "2026-09-29T12:44:31Z"
+      },
+      {
+        "databaseId": 109411826177,
+        "name": "Linux current Node",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109411826177",
+        "startedAt": "2026-09-29T12:47:33Z",
+        "completedAt": "2026-09-29T12:48:59Z"
+      },
+      {
+        "databaseId": 109411826235,
+        "name": "Linux minimum runtimes",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109411826235",
+        "startedAt": "2026-09-29T12:44:34Z",
+        "completedAt": "2026-09-29T12:46:02Z"
+      },
+      {
+        "databaseId": 109411826296,
+        "name": "Linux LTS and current clients",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109411826296",
+        "startedAt": "2026-09-29T12:46:04Z",
+        "completedAt": "2026-09-29T12:47:31Z"
+      },
+      {
+        "databaseId": 109413535171,
+        "name": "Linux account deployment",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109413535171",
+        "startedAt": "2026-09-29T12:49:01Z",
+        "completedAt": "2026-09-29T12:50:38Z"
+      },
+      {
+        "databaseId": 109414181322,
+        "name": "Documentation site",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109414181322",
+        "startedAt": "2026-09-29T12:50:41Z",
+        "completedAt": "2026-09-29T12:51:07Z"
+      },
+      {
+        "databaseId": 109414362377,
+        "name": "release-candidate / Build and install exact release artifacts",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094/job/109414362377",
+        "startedAt": "2026-09-29T12:51:10Z",
+        "completedAt": "2026-09-29T12:52:12Z"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094",
+    "runnerReceipts": [
+      {
+        "id": 109410034726,
+        "name": "Linux desktop companion",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109411826177,
+        "name": "Linux current Node",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109411826235,
+        "name": "Linux minimum runtimes",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109411826296,
+        "name": "Linux LTS and current clients",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109413535171,
+        "name": "Linux account deployment",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109414181322,
+        "name": "Documentation site",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109414362377,
+        "name": "release-candidate / Build and install exact release artifacts",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ]
+  },
+  "npm": {
+    "conclusion": "success",
+    "databaseId": 36572172627,
+    "headSha": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+    "jobs": [
+      {
+        "databaseId": 109418619052,
+        "name": "npm",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572172627/job/109418619052",
+        "startedAt": "2026-09-29T13:02:03Z",
+        "completedAt": "2026-09-29T13:05:09Z"
+      },
+      {
+        "databaseId": 109418621127,
+        "name": "go",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572172627/job/109418621127",
+        "startedAt": "2026-09-29T13:01:59Z",
+        "completedAt": "2026-09-29T13:01:58Z"
+      },
+      {
+        "databaseId": 109418621334,
+        "name": "package",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572172627/job/109418621334",
+        "startedAt": "2026-09-29T13:01:59Z",
+        "completedAt": "2026-09-29T13:01:58Z"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572172627",
+    "runnerReceipts": [
+      {
+        "id": 109418619052,
+        "name": "npm",
+        "conclusion": "success",
+        "runner_id": 1000000102,
+        "runner_name": "GitHub Actions 1000000102",
+        "labels": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "id": 109418621127,
+        "name": "go",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109418621334,
+        "name": "package",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ]
+  },
+  "rust": {
+    "conclusion": "success",
+    "databaseId": 36572201867,
+    "headSha": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+    "jobs": [
+      {
+        "databaseId": 109418994550,
+        "name": "npm",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572201867/job/109418994550",
+        "startedAt": "2026-09-29T13:02:56Z",
+        "completedAt": "2026-09-29T13:02:56Z"
+      },
+      {
+        "databaseId": 109418995675,
+        "name": "go",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572201867/job/109418995675",
+        "startedAt": "2026-09-29T13:02:56Z",
+        "completedAt": "2026-09-29T13:02:55Z"
+      },
+      {
+        "databaseId": 109419002107,
+        "name": "package",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572201867/job/109419002107",
+        "startedAt": "2026-09-29T13:03:16Z",
+        "completedAt": "2026-09-29T13:03:47Z"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572201867",
+    "runnerReceipts": [
+      {
+        "id": 109418994550,
+        "name": "npm",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "id": 109418995675,
+        "name": "go",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109419002107,
+        "name": "package",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ]
+  },
+  "go": {
+    "conclusion": "success",
+    "databaseId": 36572254660,
+    "headSha": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+    "jobs": [
+      {
+        "databaseId": 109418883888,
+        "name": "go",
+        "conclusion": "success",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572254660/job/109418883888",
+        "startedAt": "2026-09-29T13:02:43Z",
+        "completedAt": "2026-09-29T13:03:13Z"
+      },
+      {
+        "databaseId": 109418885895,
+        "name": "npm",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572254660/job/109418885895",
+        "startedAt": "2026-09-29T13:02:39Z",
+        "completedAt": "2026-09-29T13:02:39Z"
+      },
+      {
+        "databaseId": 109418886237,
+        "name": "package",
+        "conclusion": "skipped",
+        "status": "completed",
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572254660/job/109418886237",
+        "startedAt": "2026-09-29T13:02:39Z",
+        "completedAt": "2026-09-29T13:02:39Z"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36572254660",
+    "runnerReceipts": [
+      {
+        "id": 109418883888,
+        "name": "go",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109418885895,
+        "name": "npm",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "id": 109418886237,
+        "name": "package",
+        "conclusion": "skipped",
+        "runner_id": null,
+        "runner_name": null,
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ]
+  }
+}

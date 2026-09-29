@@ -1,0 +1,409 @@
+{
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "phases": {
+    "start": {
+      "at": "2026-09-29T12:52:39.360326+00:00",
+      "mode": "start",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "kind": "codex",
+          "image": "sha256:fefcf2ed2c239ad9b9013a72358bf1e9a9a07acd317f1733421af3ed2dc8a262",
+          "proxyImage": "sha256:a273422e6357cb5cd2427ae2b5cc7ef9079d6c9d77167ab0075140d3cef25d36",
+          "verification": {
+            "files": 91,
+            "match": true
+          },
+          "catalog": {
+            "mode": "catalog",
+            "provider": "agenticdriver-rc-70fb61c045-codex",
+            "model": "gpt-6-luna",
+            "runtime": {
+              "name": "Codex CLI",
+              "version": "0.157.0"
+            },
+            "account": {
+              "status": "signed-in",
+              "subscription": "pro",
+              "hasIdentity": true
+            },
+            "reportedModels": [
+              "gpt-6-astra",
+              "gpt-6-sol",
+              "gpt-6-luna",
+              "gpt-reserve",
+              "gpt-5.6-sol",
+              "gpt-5.6-terra",
+              "gpt-5.6-luna",
+              "gpt-5.5",
+              "codex-auto-review"
+            ]
+          },
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-codex",
+            "model": "gpt-6-luna",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        },
+        {
+          "kind": "claude",
+          "image": "sha256:fa2e8b1566601817f68ec612283ce0875c7c6475477bf545cf421ff4df3c7983",
+          "proxyImage": "sha256:a273422e6357cb5cd2427ae2b5cc7ef9079d6c9d77167ab0075140d3cef25d36",
+          "verification": {
+            "files": 91,
+            "match": true
+          },
+          "catalog": {
+            "mode": "catalog",
+            "provider": "agenticdriver-rc-70fb61c045-claude",
+            "model": "claude-haiku-4-5-20251001",
+            "runtime": {
+              "name": "Claude Code",
+              "version": "2.1.282"
+            },
+            "account": {
+              "status": "signed-in",
+              "subscription": "pro",
+              "hasIdentity": true
+            },
+            "reportedModels": [
+              "default",
+              "claude-opus-5-5",
+              "opus",
+              "claude-fable-5-1",
+              "haiku",
+              "claude-haiku-4-5-20251001",
+              "sonnet",
+              "claude-sonnet-5",
+              "claude-opus-5",
+              "claude-fable-5",
+              "claude-opus-4-8",
+              "claude-opus-4-7",
+              "claude-opus-4-6",
+              "claude-sonnet-4-6"
+            ]
+          },
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-claude",
+            "model": "claude-haiku-4-5-20251001",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        }
+      ],
+      "success": true
+    },
+    "codex-run": {
+      "at": "2026-09-29T12:53:45.809510+00:00",
+      "mode": "codex-run",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "mode": "run",
+          "provider": "agenticdriver-rc-70fb61c045-codex",
+          "model": "gpt-6-luna",
+          "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+          "runId": "badc839b-ea5d-48e2-8bda-bd47ffe119a6",
+          "usage": {
+            "inputTokens": 6090,
+            "outputTokens": 303,
+            "cachedInputTokens": 0,
+            "reasoningTokens": 0
+          },
+          "events": {
+            "run.started": 1,
+            "step.started": 1,
+            "run.progress": 6,
+            "text.delta": 1,
+            "usage.reported": 1,
+            "run.completed": 1
+          },
+          "responseSha256": "401f265fed82d9d97340ededb01c5a3ab970f59262ebfb1e4b63d057b0346524"
+        }
+      ],
+      "success": true
+    },
+    "codex-cancel": {
+      "at": "2026-09-29T12:55:58.182234+00:00",
+      "mode": "codex-cancel",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "mode": "cancel",
+          "provider": "agenticdriver-rc-70fb61c045-codex",
+          "model": "gpt-6-luna",
+          "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+          "runId": "49f71d58-1d79-4b83-a4ee-5b2bd0bd45b3",
+          "events": {
+            "run.started": 1,
+            "step.started": 1,
+            "run.progress": 1
+          },
+          "cancelledAfterProgress": true
+        }
+      ],
+      "success": true
+    },
+    "restart": {
+      "at": "2026-09-29T12:56:30.185223+00:00",
+      "mode": "restart",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "kind": "codex",
+          "catalog": {
+            "mode": "catalog",
+            "provider": "agenticdriver-rc-70fb61c045-codex",
+            "model": "gpt-6-luna",
+            "runtime": {
+              "name": "Codex CLI",
+              "version": "0.157.0"
+            },
+            "account": {
+              "status": "signed-in",
+              "subscription": "pro",
+              "hasIdentity": true
+            },
+            "reportedModels": [
+              "gpt-6-astra",
+              "gpt-6-sol",
+              "gpt-6-luna",
+              "gpt-reserve",
+              "gpt-5.6-sol",
+              "gpt-5.6-terra",
+              "gpt-5.6-luna",
+              "gpt-5.5",
+              "codex-auto-review"
+            ]
+          },
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-codex",
+            "model": "gpt-6-luna",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        },
+        {
+          "kind": "claude",
+          "catalog": {
+            "mode": "catalog",
+            "provider": "agenticdriver-rc-70fb61c045-claude",
+            "model": "claude-haiku-4-5-20251001",
+            "runtime": {
+              "name": "Claude Code",
+              "version": "2.1.282"
+            },
+            "account": {
+              "status": "signed-in",
+              "subscription": "pro",
+              "hasIdentity": true
+            },
+            "reportedModels": [
+              "default",
+              "claude-opus-5-5",
+              "opus",
+              "claude-fable-5-1",
+              "haiku",
+              "claude-haiku-4-5-20251001",
+              "sonnet",
+              "claude-sonnet-5",
+              "claude-opus-5",
+              "claude-fable-5",
+              "claude-opus-4-8",
+              "claude-opus-4-7",
+              "claude-opus-4-6",
+              "claude-sonnet-4-6"
+            ]
+          },
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-claude",
+            "model": "claude-haiku-4-5-20251001",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        }
+      ],
+      "success": true
+    },
+    "claude-catalog": {
+      "at": "2026-09-29T15:11:24.903781+00:00",
+      "mode": "claude-catalog",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "mode": "catalog",
+          "provider": "agenticdriver-rc-70fb61c045-claude",
+          "model": "claude-haiku-4-5-20251001",
+          "runtime": {
+            "name": "Claude Code",
+            "version": "2.1.282"
+          },
+          "account": {
+            "status": "signed-in",
+            "subscription": "pro",
+            "hasIdentity": true
+          },
+          "reportedModels": [
+            "default",
+            "claude-opus-5-5",
+            "opus",
+            "claude-fable-5-1",
+            "haiku",
+            "claude-haiku-4-5-20251001",
+            "sonnet",
+            "claude-sonnet-5",
+            "claude-opus-5",
+            "claude-fable-5",
+            "claude-opus-4-8",
+            "claude-opus-4-7",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6"
+          ]
+        }
+      ],
+      "success": true
+    },
+    "claude-run": {
+      "at": "2026-09-29T15:12:22.208579+00:00",
+      "mode": "claude-run",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "mode": "run",
+          "provider": "agenticdriver-rc-70fb61c045-claude",
+          "model": "claude-haiku-4-5-20251001",
+          "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+          "runId": "685d8707-7cd0-44b9-a74a-c7c9720a72bb",
+          "usage": {
+            "inputTokens": 3711,
+            "outputTokens": 669,
+            "cachedInputTokens": 0,
+            "apiEquivalentCostUsd": 0.007056
+          },
+          "events": {
+            "run.started": 1,
+            "step.started": 1,
+            "run.progress": 2,
+            "text.delta": 217,
+            "usage.reported": 1,
+            "run.completed": 1
+          },
+          "responseSha256": "6c586f6f086992eb683722690e1959e7cc628a7e6ccb13bc8ce58c08db17b126"
+        }
+      ],
+      "success": true,
+      "editorialReview": {
+        "reviewed": true,
+        "acceptedAsApplicationArtifact": false,
+        "notes": [
+          "The response recommends host failover and configuration export/import beyond the supplied facts. These are not supported SDK features or acceptance evidence.",
+          "The live request qualifies selected-account execution inside the isolated container; an application must review content separately.",
+          "The original response is preserved; no generation repair or substitute response was used."
+        ]
+      }
+    },
+    "claude-cancel": {
+      "at": "2026-09-29T15:13:16.140266+00:00",
+      "mode": "claude-cancel",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "mode": "cancel",
+          "provider": "agenticdriver-rc-70fb61c045-claude",
+          "model": "claude-haiku-4-5-20251001",
+          "promptSha256": "7b8c12d28c6ff83a10b551af18b073a70d5e8b1d21105d59fc6be44f8b6266df",
+          "runId": "7e4b1048-6ff4-40fe-ba35-9e0079636adf",
+          "events": {
+            "run.started": 1,
+            "step.started": 1,
+            "run.progress": 1
+          },
+          "cancelledAfterProgress": true
+        }
+      ],
+      "success": true
+    },
+    "stop": {
+      "at": "2026-09-29T15:13:54.698781+00:00",
+      "mode": "stop",
+      "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+      "accounts": [
+        {
+          "kind": "codex",
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-codex",
+            "model": "gpt-6-luna",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        },
+        {
+          "kind": "claude",
+          "probe": {
+            "mode": "probe",
+            "provider": "agenticdriver-rc-70fb61c045-claude",
+            "model": "claude-haiku-4-5-20251001",
+            "temporaryInvocationDirectories": [],
+            "nativeProcessesRemaining": 0,
+            "nonRoot": true,
+            "readOnlyRoot": true,
+            "noNewPrivileges": true,
+            "noCapabilities": true,
+            "defaultSeccomp": true,
+            "siblingAccountAbsent": true
+          }
+        }
+      ],
+      "success": true
+    }
+  },
+  "stoppedOnlyOwnedAccountLab": true,
+  "retainedNativeProfilesAndAccountVolumes": true,
+  "artifactFilesVerified": 91,
+  "claimedPlatform": "Linux x64",
+  "inferenceProviders": [
+    "Codex 0.157.0 / gpt-6-luna / medium",
+    "Claude Code 2.1.282 / claude-haiku-4-5-20251001"
+  ],
+  "limits": [
+    "Account-native authentication and live model execution are distinct from catalog discovery.",
+    "Claude checklist content was not accepted as an application artifact; unsupported suggestions are retained as a quality limit.",
+    "Container isolation assumes a trusted execution-host and Docker administrator."
+  ]
+}

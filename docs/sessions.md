@@ -95,8 +95,9 @@ Choose a mode explicitly:
 
 Discovery advertises `historyContinuation` and `nativeContinuation` separately.
 The OpenAI Responses, Anthropic and Gemini API adapters implement native state
-replay through their existing message contracts. Fixtures verify preservation
-and non-disclosure; live model/account certification remains separate. Current
+replay through their existing message contracts. Earlier simulated preservation
+checks are historical evidence; those harnesses were removed. Live continuation
+must be qualified against the selected account before use. Current
 CLI adapters and OpenAI-compatible/xAI adapters advertise only history mode;
 they do not silently resume a native CLI session or switch billing modes.
 Unsupported modes return `UNSUPPORTED_CONTINUATION`.

@@ -9,33 +9,34 @@ AgenticDriver is an **SDK**. Applications own their data, workflows, tools, user
 interface, and approval decisions. The SDK owns provider execution, the API tool
 loop, normalized events, cancellation, transport, and usage reporting.
 
-**Version 0.1.0 is published on npm, crates.io and the public Go module proxy.**
-The Python wheel is available from the [GitHub release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.1.0);
-PyPI organization approval is still pending. The opt-in **`0.2.0-alpha.6` preview**
-removes mock providers, fake connections, canned responses and fake embeddings.
-Fresh desktop installations start empty and guide you through connecting a real
-native session or API account. The desktop companion, four-language provider
-components, remote management, SSH routes, provider icons and masked account
-details remain included. npm releases use trusted publishing without per-release
-browser approval. See [alpha adoption](docs/alpha.md) and the
-[release inventory](docs/releases.md) for channel availability, exact versions
-and the required host/client upgrade sequence.
-[Real Prometheus checks](docs/validation/real-providers-alpha6-2026-09-28.md)
-record the selected Codex/Luna and Claude/Haiku accounts and their limits.
+**The opt-in `0.2.0-rc.1` release candidate is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.1).**
+All three applications pin the RC and have real workflow acceptance records.
+The [RC gate](docs/release-candidate.md) links the account, app and package
+evidence. Stable npm `latest` remains **0.1.0**. Python uses reviewed GitHub
+archives while approval of the selected PyPI organization remains pending.
 
-The **0.2.0-rc.1** source adds optional real local embeddings, persistent scoped
-retrieval and citation-ID helpers in all four languages. [The RC gate](docs/release-candidate.md)
-records current artifact/app qualification; check [publication status](docs/releases.md)
-before using the RC coordinates in the quickstart. Stable latest stays 0.1.0.
+The RC includes optional real local embeddings, persistent scoped retrieval and
+citation-ID helpers in all four languages, the Linux desktop companion, shared
+provider components, remote management, SSH routes, provider icons and masked
+account details. Fresh hosts start empty and connect actual accounts. npm uses
+trusted publishing without per-release browser approval. Follow
+[RC adoption](docs/rc.md) for exact pins and host/client upgrade order. Real
+qualification is specific to the recorded accounts, models and Linux routes;
+other providers and platforms need their own checks.
 
 ## Local desktop companion
 
 The [desktop preview](docs/desktop.md) manages providers, Usagestat usage,
 application connections and local/remote hosts in a native window. Linux x64
 builds include the SDK runtime. See its setup and lifecycle guide and
-[alpha downloads](docs/alpha.md); registry SDK 0.1.0 predates it.
+[RC downloads](docs/rc.md); registry SDK 0.1.0 predates it.
 
-## What works
+## Implemented capabilities
+
+Implementation availability and live qualification are separate. Consult the
+[compatibility matrix](docs/compatibility.md) and [release evidence](docs/release-candidate.md)
+for the exact provider, model, tool mode and operating system exercised.
 
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
 - A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent endpoint adapter example.

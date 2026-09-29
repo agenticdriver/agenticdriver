@@ -1,0 +1,68 @@
+{
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "ciRun": 36569610094,
+  "sha256": "ccdc038db9a079ce3b813afd0567c33d551eaa10e8d96f42b79deeb75654c50b",
+  "changedSinceD2": [
+    "node_modules/@agenticdriver/sdk/dist/providers/claude-cli-errors.js",
+    "node_modules/@agenticdriver/sdk/dist/providers/claude-cli-errors.js.map",
+    "node_modules/@agenticdriver/sdk/dist/providers/local-cli.js",
+    "node_modules/@agenticdriver/sdk/dist/providers/local-cli.js.map",
+    "node_modules/@agenticdriver/sdk/docs/providers.md",
+    "node_modules/@agenticdriver/sdk/docs/release-candidate.md",
+    "node_modules/@agenticdriver/sdk/docs/validation/claude-limit-2026-09-29.md"
+  ],
+  "rendererWorkerAndCodexUnchanged": true,
+  "changedFilesReviewed": true,
+  "originalSuccessfulLocalRun": "73035aa7-cd28-4ee9-9818-9d5d3659d6c6",
+  "localProvider": "rc-local-codex",
+  "localModel": "gpt-6-luna",
+  "localReasoning": "medium",
+  "checks": {
+    "freshNativeBoot": {
+      "profileCreated": true,
+      "configuredProviderCount": 0,
+      "freshRemoteHostCount": 0,
+      "nativeWindowProcessStarted": true,
+      "interactionReviewedInT3PackagedRenderer": true
+    },
+    "savedRemoteHostSurvivesUpgrade": true,
+    "remoteProviderNameRestored": true,
+    "narrowProviderCardWidth": 205,
+    "firstToggleRight": 227,
+    "narrowPanelRight": 359.4,
+    "accountHiddenByDefault": true,
+    "localCompanionLabel": true,
+    "wideViewport": [
+      1920,
+      1080
+    ],
+    "narrowViewport": [
+      390,
+      844
+    ]
+  },
+  "userLocalInstallation": {
+    "version": "0.2.0-rc.1-aae825e35d24",
+    "previousRuntimeRetained": true,
+    "profileUnchangedByInstaller": true,
+    "profileFileCount": 3
+  },
+  "userLocalBoot": {
+    "workerOwnsExistingUserProfile": true,
+    "sandboxNotDisabled": true,
+    "inferenceRequests": 0,
+    "fullNativeInteractionClaimed": false,
+    "providerCount": 0,
+    "remoteHostCount": 0,
+    "pidAliveAtFollowup": true,
+    "workerAliveAtFollowup": true,
+    "firstAttempt": "Inherited T3 XDG_CONFIG_HOME selected a separate profile; owned process was stopped, then restarted with the existing normal user profile explicitly.",
+    "nativeStillRunningAfterAccountWait": true
+  },
+  "limits": [
+    "Interactive acceptance used the exact packaged renderer and worker through the private T3 preview bridge; native Electron boot was checked separately.",
+    "The desktop UI, worker, native runtime and Codex implementation are unchanged by the final Claude quota correction.",
+    "No macOS/Windows or full native interaction qualification.",
+    "Usage UI reads the existing Usagestat backend; this receipt does not establish run ingestion/account binding."
+  ]
+}

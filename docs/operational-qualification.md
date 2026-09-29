@@ -19,3 +19,10 @@ credential and shutdown operations have separate bounded control-plane lifetimes
 requests, catalog refresh during execution, pairing/revocation and remote settings.
 It does not qualify container isolation, RAG/embedding accounts, all catalog models,
 all operating systems or complete consumer application workflows.
+
+The later [RC qualification](release-candidate.md) adds actual local embedding
+and retrieval checks, dedicated Linux account-container checks, an integrated
+boundary review and app-owned acceptance. Read each receipt's immutable source,
+selected model and limits; earlier evidence is carried forward only when the
+relevant implementation is verified unchanged. These bounded checks are not a
+long-duration availability or production-capacity guarantee.

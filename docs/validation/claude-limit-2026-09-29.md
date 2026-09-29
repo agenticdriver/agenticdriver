@@ -27,5 +27,22 @@ are not copied into it. Provider credentials stayed on Prometheus.
 Parser checks cover these observed protocol diagnostics and distinguish ordinary
 assistant text, nonterminal warnings and unknown failures. They substitute no
 provider or model. This receipt validates the real failure path; it does not
-claim successful generation while the account is limited. Final successful
-Claude and consumer acceptance remain part of the RC gate after recovery.
+claim successful generation while the account is limited. The post-reset check
+below separately establishes successful generation; consumer acceptance remains
+an independent RC gate.
+
+## Observed recovery
+
+After the reported reset, metadata was refreshed at `2026-09-29T15:11:01Z`.
+The same account identity, Pro subscription, CLI version and selected Haiku
+model were confirmed. One deliberately scheduled request through the installed
+Python RC client completed: `b9fa7219-8d60-4c09-8d48-d605dda33b86`.
+The concrete AgenticDriver brief produced three useful brand directions, each
+with a tagline, two hex colours and a visual motif, in 171 words.
+This is creative proposal material, not a guarantee of the suggested capabilities.
+
+Reported usage was 3,750 input / 967 output / 0 cached tokens, with API-equivalent
+cost $0.008585, not a subscription charge. There was no account/model/billing
+change or automatic retry. The original failures remain preserved. Successful
+generation after recovery and application acceptance are separate checks; the
+[RC record](release-0.2.0-rc.1.md) tracks the latter.

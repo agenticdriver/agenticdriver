@@ -1,0 +1,34 @@
+{
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "ciRun": 36569610094,
+  "publicationRuns": {
+    "npm": 36572172627,
+    "rust": 36572201867,
+    "go": 36572254660
+  },
+  "npmDistTags": {
+    "latest": "0.1.0",
+    "alpha": "0.2.0-alpha.6",
+    "rc": "0.2.0-rc.1"
+  },
+  "npmIntegrity": "sha512-m4SWXDdP1vGxUAr2DXhtYU0BAXI344RmbF3O/ZDHAqxy3Aml09CI9YN4cAmiC1M/pzYWvsSJnnH1npTmCJpYow==",
+  "npmExactBytesVerified": true,
+  "npmAttestations": {
+    "url": "https://registry.npmjs.org/-/npm/v1/attestations/@agenticdriver%2fsdk@0.2.0-rc.1",
+    "provenance": {
+      "predicateType": "https://slsa.dev/provenance/v1"
+    }
+  },
+  "npmSignatureCount": 2,
+  "freshRegistryInstallAndCompile": {
+    "npm": true,
+    "rust": true,
+    "go": true,
+    "pythonWheelAndSdist": "exact GitHub candidate artifacts; PyPI organization pending"
+  },
+  "npmSignaturesVerified": {
+    "packages": 7,
+    "attestations": 2,
+    "sameSourceCommit": true
+  }
+}

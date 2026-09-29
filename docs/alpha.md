@@ -1,5 +1,8 @@
 # 0.2.0-alpha.6 application preview
 
+This page preserves the alpha.6 coordinates. New RC adoption is documented in
+[0.2.0-rc.1](rc.md); consult [release status](releases.md) for current availability.
+
 Alpha.6 removes mock providers, fake connections, the fake embedding adapter,
 canned example outputs and simulated provider acceptance harnesses. New desktop
 profiles start empty. CLI setup requires an explicit provider. Existing real
@@ -102,7 +105,8 @@ screen reads its configured backend; it does not create another usage database.
 
 ## Release channel checks
 
-`release/config.json` selects `alpha`. Release tooling accepts canonical
+The alpha.6 manifest selects `alpha`; current RC source selects `rc` in
+`release/config.json`. Release tooling accepts canonical
 `X.Y.Z-alpha.N`, `-beta.N`, `-rc.N` or stable versions, with positive preview
 numbers; Python uses `aN`, `bN` or `rcN`. It rejects mixed channels, malformed
 versions and an npm publication tag that would promote an alpha to `latest`.

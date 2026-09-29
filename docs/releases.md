@@ -1,9 +1,14 @@
 # Release candidates and publication
 
-**0.2.0-rc.1 is in final artifact qualification and is not yet published.**
-The [RC gate](release-candidate.md) records real retrieval, Linux account isolation,
-security and application evidence. Use published alpha.6 until final coordinates
-and checksums are recorded here. Stable npm latest remains 0.1.0.
+**0.2.0-rc.1 is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.1).**
+Fresh public installations, exact artifact hashes and npm's same-source provenance
+passed. All three applications pin the RC and completed real workflow acceptance.
+The [publication record](validation/release-0.2.0-rc.1.md) preserves real retrieval,
+Linux account isolation, security, desktop and application evidence with their
+limits. [RC adoption](rc.md) provides exact coordinates and host upgrade order.
+Python **0.2.0rc1** is a GitHub wheel/sdist while the PyPI organization awaits
+approval. Stable npm `latest` remains **0.1.0** and `alpha` remains **0.2.0-alpha.6**.
 
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy**,
 with wire protocol 1.0. PyPI publication is waiting for approval of the selected

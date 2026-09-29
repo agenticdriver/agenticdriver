@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0-rc.1",
+  "source": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "databaseLogicalSha256": "1e4018afb7998856a594980fad46c841bbb92857c1e8538c3db54113ea73ea40",
+  "rows": {
+    "ad_vector_indexes": 1,
+    "ad_vector_documents": 3,
+    "ad_vector_chunks": 201
+  },
+  "stateAndPermissionsPreserved": true,
+  "allPackageFilesMatch": true,
+  "embeddingRuntime": "4.3.0"
+}

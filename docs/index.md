@@ -21,19 +21,21 @@ features:
     details: Index PDF, Markdown and email evidence. Scope retrieval to authorized sources and keep source revisions and citation locations with the answer.
     link: /retrieval
   - title: Keep application control
-    details: Use Better Auth with AuthYard, explicit tool approvals and your existing Usagestat backend. Apps own identities, workflows and accepted changes.
+    details: Keep your application's authentication, explicit tool approvals and existing Usagestat backend. Apps own identities, workflows and accepted changes.
     link: /authentication
 ---
 
 ## Build with a tested foundation
 
-SDK 0.1.0 is available on npm, crates.io and the public Go module proxy. Python
-archives are available from the GitHub release while PyPI organization approval
-is pending. See the [release inventory](releases.md) for immutable artifacts and
-the distinction between published packages and newer development source.
-The selected local Codex route passed [live checks](validation/codex-2026-09-25.md);
-other provider and full application qualifications remain pending. Synthetic
-examples and container/client tests are labeled throughout these guides.
+The **0.2.0-rc.1** packages are published on npm, crates.io and the public Go
+module proxy. Follow [RC adoption](rc.md) for exact versions, host upgrades and
+connection setup. Stable npm `latest` remains **0.1.0**. Python uses reviewed
+archives while approval of the selected PyPI organization remains pending.
+The [release inventory](releases.md) records download availability; the
+[RC gate](release-candidate.md) separates real account checks, application
+acceptance and build verification. Fresh hosts start empty and connect actual
+provider accounts. Other models, providers and operating systems need their own
+qualification.
 
 There is no default run deadline or inactivity timeout. Applications can opt into
 an inactivity timeout that resets on real model or tool progress, and can cancel
@@ -50,4 +52,4 @@ The [three recipes](applications.md) use the same SDK and run from its installed
 package. Use public or permitted content and deliberately select a provider instance,
 account and model that your host is authorized to use.
 
-The [provider settings component](provider-panel.md) embeds provider/model management and guided connection setup in TypeScript, Python, Go and Rust applications. It is available in development source after 0.1.0.
+The [provider settings component](provider-panel.md) embeds provider/model management and guided connection setup in the four published RC language packages. The [Linux desktop companion](desktop.md) manages local and remote hosts, provider accounts, usage and application connections.

@@ -49,6 +49,7 @@ export default defineConfig({
         text: "Start building",
         items: [
           { text: "Install and connect", link: "/quickstart" },
+          { text: "Adopt the release candidate", link: "/rc" },
           { text: "JavaScript and TypeScript", link: "/javascript" },
           { text: "Three application recipes", link: "/applications" },
           { text: "Provider and account setup", link: "/providers" },
@@ -97,7 +98,10 @@ export default defineConfig({
           { text: "Architecture", link: "/architecture" },
           { text: "Security boundaries", link: "/security" },
           { text: "Application evaluations", link: "/evaluations" },
-          { text: "Operational qualification", link: "/operational-qualification" },
+          {
+            text: "Operational qualification",
+            link: "/operational-qualification",
+          },
           { text: "Protocol", link: "/protocol" },
           { text: "Compatibility", link: "/compatibility" },
           { text: "Migration notes", link: "/migrations" },
@@ -107,7 +111,7 @@ export default defineConfig({
     ],
     footer: {
       message:
-        "Working v0.1 SDK. Packaged fixtures are verified; live account certification and registry release are tracked separately.",
+        "AgenticDriver SDK. Published artifacts, real account checks and application acceptance are recorded separately.",
     },
   },
   markdown: {

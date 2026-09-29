@@ -1,0 +1,12 @@
+{
+  "securityBaseline": "a8c53a6",
+  "candidate": "726fd821a31d7c4462db36bfdf3884ab028f9b7a",
+  "changedExecutionFiles": [
+    "package/dist/provider-panel.js",
+    "package/dist/providers/claude-cli-errors.js",
+    "package/dist/providers/local-cli.js",
+    "package/dist/ui.js"
+  ],
+  "boundaryEnforcementModulesUnchanged": true,
+  "securityReceipts": "docs/validation/security-real-2026-09-29.md"
+}
