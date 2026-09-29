@@ -5,8 +5,8 @@ Prometheus. GitHub schedules jobs and retains logs/artifacts; Prometheus supplie
 compute. The labels are `self-hosted`, `linux`, `x64`, `prometheus-ci`. There is no
 hosted-runner fallback. The stack lives at `/var/docker/agenticdriver-ci`.
 
-The CI workflow schedules one job group at a time: desktop, Codex, Claude,
-deployment, the three runtime combinations, documentation and release candidate.
+The CI workflow schedules seven jobs in serial groups: desktop, the three runtime
+combinations, account deployment, documentation and release candidate.
 The runtime matrix has `max-parallel: 1`. This matches the single runner instead
 of leaving nine jobs waiting for assignment. In run `36323616397`, eight checks
 passed, but GitHub cancelled the last unassigned job after about twenty minutes
@@ -15,7 +15,7 @@ attempts.” The runner remained online and the private Docker daemon was health
 
 Group dependencies use `!cancelled()` so a completed test failure does not hide
 later diagnostics, while cancelling an obsolete workflow still stops its queue.
-All nine checks and the repository/ref guards remain in place. See
+The repository/ref guards remain in place. See
 [GitHub's job conditions](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows)
 and [matrix limits](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymax-parallel).
 
@@ -49,6 +49,15 @@ Runner memory is capped at 8 GiB, nested Docker at 4 GiB. Existing homelab servi
 are outside this Compose project.
 
 ## Storage maintenance
+
+Self-hosted jobs set `TMPDIR` to GitHub's job-owned `runner.temp` directory.
+Node, Python, Go and packaging subprocesses therefore put temporary archives and
+compiler work under the directory that the runner cleans before and after each
+job. Persistent language/tool caches keep their normal locations. A 2026-09-29
+inspection found several retired 416 MiB packaging archives and compiler trees
+in the SDK runner's persistent `/tmp` volume; private Docker cache pruning could
+not remove those files. They were removed while the runner was idle, without
+touching other projects, registration, native account profiles or application data.
 
 Each serial CI job runs `cache-maintenance.py` after checkout and before builds.
 It selects only the private loopback Docker daemon and its default builder. The

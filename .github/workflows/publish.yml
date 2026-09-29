@@ -93,6 +93,8 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (inputs.registry == 'python' || inputs.registry == 'rust')
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: ${{ inputs.registry }}
+    env:
+      TMPDIR: ${{ runner.temp }}
     permissions:
       contents: read
       actions: read
@@ -161,6 +163,8 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'go'
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: go
+    env:
+      TMPDIR: ${{ runner.temp }}
     permissions:
       contents: write
       actions: read
