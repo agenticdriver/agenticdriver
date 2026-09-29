@@ -2,13 +2,25 @@
 
 AgenticDriver uses Usagestat as an optional local or remote service dependency for usage storage, retention, forwarding, quotas and provider metadata.
 It does not fork its provider probes, credential discovery, or logo collection.
+Released native readback is supported by Usagestat **`v2.0.0-alpha.4`**
+(`bd5b7a162d7a3ddcf17995d3d20cb4b8cbd6d64b`). This release does not include
+the optional run-ingestion service described below. Development builds may report
+the same version, so a version string is not a capability handshake.
+
+**SDK 0.2.0-rc.1 limitation:** desktop readback uses the correct native routes,
+but `limits()` and `accountLimits()` in the published SDK call nonexistent
+`/v1/limits` routes. The source correction tracked in
+[#76](https://github.com/agenticdriver/agenticdriver/issues/76) uses native usage
+snapshots as described here; it requires a subsequent package release.
+
 The inspected Usagestat endpoints are:
 
-| API                 | SDK method                    | Purpose                                   |
-| ------------------- | ----------------------------- | ----------------------------------------- |
-| `GET /v1/providers` | `UsageStatClient.providers()` | Provider names, metadata, icon references |
-| `GET /v1/usage`     | `UsageStatClient.usage()`     | Account snapshots and display metrics     |
-| `GET /v1/limits`    | `UsageStatClient.limits()`    | Machine-readable quota resources          |
+| API                         | SDK method                        | Purpose                                         |
+| --------------------------- | --------------------------------- | ----------------------------------------------- |
+| `GET /v1/providers`         | `UsageStatClient.providers()`     | Provider names, metadata, icon references       |
+| `GET /v1/usage`             | `UsageStatClient.usage()`         | Account snapshots and display metrics           |
+| `GET /v1/usage`             | `UsageStatClient.limits()`        | Quota resources derived from snapshots          |
+| `GET /v1/usage/:instanceId` | `UsageStatClient.accountLimits()` | Quota resources for an explicitly bound account |
 
 ```ts
 import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
@@ -53,17 +65,34 @@ const quota = await accountQuotas.accountLimits({
 
 Derive that identity from the trusted host and authenticated session. No match
 fails with `QUOTA_UNBOUND` before any request. The client requests only the bound
-`GET /v1/limits/:instanceId` endpoint and returns that account's snapshot. Missing
+`GET /v1/usage/:instanceId` endpoint and returns that account's quota resources. Missing
 or errored snapshots fail with `QUOTA_UNAVAILABLE`; provider-level fallback is
 disabled. Duplicate bindings and assigning one upstream instance to different
 host/account identities are rejected. The upstream connection is selected once
 for the client, with redirects disabled. Raw `limits()`/`usage()` are administrative
 reads of all accounts and should not be exposed directly to application users.
+The scoped native endpoint itself is still an administrative read, not an
+independently authenticated end-user API. The application server owns the trusted
+mapping and authorization; it must not accept identity fields from an untrusted
+request or infer a binding from the provider family.
 
-Usagestat's limits document currently identifies its schema as
-`crossusage.limits.v1`; the client preserves that actual upstream value.
+Usagestat has no separate limits endpoint. The client derives quota resources from
+`/v1/usage` snapshots with `limitsFromSnapshots()` (schema
+`agenticdriver.usagestat-limits.v1`, replacing the never-served upstream
+`crossusage.limits.v1` literal): each progress line becomes a resource keyed by
+its slugged label (`Session` → `session`, repeats get `-2`, `-3`), with `used`,
+`limit`, `remaining`, `utilization`, `unit` (`percent`, `dollars`, `count` or
+`count:<suffix>`), `resetsAt` and the original `label`. Failed providers (an error
+source, any non-`ready` state or an `Error` badge) are listed in `errors`. Progress lines
+with negative/nonfinite values, an unknown format or malformed reset time are omitted, so admission treats
+them as unknown.
 `fetchedAt`, `source`, and `errors` must be considered before treating a quota
 snapshot as current. Quotas and per-run token metering are different observations.
+Receiving a cached response does not refresh `fetchedAt`. Resource labels are
+provider-defined and may change; inspect the returned keys rather than assuming
+every account reports `session` and `weekly`. Freshness is the caller's explicit
+`maxAgeMs` policy; the separate T3 compatibility adapter's TTL is not a native
+API guarantee.
 
 ## Provider icons
 
@@ -81,12 +110,18 @@ The existing brand assets remain owned by Usagestat and their respective licenso
 
 ## Per-run usage
 
-Usagestat now implements an optional native run-ingestion contract. Enable it with
+Usagestat's development branch implements an optional native run-ingestion
+contract (AD-030, commit `e3330d6f454d6b67f6b58247aeff78e84c3873d0`). **It is not
+in a published backend release or the inspected live `main`.** Enable it with
 `usagestatd --run-usage-config /absolute/path/run-usage.json`; add `--no-poll` for
 an ingestion-only service. The backend configuration, account bindings and
 forwarding controls are documented in Usagestat's `docs/run-ingestion.md`. This
-requires the backend implementation containing AD-030; older installations
-without the route fail explicitly. No backend release has been published by this work.
+requires that backend implementation; installations without the route fail
+explicitly. Qualify a subsequent tested backend release before claiming released
+ingestion compatibility. Always call `ingestionProtocol()` to verify
+`usagestat.run-ingestion.v1` accepting `agenticdriver.usage.v2`; these are separate
+contract versions, not a requirement for a `/v2` HTTP API. The native ingestion
+daemon requires a loopback listener and its separate configured bearer credential.
 
 Records now carry `agenticdriver.usage.v2`, stable host and optional account
 identity, authenticated subject, timestamps, source, coverage, known subtotals,
@@ -164,7 +199,25 @@ integration can be exercised with the actual binary:
 npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
 ```
 
-That check starts a private actual Usagestat instance with polling disabled and
-verifies its empty read contract. It does not invent accounts or run measurements.
+That check copies the actual daemon into a temporary profile with no provider
+plugins and verifies its empty read contract. No provider can be polled. It works
+with released alpha.4, which has no `--no-poll` flag, as well as the development
+daemon. It does not invent accounts or run measurements.
 To verify usage ingestion, run meaningful prompts on an explicitly configured real
 provider and reconcile the host's actual usage records with the existing backend.
+
+The quota correction has an opt-in read-only check against existing real accounts:
+
+```sh
+USAGESTAT_URL=http://127.0.0.1:6736 \
+USAGESTAT_BINDINGS_FILE=/private/path/quota-bindings.json \
+node --import tsx --test tests/usagestat-quota.test.ts
+```
+
+The private file is an array of explicit `UsageStatAccountBinding` objects like
+the mapping above. The check keeps them in memory, issues only native usage
+reads, verifies real ready/failed snapshots and admission, and rejects unbound
+subjects without a request. It does not provision connections, install production
+account mappings or invoke a model. An optional `USAGESTAT_CHECK_REPORT` path
+records sanitized counts without account labels or credentials. CI without an
+explicit real endpoint skips this live check; a skip is not account qualification.

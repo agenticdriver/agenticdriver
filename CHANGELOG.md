@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Corrected Usagestat quota reads to derive resources from native `/v1/usage` snapshots. Published SDK 0.2.0-rc.1 calls `/v1/limits`, which the backend never served; desktop usage display is unaffected. Account bindings, freshness and failure handling remain explicit. The derived schema is `agenticdriver.usagestat-limits.v1`, replacing the never-served `crossusage.limits.v1` literal.
+- Clarified that Usagestat alpha.4 supports native readback while AD-030 run ingestion is unreleased and requires its separate protocol handshake and qualification.
+
 ## 0.2.0-rc.1 — 2026-09-29
 
 - Added optional pinned CPU embeddings with real PDF, Markdown and email retrieval, persistent SQLite vectors, bounded worker concurrency/cancellation and tokenizer-reported usage. The model runtime is an opt-in dependency; ordinary SDK installs stay lightweight.

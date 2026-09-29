@@ -160,8 +160,8 @@ const driver = new AgenticDriver({
 });
 ```
 
-Before each model step, the helper reads the existing scoped `/v1/limits/{instance}`
-API. Stale/future timestamps, elapsed reset windows, wrong units, missing remaining
+Before each model step, the helper reads the scoped `/v1/usage/{instance}`
+snapshot and derives its quota resources. Stale/future timestamps, elapsed reset windows, wrong units, missing remaining
 values, invalid snapshots and backend failures produce an unknown decision.
 The configured `unknown` policy determines whether that observation allows work.
 Exhausted quota denies admission. Missing account authorization always fails closed.

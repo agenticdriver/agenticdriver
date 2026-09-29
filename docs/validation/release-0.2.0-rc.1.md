@@ -12,6 +12,13 @@ acceptance records. A signed-in account and reported catalog are not counted as
 successful generation. The [public prerelease](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.1)
 contains the exact SDK archives and Linux desktop.
 
+**Post-release finding, 2026-09-29:** optional SDK quota admission calls
+`/v1/limits`, which Usagestat never served. Desktop `/v1/usage` readback and the
+recorded generation/consumer checks remain valid; they did not qualify this quota
+adapter. [#76](https://github.com/agenticdriver/agenticdriver/issues/76) tracks the
+source correction to native usage snapshots. The published RC.1 artifacts retain
+the defect until a subsequent release; see [the current integration contract](../usagestat.md).
+
 ## Exact artifacts and publication
 
 All seven [source checks](https://github.com/agenticdriver/agenticdriver/actions/runs/36569610094)

@@ -14,7 +14,7 @@ import {
 import {
   providerSchema,
   snapshotSchema,
-  limitsSchema,
+  limitsFromSnapshots,
 } from "./usagestat-types.js";
 
 const accountBindingSchema = AccountUsageIdentitySchema.omit({ subject: true })
@@ -48,6 +48,7 @@ export type {
   UsageStatQuotaIdentity,
   UsageStatAccountQuota,
 } from "./usagestat-types.js";
+export { limitsFromSnapshots, resourceSlug } from "./usagestat-types.js";
 
 const receiptSchema = z.object({
   schema: z.literal("usagestat.run-receipt.v1"),
@@ -200,8 +201,9 @@ export class UsageStatClient {
   usage() {
     return this.get("v1/usage", z.array(snapshotSchema));
   }
-  limits() {
-    return this.get("v1/limits", limitsSchema);
+  /** Quota resources for every account, derived from `/v1/usage`. Administrative read. */
+  async limits() {
+    return limitsFromSnapshots(await this.usage());
   }
   private async metering<T>(
     path: string,
@@ -366,11 +368,14 @@ export class UsageStatClient {
         "QUOTA_UNBOUND",
         "No authorized quota source is bound to this execution account and subject.",
       );
-    const document = await this.get(
-      `v1/limits/${encodeURIComponent(binding.instanceId)}`,
-      limitsSchema,
-      signal,
-    );
+    // Only the bound instance is requested; no provider-level fallback.
+    const document = limitsFromSnapshots([
+      await this.get(
+        `v1/usage/${encodeURIComponent(binding.instanceId)}`,
+        snapshotSchema,
+        signal,
+      ),
+    ]);
     const snapshot = Object.hasOwn(document.providers, binding.instanceId)
       ? document.providers[binding.instanceId]
       : undefined;

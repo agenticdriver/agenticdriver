@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -12,23 +12,28 @@ const binary = process.argv[2];
 if (!binary)
   throw new Error("Supply the existing native usagestatd binary path.");
 const root = await mkdtemp(join(tmpdir(), "desktop-usagestat-"));
+// Isolate executable-relative and cwd-relative provider discovery as well as
+// data/config. Released alpha.4 has no --no-poll flag; with no installed plugin
+// files this actual daemon serves an empty profile without starting a provider.
+const isolatedBinary = join(
+  root,
+  process.platform === "win32" ? "usagestatd.exe" : "usagestatd",
+);
+await cp(resolve(binary), isolatedBinary);
 const reservation = createServer();
 reservation.listen(0, "127.0.0.1");
 await once(reservation, "listening");
 const port = reservation.address().port;
 await new Promise((resolve) => reservation.close(resolve));
-const daemon = spawn(
-  resolve(binary),
-  ["--no-poll", "--bind", `127.0.0.1:${port}`],
-  {
-    env: {
-      PATH: process.env.PATH,
-      USAGESTAT_CONFIG_DIR: join(root, "usage-config"),
-      USAGESTAT_DATA_DIR: join(root, "usage-data"),
-    },
-    stdio: "ignore",
+const daemon = spawn(isolatedBinary, ["--bind", `127.0.0.1:${port}`], {
+  cwd: root,
+  env: {
+    PATH: process.env.PATH,
+    USAGESTAT_CONFIG_DIR: join(root, "usage-config"),
+    USAGESTAT_DATA_DIR: join(root, "usage-data"),
   },
-);
+  stdio: "ignore",
+});
 let controller;
 try {
   let ready = false;
