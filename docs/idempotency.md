@@ -35,8 +35,9 @@ files use 0600 on POSIX systems. Existing directories with group/other access ar
 rejected. On Windows, the host must provision appropriate directory ACLs; this
 API does not provide POSIX directory-flush guarantees. Shared network filesystems,
 disk/controller failures and distributed databases need a separately validated
-store implementation; the included crash test verifies process termination and
-restart on a local filesystem.
+store implementation. Current [real-account recovery evidence](validation/security-real-2026-09-29.md)
+checks a local filesystem across host restart, including an unacknowledged actual
+application read; it does not simulate power loss or storage hardware failure.
 
 `MemoryOperationStore` provides the same claim behavior within that store object's
 lifetime. Its default limit is 1000 accepted keys. It is useful for embedded or

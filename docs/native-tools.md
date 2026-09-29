@@ -65,11 +65,13 @@ separate session/group can escape this mechanism. Windows process-tree cleanup
 and isolation between mutually untrusted accounts remain under AD-012; use
 separate restricted OS users/containers for that trust boundary.
 
-The synthetic [process cleanup regressions](../tests/cli-process.test.ts) cover
+The process-only [cleanup regressions](../tests/cli-process.test.ts) cover
 normal/error parent exit with inherited pipes, explicit cancellation of a
 SIGTERM-resistant group, output/parser failure and throwing exit callbacks.
 They do not certify arbitrary native plugins or hostile-code containment.
 
-The [offline native report](validation/codex-application-tools-2026-09-26.md)
-records verified behavior. Capability availability does not qualify every model
+The [current real-account report](validation/security-real-2026-09-29.md) records
+actual proposals, approvals, application reads, denial, uncertainty and restart
+recovery. The earlier [offline report](validation/codex-application-tools-2026-09-26.md)
+is retained as historical protocol evidence. Capability availability does not qualify every model
 or account, and no fallback is introduced.

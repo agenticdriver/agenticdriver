@@ -1,10 +1,11 @@
 # Execution and authentication trust boundaries
 
-This is the AD-041 review of the current SDK, optional Better Auth/AuthYard integration
-and self-hosted API deployment. It records implemented controls, tests and
-remaining assumptions. **AD-041 remains open pending AD-012's native process
-isolation qualification.** Passing local tests is not an independent audit,
-live-provider certification or proof of an unselected production deployment.
+This is the integrated Linux RC review for [AD-041 / #35](https://github.com/agenticdriver/agenticdriver/issues/35).
+It records authority boundaries, current real-account evidence and residual
+assumptions. The selected Codex/Claude routes have actual execution, account
+separation and recovery evidence; final immutable RC and application acceptance
+remain [release gates](release-candidate.md). This is not an independent audit,
+proof for arbitrary plugins, or qualification of every provider/platform.
 
 ## Authority and ownership
 
@@ -24,27 +25,25 @@ endpoints, adapters, tool code, native binaries, resolvers and state storage.
 An extension is executable host code, not a sandboxed package. A compromised host
 account or plugin can access its process's secrets; API scopes do not isolate
 mutually untrusted OS users or native agents. Use separately qualified OS/container
-boundaries for those cases. The stock Linux deployment currently permits only
-configured API providers and explicit service clients.
+boundaries for those cases. The API deployment uses explicitly configured service clients; the separate
+[Linux account-container recipe](account-isolation.md) provides dedicated native
+account volumes and process namespaces.
 
-| Boundary             | Enforcement                                                                                                                                | Evidence                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Browser → host       | Exact origin allowlist; bearer still required; cookies do not authorize SDK work                                                           | `server.test.ts`, `security-boundaries.test.ts`                                  |
-| Client → host        | Verified TLS for remote listening; no credential-bearing base URLs or redirects                                                            | Four-client conformance, `network-faults.test.ts`, `security-boundaries.test.ts` |
-| Host → Better Auth   | Opaque active bearer; exact issuer/resource/client-user binding; expiry and current grants; bounded, uncached introspection                | `better-auth.test.ts`, real-package auth contract                                |
-| Device → application | Native device consent, same-user review and client binding; one-time device-code exchange; refresh rotation/reuse and revocation           | `integrations/better-auth/auth.test.mjs`                                         |
-| Request → execution  | Provider/model/tool scopes, admission revalidation and account identity configured on the host                                             | `scheduling.test.ts`, `better-auth.test.ts`, `security-boundaries.test.ts`       |
-| Approval → effect    | Subject/provider/run/tool/argument binding; separate approver/executor authority; no repeated accepted effect                              | `approvals.test.ts`, `application-tools.test.ts`                                 |
-| Tenant → state       | Sessions, operations, jobs and corpus access bind to current identity; replay reauthorizes evidence                                        | `sessions.test.ts`, `idempotency.test.ts`, `jobs.test.ts`, `retrieval.test.ts`   |
-| Document → model     | Explicit source revisions and authorized resolver leases; instructions remain untrusted data; no implicit tools or URL/file reads          | `context.test.ts`, `ingestion.test.ts`, `security-boundaries.test.ts`            |
-| Runtime → telemetry  | Stable host/account identity, bounded diagnostic fields, explicit host labels; provider bodies and untyped exceptions are redacted         | `usage.test.ts`, `diagnostics.test.ts`, `provider-extensions.test.ts`            |
-| Host → proxy/network | Raw host on namespace-local loopback; non-root/read-only containers, dropped capabilities, certificate checks and cancellation propagation | `scripts/test-deployment.py`                                                     |
+| Boundary                             | Current enforcement and evidence                                                                                                                                                                                                  |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser/client → host                | Exact origin allowlist, bearer required, strict UTF-8/body bounds and version negotiation. Actual HTTP checks: [security receipt](validation/security-real-2026-09-29.md).                                                        |
+| Transport → credentials              | HTTPS or explicit loopback through verified SSH, no credential-bearing base URLs or redirects. Four-client source review and actual [account HTTPS routes](validation/account-isolation-2026-09-29.md).                           |
+| Request → execution/management       | Independent grants; metadata cannot add authority. Actual negative requests and one-use pairing/revocation: [security receipt](validation/security-real-2026-09-29.md).                                                           |
+| Approval/ticket → effect             | Subject/provider/run/tool/argument binding, separate scopes and single-use decisions/results. Real native tool proposals and application reads: [security receipt](validation/security-real-2026-09-29.md).                       |
+| Tenant/document → retrieval          | App-owned namespace and source revisions, permission rechecks, exact citation IDs. Actual embeddings, PDF/Markdown/email, stale/deleted evidence and four clients: [retrieval receipt](validation/local-retrieval-2026-09-29.md). |
+| Restart/replay → effects             | Stored outcomes never issue another executable ticket. Real completed, denied and uncertain cancelled operations preserve their ledgers across restart: [security receipt](validation/security-real-2026-09-29.md).               |
+| Native account → other accounts/host | Dedicated Linux containers, private account volumes and process namespaces, read-only runtime, non-root, dropped capabilities, cancellation/shutdown checks: [account receipt](validation/account-isolation-2026-09-29.md).       |
+| Runtime → logs                       | Public failures are bounded/redacted; the four current SDK bearers were absent from inspected journal/usage/approval logs. Arbitrary extension/native logging remains operator-owned.                                             |
 
-Test paths above live in [`tests/`](../tests/), except the explicitly named
-integration/deployment scripts. The Better Auth and device-consent rows describe
-that optional integration, not a universal consumer requirement. Its native auth contract uses Better Auth and
-OAuth Provider 1.7.3, with the qualified AuthYard `@authplane/better-auth` 0.2.0
-artifact. Renamed or changed connector versions require their own qualification.
+Optional Better Auth/device integration tests and former simulated-provider suites
+are historical evidence. They are not substitutes for the current records above
+and do not impose that identity system on consumers. Changing an auth connector,
+platform, model or native runtime requires qualification of that selected route.
 
 ## Bearers, pairing and revocation
 
@@ -58,7 +57,7 @@ The optional OAuth device-pairing helper keeps verification URLs on the issuer's
 origin. Its auth HTTP calls omit
 cookies, reject redirects, bound response sizes and have an explicit short auth
 exchange timeout. The refresh helper rejects concurrent refresh attempts and
-does not retry an uncertain rotation. Real Better Auth tests verify a denied
+does not retry an uncertain rotation. The earlier optional Better Auth qualification checked a denied
 foreign origin/user/client, consumed device-code replay, scope intersections,
 revocation, reuse invalidation and service identities distinct from their owners.
 The separate [host invitation flow](connections.md) uses host-owned scoped grants
@@ -108,27 +107,22 @@ file permissions do not provide encryption at rest.
 
 ## Findings and test scope
 
-AD-041-001: the HTTP request reader previously used replacement decoding for
-invalid UTF-8. An authenticated malformed JSON byte string could return 200 and
-reach the model as altered text. It now uses fatal UTF-8 decoding and returns
-`INVALID_REQUEST` before inference. The regression reproduced the earlier 200
-and now asserts 400 with zero provider invocations. This was a request-integrity
-defect; the test did not establish an authorization bypass.
+The earlier AD-041-001 malformed UTF-8 defect was fixed with fatal decoding.
+The current actual-host check again returned `INVALID_REQUEST` before inference.
+No new release-blocking SDK defect was found in the exercised Linux scope.
+The security qualification corrected two harness assumptions, retained their
+failed receipts and recovered the original operations without repeating inference.
 
-The new combined checks also use real HTTP redirect peers to prove that client
-bearers, resource-server introspection credentials and device refresh tokens do
-not reach the redirect target. A Better Auth-authenticated host denies forged
-tenant metadata and another user's reference, never fetches a source metadata
-URL, rejects an unselected tool emitted after hostile document content, and
-records the configured canonical usage identity. Existing tests cover argument
-substitution, replay, revoked evidence and credential/error leakage.
+A real email assessment also exercised hostile embedded instructions. The selected
+model identified the attack and produced only a cited assessment. This single
+observed response is not a general prompt-injection defense. Retrieved text, source
+metadata and model output cannot grant access; applications must still authorize
+resources and review requested effects independently of model behavior.
 
-Current [package and pure contract checks](conformance.md) run without model
-substitutes. The former simulated suites described above are historical evidence;
-qualify actual scoped connections and deployment controls before production use.
-See [real Prometheus validation](validation/prometheus-real-2026-09-28.md) for the
-specific account/model and control-plane checks performed. That evidence does not
-qualify every native tool mode or operating system. The separate
-[Linux account-container checks](validation/account-isolation-2026-09-29.md)
-record actual native execution and account separation. The integrated review
-remains open until its remaining RC gates pass.
+The current [package and pure contract checks](conformance.md) contain no model
+substitutes. They check schema, parser, process and installation contracts separately
+from the live records above. Windows/macOS isolation, unselected providers/models,
+optional auth deployments and a hostile host/kernel remain outside this review.
+Protect the operator account, configuration, trusted parent directories and state
+backups; an attacker who can replace those files is already inside the host trust
+boundary. Connection revocation cannot undo previously accepted external effects.
