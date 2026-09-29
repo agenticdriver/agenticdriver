@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0-rc.1 — candidate
+
+- Added optional pinned CPU embeddings with real PDF, Markdown and email retrieval, persistent SQLite vectors, bounded worker concurrency/cancellation and tokenizer-reported usage. The model runtime is an opt-in dependency; ordinary SDK installs stay lightweight.
+- Added exact source-citation ID validation in TypeScript, Python, Go and Rust, and serializable Rust retrieval results. Missing or invented references are rejected without automatic generation repair.
+- Qualified dedicated Linux account containers using actual Codex and Claude subscriptions, with isolated account state, TLS, cancellation, shutdown and restart checks.
+- Recorded real native tool approval, executor scope, argument substitution, single-use pairing, revocation and uncertain-effect recovery checks. Historical simulated acceptance is explicitly separated from current evidence.
+- Kept temporary CI archives inside job cleanup on Prometheus. Fresh hosts remain empty; account/model selection, billing mode, existing application authentication and disabled default inactivity timeout are preserved.
+
+The RC targets Linux x64, Codex 0.157.0 / gpt-6-luna (medium), Claude Code 2.1.282 / claude-haiku-4-5-20251001, and all four clients. Other catalog entries remain discoverable and unqualified. Wire protocol is 1.0, Python version is 0.2.0rc1, and npm uses the separate rc tag. Final artifact/app qualification and publication status are tracked in [the RC gate](docs/release-candidate.md); PyPI organization approval remains pending.
+
 ## 0.2.0-alpha.6
 
 - Removed mock providers, offline setup options, fake embedding adapters and the simulated provider-conformance export.

@@ -1,7 +1,8 @@
 # Release candidate gate
 
 Tracking: [#71](https://github.com/agenticdriver/agenticdriver/issues/71).
-Target: **0.2.0-rc.1** (Python **0.2.0rc1**). Not yet qualified or published.
+Target: **0.2.0-rc.1** (Python **0.2.0rc1**). Candidate artifacts are being prepared;
+final artifact acceptance and publication are pending.
 
 The candidate targets the Linux x64 host and desktop, all four language clients,
 and explicitly selected Codex/Claude subscription accounts through local or
@@ -32,14 +33,26 @@ Removed simulated tests and historical completion counts cannot satisfy these
 gates. No default generation deadline, inactivity timeout or silent fallback is
 introduced. Consumer applications keep their existing authentication.
 
-## Current baseline
+## Completed development gates
 
-- Brandstorm: registry alpha.6, mounted Quickstorm, three persisted proposals,
-  explicit Codex/Luna; source 0920c543a2b375d47f897fa7124f1c812745ce81.
-- LitAgent: registry alpha.6, actual public-abstract Q&A/writing and support
-  review through Claude/Haiku; full-PDF retrieval and workflow recovery pending.
-- AI Workspace: registry alpha.6, actual adapter triage through Codex/Luna;
-  generation in the mail UI and accepted-draft flow remain application work.
+- Real embeddings, scoped persistent retrieval and four-client contracts: [#72](https://github.com/agenticdriver/agenticdriver/issues/72),
+  [actual model and document evidence](validation/local-retrieval-2026-09-29.md),
+  all seven Prometheus checks passed on source `a8c53a6`.
+- Linux account containers: [#68](https://github.com/agenticdriver/agenticdriver/issues/68),
+  [actual isolation/cancellation/recovery evidence](validation/account-isolation-2026-09-29.md).
+- Integrated Linux boundary review: [#35](https://github.com/agenticdriver/agenticdriver/issues/35),
+  [real approval, pairing, adversarial content and replay evidence](validation/security-real-2026-09-29.md).
+
+## Current consumer baseline
+
+All three still use registry alpha.6. These receipts qualify their application
+workflows; they must repeat relevant checks on the final immutable RC artifact.
+
+| Application  | Actual workflow evidence                                                                                                              | Application source                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Brandstorm   | Quickstorm proposals, source-grounded question, saved answer/citations, disabled-selection rejection, cancellation and reload         | `cf56d05f7aca776569aeb536eb5745ee441cd3a7` |
+| LitAgent     | Full public-paper context, Q&A, writing/support review, acceptance, cancellation/disconnect recovery and replay                       | App `docs/validation/driver-rc-consumer-2026-09-29.md`                              |
+| AI Workspace | Mounted selected-message assessment, reviewable saved reply draft, edit/reload/repeated acceptance, cancellation and service recovery | `7823515ab5a927bfccf25d92ec56953cc91c941a`                                          |
 
 The three existing app threads own their consumer changes and report immutable
 commits, selected account/model, run IDs/usage, UI checks and Prometheus receipts.

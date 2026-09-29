@@ -1,5 +1,10 @@
 # Release candidates and publication
 
+**0.2.0-rc.1 is in final artifact qualification and is not yet published.**
+The [RC gate](release-candidate.md) records real retrieval, Linux account isolation,
+security and application evidence. Use published alpha.6 until final coordinates
+and checksums are recorded here. Stable npm latest remains 0.1.0.
+
 **Version 0.1.0 is published on npm, crates.io and the public Go module proxy**,
 with wire protocol 1.0. PyPI publication is waiting for approval of the selected
 `agenticdriver` organization. The reviewed Python wheel and sdist remain usable
