@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-09-29T22:37:51.495Z",
+  "accounts": 5,
+  "snapshots": 6,
+  "ready": 2,
+  "unavailable": 3,
+  "failedWithCachedMetrics": 1,
+  "measuredResources": 3,
+  "allowed": 2,
+  "denied": 0,
+  "overCapRejected": 2,
+  "unknown": 4,
+  "unboundWithoutRequest": 5,
+  "modelCalls": 0,
+  "bindingsPersistedToHost": false,
+  "httpReads": 14
+}

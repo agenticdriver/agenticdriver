@@ -1,0 +1,222 @@
+{
+  "version": "0.2.0-rc.2",
+  "source": "91dc52292c627a6febed102a8198c56f35d3afc9",
+  "registryIntegrity": "sha512-LzXVqr2umXDChhJi2pb1doPSjD/YlpG3qsgTkM5M3PBtE/KLiABwFrdqpXdCzpCiQ3u2cBuxDY7QtagL3ppHgw==",
+  "allThreeAdopted": true,
+  "model": "gpt-6-luna",
+  "reasoning": "medium",
+  "authMode": "cli-session",
+  "applications": [
+    {
+      "name": "Brandstorm",
+      "key": "brandstorm",
+      "repo": "hashimkarim/brandstorm",
+      "source": "3dfc5e64b22dfae9f05db1d3be53169e8b1b6673",
+      "receiptCommit": "8797a18bf57eba3f912296b86dc6e65e008211a6",
+      "receiptPath": "docs/validation/agenticdriver-rc2-2026-09-30.md",
+      "ci": 36643612843,
+      "runId": "0983c734-4051-4429-97c8-1b493bc8231c",
+      "workflow": "Source question over selected public Mozilla excerpts; two source-linked priorities and explicit unknown prices/naming guidance.",
+      "checks": [
+        "exact registry pin/integrity",
+        "100 unit, 36 integration and 15 browser checks",
+        "mounted source question",
+        "reload and explicit selection retention",
+        "disabled execution denied before streaming",
+        "390x844 without horizontal overflow",
+        "automatic usage capture before explicit submission"
+      ],
+      "limits": [
+        "Single observed setup propagation issue; reproduction pending. SDK emitted model-selected, outer form stayed empty until a read-only panel snapshot and repeat selection. Brandstorm selection bridge is the first investigation target; first-click onboarding is not certified.",
+        "Question retained an existing naming suffix; model correctly identified it as unsupported.",
+        "No new invitation exchange, offline-host interruption, OS-keychain restart, retrieval or wider cancellation/security qualification."
+      ],
+      "ciUrl": "https://github.com/hashimkarim/brandstorm/actions/runs/36643612843",
+      "receiptUrl": "https://github.com/hashimkarim/brandstorm/blob/8797a18bf57eba3f912296b86dc6e65e008211a6/docs/validation/agenticdriver-rc2-2026-09-30.md",
+      "runnerReceipts": [
+        {
+          "id": 109661374292,
+          "name": "verify",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-brandstorm-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        }
+      ],
+      "reportedUsage": {
+        "inputTokens": 7877,
+        "outputTokens": 193,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "subject": "rc2-brandstorm",
+      "newModelCalls": 1,
+      "automaticCaptureVerified": true
+    },
+    {
+      "name": "LitAgent",
+      "key": "literature",
+      "repo": "hashimkarim/agentic-literature-review",
+      "source": "6bdbebd86c31afe24076c333bb364aa2a2db14a6",
+      "receiptCommit": "6bdbebd86c31afe24076c333bb364aa2a2db14a6",
+      "receiptPath": "docs/validation/driver-rc2-consumer-2026-09-30.md",
+      "ci": 36643470627,
+      "runId": "6f79f282-5a27-48bb-82fa-82176d55fc12",
+      "workflow": "Key findings from public Lost in the Middle reading notes; supported qualified finding remains a pending proposal.",
+      "checks": [
+        "exact registry pin/integrity",
+        "347 tests passed, 2 optional skips",
+        "typecheck/build/frozen install",
+        "mounted Settings and finding",
+        "disabled execution denied",
+        "backend restart retained workflow and selection",
+        "normal connection and disabled choices unchanged",
+        "automatic usage capture before explicit submission"
+      ],
+      "limits": [
+        "Reading notes, not a new full-PDF retrieval evaluation.",
+        "Proposal remains pending; confidence is not support certification.",
+        "Prior editorial and wider RC.1 checks remain historical."
+      ],
+      "ciUrl": "https://github.com/hashimkarim/agentic-literature-review/actions/runs/36643470627",
+      "receiptUrl": "https://github.com/hashimkarim/agentic-literature-review/blob/6bdbebd86c31afe24076c333bb364aa2a2db14a6/docs/validation/driver-rc2-consumer-2026-09-30.md",
+      "runnerReceipts": [
+        {
+          "id": 109660912261,
+          "name": "check",
+          "conclusion": "success",
+          "runner_id": 2,
+          "runner_name": "prometheus-literature-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        }
+      ],
+      "reportedUsage": {
+        "inputTokens": 6634,
+        "outputTokens": 156,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "subject": "rc2-literature",
+      "newModelCalls": 1,
+      "automaticCaptureVerified": true
+    },
+    {
+      "name": "AI Workspace",
+      "key": "workspace",
+      "repo": "hashimkarim/ai-workspace",
+      "source": "26f11db5e6cbfc68a500bf83c99b6a5fcedd8c7f",
+      "receiptCommit": "9172c7727c1b4cdb2d1a18f06a9795786a39e873",
+      "receiptPath": "docs/validation/mail-ui-rc2-2026-09-30.md",
+      "ci": 36643237463,
+      "runId": "2d9fb193-9520-4067-bca4-ef4c31fd46b4",
+      "workflow": "Summary, reply and task from the public dated SDK release handoff; one reviewed and manually edited draft persisted without duplication.",
+      "checks": [
+        "exact registry pin/integrity",
+        "87 app, 9 SDK and 13 browser checks",
+        "five Prometheus jobs",
+        "mounted selection/refresh/reload",
+        "one edited draft after repeat acceptance",
+        "390x844 without overflow",
+        "backend offline/recovery without replay",
+        "automatic usage capture before explicit submission"
+      ],
+      "limits": [
+        "No private mailbox data or email send.",
+        "Tasks review-only; source navigation is not claim-level RAG.",
+        "Manual packaged desktop/mobile UI and wider cancellation/security acceptance remain separate."
+      ],
+      "ciUrl": "https://github.com/hashimkarim/ai-workspace/actions/runs/36643237463",
+      "receiptUrl": "https://github.com/hashimkarim/ai-workspace/blob/9172c7727c1b4cdb2d1a18f06a9795786a39e873/docs/validation/mail-ui-rc2-2026-09-30.md",
+      "runnerReceipts": [
+        {
+          "id": 109660170768,
+          "name": "core (22.22.0)",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-workspace-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        },
+        {
+          "id": 109660171049,
+          "name": "core (24.13.0)",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-workspace-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        },
+        {
+          "id": 109660636063,
+          "name": "browser",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-workspace-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        },
+        {
+          "id": 109660827923,
+          "name": "android",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-workspace-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        },
+        {
+          "id": 109661030318,
+          "name": "desktop-check",
+          "conclusion": "success",
+          "runner_id": 21,
+          "runner_name": "prometheus-workspace-01",
+          "labels": [
+            "self-hosted",
+            "linux",
+            "x64",
+            "prometheus-ci"
+          ]
+        }
+      ],
+      "reportedUsage": {
+        "inputTokens": 6608,
+        "outputTokens": 230,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "subject": "rc2-workspace",
+      "newModelCalls": 1,
+      "automaticCaptureVerified": true
+    }
+  ],
+  "applicationAuthMigration": false,
+  "newAppTelemetryEmitter": false,
+  "normalSavedSelectionsPreserved": true,
+  "validationProfilesAreNotProductionGrants": true
+}

@@ -1,11 +1,23 @@
 # Release candidate gate
 
-**0.2.0-rc.2 is in qualification** for the native Usagestat quota fix and the
-released 2.0.0 ingestion contract. Python uses **0.2.0rc2**; protocol stays **1.0**.
-Tracking: [#77](https://github.com/agenticdriver/agenticdriver/issues/77).
-Build, stable-backend reconciliation, publication and app migration receipts are
-required before marking this update accepted. The RC.1 evidence below remains
-historical evidence; it does not claim a new RC.2 app run.
+**0.2.0-rc.2 passed its scoped gates and is published.** It corrects native quota
+reads and qualifies the released Usagestat 2.0.0 ingestion contract. Python uses
+**0.2.0rc2**; protocol stays **1.0**. Artifact source:
+`91dc52292c627a6febed102a8198c56f35d3afc9`.
+
+The [RC.2 receipt](validation/release-0.2.0-rc.2.md) records all seven Prometheus
+source checks, exact registry/public-download verification, real Codex and Claude
+capture, and all three app-owned registry migrations and metered workflows. The
+normal LitAgent host and usage service preserve all thirteen stored records and
+existing credentials/grants; the local desktop preserves its original profile.
+Use [RC adoption](rc.md) for installation and host/client upgrade order.
+
+Current scoped limits include pending PyPI organization approval, the earlier
+provider/platform restrictions, and a [single Brandstorm selection propagation
+observation](https://github.com/hashimkarim/brandstorm/issues/3) whose reproduction
+is pending. SDK model selection emitted its event; no SDK-owned defect is proven.
+Do not claim first-click Brandstorm setup fully qualified. Wider retrieval,
+security and cancellation checks below remain the historical RC.1 baseline.
 
 ## RC.1 accepted baseline
 
@@ -39,7 +51,8 @@ visible, with per-connection permissions; discovery is not live qualification.
 | Exact-source Prometheus builds, fresh language installs, hashes and provenance                       | [CI/publication](../release/0.2.0-rc.1/ci-publication.json), [registry verification](../release/0.2.0-rc.1/registry-publication.json)                                    |
 | Publication and public downloads                                                                     | [GitHub verification](../release/0.2.0-rc.1/github-publication.json), [release inventory](releases.md)                                                                   |
 
-All three applications pin `@agenticdriver/sdk@0.2.0-rc.1` with registry integrity.
+At the RC.1 gate, all three applications pinned `@agenticdriver/sdk@0.2.0-rc.1`
+with registry integrity; the current pins are RC.2.
 Brandstorm reviewed a selected-source answer; AI Workspace saved and edited a
 reply draft; LitAgent accepted a supported writing proposal into a disposable
 manuscript. Their own authentication, data and saved choices were preserved.

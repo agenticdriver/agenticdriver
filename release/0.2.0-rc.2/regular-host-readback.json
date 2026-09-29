@@ -1,0 +1,48 @@
+{
+  "at": "2026-09-29T23:03:25.714Z",
+  "protocol": {
+    "protocol": "agenticdriver",
+    "version": "1.0",
+    "supportedVersions": [
+      "1.0"
+    ],
+    "features": [
+      "json-results",
+      "client-pairing",
+      "event-stream",
+      "cancel-on-disconnect",
+      "optional-idle-timeout",
+      "required-capabilities",
+      "optional-events",
+      "provider-discovery",
+      "context-inputs",
+      "draft-artifacts",
+      "idempotency"
+    ]
+  },
+  "providers": [
+    {
+      "id": "local-codex",
+      "authMode": "cli-session",
+      "runtime": {
+        "name": "Codex CLI",
+        "version": "0.157.0"
+      },
+      "accountStatus": "signed-in",
+      "catalogSource": "provider",
+      "reportedModels": 9
+    },
+    {
+      "id": "local-claude",
+      "authMode": "cli-session",
+      "runtime": {
+        "name": "Claude Code",
+        "version": "2.1.282"
+      },
+      "accountStatus": "signed-in",
+      "catalogSource": "provider",
+      "reportedModels": 14
+    }
+  ],
+  "modelCalls": 0
+}

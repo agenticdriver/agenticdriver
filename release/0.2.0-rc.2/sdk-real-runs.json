@@ -1,0 +1,147 @@
+{
+  "source": "91dc52292c627a6febed102a8198c56f35d3afc9",
+  "at": "2026-09-29T23:07:13Z",
+  "connection": "Trusted OpenSSH to a separate Prometheus loopback host",
+  "billingMode": "existing native subscriptions; API-equivalent estimates are not billed charges",
+  "runs": [
+    {
+      "case": "brandstorm",
+      "input": "Develop three distinct brand directions for AgenticDriver (agenticdriver.dev).\nThe product is an SDK for TypeScript, Python, Go and Rust applications. Developers\nconnect their own provider API accounts or supported native subscription sessions.\nExecution can happen locally or on a remote host using HTTPS or an SSH tunnel.\nApplications explicitly choose the provider, account connection and model. The\ntarget audience is developers building research assistants, email workspaces and\ncreative tools. The name AgenticDriver must stay. Do not promise universal provider\ncompatibility, unlimited usage, automatic model routing or guaranteed accuracy.\nFor each direction give a tagline, two hex colours, a visual motif, and one sentence\nexplaining why it fits this audience. Keep the whole answer below 220 words.",
+      "runId": "e40695bd-47ec-4257-9920-f7485c8c11d5",
+      "provider": {
+        "id": "prometheus-codex",
+        "vendor": "codex",
+        "authMode": "cli-session",
+        "runtime": {
+          "name": "Codex CLI",
+          "version": "0.157.0"
+        },
+        "account": {
+          "status": "signed-in",
+          "method": "ChatGPT",
+          "subscription": "pro",
+          "hasIdentity": true
+        },
+        "health": {
+          "status": "unknown",
+          "code": "CLI_CATALOG_AVAILABLE",
+          "message": "The signed-in CLI supplied a model catalog, which may include cached or bundled entries. Account entitlement, model execution and quota have not been verified.",
+          "checkedAt": "2026-09-29T22:56:44.407Z"
+        },
+        "catalog": {
+          "source": "provider",
+          "models": [
+            "gpt-6-astra",
+            "gpt-6-sol",
+            "gpt-6-luna",
+            "gpt-reserve",
+            "gpt-5.6-sol",
+            "gpt-5.6-terra",
+            "gpt-5.6-luna",
+            "gpt-5.5",
+            "codex-auto-review"
+          ],
+          "complete": true
+        },
+        "model": "gpt-6-luna"
+      },
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 252,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 5,
+        "text.delta": 1,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "responseSha256": "6bf02b97b6192aeb5ee516ce7215aa5be390b4d35a5217bac3b5a7babc6d492c",
+      "outputWordCount": 149,
+      "refreshDuringRun": {
+        "at": "2026-09-29T22:56:45.210Z",
+        "counts": {
+          "prometheus-codex": 9,
+          "prometheus-claude": 14
+        }
+      },
+      "review": "Three brief-compatible directions with tagline, colors and motif."
+    },
+    {
+      "case": "workspace",
+      "input": "Draft an email from these AgenticDriver release handoff notes dated\n2026-09-28. This is a draft only; no email will be sent.\nThe npm package @agenticdriver/sdk@0.2.0-alpha.5 is published under the alpha tag.\nRust agenticdriver 0.2.0-alpha.5 and the Go clients/go/v0.2.0-alpha.5 tag are published.\nPython 0.2.0a5 wheel and source archives are on the GitHub prerelease; PyPI organization\napproval is still pending. Brandstorm, LitAgent and AI Workspace should pin alpha.5,\nrefresh their connected host's provider catalog, then validate an explicitly selected\nprovider and inexpensive model. Application authentication stays owned by each app.\nCatalog discovery alone does not prove model execution. Adoption by all three apps\nhas not yet been confirmed. Do not claim the Python package is on PyPI or that the\napps have already upgraded. Produce a subject, a concise body and three action items,\nbelow 170 words total. Do not invent recipients, deadlines or completed checks.",
+      "runId": "b069b1a7-3f57-4407-9191-bed66bd34199",
+      "provider": {
+        "id": "prometheus-claude",
+        "vendor": "claude-code",
+        "authMode": "cli-session",
+        "runtime": {
+          "name": "Claude Code",
+          "version": "2.1.282"
+        },
+        "account": {
+          "status": "signed-in",
+          "method": "claude.ai",
+          "subscription": "pro",
+          "hasIdentity": true
+        },
+        "health": {
+          "status": "unknown",
+          "code": "CLI_CATALOG_AVAILABLE",
+          "message": "The signed-in CLI supplied a model catalog, which may include cached or bundled entries. Account entitlement, model execution and quota have not been verified.",
+          "checkedAt": "2026-09-29T22:56:53.909Z"
+        },
+        "catalog": {
+          "source": "provider",
+          "models": [
+            "default",
+            "claude-opus-5-5",
+            "opus",
+            "claude-fable-5-1",
+            "haiku",
+            "claude-haiku-4-5-20251001",
+            "sonnet",
+            "claude-sonnet-5",
+            "claude-opus-5",
+            "claude-fable-5",
+            "claude-opus-4-8",
+            "claude-opus-4-7",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6"
+          ],
+          "complete": true
+        },
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "usage": {
+        "inputTokens": 3846,
+        "outputTokens": 1326,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.010476
+      },
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 2,
+        "text.delta": 55,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "responseSha256": "89c946151f8462bab23e5b3abee7db04a5b3e8348b7456dca2877f9a5b753f00",
+      "outputWordCount": 86,
+      "refreshDuringRun": {
+        "at": "2026-09-29T22:56:53.958Z",
+        "counts": {
+          "prometheus-codex": 9,
+          "prometheus-claude": 14
+        }
+      },
+      "review": "Keeps the historical alpha.5 handoff facts and PyPI pending, distinguishes discovery from execution; appended word-count claim is inaccurate and should be removed before sending."
+    }
+  ],
+  "newModelCalls": 2,
+  "metadataDoesNotQualifyOtherModels": true
+}

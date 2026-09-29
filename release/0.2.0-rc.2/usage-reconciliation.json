@@ -1,0 +1,193 @@
+{
+  "at": "2026-09-29T23:14:53.180Z",
+  "hostId": "prometheus-rc2",
+  "sdkVersion": "0.2.0-rc.2",
+  "usagestatVersion": "2.0.0",
+  "schema": "agenticdriver.usage.v2",
+  "records": [
+    {
+      "eventId": "e40695bd-47ec-4257-9920-f7485c8c11d5",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc2-sdk",
+      "accountId": "prometheus-codex-account",
+      "status": "completed",
+      "source": "cli-report",
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 252,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "observedUsage": {
+        "inputTokens": 6129,
+        "outputTokens": 252,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      },
+      "automaticCaptureBeforeRead": true,
+      "recordMatched": true,
+      "duplicate": "duplicate",
+      "crossSubjectReadDenied": true,
+      "expiresAt": "2026-10-29T22:56:52.171Z",
+      "payloadSha256": "43db2ad258273e6b303eb5f566c5dd36f025fa0ed14e09d5198db37632c9a8ae"
+    },
+    {
+      "eventId": "b069b1a7-3f57-4407-9191-bed66bd34199",
+      "provider": "prometheus-claude",
+      "model": "claude-haiku-4-5-20251001",
+      "subject": "rc2-sdk",
+      "accountId": "prometheus-claude-account",
+      "status": "completed",
+      "source": "cli-report",
+      "usage": {
+        "inputTokens": 3846,
+        "outputTokens": 1326,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.010476
+      },
+      "observedUsage": {
+        "inputTokens": 3846,
+        "outputTokens": 1326,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.010476
+      },
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "apiEquivalentCostUsd": 1
+        }
+      },
+      "automaticCaptureBeforeRead": true,
+      "recordMatched": true,
+      "duplicate": "duplicate",
+      "crossSubjectReadDenied": true,
+      "expiresAt": "2026-10-29T22:57:06.290Z",
+      "payloadSha256": "e242197bf06fdedebc9b6cd5586039508a4bfee81dd262c3eee7653a61082a36"
+    },
+    {
+      "eventId": "6f79f282-5a27-48bb-82fa-82176d55fc12",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc2-literature",
+      "accountId": "prometheus-codex-account",
+      "status": "completed",
+      "source": "cli-report",
+      "usage": {
+        "inputTokens": 6634,
+        "outputTokens": 156,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "observedUsage": {
+        "inputTokens": 6634,
+        "outputTokens": 156,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      },
+      "automaticCaptureBeforeRead": true,
+      "recordMatched": true,
+      "crossSubjectReadDenied": true,
+      "expiresAt": "2026-10-29T23:04:13.456Z",
+      "payloadSha256": "475e9b5bb7e2f99efe8bfb7b6b5d2b1e43d5456974c3e6c74f33b8ad2f61d5af"
+    },
+    {
+      "eventId": "2d9fb193-9520-4067-bca4-ef4c31fd46b4",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc2-workspace",
+      "accountId": "prometheus-codex-account",
+      "status": "completed",
+      "source": "cli-report",
+      "usage": {
+        "inputTokens": 6608,
+        "outputTokens": 230,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "observedUsage": {
+        "inputTokens": 6608,
+        "outputTokens": 230,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      },
+      "automaticCaptureBeforeRead": true,
+      "recordMatched": true,
+      "crossSubjectReadDenied": true,
+      "expiresAt": "2026-10-29T23:05:34.337Z",
+      "payloadSha256": "642fe59a6da519ae2b24acf20667dfb6b3fdc622714f00672e4e323228365a42"
+    },
+    {
+      "eventId": "0983c734-4051-4429-97c8-1b493bc8231c",
+      "provider": "prometheus-codex",
+      "model": "gpt-6-luna",
+      "subject": "rc2-brandstorm",
+      "accountId": "prometheus-codex-account",
+      "status": "completed",
+      "source": "cli-report",
+      "usage": {
+        "inputTokens": 7877,
+        "outputTokens": 193,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "observedUsage": {
+        "inputTokens": 7877,
+        "outputTokens": 193,
+        "cachedInputTokens": 0,
+        "reasoningTokens": 0
+      },
+      "coverage": {
+        "startedSteps": 1,
+        "completedSteps": 1,
+        "reportedSteps": {
+          "inputTokens": 1,
+          "outputTokens": 1,
+          "cachedInputTokens": 1,
+          "reasoningTokens": 1
+        }
+      },
+      "automaticCaptureBeforeRead": true,
+      "recordMatched": true,
+      "crossSubjectReadDenied": true,
+      "expiresAt": "2026-10-29T23:07:58.082Z",
+      "payloadSha256": "416cfa61430004405ce9dff7c6af982455756a3c281775c528b56995b231abde"
+    }
+  ],
+  "sdkRecordsSurvivedBackendRestart": true,
+  "restartedBeforeAppRuns": true
+}

@@ -1,0 +1,19 @@
+{
+  "at": "2026-09-29T22:50:04.073Z",
+  "version": "0.2.0-rc.2",
+  "source": "91dc52292c627a6febed102a8198c56f35d3afc9",
+  "archiveSha256": "b049d15ea4c37b860c8b06fe74e9b432849980c847d2c57b0fc3d5428c61a718",
+  "checks": {
+    "freshProfileEmpty": true,
+    "stableNativeReadback": {
+      "snapshots": 6,
+      "sections": {
+        "providers": "available",
+        "usage": "available"
+      }
+    },
+    "settingsSurviveRestart": true
+  },
+  "modelCalls": 0,
+  "userProfileChanged": false
+}

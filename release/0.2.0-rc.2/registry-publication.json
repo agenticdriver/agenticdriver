@@ -1,0 +1,34 @@
+{
+  "source": "91dc52292c627a6febed102a8198c56f35d3afc9",
+  "npm": {
+    "version": "0.2.0-rc.2",
+    "integrity": "sha512-LzXVqr2umXDChhJi2pb1doPSjD/YlpG3qsgTkM5M3PBtE/KLiABwFrdqpXdCzpCiQ3u2cBuxDY7QtagL3ppHgw==",
+    "sha256": "1e4bc9e639612ecc1d97913fd915d72deb9bbe72c5034aa1e8928a4e06cf9f9a",
+    "publicBytesMatch": true,
+    "distTags": {
+      "latest": "0.1.0",
+      "alpha": "0.2.0-alpha.6",
+      "rc": "0.2.0-rc.2"
+    },
+    "sameSourceProvenance": true,
+    "verifiedRegistrySignatures": 7,
+    "verifiedAttestations": 2,
+    "freshRegistryInstallAndRegularHostReadback": true
+  },
+  "rust": {
+    "version": "0.2.0-rc.2",
+    "reviewedContentsVerified": true,
+    "workflow": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642586234"
+  },
+  "go": {
+    "version": "v0.2.0-rc.2",
+    "immutableSourceTagVerified": true,
+    "publicProxyInstallVerifiedByWorkflow": true,
+    "workflow": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642589053"
+  },
+  "python": {
+    "version": "0.2.0rc2",
+    "pypi": "Selected organization approval remains pending; no upload or personal substitution",
+    "archives": "Reviewed wheel and sdist in GitHub release assets"
+  }
+}

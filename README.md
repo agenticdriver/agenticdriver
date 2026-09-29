@@ -9,13 +9,13 @@ AgenticDriver is an **SDK**. Applications own their data, workflows, tools, user
 interface, and approval decisions. The SDK owns provider execution, the API tool
 loop, normalized events, cancellation, transport, and usage reporting.
 
-**The opt-in `0.2.0-rc.2` candidate updates compatibility with Usagestat 2.0.0**
-and corrects account quota reads. Publication and the three app upgrades are
-tracked in [#77](https://github.com/agenticdriver/agenticdriver/issues/77).
-The [release inventory](docs/releases.md) records verified availability; RC.1
-remains the published baseline while RC.2 is being qualified. Stable npm
-`latest` remains **0.1.0**. Python uses reviewed GitHub archives while approval
-of the selected PyPI organization remains pending.
+**The opt-in `0.2.0-rc.2` release candidate is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.2).**
+It corrects quota reads and supports released Usagestat **2.0.0**. All three
+applications pin this RC, passed Prometheus CI and verified real workflows with
+automatic usage capture. The [release record](docs/validation/release-0.2.0-rc.2.md)
+links exact artifacts and qualification limits. Stable npm `latest` remains
+**0.1.0**. Python uses GitHub archives while PyPI organization approval is pending.
 
 The RC includes optional real local embeddings, persistent scoped retrieval and
 citation-ID helpers in all four languages, the Linux desktop companion, shared

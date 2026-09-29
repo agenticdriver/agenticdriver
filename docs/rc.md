@@ -2,14 +2,12 @@
 
 The release candidate targets Linux x64 hosts and the desktop companion, with
 TypeScript/JavaScript, Python, Go and Rust clients. Wire protocol remains **1.0**. RC.2 carries the native quota correction and
-released Usagestat 2.0.0 integration; publication and consumer receipts are
-tracked in [#77](https://github.com/agenticdriver/agenticdriver/issues/77).
+released Usagestat 2.0.0 integration. The [publication receipt](validation/release-0.2.0-rc.2.md)
+records source `91dc52292c627a6febed102a8198c56f35d3afc9`, package integrity and
+acceptance from all three apps.
 Check the [release inventory](releases.md) and [qualification gate](release-candidate.md)
 for the current download and acceptance status. A release candidate is an opt-in
 version; stable npm `latest` remains **0.1.0**.
-
-RC.2 publication is in progress. Check the release inventory before installing;
-RC.1 remains the published baseline until each channel is verified.
 
 ## Install an exact version
 
@@ -19,8 +17,9 @@ go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.2
 ```
 
 Rust: use `agenticdriver = "=0.2.0-rc.2"` in `Cargo.toml`.
-Commit the version and lockfile. Verify archive digests against the release
-`ASSET-SHA256SUMS` and registry integrity; do not reuse RC.1 artifact hashes.
+Commit the version and lockfile. The npm archive SHA-256 is
+`1e4bc9e639612ecc1d97913fd915d72deb9bbe72c5034aa1e8928a4e06cf9f9a`.
+Verify other download digests against the release `ASSET-SHA256SUMS`.
 
 Python uses **0.2.0rc2**. Download
 `agenticdriver-0.2.0rc2-py3-none-any.whl` from the

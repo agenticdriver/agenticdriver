@@ -4,7 +4,7 @@
 
 - Corrected Usagestat quota reads to derive resources from native `/v1/usage` snapshots. Published SDK 0.2.0-rc.1 calls `/v1/limits`, which the backend never served; desktop usage display is unaffected. Account bindings, freshness and failure handling remain explicit. The derived schema is `agenticdriver.usagestat-limits.v1`, replacing the never-served `crossusage.limits.v1` literal.
 - Updated integration guidance to released Usagestat **2.0.0**, including optional durable run ingestion, explicit account/subject bindings and the required capability handshake. Native usage reads remain administrative; per-run capture uses a separate credential.
-- Kept wire protocol 1.0, selected provider accounts, application authentication and disabled default inactivity timeout unchanged. Registry publication and app adoption are tracked in #77.
+- Kept wire protocol 1.0, selected provider accounts, application authentication and disabled default inactivity timeout unchanged. All three apps now pin the registry RC and passed Prometheus checks plus real metered workflows. The local desktop and regular LitAgent host/metering service were upgraded with retained state. [Publication and limits](docs/validation/release-0.2.0-rc.2.md).
 
 ## 0.2.0-rc.1 — 2026-09-29
 

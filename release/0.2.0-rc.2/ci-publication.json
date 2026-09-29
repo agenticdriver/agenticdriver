@@ -1,0 +1,1616 @@
+{
+  "ci": {
+    "conclusion": "success",
+    "databaseId": 36640743553,
+    "headSha": "91dc52292c627a6febed102a8198c56f35d3afc9",
+    "jobs": [
+      {
+        "completedAt": "2026-09-29T22:47:15Z",
+        "conclusion": "success",
+        "databaseId": 109653440269,
+        "name": "Linux desktop companion",
+        "startedAt": "2026-09-29T22:42:34Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:42:38Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:42:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:38Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:42:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:38Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:42:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:39Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:42:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:39Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:42:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:39Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:42:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:44Z",
+            "conclusion": "success",
+            "name": "Run npm ci && npm run build",
+            "number": 7,
+            "startedAt": "2026-09-29T22:42:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:46Z",
+            "conclusion": "success",
+            "name": "Run npm ci --install-links --prefix apps/desktop",
+            "number": 8,
+            "startedAt": "2026-09-29T22:42:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:42:46Z",
+            "conclusion": "success",
+            "name": "Run npm test --prefix apps/desktop",
+            "number": 9,
+            "startedAt": "2026-09-29T22:42:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:46:35Z",
+            "conclusion": "success",
+            "name": "Run npm run package:linux --prefix apps/desktop",
+            "number": 10,
+            "startedAt": "2026-09-29T22:42:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:46:54Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 11,
+            "startedAt": "2026-09-29T22:46:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:12Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 21,
+            "startedAt": "2026-09-29T22:46:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:13Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-09-29T22:47:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:13Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-09-29T22:47:13Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109653440269"
+      },
+      {
+        "completedAt": "2026-09-29T22:52:16Z",
+        "conclusion": "success",
+        "databaseId": 109654911186,
+        "name": "Linux current Node",
+        "startedAt": "2026-09-29T22:50:52Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:50:56Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:50:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:56Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:50:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:56Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:50:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:57Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:50:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:57Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:50:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:03Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:50:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:03Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 7,
+            "startedAt": "2026-09-29T22:51:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:04Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 8,
+            "startedAt": "2026-09-29T22:51:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:05Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de",
+            "number": 9,
+            "startedAt": "2026-09-29T22:51:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:06Z",
+            "conclusion": "success",
+            "name": "Run python -m unittest discover -s tests -p 'ci_*_test.py' -v",
+            "number": 10,
+            "startedAt": "2026-09-29T22:51:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:07Z",
+            "conclusion": "success",
+            "name": "Run npm ci",
+            "number": 11,
+            "startedAt": "2026-09-29T22:51:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:16Z",
+            "conclusion": "success",
+            "name": "Run npm run check",
+            "number": 12,
+            "startedAt": "2026-09-29T22:51:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:51:17Z",
+            "conclusion": "success",
+            "name": "Run npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json",
+            "number": 13,
+            "startedAt": "2026-09-29T22:51:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:09Z",
+            "conclusion": "success",
+            "name": "Run npm run test:clients",
+            "number": 14,
+            "startedAt": "2026-09-29T22:51:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:11Z",
+            "conclusion": "success",
+            "name": "Run npm run test:package",
+            "number": 15,
+            "startedAt": "2026-09-29T22:52:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 27,
+            "startedAt": "2026-09-29T22:52:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 28,
+            "startedAt": "2026-09-29T22:52:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:12Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 29,
+            "startedAt": "2026-09-29T22:52:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:12Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 30,
+            "startedAt": "2026-09-29T22:52:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:12Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 31,
+            "startedAt": "2026-09-29T22:52:12Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109654911186"
+      },
+      {
+        "completedAt": "2026-09-29T22:50:49Z",
+        "conclusion": "success",
+        "databaseId": 109654911189,
+        "name": "Linux LTS and current clients",
+        "startedAt": "2026-09-29T22:49:08Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:49:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:49:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:12Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:49:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:12Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:49:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:13Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:49:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:14Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:49:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:20Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:49:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:20Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 7,
+            "startedAt": "2026-09-29T22:49:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:21Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 8,
+            "startedAt": "2026-09-29T22:49:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:22Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de",
+            "number": 9,
+            "startedAt": "2026-09-29T22:49:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:23Z",
+            "conclusion": "success",
+            "name": "Run python -m unittest discover -s tests -p 'ci_*_test.py' -v",
+            "number": 10,
+            "startedAt": "2026-09-29T22:49:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:24Z",
+            "conclusion": "success",
+            "name": "Run npm ci",
+            "number": 11,
+            "startedAt": "2026-09-29T22:49:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:34Z",
+            "conclusion": "success",
+            "name": "Run npm run check",
+            "number": 12,
+            "startedAt": "2026-09-29T22:49:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:35Z",
+            "conclusion": "success",
+            "name": "Run npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json",
+            "number": 13,
+            "startedAt": "2026-09-29T22:49:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:43Z",
+            "conclusion": "success",
+            "name": "Run npm run test:clients",
+            "number": 14,
+            "startedAt": "2026-09-29T22:49:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:44Z",
+            "conclusion": "success",
+            "name": "Run npm run test:package",
+            "number": 15,
+            "startedAt": "2026-09-29T22:50:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 27,
+            "startedAt": "2026-09-29T22:50:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 28,
+            "startedAt": "2026-09-29T22:50:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 29,
+            "startedAt": "2026-09-29T22:50:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 30,
+            "startedAt": "2026-09-29T22:50:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:50:45Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 31,
+            "startedAt": "2026-09-29T22:50:45Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109654911189"
+      },
+      {
+        "completedAt": "2026-09-29T22:49:06Z",
+        "conclusion": "success",
+        "databaseId": 109654911192,
+        "name": "Linux minimum runtimes",
+        "startedAt": "2026-09-29T22:47:18Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:47:22Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:47:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:22Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:47:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:22Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:47:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:24Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:47:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:24Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:47:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:25Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:47:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:25Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 7,
+            "startedAt": "2026-09-29T22:47:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:25Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 8,
+            "startedAt": "2026-09-29T22:47:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:26Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de",
+            "number": 9,
+            "startedAt": "2026-09-29T22:47:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:27Z",
+            "conclusion": "success",
+            "name": "Run python -m unittest discover -s tests -p 'ci_*_test.py' -v",
+            "number": 10,
+            "startedAt": "2026-09-29T22:47:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:28Z",
+            "conclusion": "success",
+            "name": "Run npm ci",
+            "number": 11,
+            "startedAt": "2026-09-29T22:47:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:39Z",
+            "conclusion": "success",
+            "name": "Run npm run check",
+            "number": 12,
+            "startedAt": "2026-09-29T22:47:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:47:39Z",
+            "conclusion": "success",
+            "name": "Run npm run protocol && git diff --exit-code -- protocol/openapi.json protocol/host-config.schema.json protocol/usage-record.schema.json protocol/provider-extension.schema.json",
+            "number": 13,
+            "startedAt": "2026-09-29T22:47:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:48:46Z",
+            "conclusion": "success",
+            "name": "Run npm run test:clients",
+            "number": 14,
+            "startedAt": "2026-09-29T22:47:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:48:48Z",
+            "conclusion": "success",
+            "name": "Run npm run test:package",
+            "number": 15,
+            "startedAt": "2026-09-29T22:48:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:48:49Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 27,
+            "startedAt": "2026-09-29T22:48:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:48:49Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 28,
+            "startedAt": "2026-09-29T22:48:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:03Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 29,
+            "startedAt": "2026-09-29T22:48:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:03Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 30,
+            "startedAt": "2026-09-29T22:49:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:49:03Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 31,
+            "startedAt": "2026-09-29T22:49:03Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109654911192"
+      },
+      {
+        "completedAt": "2026-09-29T22:53:44Z",
+        "conclusion": "success",
+        "databaseId": 109656420520,
+        "name": "Linux account deployment",
+        "startedAt": "2026-09-29T22:52:18Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:52:22Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:52:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:22Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:52:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:22Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:52:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:23Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:52:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:23Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:52:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:29Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:52:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:34Z",
+            "conclusion": "success",
+            "name": "Run npm ci && npm run build",
+            "number": 7,
+            "startedAt": "2026-09-29T22:52:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:52:34Z",
+            "conclusion": "success",
+            "name": "Run node --test deploy/account/policy.test.mjs",
+            "number": 8,
+            "startedAt": "2026-09-29T22:52:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:40Z",
+            "conclusion": "success",
+            "name": "Build actual deployment images without account credentials",
+            "number": 9,
+            "startedAt": "2026-09-29T22:52:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:40Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 17,
+            "startedAt": "2026-09-29T22:53:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:40Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-09-29T22:53:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:40Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-09-29T22:53:40Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109656420520"
+      },
+      {
+        "completedAt": "2026-09-29T22:54:11Z",
+        "conclusion": "success",
+        "databaseId": 109656859585,
+        "name": "Documentation site",
+        "startedAt": "2026-09-29T22:53:47Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:53:51Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:53:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:51Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:53:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:51Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:53:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:52Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:53:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:52Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:53:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:56Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:53:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:53:58Z",
+            "conclusion": "success",
+            "name": "Run npm ci --prefix site",
+            "number": 7,
+            "startedAt": "2026-09-29T22:53:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:05Z",
+            "conclusion": "success",
+            "name": "Run npm run build --prefix site",
+            "number": 8,
+            "startedAt": "2026-09-29T22:53:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:08Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 9,
+            "startedAt": "2026-09-29T22:54:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:08Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 17,
+            "startedAt": "2026-09-29T22:54:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:08Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-09-29T22:54:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:08Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-09-29T22:54:08Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109656859585"
+      },
+      {
+        "completedAt": "2026-09-29T22:55:18Z",
+        "conclusion": "success",
+        "databaseId": 109656990583,
+        "name": "release-candidate / Build and install exact release artifacts",
+        "startedAt": "2026-09-29T22:54:14Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-09-29T22:54:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-09-29T22:54:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:18Z",
+            "conclusion": "success",
+            "name": "Set up runner",
+            "number": 2,
+            "startedAt": "2026-09-29T22:54:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:18Z",
+            "conclusion": "success",
+            "name": "Use job-scoped temporary directory",
+            "number": 3,
+            "startedAt": "2026-09-29T22:54:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:19Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 4,
+            "startedAt": "2026-09-29T22:54:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:20Z",
+            "conclusion": "success",
+            "name": "Bound private CI build cache",
+            "number": 5,
+            "startedAt": "2026-09-29T22:54:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:20Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 6,
+            "startedAt": "2026-09-29T22:54:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:20Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 7,
+            "startedAt": "2026-09-29T22:54:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:21Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 8,
+            "startedAt": "2026-09-29T22:54:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:23Z",
+            "conclusion": "success",
+            "name": "Run dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de",
+            "number": 9,
+            "startedAt": "2026-09-29T22:54:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:23Z",
+            "conclusion": "success",
+            "name": "Run python -m unittest discover -s tests -p 'release_test.py' -v",
+            "number": 10,
+            "startedAt": "2026-09-29T22:54:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:25Z",
+            "conclusion": "success",
+            "name": "Run npm ci",
+            "number": 11,
+            "startedAt": "2026-09-29T22:54:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:50Z",
+            "conclusion": "success",
+            "name": "Run python scripts/release.py build --output \"$RUNNER_TEMP/candidate\"",
+            "number": 12,
+            "startedAt": "2026-09-29T22:54:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:54:50Z",
+            "conclusion": "success",
+            "name": "Run python scripts/release.py verify \"$RUNNER_TEMP/candidate\" --require-clean",
+            "number": 13,
+            "startedAt": "2026-09-29T22:54:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:11Z",
+            "conclusion": "success",
+            "name": "Run python scripts/test-release.py \"$RUNNER_TEMP/candidate\"",
+            "number": 14,
+            "startedAt": "2026-09-29T22:54:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 15,
+            "startedAt": "2026-09-29T22:55:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+            "number": 27,
+            "startedAt": "2026-09-29T22:55:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            "number": 28,
+            "startedAt": "2026-09-29T22:55:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 29,
+            "startedAt": "2026-09-29T22:55:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 30,
+            "startedAt": "2026-09-29T22:55:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-09-29T22:55:13Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 31,
+            "startedAt": "2026-09-29T22:55:13Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553/job/109656990583"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36640743553",
+    "runnerReceipts": [
+      {
+        "id": 109653440269,
+        "name": "Linux desktop companion",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109654911186,
+        "name": "Linux current Node",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109654911189,
+        "name": "Linux LTS and current clients",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109654911192,
+        "name": "Linux minimum runtimes",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109656420520,
+        "name": "Linux account deployment",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109656859585,
+        "name": "Documentation site",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      },
+      {
+        "id": 109656990583,
+        "name": "release-candidate / Build and install exact release artifacts",
+        "conclusion": "success",
+        "runner_id": 21,
+        "runner_name": "prometheus-agenticdriver-01",
+        "labels": [
+          "self-hosted",
+          "linux",
+          "x64",
+          "prometheus-ci"
+        ]
+      }
+    ]
+  },
+  "publication": {
+    "npm": {
+      "conclusion": "success",
+      "databaseId": 36642583503,
+      "headSha": "91dc52292c627a6febed102a8198c56f35d3afc9",
+      "jobs": [
+        {
+          "completedAt": "2026-09-29T23:00:31Z",
+          "conclusion": "success",
+          "databaseId": 109658058634,
+          "name": "npm",
+          "startedAt": "2026-09-29T22:57:56Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-29T22:57:57Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-29T22:57:56Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:57:57Z",
+              "conclusion": "success",
+              "name": "Validate the optional candidate revision",
+              "number": 2,
+              "startedAt": "2026-09-29T22:57:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:57:58Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 3,
+              "startedAt": "2026-09-29T22:57:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:01Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "number": 4,
+              "startedAt": "2026-09-29T22:57:58Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:07Z",
+              "conclusion": "success",
+              "name": "Install the pinned OIDC-capable npm CLI",
+              "number": 5,
+              "startedAt": "2026-09-29T22:58:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:11Z",
+              "conclusion": "success",
+              "name": "Download and verify the exact Prometheus candidate",
+              "number": 6,
+              "startedAt": "2026-09-29T22:58:07Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:16Z",
+              "conclusion": "success",
+              "name": "Publish the reviewed archive using npm trusted publishing",
+              "number": 7,
+              "startedAt": "2026-09-29T22:58:11Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T23:00:30Z",
+              "conclusion": "success",
+              "name": "Verify the registry has the exact reviewed bytes",
+              "number": 8,
+              "startedAt": "2026-09-29T22:58:16Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T23:00:30Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "number": 15,
+              "startedAt": "2026-09-29T23:00:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T23:00:30Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 16,
+              "startedAt": "2026-09-29T23:00:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T23:00:30Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-09-29T23:00:30Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642583503/job/109658058634"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:51Z",
+          "conclusion": "skipped",
+          "databaseId": 109658060232,
+          "name": "go",
+          "startedAt": "2026-09-29T22:57:52Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642583503/job/109658060232"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:51Z",
+          "conclusion": "skipped",
+          "databaseId": 109658060441,
+          "name": "package",
+          "startedAt": "2026-09-29T22:57:52Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642583503/job/109658060441"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642583503"
+    },
+    "rust": {
+      "conclusion": "success",
+      "databaseId": 36642586234,
+      "headSha": "91dc52292c627a6febed102a8198c56f35d3afc9",
+      "jobs": [
+        {
+          "completedAt": "2026-09-29T22:58:28Z",
+          "conclusion": "success",
+          "databaseId": 109658065336,
+          "name": "package",
+          "startedAt": "2026-09-29T22:57:56Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-29T22:58:01Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-29T22:57:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:01Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-29T22:58:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:01Z",
+              "conclusion": "success",
+              "name": "Use job-scoped temporary directory",
+              "number": 3,
+              "startedAt": "2026-09-29T22:58:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:01Z",
+              "conclusion": "success",
+              "name": "Validate the optional candidate revision",
+              "number": 4,
+              "startedAt": "2026-09-29T22:58:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:02Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 5,
+              "startedAt": "2026-09-29T22:58:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:02Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+              "number": 6,
+              "startedAt": "2026-09-29T22:58:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:03Z",
+              "conclusion": "success",
+              "name": "Run dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de",
+              "number": 7,
+              "startedAt": "2026-09-29T22:58:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:06Z",
+              "conclusion": "success",
+              "name": "Verify successful CI and prepare its exact artifacts",
+              "number": 8,
+              "startedAt": "2026-09-29T22:58:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:06Z",
+              "conclusion": "skipped",
+              "name": "Publish missing Python artifacts through the configured trusted publisher",
+              "number": 9,
+              "startedAt": "2026-09-29T22:58:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:06Z",
+              "conclusion": "skipped",
+              "name": "Upload verified Python files",
+              "number": 10,
+              "startedAt": "2026-09-29T22:58:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:16Z",
+              "conclusion": "success",
+              "name": "Verify Cargo's repackaging against the reviewed crate",
+              "number": 11,
+              "startedAt": "2026-09-29T22:58:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:16Z",
+              "conclusion": "success",
+              "name": "Obtain the configured crates.io publishing identity",
+              "number": 12,
+              "startedAt": "2026-09-29T22:58:16Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:22Z",
+              "conclusion": "success",
+              "name": "Publish the verified Rust crate",
+              "number": 13,
+              "startedAt": "2026-09-29T22:58:16Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:23Z",
+              "conclusion": "success",
+              "name": "Verify the actual registry artifacts",
+              "number": 14,
+              "startedAt": "2026-09-29T22:58:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:23Z",
+              "conclusion": "success",
+              "name": "Post Obtain the configured crates.io publishing identity",
+              "number": 26,
+              "startedAt": "2026-09-29T22:58:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:23Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+              "number": 27,
+              "startedAt": "2026-09-29T22:58:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:23Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 28,
+              "startedAt": "2026-09-29T22:58:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:23Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 29,
+              "startedAt": "2026-09-29T22:58:23Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642586234/job/109658065336"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:53Z",
+          "conclusion": "skipped",
+          "databaseId": 109658066434,
+          "name": "go",
+          "startedAt": "2026-09-29T22:57:53Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642586234/job/109658066434"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:53Z",
+          "conclusion": "skipped",
+          "databaseId": 109658066496,
+          "name": "npm",
+          "startedAt": "2026-09-29T22:57:53Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642586234/job/109658066496"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642586234"
+    },
+    "go": {
+      "conclusion": "success",
+      "databaseId": 36642589053,
+      "headSha": "91dc52292c627a6febed102a8198c56f35d3afc9",
+      "jobs": [
+        {
+          "completedAt": "2026-09-29T22:58:58Z",
+          "conclusion": "success",
+          "databaseId": 109658075652,
+          "name": "go",
+          "startedAt": "2026-09-29T22:58:30Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-29T22:58:33Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-29T22:58:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:33Z",
+              "conclusion": "success",
+              "name": "Set up runner",
+              "number": 2,
+              "startedAt": "2026-09-29T22:58:33Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:33Z",
+              "conclusion": "success",
+              "name": "Use job-scoped temporary directory",
+              "number": 3,
+              "startedAt": "2026-09-29T22:58:33Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:33Z",
+              "conclusion": "success",
+              "name": "Validate the optional candidate revision",
+              "number": 4,
+              "startedAt": "2026-09-29T22:58:33Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:34Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 5,
+              "startedAt": "2026-09-29T22:58:33Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:35Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+              "number": 6,
+              "startedAt": "2026-09-29T22:58:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:35Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "number": 7,
+              "startedAt": "2026-09-29T22:58:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:36Z",
+              "conclusion": "success",
+              "name": "Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+              "number": 8,
+              "startedAt": "2026-09-29T22:58:35Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:39Z",
+              "conclusion": "success",
+              "name": "Verify successful CI and prepare its exact artifacts",
+              "number": 9,
+              "startedAt": "2026-09-29T22:58:36Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:41Z",
+              "conclusion": "success",
+              "name": "Create the immutable Go module tag",
+              "number": 10,
+              "startedAt": "2026-09-29T22:58:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:42Z",
+              "conclusion": "success",
+              "name": "Run npm ci",
+              "number": 11,
+              "startedAt": "2026-09-29T22:58:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:53Z",
+              "conclusion": "success",
+              "name": "Install the tagged Go module over the public proxy",
+              "number": 12,
+              "startedAt": "2026-09-29T22:58:42Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:53Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
+              "number": 21,
+              "startedAt": "2026-09-29T22:58:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:53Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "number": 22,
+              "startedAt": "2026-09-29T22:58:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:53Z",
+              "conclusion": "success",
+              "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+              "number": 23,
+              "startedAt": "2026-09-29T22:58:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:54Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "number": 24,
+              "startedAt": "2026-09-29T22:58:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-29T22:58:54Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 25,
+              "startedAt": "2026-09-29T22:58:54Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642589053/job/109658075652"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:55Z",
+          "conclusion": "skipped",
+          "databaseId": 109658076888,
+          "name": "npm",
+          "startedAt": "2026-09-29T22:57:55Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642589053/job/109658076888"
+        },
+        {
+          "completedAt": "2026-09-29T22:57:55Z",
+          "conclusion": "skipped",
+          "databaseId": 109658077754,
+          "name": "package",
+          "startedAt": "2026-09-29T22:57:55Z",
+          "status": "completed",
+          "steps": [],
+          "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642589053/job/109658077754"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36642589053"
+    }
+  },
+  "initialAttempt": "Failed before build/tests at the 8 GiB disk-space preflight; only the SDK runner Go cache and its private Docker build cache were reclaimed before attempt 2."
+}

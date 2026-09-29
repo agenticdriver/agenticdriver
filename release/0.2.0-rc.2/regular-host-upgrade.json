@@ -1,0 +1,23 @@
+{
+  "hostSdk": "0.2.0-rc.2",
+  "source": "91dc52292c627a6febed102a8198c56f35d3afc9",
+  "usagestat": "2.0.0",
+  "protocol": {
+    "eventSchemas": [
+      "agenticdriver.usage.v2"
+    ],
+    "maxEventBytes": 65536,
+    "receiptSchema": "usagestat.run-receipt.v1",
+    "requiresAccount": true,
+    "schema": "usagestat.run-ingestion.v1"
+  },
+  "retainedRows": 13,
+  "allRowsUnchanged": true,
+  "privateConfigurationAndCredentialsUnchanged": true,
+  "units": [
+    "agenticdriver-litagent.service",
+    "agenticdriver-litagent-usage.service"
+  ],
+  "modelCalls": 0,
+  "executionGrantsChanged": false
+}
