@@ -41,3 +41,8 @@ Private credentials, account identities and full receipts remain outside the
 repository. Reported Claude dollar amounts are API-equivalent estimates, not
 subscription invoice charges. Generation retains disabled-by-default timeouts and
 there is no account/model/billing fallback.
+
+The subsequently published [alpha.6 release](release-0.2.0-alpha.6.md) records
+the exact final CI archive, two further real Codex/Claude requests, actual
+management reads in all four languages, published downloads and desktop startup.
+Its archive digest is separate from the source-candidate digest recorded above.

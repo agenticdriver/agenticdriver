@@ -1,0 +1,33 @@
+{
+  "verifiedAt": "2026-09-28T16:43:48.629939+00:00",
+  "source": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "ciRun": 36449845337,
+  "publishRun": 36451905839,
+  "version": "0.2.0-alpha.6",
+  "sha256": "b06c67eb847c7806db056351eaea338de5977fcf823212aac0dc27a03395df36",
+  "integrity": "sha512-eWUXwdnCNaLFHbbEkQezLRZvsjKnvlU4C7gnwJkd9ljsrqzKrp9Hh1ktxM6TJjDa2+/9n77Vx6hjKHVyAhLuMA==",
+  "tarball": "https://registry.npmjs.org/@agenticdriver/sdk/-/sdk-0.2.0-alpha.6.tgz",
+  "distTags": {
+    "latest": "0.1.0",
+    "alpha": "0.2.0-alpha.6"
+  },
+  "trustedPublisher": true,
+  "sameSourceProvenance": true,
+  "provenance": {
+    "url": "https://registry.npmjs.org/-/npm/v1/attestations/@agenticdriver%2fsdk@0.2.0-alpha.6",
+    "source": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+    "workflow": {
+      "ref": "refs/heads/sdk-roadmap",
+      "repository": "https://github.com/agenticdriver/agenticdriver",
+      "path": ".github/workflows/publish.yml"
+    },
+    "subjectSha512": "796517c1d9c235a2c51db6c49107b32d166fb232a7be55380bb827c0991df658ecaeaccaae9f4787592dc4ce932630dadbeffd9fbed5c7a8632875720212ee30"
+  },
+  "freshNpmSignatureAudit": {
+    "success": true,
+    "packagesWithRegistrySignatures": 7,
+    "packagesWithAttestations": 2
+  },
+  "memberBrowserApproval": false,
+  "workflowAvailabilityCheck": "Upload succeeded; three-minute availability polling expired. Later independent exact-byte verification, fresh registry installation and signature/provenance audit passed. No repeat upload."
+}

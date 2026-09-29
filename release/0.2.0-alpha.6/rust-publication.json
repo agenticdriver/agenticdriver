@@ -1,0 +1,12 @@
+{
+  "channel": "rust",
+  "runId": 36451909600,
+  "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36451909600",
+  "commit": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "conclusion": "success",
+  "verifiedRegistryInstallation": true,
+  "registrySha256": "641c85b2d1dbad0f6daf14c44fae7446616e066e5ffd1aebbcb99dfa8cf6e309",
+  "candidateSha256": "641c85b2d1dbad0f6daf14c44fae7446616e066e5ffd1aebbcb99dfa8cf6e309",
+  "archiveBytesMatch": true,
+  "reviewedContentsMatch": true
+}

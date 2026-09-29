@@ -13,7 +13,9 @@ remain included. Account email/name stays masked until Reveal and is remasked on
 refresh or provider changes. Catalog availability, execution grants and successful
 model execution remain separate.
 
-The [release page](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.6)
+Alpha.6 is published on npm, crates.io, Go and GitHub. The
+[publication record](validation/release-0.2.0-alpha.6.md) records exact artifacts
+and real connection checks. The [release page](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.6)
 is the authority for published channels, immutable source and exact artifact
 checksums. npm publication uses GitHub OIDC trusted publishing. PyPI organization
 approval remains pending; Python uses the reviewed GitHub wheel/sdist. Stable npm

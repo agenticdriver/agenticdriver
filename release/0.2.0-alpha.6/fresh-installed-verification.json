@@ -1,0 +1,12 @@
+{
+  "commit": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "checkedAt": "2026-09-28T16:49:14.709001+00:00",
+  "registries": [
+    "npm",
+    "rust",
+    "go"
+  ],
+  "python": "reviewed GitHub wheel and sdist; PyPI approval pending",
+  "installationAndCompilationPassed": true,
+  "modelExecutionAttemptedByInstallCheck": false
+}

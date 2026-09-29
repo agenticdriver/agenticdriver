@@ -1,0 +1,57 @@
+{
+  "version": "0.2.0-alpha.6",
+  "packagedWorker": {
+    "at": "2026-09-28T16:11:10.606Z",
+    "version": "0.2.0-alpha.6",
+    "ciRun": 36448085894,
+    "modelCalls": 0,
+    "freshProfile": {
+      "providers": 0,
+      "remoteHosts": 0,
+      "mockDefinitionAbsent": true
+    },
+    "remote": [
+      {
+        "id": "prometheus-codex",
+        "vendor": "codex",
+        "runtime": {
+          "name": "Codex CLI",
+          "version": "0.157.0"
+        },
+        "subscription": "pro",
+        "status": "signed-in",
+        "hasIdentity": true,
+        "models": 9
+      },
+      {
+        "id": "prometheus-claude",
+        "vendor": "claude-code",
+        "runtime": {
+          "name": "Claude Code",
+          "version": "2.1.282"
+        },
+        "subscription": "pro",
+        "status": "signed-in",
+        "hasIdentity": true,
+        "models": 14
+      }
+    ],
+    "savedHostRecovered": true,
+    "temporaryGrantRevoked": true
+  },
+  "finalRuntimeAndUiFilesIdentical": 192,
+  "finalSdkJavaScriptFilesMatchNpm": 87,
+  "installedVersion": "0.2.0-alpha.6-4168060e8bcb",
+  "nativeStartupObserved": true,
+  "nativeProcessRunningAtFollowup": false,
+  "followup": "Process subsequently absent, log empty and desktop lock removed. Exit cause was not observed. Full native GUI interaction is not claimed.",
+  "rendererChecks": {
+    "transport": "real controller through T3 development HTTP bridge",
+    "viewports": [
+      "1920x1080",
+      "390x844"
+    ],
+    "identityMasked": true,
+    "horizontalOverflow": false
+  }
+}

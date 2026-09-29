@@ -1,0 +1,50 @@
+{
+  "commit": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "runId": 36449845337,
+  "url": "https://github.com/agenticdriver/agenticdriver/actions/runs/36449845337",
+  "jobs": [
+    {
+      "id": 109021602547,
+      "name": "Linux desktop companion",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    },
+    {
+      "id": 109023480690,
+      "name": "Linux LTS and current clients",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    },
+    {
+      "id": 109023480713,
+      "name": "Linux current Node",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    },
+    {
+      "id": 109023480795,
+      "name": "Linux minimum runtimes",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    },
+    {
+      "id": 109025754411,
+      "name": "Documentation site",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    },
+    {
+      "id": 109025942018,
+      "name": "release-candidate / Build and install exact release artifacts",
+      "conclusion": "success",
+      "runner": "prometheus-agenticdriver-01",
+      "runnerId": 21
+    }
+  ],
+  "desktopSdkJavaScriptFilesMatchCandidate": 87
+}

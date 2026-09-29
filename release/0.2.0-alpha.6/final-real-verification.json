@@ -1,0 +1,74 @@
+{
+  "commit": "5ac1e6fdf24dc226177d7167bd1611a2c6c0ae44",
+  "ciRun": 36449845337,
+  "sdkVersion": "0.2.0-alpha.6",
+  "npmArchiveSha256": "b06c67eb847c7806db056351eaea338de5977fcf823212aac0dc27a03395df36",
+  "transport": "Pinned OpenSSH to separate loopback Prometheus host",
+  "runs": [
+    {
+      "provider": "prometheus-codex",
+      "runtime": {
+        "name": "Codex CLI",
+        "version": "0.157.0"
+      },
+      "subscription": "pro",
+      "model": "gpt-6-luna",
+      "example": "brandstorm",
+      "runId": "d3893877-dceb-470b-8c13-a505de5f0cb7",
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 5,
+        "text.delta": 1,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "usage": {
+        "inputTokens": 6129,
+        "outputTokens": 265,
+        "cachedInputTokens": 4864,
+        "reasoningTokens": 0
+      },
+      "catalogRefreshDuringRun": true,
+      "responseSha256": "84be6904ff108575b74fd4d72dee98f76b18358536c42aeda6fc20aa36a844b7",
+      "privateReceiptSha256": "7a080be4cd046e0f84292cd8411992ed6c0016585fd573233aa2fa99b33b290a"
+    },
+    {
+      "provider": "prometheus-claude",
+      "runtime": {
+        "name": "Claude Code",
+        "version": "2.1.282"
+      },
+      "subscription": "pro",
+      "model": "claude-haiku-4-5-20251001",
+      "example": "workspace",
+      "runId": "41167eb0-eb47-4371-b6c8-6a83a980a054",
+      "events": {
+        "run.started": 1,
+        "step.started": 1,
+        "run.progress": 2,
+        "text.delta": 60,
+        "usage.reported": 1,
+        "run.completed": 1
+      },
+      "usage": {
+        "inputTokens": 3848,
+        "outputTokens": 1217,
+        "cachedInputTokens": 0,
+        "apiEquivalentCostUsd": 0.009933
+      },
+      "catalogRefreshDuringRun": true,
+      "responseSha256": "fcd09b6303d7063a80043fa92519e1bfe3ab424443cf587c8684887c4df652cb",
+      "privateReceiptSha256": "20d9c161d78f59846e1bd8542244bbeeb6dc1350479fa3e0de68fd770040fe24"
+    }
+  ],
+  "managementClients": [
+    "javascript",
+    "python",
+    "go",
+    "rust"
+  ],
+  "managementProviders": 2,
+  "managementDefinitions": 9,
+  "qualityReview": "Final Codex brand output met the supplied structure. Final Claude handoff kept pending PyPI approval and distinguished catalog discovery from execution; the broad opening wording still benefits from editorial review. No email was sent or full consumer acceptance claimed."
+}

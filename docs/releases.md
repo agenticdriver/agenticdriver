@@ -7,14 +7,17 @@ as archives. See the [release verification record](validation/release-0.1.0.md)
 for immutable source, digests, installation evidence and outstanding app migrations.
 Real-provider certification remains separate from package publication.
 
-**0.2.0-alpha.6** (Python **0.2.0a6**) removes mock providers, fake connections,
+**0.2.0-alpha.6** is published on npm, crates.io, Go and GitHub. Python **0.2.0a6**
+is available as a reviewed GitHub wheel/sdist. This release removes mock providers, fake connections,
 fake embeddings and simulated acceptance harnesses. Real Prometheus checks cover
 the selected Codex/Luna and Claude/Haiku accounts across the three application
 examples; [the evidence](validation/real-providers-alpha6-2026-09-28.md) records
 observed quality limits. Package/build checks run separately from real inference.
 See [alpha adoption](alpha.md), [migration notes](migrations.md) and the
 [alpha.6 release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-alpha.6)
-for publication availability and checksums. PyPI approval remains pending.
+for publication availability and checksums. All six SDK checks passed on Prometheus;
+[alpha.6 publication evidence](validation/release-0.2.0-alpha.6.md) records exact
+artifacts, real connections and the delayed npm registry verification. PyPI approval remains pending.
 
 The earlier **0.2.0-alpha.5** (Python **0.2.0a5**) is published on npm, crates.io, Go and GitHub.
 It adds desktop-managed outbound SSH routes, native process cleanup and the SDK
