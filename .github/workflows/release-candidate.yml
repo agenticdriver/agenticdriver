@@ -9,9 +9,9 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     name: Build and install exact release artifacts
     runs-on: [self-hosted, linux, x64, prometheus-ci]
-    env:
-      TMPDIR: ${{ runner.temp }}
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false

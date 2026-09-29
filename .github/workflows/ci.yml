@@ -13,9 +13,9 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap'
     name: Linux desktop companion
     runs-on: [self-hosted, linux, x64, prometheus-ci]
-    env:
-      TMPDIR: ${{ runner.temp }}
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
@@ -45,9 +45,9 @@ jobs:
     if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Documentation site
     runs-on: [self-hosted, linux, x64, prometheus-ci]
-    env:
-      TMPDIR: ${{ runner.temp }}
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
@@ -71,9 +71,9 @@ jobs:
     if: ${{ !cancelled() && github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' }}
     name: Linux account deployment
     runs-on: [self-hosted, linux, x64, prometheus-ci]
-    env:
-      TMPDIR: ${{ runner.temp }}
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
@@ -118,9 +118,10 @@ jobs:
             go: stable
             rust: stable
     env:
-      TMPDIR: ${{ runner.temp }}
       AGENTICDRIVER_TEST_RUST_TOOLCHAIN: ${{ matrix.rust }}
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false

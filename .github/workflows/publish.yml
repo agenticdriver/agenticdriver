@@ -93,13 +93,13 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && (inputs.registry == 'python' || inputs.registry == 'rust')
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: ${{ inputs.registry }}
-    env:
-      TMPDIR: ${{ runner.temp }}
     permissions:
       contents: read
       actions: read
       id-token: write
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Validate the optional candidate revision
         env:
           CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
@@ -163,12 +163,12 @@ jobs:
     if: github.repository == 'agenticdriver/agenticdriver' && github.ref == 'refs/heads/sdk-roadmap' && inputs.registry == 'go'
     runs-on: [self-hosted, linux, x64, prometheus-ci]
     environment: go
-    env:
-      TMPDIR: ${{ runner.temp }}
     permissions:
       contents: write
       actions: read
     steps:
+      - name: Use job-scoped temporary directory
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: Validate the optional candidate revision
         env:
           CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
