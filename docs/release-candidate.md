@@ -11,6 +11,9 @@ installation, cancellation, restart, language-client status and the selected Lun
 brand prompt. Python uses **0.2.0rc3**; protocol remains **1.0**. The three apps'
 accepted workflows currently remain RC.2 evidence; RC.3 publication does not
 automatically establish app acceptance.
+The [consumer coordination diagnosis](validation/consumer-rc3-coordination-2026-09-30.md)
+records the existing blocked rollout, available exact declarations and required
+scope repair under [#83](https://github.com/agenticdriver/agenticdriver/issues/83).
 
 After publication, the released **Usagestat 2.0.1** binary passed separate
 [compatibility and retained-state maintenance](validation/usagestat-2.0.1-2026-09-30.md).

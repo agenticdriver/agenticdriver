@@ -1,0 +1,164 @@
+{
+  "source": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "version": "0.2.0-rc.3",
+  "rolloutId": "rollout_69faf723d8aeb5b1",
+  "featureId": "feat_d00c323b06664d19",
+  "status": "blocked",
+  "activeWorkersAtInspection": 0,
+  "sdkArchiveSha256": "23db3a8269357b1e4f2568a4836588c3c70e8bf60e3869e5d940b362ebe3f070",
+  "selectedPublicDeclarations": [
+    {
+      "export": "./client",
+      "path": "./dist/client.d.ts",
+      "bytes": 6064,
+      "sha256": "78de22c2d7a36fe1055bb40de2ef0a4ef4788e1546744daa66a8194c551f78aa"
+    },
+    {
+      "export": "./catalog",
+      "path": "./dist/catalog.d.ts",
+      "bytes": 2890,
+      "sha256": "1aec5c072a7774453a2be7c1f0e7893b273b41f81fe976cb5c4655eb3e7d5a7d"
+    },
+    {
+      "export": "./connections",
+      "path": "./dist/connections.d.ts",
+      "bytes": 1422,
+      "sha256": "2564e624ad8059728ae5419353a0e0d65687b754a879d533421f6225375678fc"
+    },
+    {
+      "export": "./panel",
+      "path": "./dist/panel.d.ts",
+      "bytes": 7740,
+      "sha256": "70998207af93a342fbd3587352a95c4ebc8c30bfb1c4b35c1f32f7397bec7eab"
+    },
+    {
+      "export": "./context",
+      "path": "./dist/context.d.ts",
+      "bytes": 5032,
+      "sha256": "2a2e12ffa32f391e1fa733268a93c83442f098bbedea434c6c7d3f95251f6a46"
+    }
+  ],
+  "consumers": [
+    {
+      "name": "agent-orchestrator",
+      "taskId": "task_a5460e97694540fa",
+      "adoption": "pending",
+      "message": "Task packet exceeds the driver 100 KB input limit. Reduce the selected files."
+    },
+    {
+      "name": "agentic-literature-review",
+      "taskId": "task_c4c6d856cbaf4e06",
+      "adoption": "pending",
+      "message": "Task packet exceeds the driver 100 KB input limit. Reduce the selected files."
+    },
+    {
+      "name": "ai-workspace",
+      "taskId": "task_b4f32363e3b5462f",
+      "adoption": "pending",
+      "message": "The supplied tests exercise src/integrations/driver-settings.ts, src/integrations/settings-host.ts, src/integrations/mail-triage.ts and src/remote-triage.ts, but those implementations are neither supplied nor allowed for edits. The allowed src/driver-settings.ts and src/driver-connection.ts have null contents and are not the modules these tests import. SDK reference material contains README examples, without rc.3 declarations for the connection and panel APIs, and priorEvidence contains no check diagnostics. Supply the active consumer implementations, relevant rc.3 API contracts or scoped check diagnostics, and exact edit grants for required repairs."
+    },
+    {
+      "name": "brandstorm",
+      "taskId": "task_0ec11c5251964165",
+      "adoption": "pending",
+      "message": "The packet lacks the exact rc.3 API contracts needed to assess compatibility of the consumed client, catalog, connections, panel and context exports. migration.types contains only READMEs, including rc.2 release text, and priorEvidence contains no check diagnostics. Package inspection is unavailable within the granted context. Provide the relevant contracts from f319f173f55069a2ca0f91969bac99c169a063d2 or adapter-types/sdk-integration diagnostics to support a scoped repair."
+    }
+  ],
+  "existingTasks": [
+    {
+      "id": "task_a5460e97694540fa",
+      "status": "blocked",
+      "version": 3,
+      "attemptCount": 1,
+      "backend": "agenticdriver",
+      "files": [
+        "package.json",
+        "src/core/driver.ts",
+        "src/core/driver-runs.ts",
+        "src/core/types.ts",
+        "tests/driver.test.ts",
+        "src/core/engine.ts",
+        "tests/driver-jobs.test.ts",
+        "tests/libraries.test.ts",
+        "tests/support/job-transport.ts",
+        "vendor/agenticdriver.json",
+        "docs/driver-execution.md",
+        "vendor/agenticdriver-sdk-0.2.0-rc.3.tgz",
+        "package-lock.json"
+      ],
+      "checkIds": ["sdk-integration"]
+    },
+    {
+      "id": "task_c4c6d856cbaf4e06",
+      "status": "blocked",
+      "version": 3,
+      "attemptCount": 1,
+      "backend": "agenticdriver",
+      "files": [
+        "apps/server/package.json",
+        "apps/web/package.json",
+        "packages/agents/package.json",
+        "packages/agents/src/agenticdriver.ts",
+        "packages/agents/src/agenticdriver.test.ts",
+        "packages/agents/src/driver-registry.test.ts",
+        "packages/workflows/src/agenticdriver.test.ts",
+        "packages/workflows/src/index.test.ts",
+        "apps/server/src/driver-connection.test.ts",
+        "apps/server/src/driver-panel.test.ts",
+        "apps/server/src/writing-driver.test.ts",
+        "vitest.config.ts",
+        "vendor/agenticdriver-sdk-0.2.0-rc.3-23db3a826935.tgz",
+        "bun.lock"
+      ],
+      "checkIds": ["typecheck", "sdk-integration"]
+    },
+    {
+      "id": "task_b4f32363e3b5462f",
+      "status": "blocked",
+      "version": 3,
+      "attemptCount": 1,
+      "backend": "agenticdriver",
+      "files": [
+        "package.json",
+        "src/agent.ts",
+        "src/driver-connection.ts",
+        "src/driver-settings.ts",
+        "tests/agent.test.ts",
+        "tests/driver-settings.test.ts",
+        "tests/driver-connection.test.ts",
+        "tests/mail-triage.test.ts",
+        "tsconfig.agenticdriver.json",
+        "vendor/agenticdriver-sdk-0.2.0-rc.3-23db3a826935.tgz",
+        "package-lock.json"
+      ],
+      "checkIds": ["sdk-integration"]
+    },
+    {
+      "id": "task_0ec11c5251964165",
+      "status": "blocked",
+      "version": 3,
+      "attemptCount": 1,
+      "backend": "agenticdriver",
+      "files": [
+        "package.json",
+        "packages/provider-agenticdriver/package.json",
+        "packages/ui/package.json",
+        "packages/provider-agenticdriver/src/index.ts",
+        "packages/provider-agenticdriver/src/panel.ts",
+        "tests/unit/agenticdriver.test.ts",
+        "tests/unit/driver-profile.test.ts",
+        "tests/unit/driver-panel.test.ts",
+        "tests/unit/driver-errors.test.ts",
+        "tests/unit/driver-context.test.ts",
+        "vendor/agenticdriver-sdk-0.2.0-rc.3-23db3a826935.tgz",
+        "pnpm-lock.yaml"
+      ],
+      "checkIds": ["adapter-types", "sdk-integration"]
+    }
+  ],
+  "replacementTasksCreated": false,
+  "attemptLimitsChanged": false,
+  "consumerSourcesEdited": false,
+  "modelCallsRequestedForDiagnosis": 0,
+  "followup": "https://github.com/agenticdriver/agenticdriver/issues/83"
+}
