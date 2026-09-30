@@ -109,7 +109,20 @@ Local typechecking, 34 pure/real-empty-host tests (one live-account-dependent sk
 all language package checks, seven desktop checks, protocol generation and a fresh
 npm package installation passed. Protocol/IPC/schema checks use no replacement
 model server and are separate from the actual install and inference above.
-Prometheus CI and the resulting immutable desktop artifact are tracked on #79.
+All seven [Prometheus checks](https://github.com/agenticdriver/agenticdriver/actions/runs/36654580365)
+passed for source `57cd694e26e9ec444e3b17689597db689da9ce91` on attempt 3. The
+first two attempts stopped documentation/candidate packaging at the storage
+preflight before compilation. The private-cache recovery in #81 restored 8.8 GiB
+free without broadening cleanup to images, volumes, containers or shared data.
+
+The exact desktop artifact SHA-256 is
+`fbead0b168626460225fe780d57ba988957146793a5e18bb273fe60f1ec67421`.
+Its bundled Node worker started a real empty host, downloaded and verified the
+official executable, retained it through restart, and read six actual Usagestat
+snapshots with retained settings. It created no provider or application grant
+and made no model call. This is a development artifact still labelled RC.2; it
+does not replace the immutable published RC.2 release. RC.3 publication is the
+separate #80 task.
 
 Private full receipts and profiles are retained under local validation state.
 Public evidence excludes account email/name, native account paths and credential
