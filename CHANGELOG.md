@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0-rc.3 — candidate
+
+- Added the desktop Overview with real host, provider, account-catalog, application-grant and Usagestat setup status. Partial or unavailable checks remain unknown; metadata does not imply successful model execution.
+- Added explicit local and remote installation of the qualified Codex 0.157.0 Linux x64 runtime. The host pins official archive/executable hashes, verifies before installation, supports owned cancellation and preserves native accounts and provider settings.
+- Added typed runtime management to TypeScript, Python, Go and Rust and the shared provider panel. Installation, provider sign-in, application grants and model execution remain separate user choices.
+- Kept stable Usagestat 2.0.0 compatibility, wire protocol 1.0, existing provider/account/model selections and the disabled default inactivity timeout. Other native installers and platform qualifications remain outside this candidate.
+
 ## 0.2.0-rc.2 — 2026-09-30
 
 - Corrected Usagestat quota reads to derive resources from native `/v1/usage` snapshots. Published SDK 0.2.0-rc.1 calls `/v1/limits`, which the backend never served; desktop usage display is unaffected. Account bindings, freshness and failure handling remain explicit. The derived schema is `agenticdriver.usagestat-limits.v1`, replacing the never-served `crossusage.limits.v1` literal.

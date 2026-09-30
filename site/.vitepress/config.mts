@@ -67,6 +67,7 @@ export default defineConfig({
           { text: "Real remote examples", link: "/real-connections" },
           { text: "Remote provider management", link: "/provider-management" },
           { text: "Native provider sign-in", link: "/provider-sign-in" },
+          { text: "Managed provider runtimes", link: "/provider-runtimes" },
           { text: "Better Auth and AuthYard", link: "/authentication" },
           { text: "Remote deployment", link: "/deployment" },
           { text: "Discovery", link: "/discovery" },
