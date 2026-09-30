@@ -1,6 +1,7 @@
 import { hostConnections } from "./connections.js";
 import { providerDefinitions } from "./provider-definitions.js";
 import { providerSetup } from "./provider-setup.js";
+import { providerRuntimes } from "./provider-runtimes.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -20,6 +21,7 @@ import {
 } from "./management-types.js";
 export type * from "./management-types.js";
 export type * from "./setup-types.js";
+export type * from "./runtime-types.js";
 
 /** Built-in host snapshots are synchronous; custom management can also be asynchronous. */
 export interface ManagedProviderManagement extends ProviderManagement {
@@ -41,10 +43,8 @@ export async function managedHost(
   const path = resolve(configPath),
     directory = dirname(path);
   let config = await readHostConfig(path);
-  const ownedSignIn =
-    process.platform === "linux" &&
-    process.arch === "x64" &&
-    Boolean(config.usage?.hostId);
+  const managedRuntime = process.platform === "linux" && process.arch === "x64";
+  const ownedSignIn = managedRuntime && Boolean(config.usage?.hostId);
   const driver = configuredDriver(config, path, options);
   let queue: Promise<unknown> = Promise.resolve();
   const snapshot = (): ManagementSnapshot => ({
@@ -213,6 +213,9 @@ export async function managedHost(
     snapshot,
     configure,
     ...(setup ? { setup } : {}),
+    ...(managedRuntime
+      ? { runtimes: await providerRuntimes({ directory }) }
+      : {}),
   };
   return {
     driver,

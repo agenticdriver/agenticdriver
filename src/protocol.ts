@@ -32,6 +32,7 @@ export function protocolInfo(
     clientPairing?: boolean;
     providerManagement?: boolean;
     providerSetup?: boolean;
+    providerRuntimes?: boolean;
     jobs?: boolean;
     sessions?: boolean;
     applicationTools?: boolean;
@@ -51,6 +52,7 @@ export function protocolInfo(
       ...(options.clientPairing ? ["client-pairing"] : []),
       ...(options.providerManagement ? ["provider-management"] : []),
       ...(options.providerSetup ? ["provider-setup"] : []),
+      ...(options.providerRuntimes ? ["provider-runtimes"] : []),
       ...(options.jobs ? ["durable-jobs"] : []),
       ...(options.sessions ? ["conversation-sessions"] : []),
       ...(options.applicationTools ? ["application-tools"] : []),

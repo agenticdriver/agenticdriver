@@ -27,6 +27,14 @@ import {
 } from "./setup-types.js";
 export type * from "./setup-types.js";
 import { z } from "zod";
+import {
+  ProviderRuntimeRequestSchema,
+  ProviderRuntimeSnapshotSchema,
+  matchesRuntimeResponse,
+  type ProviderRuntimeRequest,
+  type ProviderRuntimeSnapshot,
+} from "./runtime-types.js";
+export type * from "./runtime-types.js";
 export { validateSourceCitations } from "./citations.js";
 import {
   SessionInfoSchema,
@@ -251,6 +259,7 @@ export class AgenticClient {
       | Record<string, never>
       | ConfigureProvider
       | ProviderSetupRequest
+      | ProviderRuntimeRequest
       | RunRequest
       | RetrievalSearch
       | RetrievalIndexRequest
@@ -422,6 +431,32 @@ export class AgenticClient {
       throw new DriverError(
         "INVALID_RESPONSE",
         "The host returned invalid or mismatched provider setup state.",
+      );
+    return parsed.data;
+  }
+  async providerRuntime(
+    input: ProviderRuntimeRequest,
+    options: ClientRequestOptions = {},
+  ): Promise<ProviderRuntimeSnapshot> {
+    const request = ProviderRuntimeRequestSchema.safeParse(input);
+    if (!request.success)
+      throw new DriverError(
+        "INVALID_RUNTIME_REQUEST",
+        "Choose a supported runtime operation.",
+      );
+    const parsed = ProviderRuntimeSnapshotSchema.safeParse(
+      await readResponseJson(
+        await this.request(
+          "v1/management/runtimes",
+          request.data,
+          options.signal,
+        ),
+      ),
+    );
+    if (!parsed.success || !matchesRuntimeResponse(parsed.data, request.data))
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The host returned invalid or mismatched runtime state.",
       );
     return parsed.data;
   }

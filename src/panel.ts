@@ -11,6 +11,10 @@ import {
 } from "./setup-types.js";
 import type { ProviderInfo } from "./types.js";
 import type { ProviderPresentation } from "./catalog.js";
+import {
+  ProviderRuntimeRequestSchema,
+  type ProviderRuntimeSnapshot,
+} from "./runtime-types.js";
 export interface PanelConnection {
   id: string;
   label: string;
@@ -22,6 +26,7 @@ export interface ProviderPanelState {
   providers: ProviderInfo[];
   management?: ManagementSnapshot;
   setup?: ProviderSetupSnapshot;
+  runtimes?: ProviderRuntimeSnapshot;
   presentations?: Record<string, ProviderPresentation>;
   canConnect: boolean;
   canDisconnect: boolean;
@@ -29,6 +34,12 @@ export interface ProviderPanelState {
   connectionError?: string;
 }
 export const PanelRequestSchema = z.discriminatedUnion("action", [
+  z
+    .object({
+      action: z.literal("runtime"),
+      request: ProviderRuntimeRequestSchema,
+    })
+    .strict(),
   z
     .object({ action: z.literal("setup"), request: ProviderSetupRequestSchema })
     .strict(),
@@ -101,6 +112,14 @@ export function providerPanel(options: ProviderPanelOptions) {
       ...(management && protocol.features.includes("provider-setup")
         ? { setup: await client.providerSetup({ action: "list" }) }
         : {}),
+      ...(management && protocol.features.includes("provider-runtimes")
+        ? {
+            runtimes: await client.providerRuntime({
+              action: "status",
+              kind: "codex",
+            }),
+          }
+        : {}),
       canInvite: Boolean(
         management &&
         connection?.url &&
@@ -149,6 +168,8 @@ export function providerPanel(options: ProviderPanelOptions) {
       return snapshot();
     }
     if (action.action === "setup") return client.providerSetup(action.request);
+    if (action.action === "runtime")
+      return client.providerRuntime(action.request);
     if (action.action === "connections") return client.connections();
     if (action.action === "revoke") return client.revokeConnection(action.id);
     const connection = options.connection?.();

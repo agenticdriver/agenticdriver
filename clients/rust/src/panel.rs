@@ -90,6 +90,13 @@ pub fn panel_snapshot<B: PanelBackend>(backend: &B, refresh: bool) -> Result<Val
             state["setup"] =
                 serde_json::to_value(client.provider_setup(&crate::ProviderSetupRequest::List)?)?;
         }
+        if features.iter().any(|f| f == "provider-runtimes") {
+            state["runtimes"] = serde_json::to_value(client.provider_runtime(
+                &crate::ProviderRuntimeRequest::Status {
+                    kind: "codex".into(),
+                },
+            )?)?;
+        }
         state["canInvite"] = json!(
             features.iter().any(|f| f == "client-pairing")
                 && backend.connection().and_then(|c| c.url).is_some()
@@ -119,6 +126,9 @@ pub fn handle_provider_panel<B: PanelBackend>(backend: &mut B, request: &Value) 
         .client()
         .ok_or(Error::Protocol("Connect an AgenticDriver host first."))?;
     match action {
+        "runtime" => Ok(serde_json::to_value(client.provider_runtime(
+            &serde_json::from_value(request["request"].clone())?,
+        )?)?),
         "setup" => Ok(serde_json::to_value(client.provider_setup(
             &serde_json::from_value(request["request"].clone())?,
         )?)?),
@@ -211,6 +221,15 @@ pub async fn panel_snapshot_async<B: AsyncPanelBackend>(
                     .await?,
             )?;
         }
+        if features.iter().any(|f| f == "provider-runtimes") {
+            state["runtimes"] = serde_json::to_value(
+                client
+                    .provider_runtime(&crate::ProviderRuntimeRequest::Status {
+                        kind: "codex".into(),
+                    })
+                    .await?,
+            )?;
+        }
         state["canInvite"] = json!(
             features.iter().any(|f| f == "client-pairing")
                 && backend.connection().and_then(|c| c.url).is_some()
@@ -243,6 +262,11 @@ pub async fn handle_provider_panel_async<B: AsyncPanelBackend>(
         .client()
         .ok_or(Error::Protocol("Connect an AgenticDriver host first."))?;
     match action {
+        "runtime" => Ok(serde_json::to_value(
+            client
+                .provider_runtime(&serde_json::from_value(request["request"].clone())?)
+                .await?,
+        )?),
         "setup" => Ok(serde_json::to_value(
             client
                 .provider_setup(&serde_json::from_value(request["request"].clone())?)

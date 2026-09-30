@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { HostProviderConfigSchema } from "./provider-config.js";
 import type { ProviderSetup } from "./setup-types.js";
+import type { ProviderRuntimes } from "./runtime-types.js";
 export {
   HostProviderConfigSchema,
   type HostProviderConfig,
@@ -70,4 +71,5 @@ export interface ProviderManagement {
   snapshot(): ManagementSnapshot | Promise<ManagementSnapshot>;
   configure(input: unknown): Promise<ManagementSnapshot>;
   setup?: ProviderSetup;
+  runtimes?: ProviderRuntimes;
 }

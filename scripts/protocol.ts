@@ -15,6 +15,10 @@ import {
   ProviderSetupSnapshotSchema,
 } from "../src/setup-types.js";
 import { z } from "zod";
+import {
+  ProviderRuntimeRequestSchema,
+  ProviderRuntimeSnapshotSchema,
+} from "../src/runtime-types.js";
 import { format } from "prettier";
 import { HostConfigSchema } from "../src/host.js";
 import { ProviderExtensionManifestSchema } from "../src/provider-kit.js";
@@ -96,6 +100,8 @@ const schemas = {
       ManagementSnapshot: ManagementSnapshotSchema,
       ProviderSetupRequest: ProviderSetupRequestSchema,
       ProviderSetupSnapshot: ProviderSetupSnapshotSchema,
+      ProviderRuntimeRequest: ProviderRuntimeRequestSchema,
+      ProviderRuntimeSnapshot: ProviderRuntimeSnapshotSchema,
       JobSubmit: JobSubmitSchema,
       JobIdentity: JobIdentitySchema,
       JobInfo: JobInfoSchema,
@@ -699,6 +705,32 @@ const document = {
               },
             },
           },
+        },
+      },
+    },
+    "/v1/management/runtimes": {
+      post: {
+        summary: "Inspect, install or cancel a host-reviewed native runtime",
+        description:
+          "Requires provider-runtimes and manageProviders. Only fixed official release artifacts are accepted. Installation is separate from sign-in, provider configuration and model execution. Cancellation belongs to the initiating credential.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: ref("ProviderRuntimeRequest") },
+          },
+        },
+        responses: {
+          "200": {
+            description:
+              "Runtime status or scheduled installation progress; host-local executable path only after verification",
+            content: {
+              "application/json": { schema: ref("ProviderRuntimeSnapshot") },
+            },
+          },
+          "403": { description: "Management grant required" },
+          "404": { description: "Installation unavailable to this credential" },
+          "409": { description: "Another installation is active" },
+          "503": { description: "Managed runtimes unavailable on this host" },
         },
       },
     },

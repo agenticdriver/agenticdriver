@@ -39,6 +39,29 @@ function providerIconSvg(provider, options = {}) {
   return svg[icon.file].replaceAll("__AD_ICON__", prefix + "-");
 }
 
+// dist/runtime-validation.js
+function matchesRuntimeResponse(value, request) {
+  if (!value || typeof value !== "object")
+    return false;
+  const snapshot = value;
+  if (snapshot.version !== 1 || !Array.isArray(snapshot.runtimes) || snapshot.runtimes.length !== 1)
+    return false;
+  const r = snapshot.runtimes[0];
+  if (!r || r.kind !== request.kind || r.version !== "0.157.0" || r.platform !== "linux-x64" || ![
+    "missing",
+    "downloading",
+    "verifying",
+    "installed",
+    "failed",
+    "cancelled"
+  ].includes(r.phase))
+    return false;
+  const uuid = /^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-8][a-fA-F0-9]{3}-[89aAbB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$/;
+  const text = (s, maximum) => typeof s === "string" && s.length > 0 && s.length <= maximum;
+  const active = r.phase === "downloading" || r.phase === "verifying";
+  return typeof r.archiveSha256 === "string" && /^[a-f0-9]{64}$/.test(r.archiveSha256) && typeof r.canCancel === "boolean" && Number.isSafeInteger(r.downloadBytes) && Number.isSafeInteger(r.totalBytes) && r.totalBytes > 0 && r.downloadBytes >= 0 && r.downloadBytes <= r.totalBytes && (!["installed", "verifying"].includes(r.phase) || r.downloadBytes === r.totalBytes) && (r.phase === "installed" ? text(r.binary, 4096) : r.binary === void 0) && (r.id === void 0 || typeof r.id === "string" && uuid.test(r.id)) && (!active || Boolean(r.id)) && (!r.canCancel || active) && (r.updatedAt === void 0 || typeof r.updatedAt === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(r.updatedAt) && Number.isFinite(Date.parse(r.updatedAt))) && (r.error === void 0 || r.error && text(r.error.code, 80) && text(r.error.message, 512)) && (request.action !== "cancel" || r.id === request.id);
+}
+
 // dist/ui.js
 var escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 function assetPath(path) {
@@ -134,6 +157,7 @@ var css = `
 :host{--ad-bg:#252a3b;--ad-surface:#2c3245;--ad-field:#222737;--ad-line:#3a4157;--ad-fg:#e9ecf5;--ad-muted:#a6aec4;--ad-accent:#a6b6ff;--ad-good:#9ddbc2;display:block;color:var(--ad-fg);font:14px/1.5 system-ui,sans-serif;color-scheme:dark}
 :host([theme=light]){--ad-bg:#fafbff;--ad-surface:#f0f2f9;--ad-field:#fff;--ad-line:#d8deee;--ad-fg:#202839;--ad-muted:#5d6980;--ad-accent:#3e52b6;--ad-good:#237a59;color-scheme:light}
 *{box-sizing:border-box}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ad-accent);outline-offset:3px}button{color:inherit;border:1px solid var(--ad-line);border-radius:8px;background:transparent;padding:7px 12px}button:hover:enabled{background:var(--ad-surface)}button.primary{background:var(--ad-accent);color:var(--ad-bg);border-color:transparent;font-weight:650}button.primary:hover:enabled{filter:brightness(1.08)}.quiet{border:0;padding:5px 8px}.shell{background:var(--ad-bg);border:1px solid var(--ad-line);border-radius:18px;overflow:hidden;min-height:460px;max-width:1320px;margin:auto}.top{padding:22px 26px;display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid var(--ad-line)}.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--ad-muted);text-transform:uppercase}.top h2{font-size:20px;letter-spacing:-.025em;margin:4px 0 0;font-weight:600}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:11px;border:1px solid var(--ad-line);border-radius:20px;padding:3px 9px;color:var(--ad-muted);white-space:nowrap}.live{color:var(--ad-good)}.layout{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:480px}.sidebar{background:color-mix(in srgb,var(--ad-surface) 45%,transparent);border-right:1px solid var(--ad-line);padding:12px}.side-label{font-size:11px;color:var(--ad-muted);padding:10px 10px 14px;text-transform:uppercase;letter-spacing:.07em}.provider{display:flex;align-items:center;border:1px solid transparent;border-radius:11px;margin:3px 0;padding:5px;gap:3px}.provider.selected{background:var(--ad-surface);border-color:var(--ad-line)}.provider button.select{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-align:left;border:0;padding:10px 6px}.avatar{width:32px;height:32px;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:650;color:var(--ad-accent);background:var(--ad-field);border-radius:9px}.avatar img,.avatar svg{width:24px;height:24px;object-fit:contain}.brand-mark{color:var(--ad-fg);background:transparent}.icon-preferences{margin-bottom:20px}.icon-preferences>p{padding:0 18px}.provider-copy{min-width:0}.provider-copy strong{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.provider-copy small{font-size:11px;color:var(--ad-muted);display:block}.switch{width:32px;height:19px;flex:0 0 32px;padding:2px!important;border:0;border-radius:18px;background:var(--ad-line);position:relative}.switch:before{content:"";width:15px;height:15px;display:block;border-radius:50%;background:var(--ad-muted)}.switch[aria-checked=true]{background:var(--ad-accent)}.switch[aria-checked=true]:before{background:var(--ad-bg);margin-left:13px}.detail{padding:26px 30px;min-width:0}.detail-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.detail-head>div{min-width:0;overflow-wrap:anywhere}.detail-head h3{font-size:19px;margin:0;font-weight:600}.muted{color:var(--ad-muted)}.small{font-size:12px}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ad-line);margin:22px 0}.tabs button{border:0;border-radius:0;padding:10px 16px;color:var(--ad-muted);border-bottom:2px solid transparent}.tabs button[aria-selected=true]{color:var(--ad-accent);border-bottom-color:var(--ad-accent)}.group{border:1px solid var(--ad-line);border-radius:12px;overflow:hidden;margin:14px 0}.field{display:grid;grid-template-columns:minmax(130px,1fr) minmax(160px,1fr);gap:20px;padding:16px 18px;align-items:center}.field+.field{border-top:1px solid var(--ad-line)}.field label{font-weight:550;display:block}.hint{color:var(--ad-muted);font-size:12px;font-weight:400;margin:4px 0 0}input,select,textarea{border:1px solid var(--ad-line);border-radius:8px;padding:8px 10px;background:var(--ad-field);color:var(--ad-fg);width:100%;min-width:0}input:disabled{opacity:.65}input[type=checkbox]{width:16px;height:16px;accent-color:var(--ad-accent)}textarea{resize:vertical;min-height:90px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.model-access{flex-wrap:wrap}.model-access .inline{white-space:nowrap}.model-toolbar{margin-bottom:12px;display:flex;gap:14px;align-items:center}.model-toolbar input{max-width:260px}.models{border-top:1px solid var(--ad-line);margin-top:14px}.model{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--ad-line)}.model.hidden-model{opacity:.65}.model .model-name{flex:1;min-width:0;text-align:left;border:0;font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;padding:4px}.model .star{font-size:18px;width:27px;padding:2px;border:0}.star.favorite{color:#e9c979}.icon-button{font-size:12px;padding:3px 6px}.section-label{font-size:12px;color:var(--ad-muted);margin:22px 0 10px}.notice{border:1px solid var(--ad-line);border-radius:10px;padding:12px 15px;color:var(--ad-muted);font-size:12px;margin:12px 0}.error{border-color:#b5727c;color:#f2b7bf;margin:16px 24px}.success{color:var(--ad-good)}.empty{max-width:840px;margin:auto;padding:40px 32px}.empty h3{font-size:28px;line-height:1.25;letter-spacing:-.035em;margin:10px 0}.empty p{max-width:570px;color:var(--ad-muted)}.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}.setup-card{background:var(--ad-surface);border:1px solid var(--ad-line);border-radius:12px;padding:22px}.setup-card h4{font-size:15px;margin:4px 0 10px}.step{font-size:11px;color:var(--ad-accent);font-weight:600}.command{font:12px/1.6 ui-monospace,monospace;background:var(--ad-field);border-radius:8px;padding:12px;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}.connect-form{margin:24px 0}.connect-form label{display:block;margin-bottom:8px;font-weight:550}.connect-form textarea{font:12px/1.6 ui-monospace,monospace}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:18px}.inline{display:flex;align-items:center;gap:8px}.host-label{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.links{margin-top:24px;padding-top:18px;border-top:1px solid var(--ad-line)}.connections{padding:10px 0;border-bottom:1px solid var(--ad-line);display:flex;justify-content:space-between;gap:16px}.connection-meta{font-size:11px;color:var(--ad-muted);overflow-wrap:anywhere}.new-provider{border:1px dashed var(--ad-line);width:100%;margin-top:15px;text-align:left}.save-row{justify-content:flex-end}.loading{padding:50px;text-align:center;color:var(--ad-muted)}
+.runtime-install{margin:16px 24px}.detail .runtime-install{margin:16px 0}.runtime-install progress{width:100%;accent-color:var(--ad-accent);margin-top:12px}.runtime-install>.row{flex-wrap:wrap}.runtime-install strong{color:var(--ad-fg)}
 .setup-host{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border:1px solid var(--ad-line);border-radius:10px;padding:12px 16px;margin-bottom:22px;overflow-wrap:anywhere}.setup-host .hint{flex-basis:100%}.setup-host .small{overflow-wrap:anywhere;min-width:0}.provider-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.provider-choice,.method-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:16px}.provider-choice strong{font-size:15px}.provider-choice .hint{margin-top:auto;padding-top:8px}.method-list{display:grid;gap:10px;margin:18px 0}.method-choice.chosen{border-color:var(--ad-accent);background:var(--ad-surface)}.method-choice strong:before{content:"\u25CB";margin-right:8px;color:var(--ad-muted)}.method-choice.chosen strong:before{content:"\u25CF";color:var(--ad-accent)}.setup-title h4{font-size:20px;margin:3px 0}.advanced summary{cursor:pointer;color:var(--ad-muted);padding:8px 0}.advanced .group{margin-top:6px}.hint a{color:var(--ad-accent);white-space:normal}
 @media(max-width:760px){.connection-facts{grid-template-columns:1fr}.provider-catalog{grid-template-columns:1fr}.setup-title{flex-wrap:wrap}.top{padding:18px;align-items:flex-start;flex-wrap:wrap}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--ad-line);display:flex;gap:6px;overflow:auto;align-items:center}.side-label{display:none}.provider{flex:0 0 205px;min-width:0}.new-provider{width:auto;white-space:nowrap;margin:0}.detail{padding:22px 18px}.field{grid-template-columns:1fr;gap:9px;padding:14px}.setup-grid{grid-template-columns:1fr}.empty{padding:26px 20px}.empty h3{font-size:25px}.host-label{max-width:180px}.model{gap:3px}.model-toolbar{align-items:flex-start;flex-wrap:wrap}.model .model-name{font-size:11px}.footer{flex-wrap:wrap}}
 `;
@@ -159,6 +183,8 @@ function registerProviderPanel(registry = customElements) {
     setupMethod = "";
     setupTimer;
     setupSequence = 0;
+    runtimeTimer;
+    runtimeSequence = 0;
     draft;
     apiKey = "";
     generation = 0;
@@ -211,6 +237,8 @@ function registerProviderPanel(registry = customElements) {
       this.generation++;
       clearTimeout(this.setupTimer);
       this.setupSequence++;
+      clearTimeout(this.runtimeTimer);
+      this.runtimeSequence++;
     }
     async call(request) {
       if (!this.transport)
@@ -249,6 +277,57 @@ function registerProviderPanel(registry = customElements) {
       this.links = void 0;
       this.invite = void 0;
       this.armSetupPoll();
+      this.armRuntimePoll();
+    }
+    async runtimeRequest(request) {
+      const generation = this.generation, sequence = ++this.runtimeSequence;
+      this.busy = true;
+      clearTimeout(this.runtimeTimer);
+      this.render();
+      try {
+        const raw = await this.call({ action: "runtime", request });
+        if (!matchesRuntimeResponse(raw, request))
+          throw new Error("Invalid runtime installation status.");
+        if (generation === this.generation && sequence === this.runtimeSequence && this.state)
+          this.state.runtimes = raw;
+      } finally {
+        if (generation === this.generation && sequence === this.runtimeSequence) {
+          this.busy = false;
+          this.render();
+          this.armRuntimePoll();
+        }
+      }
+    }
+    armRuntimePoll() {
+      clearTimeout(this.runtimeTimer);
+      if (!this.isConnected || !this.state?.runtimes?.runtimes.some((r) => ["downloading", "verifying"].includes(r.phase)))
+        return;
+      this.runtimeTimer = setTimeout(async () => {
+        if (this.busy) {
+          this.armRuntimePoll();
+          return;
+        }
+        const generation = this.generation, sequence = ++this.runtimeSequence;
+        try {
+          const request = {
+            action: "status",
+            kind: "codex"
+          };
+          const result = await this.call({ action: "runtime", request });
+          if (!matchesRuntimeResponse(result, request))
+            throw new Error("Invalid runtime installation status.");
+          if (generation !== this.generation || sequence !== this.runtimeSequence || !this.state)
+            return;
+          this.state.runtimes = result;
+          this.render();
+          this.armRuntimePoll();
+        } catch (error) {
+          if (generation === this.generation && sequence === this.runtimeSequence) {
+            this.failure = "Runtime status is unavailable. Refresh to reconnect. " + (error instanceof Error ? error.message : "");
+            this.render();
+          }
+        }
+      }, 2e3);
     }
     async setupRequest(request) {
       const generation = this.generation;
@@ -332,12 +411,16 @@ function registerProviderPanel(registry = customElements) {
       this.invite = void 0;
       clearTimeout(this.setupTimer);
       this.setupSequence++;
+      clearTimeout(this.runtimeTimer);
+      this.runtimeSequence++;
     }
     async refresh() {
       this.revealedAccounts.clear();
       const generation = ++this.generation;
       clearTimeout(this.setupTimer);
       this.setupSequence++;
+      clearTimeout(this.runtimeTimer);
+      this.runtimeSequence++;
       this.busy = true;
       this.failure = "";
       this.render();
@@ -537,6 +620,30 @@ function registerProviderPanel(registry = customElements) {
       }
       if (action === "confirm-remove")
         return this.removeProvider();
+      if (action === "runtime-install" || action === "runtime-check")
+        return this.runtimeRequest({
+          action: action === "runtime-install" ? "install" : "status",
+          kind: "codex"
+        });
+      if (action === "runtime-cancel" && button.dataset.id)
+        return this.runtimeRequest({
+          action: "cancel",
+          kind: "codex",
+          id: button.dataset.id
+        });
+      if (action === "runtime-use" && this.adding && this.draft?.kind === "codex") {
+        const generation = this.generation, draft = this.draft;
+        await this.runtimeRequest({ action: "status", kind: "codex" });
+        if (generation !== this.generation || !this.isConnected || !this.adding || this.draft !== draft)
+          return;
+        const runtime = this.state?.runtimes?.runtimes[0];
+        if (runtime?.phase !== "installed" || !runtime.binary)
+          throw new Error("The managed runtime is unavailable. Check its installation first.");
+        draft.binary = runtime.binary;
+        this.message = "Managed Codex runtime selected for this new connection. Sign-in starts only when you choose Start sign-in.";
+        this.render();
+        return;
+      }
       if ((action === "setup-accept" || action === "setup-cancel") && button.dataset.id) {
         return this.setupRequest({
           action: action === "setup-accept" ? "accept" : "cancel",
@@ -876,6 +983,25 @@ function registerProviderPanel(registry = customElements) {
         ])}<p>Connect this account as <strong>${escape(a.name)}</strong> on ${escape(this.state?.connection?.label ?? "this host")}?</p><button class="primary" data-action="setup-accept" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Confirm account</button>` : ""}${a.error ? `<p class="notice error" role="alert">${escape(a.error.message)}</p>` : ""}${active ? `<div class="footer"><span class="hint">Sign-in expires ${escape(new Date(a.expiresAt).toLocaleTimeString())} \xB7 Existing accounts stay connected.</span><button data-action="setup-cancel" data-id="${escape(a.id)}" ${this.busy ? "disabled" : ""}>Cancel sign-in</button></div>` : `<p class="hint">${a.phase === "succeeded" ? "Account verified. No model was run and application permissions stay unchanged." : "You can start a new attempt from Add provider."}</p>`}</article>`;
       }).join("")}</section>`;
     }
+    runtimeCard(setup = false) {
+      const runtime = this.state?.runtimes?.runtimes[0];
+      if (!runtime)
+        return "";
+      const active = ["downloading", "verifying"].includes(runtime.phase);
+      if (!setup && !active)
+        return "";
+      const statuses = {
+        missing: "Install the Codex runtime",
+        downloading: "Downloading Codex",
+        verifying: "Checking the runtime",
+        installed: "Codex runtime installed",
+        failed: "Runtime installation needs attention",
+        cancelled: "Installation cancelled"
+      };
+      const selected = this.draft?.kind === "codex" && this.draft.binary === runtime.binary && runtime.binary;
+      const percent = Math.floor(runtime.downloadBytes / runtime.totalBytes * 100);
+      return `<section class="notice runtime-install" aria-label="Managed Codex runtime"><div class="row"><strong>${escape(statuses[runtime.phase])}</strong><span class="hint">${escape(runtime.version)} \xB7 ${escape(runtime.platform)}</span></div><p class="hint">The runtime uses AgenticDriver's private directory on ${escape(this.state?.connection?.label ?? "the connected host")}. Your existing CLI and accounts stay in place.</p>${active ? `<progress aria-label="Codex download" max="${runtime.totalBytes}" value="${runtime.downloadBytes}"></progress><p class="hint" role="status">${runtime.phase === "verifying" ? "Download complete. Verifying the release and executable." : `${percent}% downloaded`}</p>` : ""}${runtime.error ? `<p role="alert">${escape(runtime.error.message)}</p>` : ""}<div class="footer"><span class="hint">${selected ? "Selected for this new connection." : "Installation does not sign in, run a model or change application access."}</span><div class="actions">${active ? runtime.canCancel && runtime.id ? `<button data-action="runtime-cancel" data-id="${escape(runtime.id)}" ${this.busy ? "disabled" : ""}>Cancel installation</button>` : '<span class="hint">Started by another connection</span>' : runtime.phase === "installed" ? setup && !selected ? `<button data-action="runtime-use" ${this.busy ? "disabled" : ""}>Use for this connection</button>` : "" : `<button data-action="runtime-install" ${this.busy || runtime.error?.code === "RUNTIME_DAMAGED" || runtime.error?.code === "RUNTIME_STORE_UNSAFE" || runtime.error?.code === "RUNTIME_CLEANUP_FAILED" ? "disabled" : ""}>${runtime.phase === "missing" ? "Install Codex 0.157.0" : "Retry installation"}</button>`}<button data-action="runtime-check" ${this.busy ? "disabled" : ""}>Check runtime</button></div></div></section>`;
+    }
     setupProvider() {
       const definitions = this.definitions(), p = this.draft;
       const host = `<div class="setup-host"><span class="eyebrow">SET UP ON</span><strong>${escape(this.state?.connection?.label ?? "Connected host")}</strong>${this.state?.connection?.url ? `<span class="small muted">${escape(this.state.connection.url)}</span>` : ""}<span class="hint">Accounts, paths and credentials belong to this host.</span></div>`;
@@ -911,7 +1037,7 @@ function registerProviderPanel(registry = customElements) {
         }
       }
       const owner = method?.credentialOwner === "native-runtime" ? "Credentials stay with the official runtime." : method?.credentialOwner === "host" ? "Credentials are resolved privately by the connected host." : "No credentials are needed.";
-      return `${host}<div class="row setup-title"><div><span class="eyebrow">${escape(categories[definition.category])}</span><h4 tabindex="-1" data-field="method-heading">${escape(definition.name)}</h4><span class="hint">${escape(definition.protocol)}</span></div><button data-action="back-providers">Change provider</button></div><div class="method-list" aria-label="Connection methods">${methods}</div>${definition.requirements ? `<div class="notice">${escape(definition.requirements)}</div>` : ""}<p class="hint">${owner} ${helpLink(definition.docsUrl)}</p><div class="group">${fields}</div><details class="advanced"><summary>Advanced settings</summary><div class="group">${advanced}</div></details><div class="notice">All models are allowed by default for this instance. You can add connection overrides in Models. Application execution grants stay separate. ${method?.interaction === "device-code" ? "Sign-in verifies the account; models remain untested until you explicitly run them." : "Saving does not run a model or verify account access."}</div><div class="footer"><button data-action="cancel-add">Cancel</button><button class="primary" data-action="connect-provider" ${this.busy || !method || !setupInteractions.has(method.interaction) ? "disabled" : ""}>${this.busy ? "Saving\u2026" : method?.interaction === "device-code" ? "Start sign-in" : "Save connection"}</button></div>`;
+      return `${host}<div class="row setup-title"><div><span class="eyebrow">${escape(categories[definition.category])}</span><h4 tabindex="-1" data-field="method-heading">${escape(definition.name)}</h4><span class="hint">${escape(definition.protocol)}</span></div><button data-action="back-providers">Change provider</button></div><div class="method-list" aria-label="Connection methods">${methods}</div>${p.kind === "codex" ? this.runtimeCard(true) : ""}${definition.requirements ? `<div class="notice">${escape(definition.requirements)}</div>` : ""}<p class="hint">${owner} ${helpLink(definition.docsUrl)}</p><div class="group">${fields}</div><details class="advanced"><summary>Advanced settings</summary><div class="group">${advanced}</div></details><div class="notice">All models are allowed by default for this instance. You can add connection overrides in Models. Application execution grants stay separate. ${method?.interaction === "device-code" ? "Sign-in verifies the account; models remain untested until you explicitly run them." : "Saving does not run a model or verify account access."}</div><div class="footer"><button data-action="cancel-add">Cancel</button><button class="primary" data-action="connect-provider" ${this.busy || !method || !setupInteractions.has(method.interaction) ? "disabled" : ""}>${this.busy ? "Saving\u2026" : method?.interaction === "device-code" ? "Start sign-in" : "Save connection"}</button></div>`;
     }
     runtime(provider) {
       if (this.adding && this.state?.management?.providerDefinitions)
@@ -990,7 +1116,7 @@ function registerProviderPanel(registry = customElements) {
           const config = state.management?.providers.find((p) => p.id === provider.id);
           return `<div class="provider ${provider.id === this.selected && !this.adding ? "selected" : ""}"><button class="select" data-action="select" data-id="${escape(provider.id)}" aria-pressed="${provider.id === this.selected && !this.adding}">${this.avatar(provider)}<span class="provider-copy"><strong>${escape(provider.name)}${provider.connection?.runtime ? ` <span class="provider-version">${escape(provider.connection.runtime.version)}</span>` : ""}</strong><small>${config?.enabled === false ? "Disabled" : provider.connection?.account?.status === "signed-in" ? `Signed in${provider.connection.account.subscription ? ` \xB7 ${escape(provider.connection.account.subscription)}` : ""}` : provider.connection?.account?.status === "signed-out" ? "Sign-in required" : provider.authMode === "cli-session" ? "Local account" : provider.authMode === "api-key" ? "API connection" : "Provider connection"}</small><small>${provider.modelCatalog?.models.length ?? 0} reported models</small></span></button>${config && config.kind !== "extension" ? `<button class="switch" role="switch" aria-label="Enable ${escape(provider.name)}" aria-checked="${config.enabled !== false}" data-action="enable" data-id="${escape(provider.id)}" ${this.busy ? "disabled" : ""}></button>` : ""}</div>`;
         }).join("")}${state.management ? '<button class="new-provider" data-action="add">\uFF0B Add provider</button>' : ""}</aside><main class="detail"><div class="detail-head"><div><h3>${this.adding ? "Add a provider" : escape(selected?.name ?? (state.management ? "No providers configured" : "No providers granted"))}</h3><div class="hint">${this.adding ? "Configure an account on the connected host." : escape(this.draft?.accountId ?? selected?.id ?? (state.management ? "Configure an account on the connected host." : "Ask the host operator for a provider grant."))}</div></div>${!this.adding && selected?.health ? `<span class="pill">${escape(selected.health.status)}</span>` : ""}</div>${!this.adding && selected?.health ? `<p class="hint">${escape(selected.health.message)} \xB7 Checked ${escape(new Date(selected.health.checkedAt).toLocaleTimeString())}</p>` : ""}${!this.adding && selected ? this.connectionDetails(selected) : ""}${!this.adding && selected ? `<div class="tabs" role="tablist" aria-label="Provider settings"><button role="tab" id="tab-runtime" aria-controls="tab-content" tabindex="${this.tab === "runtime" ? 0 : -1}" aria-selected="${this.tab === "runtime"}" data-action="tab" data-tab="runtime">Settings</button><button role="tab" id="tab-models" aria-controls="tab-content" tabindex="${this.tab === "models" ? 0 : -1}" aria-selected="${this.tab === "models"}" data-action="tab" data-tab="models">Models <span class="small">${this.models(selected).length}</span></button></div>` : ""}${!this.adding && selected ? `<div id="tab-content" role="tabpanel" aria-labelledby="tab-${this.tab}">` : ""}${this.tab === "models" && !this.adding && selected ? this.modelList(selected) : this.appearance(selected) + this.runtime(selected)}${!this.adding && selected ? "</div>" : ""}${this.message ? `<p class="small success" role="status">${escape(this.message)}</p>` : ""}${this.removalSection()}${this.connectionSection()}</main></div>`;
-      this.root.innerHTML = `<section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${content}</section>`;
+      this.root.innerHTML = `<section class="shell" aria-label="AgenticDriver provider management">${header}${this.failure ? `<div class="notice error" role="alert">${escape(this.failure)}</div>` : ""}${connected ? this.setupCards() : ""}${connected && !(this.adding && this.draft?.kind === "codex") ? this.runtimeCard() : ""}${content}</section>`;
       if (focusField === "query" || focusField === "provider-query") {
         const input = this.root.querySelector(`[data-field="${focusField}"]`);
         input?.focus();

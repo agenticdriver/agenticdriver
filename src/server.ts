@@ -320,6 +320,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             providerSetup:
               options.management?.setup !== undefined &&
               principal.manageProviders === true,
+            providerRuntimes:
+              options.management?.runtimes !== undefined &&
+              principal.manageProviders === true,
             jobs: jobs !== undefined,
             sessions: driver.supportsSessions,
             applicationTools: driver.supportsApplicationTools,
@@ -372,6 +375,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
       if (
         req.url === "/v1/management" ||
         req.url === "/v1/management/setup" ||
+        req.url === "/v1/management/runtimes" ||
         req.url === "/v1/management/providers"
       ) {
         if (!options.management || principal.manageProviders !== true)
@@ -379,7 +383,29 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             "FORBIDDEN",
             "This credential cannot manage provider settings.",
           );
-        if (req.url === "/v1/management/setup" && req.method === "POST") {
+        if (req.url === "/v1/management/runtimes" && req.method === "POST") {
+          if (!options.management.runtimes)
+            throw new DriverError(
+              "RUNTIME_UNAVAILABLE",
+              "This host does not offer managed runtime installation.",
+            );
+          const caller = JSON.stringify([
+            principal.id,
+            principal.subject,
+            createHash("sha256").update(bearer).digest("hex"),
+          ]);
+          json(
+            res,
+            200,
+            await options.management.runtimes.request(
+              await readRequest(req),
+              caller,
+            ),
+          );
+        } else if (
+          req.url === "/v1/management/setup" &&
+          req.method === "POST"
+        ) {
           if (!options.management.setup)
             throw new DriverError(
               "SETUP_UNAVAILABLE",
@@ -837,7 +863,11 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           try {
             await options.management?.setup?.close();
           } finally {
-            if (ownsJobStore) await jobStore?.close?.();
+            try {
+              await options.management?.runtimes?.close();
+            } finally {
+              if (ownsJobStore) await jobStore?.close?.();
+            }
           }
         }
       })());
@@ -851,6 +881,10 @@ function json(res: ServerResponse, status: number, value: unknown) {
   res.end(JSON.stringify(value));
 }
 function statusFor(code: string) {
+  if (code === "RUNTIME_NOT_FOUND") return 404;
+  if (code === "RUNTIME_BUSY") return 409;
+  if (code === "INVALID_RUNTIME_REQUEST") return 400;
+  if (code.startsWith("RUNTIME_")) return 503;
   if (code === "SETUP_NOT_FOUND") return 404;
   if (code === "SETUP_CAPACITY") return 429;
   if (code === "SETUP_UNAVAILABLE") return 503;

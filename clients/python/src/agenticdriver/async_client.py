@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 from .connections import CreateInvitation, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_value
 from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from .setup import ProviderSetupRequest, ProviderSetupSnapshot, setup_request, setup_snapshot
+from .runtimes import ProviderRuntimeRequest, ProviderRuntimeSnapshot, runtime_request, runtime_snapshot
 from ._errors import DriverError
 from ._protocol import (
     EventDecoder,
@@ -353,6 +354,10 @@ class AsyncAgenticClient:
     async def provider_setup(self, request: ProviderSetupRequest) -> ProviderSetupSnapshot:
         async with self._request("v1/management/setup", setup_request(request)) as response:
             return setup_snapshot(await self._json(response), request)
+
+    async def provider_runtime(self, request: ProviderRuntimeRequest) -> ProviderRuntimeSnapshot:
+        async with self._request("v1/management/runtimes", runtime_request(request)) as response:
+            return runtime_snapshot(await self._json(response), request)
 
     async def management(self) -> ManagementSnapshot:
         async with self._request("v1/management") as response:

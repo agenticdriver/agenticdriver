@@ -1,6 +1,7 @@
 package agenticdriver
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/base64"
@@ -84,11 +85,12 @@ func (p *ProviderPanel) Snapshot(ctx context.Context, refresh bool) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	management, pairing, setup := false, false, false
+	management, pairing, setup, runtimes := false, false, false, false
 	for _, feature := range protocol.Features {
 		management = management || feature == "provider-management"
 		pairing = pairing || feature == "client-pairing"
 		setup = setup || feature == "provider-setup"
+		runtimes = runtimes || feature == "provider-runtimes"
 	}
 	if management {
 		info, err := client.Management(ctx)
@@ -103,6 +105,13 @@ func (p *ProviderPanel) Snapshot(ctx context.Context, refresh bool) (map[string]
 			}
 			state["setup"] = attempts
 		}
+		if runtimes {
+			runtime, err := client.ProviderRuntime(ctx, ProviderRuntimeRequest{Action: "status", Kind: "codex"})
+			if err != nil {
+				return nil, err
+			}
+			state["runtimes"] = runtime
+		}
 		state["canInvite"] = pairing && connection != nil && connection.URL != ""
 	}
 	return state, nil
@@ -112,15 +121,15 @@ func (p *ProviderPanel) Handle(ctx context.Context, raw []byte) (any, error) {
 		return nil, &Error{Code: "BODY_TOO_LARGE", Message: "The panel request is too large."}
 	}
 	var request struct {
-		Action     string               `json:"action"`
-		Refresh    bool                 `json:"refresh"`
-		Invitation string               `json:"invitation"`
-		Change     ConfigureProvider    `json:"change"`
-		Setup      ProviderSetupRequest `json:"request"`
-		ID         string               `json:"id"`
-		Subject    string               `json:"subject"`
-		Providers  []string             `json:"providers"`
-		Manage     bool                 `json:"manageProviders"`
+		Action     string            `json:"action"`
+		Refresh    bool              `json:"refresh"`
+		Invitation string            `json:"invitation"`
+		Change     ConfigureProvider `json:"change"`
+		Request    json.RawMessage   `json:"request"`
+		ID         string            `json:"id"`
+		Subject    string            `json:"subject"`
+		Providers  []string          `json:"providers"`
+		Manage     bool              `json:"manageProviders"`
 	}
 	if err := json.Unmarshal(raw, &request); err != nil {
 		return nil, &Error{Code: "INVALID_PANEL_REQUEST", Message: "Use a valid panel request."}
@@ -152,7 +161,19 @@ func (p *ProviderPanel) Handle(ctx context.Context, raw []byte) (any, error) {
 	}
 	switch request.Action {
 	case "setup":
-		return client.ProviderSetup(ctx, request.Setup)
+		var setup ProviderSetupRequest
+		if err := json.Unmarshal(request.Request, &setup); err != nil {
+			return nil, err
+		}
+		return client.ProviderSetup(ctx, setup)
+	case "runtime":
+		var runtime ProviderRuntimeRequest
+		decoder := json.NewDecoder(bytes.NewReader(request.Request))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&runtime); err != nil {
+			return nil, &Error{Code: "INVALID_RUNTIME_REQUEST", Message: "Choose a supported runtime operation."}
+		}
+		return client.ProviderRuntime(ctx, runtime)
 	case "configure":
 		if _, err := client.ConfigureProvider(ctx, request.Change); err != nil {
 			return nil, err

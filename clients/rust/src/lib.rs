@@ -28,10 +28,14 @@ pub use connections::{
     CreateInvitation,
 };
 pub mod management;
+pub mod runtimes;
 pub mod setup;
 pub use management::{
     ConfigureProvider, ManagementSnapshot, ProviderConfiguration, ProviderConnectionMethod,
     ProviderDefinition,
+};
+pub use runtimes::{
+    ProviderRuntimeError, ProviderRuntimeInfo, ProviderRuntimeRequest, ProviderRuntimeSnapshot,
 };
 pub use setup::{
     ProviderSetupAccount, ProviderSetupAttempt, ProviderSetupConfig, ProviderSetupError,

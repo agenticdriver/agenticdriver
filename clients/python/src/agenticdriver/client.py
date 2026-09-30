@@ -12,6 +12,7 @@ from typing_extensions import Unpack
 from .connections import CreateInvitation, ConnectionInvitation, ConnectionCredentials, ConnectionList, connection_value
 from .management import ConfigureProvider, ManagementSnapshot, snapshot as management_snapshot
 from .setup import ProviderSetupRequest, ProviderSetupSnapshot, setup_request, setup_snapshot
+from .runtimes import ProviderRuntimeRequest, ProviderRuntimeSnapshot, runtime_request, runtime_snapshot
 from ._errors import DriverError
 from ._protocol import (
     EventDecoder,
@@ -330,6 +331,10 @@ class AgenticClient:
     def provider_setup(self, request: ProviderSetupRequest) -> ProviderSetupSnapshot:
         with self._request("v1/management/setup", setup_request(request)) as response:
             return setup_snapshot(self._json(response), request)
+
+    def provider_runtime(self, request: ProviderRuntimeRequest) -> ProviderRuntimeSnapshot:
+        with self._request("v1/management/runtimes", runtime_request(request)) as response:
+            return runtime_snapshot(self._json(response), request)
 
     def management(self) -> ManagementSnapshot:
         with self._request("v1/management") as response:

@@ -61,6 +61,10 @@ partial activity and unavailable services stay explicit. Account email/name,
 credential references and runtime paths are omitted from this summary; use the
 provider panel's existing hidden identity controls when you need them.
 
+Codex setup on supported hosts also offers [managed installation](provider-runtimes.md),
+with download progress, cancellation and explicit runtime selection. This
+post-RC.2 source feature preserves normal CLIs and existing accounts.
+
 Each step opens its existing setup screen. Native runtimes must be installed on
 the selected execution computer; provider setup links their official instructions.
 Signed-in accounts and catalog entries are observations, not proof that a model

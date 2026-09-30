@@ -210,6 +210,18 @@ impl AgenticClient {
         )?)?;
         crate::setup::snapshot(value, input)
     }
+    pub fn provider_runtime(
+        &self,
+        input: &crate::ProviderRuntimeRequest,
+    ) -> Result<crate::ProviderRuntimeSnapshot> {
+        crate::runtimes::validate_request(input)?;
+        let value: Value = read_json(self.request(
+            "v1/management/runtimes",
+            Some(&serde_json::to_value(input)?),
+            false,
+        )?)?;
+        crate::runtimes::snapshot(value, input)
+    }
     pub fn management(&self) -> Result<crate::ManagementSnapshot> {
         let value: Value = read_json(self.request("v1/management", None, false)?)?;
         crate::management::snapshot(value, None)

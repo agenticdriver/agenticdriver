@@ -35,6 +35,7 @@ class ProviderPanel:
         if "provider-management" in features:
             state["management"] = client.management()
             if "provider-setup" in features: state["setup"] = client.provider_setup({"action": "list"})
+            if "provider-runtimes" in features: state["runtimes"] = client.provider_runtime({"action": "status", "kind": "codex"})
             state["canInvite"] = bool(state.get("connection", {}).get("url") and "client-pairing" in features)
         return state
 
@@ -55,6 +56,7 @@ class ProviderPanel:
             client.configure_provider(request["change"])
             return self.snapshot()
         if action == "setup": return client.provider_setup(request["request"])
+        if action == "runtime": return client.provider_runtime(request["request"])
         if action == "connections": return client.connections()
         if action == "revoke": return {"revoked": client.revoke_connection(request["id"])}
         if action == "invite":
@@ -83,6 +85,7 @@ class AsyncProviderPanel:
         if "provider-management" in features:
             state["management"] = await client.management()
             if "provider-setup" in features: state["setup"] = await client.provider_setup({"action": "list"})
+            if "provider-runtimes" in features: state["runtimes"] = await client.provider_runtime({"action": "status", "kind": "codex"})
             state["canInvite"] = bool(state.get("connection", {}).get("url") and "client-pairing" in features)
         return state
 
@@ -103,6 +106,7 @@ class AsyncProviderPanel:
             await client.configure_provider(request["change"])
             return await self.snapshot()
         if action == "setup": return await client.provider_setup(request["request"])
+        if action == "runtime": return await client.provider_runtime(request["request"])
         if action == "connections": return await client.connections()
         if action == "revoke": return {"revoked": await client.revoke_connection(request["id"])}
         if action == "invite":

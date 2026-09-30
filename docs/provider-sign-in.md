@@ -5,16 +5,19 @@ a connected local or remote host. The official native runtime exchanges and
 stores credentials. AgenticDriver receives a device interaction and verified
 account metadata; it does not extract provider tokens or browser cookies.
 
-This is a source-preview feature on `sdk-roadmap`, included in desktop
-`0.1.0-alpha.2`. Published SDK `0.1.0` predates it. Other native providers retain
-their existing-session setup until their own integration is qualified. API keys
-continue to use the existing write-only host credential store.
+Codex device sign-in is included in SDK and desktop RC.2. Other native providers
+retain their existing-session setup until their own integration is qualified. API
+keys use the write-only host credential store. Post-RC.2 source also offers
+[managed Codex installation](provider-runtimes.md) before sign-in on supported
+hosts.
 
 ## Connect an account
 
 1. Select the intended host, then **Add provider → Codex → Sign in with ChatGPT**.
 2. Name the connection. In **Advanced settings**, select the qualified Codex
    **0.157.0** executable if the host's `codex` command is a different version.
+   Hosts advertising managed runtimes also offer **Install Codex 0.157.0**, then
+   **Use for this connection**, without a terminal installation.
    The host currently needs Linux x64 and a persistent `usage.hostId` in its
    configuration. CLI bootstrap and desktop-created hosts supply that identity.
 3. Choose **Start sign-in**, open the official ChatGPT device page, and enter the

@@ -829,6 +829,46 @@
         }
       }
     },
+    "/v1/management/runtimes": {
+      "post": {
+        "summary": "Inspect, install or cancel a host-reviewed native runtime",
+        "description": "Requires provider-runtimes and manageProviders. Only fixed official release artifacts are accepted. Installation is separate from sign-in, provider configuration and model execution. Cancellation belongs to the initiating credential.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderRuntimeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Runtime status or scheduled installation progress; host-local executable path only after verification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderRuntimeSnapshot"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "403": { "description": "Management grant required" },
+          "404": {
+            "description": "Installation unavailable to this credential"
+          },
+          "409": { "description": "Another installation is active" },
+          "503": { "description": "Managed runtimes unavailable on this host" }
+        }
+      }
+    },
     "/v1/management/setup": {
       "post": {
         "summary": "Start, inspect, accept or cancel an owned native provider sign-in",
@@ -2754,6 +2794,131 @@
           }
         },
         "required": ["version", "attempts"]
+      },
+      "ProviderRuntimeRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "status" },
+              "kind": { "type": "string", "const": "codex" }
+            },
+            "required": ["action", "kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "install" },
+              "kind": { "type": "string", "const": "codex" }
+            },
+            "required": ["action", "kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": { "type": "string", "const": "cancel" },
+              "kind": { "type": "string", "const": "codex" },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": ["action", "kind", "id"],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ProviderRuntimeSnapshot": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "version": { "type": "number", "const": 1 },
+          "runtimes": {
+            "minItems": 1,
+            "maxItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": { "type": "string", "const": "codex" },
+                "version": { "type": "string", "const": "0.157.0" },
+                "platform": { "type": "string", "const": "linux-x64" },
+                "phase": {
+                  "type": "string",
+                  "enum": [
+                    "missing",
+                    "downloading",
+                    "verifying",
+                    "installed",
+                    "failed",
+                    "cancelled"
+                  ]
+                },
+                "archiveSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "downloadBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "totalBytes": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "canCancel": { "type": "boolean" },
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "binary": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              },
+              "required": [
+                "kind",
+                "version",
+                "platform",
+                "phase",
+                "archiveSha256",
+                "downloadBytes",
+                "totalBytes",
+                "canCancel"
+              ]
+            }
+          }
+        },
+        "required": ["version", "runtimes"]
       },
       "JobSubmit": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
