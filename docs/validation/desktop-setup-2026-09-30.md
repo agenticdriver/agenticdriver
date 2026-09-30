@@ -69,7 +69,16 @@ Seven desktop tests passed, including pure IPC request validation, summary priva
 unknown/completeness semantics and packaging boundaries. SDK build, JavaScript
 syntax, documentation build and whitespace checks passed separately. These pure
 checks do not substitute for the real connection and generation evidence above.
-Prometheus CI and packaged-artifact checks are recorded after their completion.
+All seven jobs passed in [Prometheus CI run 36649945308, attempt 2](https://github.com/agenticdriver/agenticdriver/actions/runs/36649945308), at source `d22d4f1652290f044526583ff6120fb3f3bc3fd4`. The first attempt stopped at the storage guard before compilation; only this repository's private, unused Docker build cache was reclaimed before the rerun. No hosted build compute was used.
+
+The downloaded CI desktop archive has SHA-256
+`5c9feaaac1552ba402ab9906d69d4f3d780731e5794371b77467a5b50dc0cae6`.
+Its bundled Node worker started a fresh real host, returned the new setup summary,
+read six actual Usagestat snapshots and retained usage settings after worker
+restart. The packaged renderer includes the Overview screen. This development
+artifact retains the RC.2 version string; it is not a replacement public RC.2
+release. Both temporary setup-test grants were subsequently revoked, with the
+existing application grants preserved. The private preview was stopped.
 
 Private invitations, connection profiles, native account metadata and full model
 receipts remain under the local validation state. No credential values or identity
