@@ -111,8 +111,10 @@ Brandstorm's separately tracked initial-selection observation remains app-owned.
 [Delivery receipt](../../release/0.2.0-rc.3/handoff-delivery.json)
 
 Usagestat **2.0.1** was published after the SDK candidate checks. The tested
-backend remains **2.0.0** until the new released binary passes its own integration
-and maintenance checks; RC.3 does not claim that new backend qualification yet.
+backend at this publication gate was **2.0.0**. Subsequent
+[2.0.1 compatibility and service maintenance](usagestat-2.0.1-2026-09-30.md)
+passed separately and retained the original store, credentials and running
+execution host. That maintenance does not replace the immutable SDK archives.
 The SDK retains the existing backend API and introduces no parallel usage store.
 Shared provider-icons remain **0.1.0-alpha.1**.
 

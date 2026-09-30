@@ -1,0 +1,11 @@
+{
+  "nativeUsagestatReadContract": "passed",
+  "polling": false,
+  "providerCalls": 0,
+  "sections": {
+    "providers": "available",
+    "usage": "available"
+  },
+  "usagestat": "2.0.1",
+  "realNativeBinary": true
+}

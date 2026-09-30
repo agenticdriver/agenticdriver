@@ -12,6 +12,12 @@ brand prompt. Python uses **0.2.0rc3**; protocol remains **1.0**. The three apps
 accepted workflows currently remain RC.2 evidence; RC.3 publication does not
 automatically establish app acceptance.
 
+After publication, the released **Usagestat 2.0.1** binary passed separate
+[compatibility and retained-state maintenance](validation/usagestat-2.0.1-2026-09-30.md).
+The SDK-owned regular ingestion service now runs 2.0.1 with all thirteen original
+records and its private configuration retained; the execution host and ordinary
+usage daemon were preserved. SDK RC.2 and RC.3 both verified scoped readback.
+
 **0.2.0-rc.2 passed its scoped gates and is published.** It corrects native quota
 reads and qualifies the released Usagestat 2.0.0 ingestion contract. Python uses
 **0.2.0rc2**; protocol stays **1.0**. Artifact source:

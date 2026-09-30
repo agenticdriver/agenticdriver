@@ -1,0 +1,24 @@
+{
+  "usagestat": "2.0.1",
+  "source": "84bfa891782e1228dd6d2c179f7108e83c5b5aa7",
+  "daemonSha256": "a5e23806972fa7284f3d471880c1ebc1d3254c6c16c28c95f63871a0de8f4542",
+  "hostSdk": "0.2.0-rc.2",
+  "protocol": {
+    "eventSchemas": [
+      "agenticdriver.usage.v2"
+    ],
+    "maxEventBytes": 65536,
+    "receiptSchema": "usagestat.run-receipt.v1",
+    "requiresAccount": true,
+    "schema": "usagestat.run-ingestion.v1"
+  },
+  "retainedRows": 13,
+  "allPayloadAndDigestBytesUnchanged": true,
+  "privateConfigurationAndCredentialsUnchanged": true,
+  "executionHostProcessUnchanged": true,
+  "ordinaryReadbackDaemonUnchanged": true,
+  "previousBinaryAndSqliteBackupRetained": true,
+  "upgradedService": "agenticdriver-litagent-usage.service",
+  "modelCalls": 0,
+  "executionGrantsChanged": false
+}

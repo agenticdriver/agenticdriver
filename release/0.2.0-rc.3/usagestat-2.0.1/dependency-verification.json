@@ -1,0 +1,15 @@
+{
+  "version": "2.0.1",
+  "source": "84bfa891782e1228dd6d2c179f7108e83c5b5aa7",
+  "sourceDirty": false,
+  "tagCommitVerified": true,
+  "release": "https://github.com/hashimkarim/usagestat/releases/tag/v2.0.1",
+  "archiveSha256": "14639690fcba5ed5038628bb6cfd684076e0c494fe6087fd6e01ddbddd299942",
+  "manifestSha256": "3f14e1662b969d6af5435a29c2df0c9eae14baff5491304434f6700844ca57de",
+  "manifestFilesVerified": 382,
+  "daemonSha256": "a5e23806972fa7284f3d471880c1ebc1d3254c6c16c28c95f63871a0de8f4542",
+  "target": "x86_64-unknown-linux-gnu",
+  "minimumSystem": "glibc 2.39",
+  "sdkArchivesUnchanged": true,
+  "modelCalls": 0
+}

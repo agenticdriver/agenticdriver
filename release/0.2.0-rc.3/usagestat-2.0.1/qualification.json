@@ -1,0 +1,34 @@
+{
+  "version": "2.0.1",
+  "source": "84bfa891782e1228dd6d2c179f7108e83c5b5aa7",
+  "daemonSha256": "a5e23806972fa7284f3d471880c1ebc1d3254c6c16c28c95f63871a0de8f4542",
+  "existingRows": 13,
+  "allOriginalRecordsRetained": true,
+  "protocol": {
+    "eventSchemas": [
+      "agenticdriver.usage.v2"
+    ],
+    "maxEventBytes": 65536,
+    "receiptSchema": "usagestat.run-receipt.v1",
+    "requiresAccount": true,
+    "schema": "usagestat.run-ingestion.v1"
+  },
+  "actualCachedSnapshots": 6,
+  "freshProviderPolling": false,
+  "copiedCacheSha256": "08c0b99fc75079aad44607d9c0e1538a828b66ffd0bb0c88fcf476fc94cb3be8",
+  "productionStoreChanged": false,
+  "modelCalls": 0,
+  "sdkCheck": {
+    "sdk": "0.2.0-rc.3",
+    "protocol": "usagestat.run-ingestion.v1",
+    "actualRunRecordsVerified": 13,
+    "duplicateCaptureAcknowledgements": 13,
+    "snapshots": 6,
+    "originalMetricFreshnessAndStatePreserved": true,
+    "readyBindings": 3,
+    "unavailableBindings": 2,
+    "unboundRejected": 5,
+    "foreignCredentialRejected": true,
+    "modelCalls": 0
+  }
+}

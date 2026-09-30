@@ -1,0 +1,12 @@
+{
+  "usagestat": "2.0.1",
+  "sdkVersions": [
+    "0.2.0-rc.3",
+    "0.2.0-rc.2"
+  ],
+  "supportedProtocolReadbacks": 2,
+  "completeOriginalRecordReadbacks": 26,
+  "duplicateAcknowledgements": 2,
+  "newRecords": 0,
+  "modelCalls": 0
+}

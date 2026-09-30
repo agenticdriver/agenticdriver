@@ -2,13 +2,17 @@
 
 AgenticDriver uses Usagestat as an optional local or remote service dependency for usage storage, retention, forwarding, quotas and provider metadata.
 It does not fork its provider probes, credential discovery, or logo collection.
-Pin Usagestat **[`v2.0.0`](https://github.com/hashimkarim/usagestat/releases/tag/v2.0.0)**
-(`fbf84796d80fd5567516cec2e11b0784e7c187db`) for native readback and optional
+Pin Usagestat **[`v2.0.1`](https://github.com/hashimkarim/usagestat/releases/tag/v2.0.1)**
+(`84bfa891782e1228dd6d2c179f7108e83c5b5aa7`) for native readback and optional
 durable run ingestion. Ingestion is disabled unless explicitly configured;
 even a stable version string does not establish that the running service enables
 it. Check the ingestion protocol before capture. The stable native Linux builds
 require glibc 2.39 or later; its optional npm installer requires Node 24 or later.
 This does not change the SDK's own Node requirement.
+The [2.0.1 compatibility receipt](validation/usagestat-2.0.1-2026-09-30.md)
+records the released binary, actual stored-run reconciliation, retained native
+observations and maintenance of the SDK-owned ingestion service. Both SDK RC.2
+and RC.3 remain compatible; the update needs no new event schema or SDK archive.
 
 **Upgrade from SDK 0.2.0-rc.1:** desktop readback already uses native routes,
 but that SDK's `limits()` and `accountLimits()` call nonexistent `/v1/limits`
@@ -114,12 +118,13 @@ The existing brand assets remain owned by Usagestat and their respective licenso
 
 ## Per-run usage
 
-Usagestat **2.0.0** includes the optional native run-ingestion contract (AD-030).
+Usagestat **2.0.0** introduced the optional native run-ingestion contract (AD-030);
+**2.0.1** retains it.
 Enable it with
 `usagestatd --run-usage-config /absolute/path/run-usage.json`; add `--no-poll` for
 an ingestion-only service. The backend configuration, account bindings and
 forwarding controls are documented in Usagestat's
-[`docs/run-ingestion.md`](https://github.com/hashimkarim/usagestat/blob/v2.0.0/docs/run-ingestion.md).
+[`docs/run-ingestion.md`](https://github.com/hashimkarim/usagestat/blob/v2.0.1/docs/run-ingestion.md).
 An installation without the enabled route fails explicitly. Always call
 `ingestionProtocol()` to verify
 `usagestat.run-ingestion.v1` accepting `agenticdriver.usage.v2`; these are separate
@@ -219,7 +224,7 @@ npm run test:usagestat --prefix apps/desktop -- /absolute/path/to/usagestatd
 
 That check copies the actual daemon into a temporary profile with no provider
 plugins and verifies its empty read contract. No provider can be polled. It works
-with stable 2.0.0 and older alpha.4, which has no `--no-poll` flag. It does not
+with stable 2.0.0/2.0.1 and older alpha.4, which has no `--no-poll` flag. It does not
 invent accounts or run measurements.
 To verify usage ingestion, run meaningful prompts on an explicitly configured real
 provider and reconcile the host's actual usage records with the existing backend.

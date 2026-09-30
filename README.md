@@ -17,6 +17,8 @@ the three applications have verified RC.2 workflows and an RC.3 handoff. The
 [release record](docs/validation/release-0.2.0-rc.3.md) links exact artifacts,
 adoption status and qualification limits. Stable npm `latest` remains
 **0.1.0**. Python uses GitHub archives while PyPI organization approval is pending.
+Current [Usagestat guidance](docs/usagestat.md) pins verified stable **2.0.1**;
+the SDK-owned regular ingestion service retains its original records and bindings.
 
 The RC includes optional real local embeddings, persistent scoped retrieval and
 citation-ID helpers in all four languages, the Linux desktop companion, shared
