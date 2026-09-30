@@ -141,8 +141,28 @@ maps, `.mjs` declaration dependencies, imports in comments, and ignored absolute
 reference paths. It also identified silently skipped missing scoped consumer
 files. The initial manual fixer skipped the general review body because it had
 no actionable inline findings. The primary agent then posted five inline review
-threads; loop sequence `3`, ID `d0ba75c8-b72a-4085-a2b9-a6543d588618`, now runs
+threads; loop sequence `3`, ID `d0ba75c8-b72a-4085-a2b9-a6543d588618`, started
 the bounded repair on the same PR. Run `run_fdaea0e53cd1869dafeafb7e868659cd`
-is in its real repair step. Fixer draft support is enabled for this selected
-pass; automatic discovery, self-review and automatic merging remain disabled.
+completed at `2026-09-30T20:15:15.520Z` and pushed
+`181261882ac83c7a2c581778a1c53028b2e2d30e`. Fixer draft support is enabled for
+this selected pass; automatic discovery, self-review and automatic merging remain disabled.
 No merge, consumer retry, task-scope change or rollout completion is claimed.
+
+## User-selected coding model
+
+The user explicitly replaced Luna with `gpt-6.1-sol` for Looper coding and
+review. The Luna fixer had already completed, so no active run needed
+interruption and its commit remains preserved. The daemon configuration was
+validated and reloaded with Sol, preserving medium reasoning, the native
+subscription, disabled run timeouts and the existing concurrency/retry limits.
+Issue #26's current model instruction was updated to match this selection.
+
+The first manual review was skipped before inference because draft review was
+disabled. Draft support was then enabled for the selected manual review;
+automatic discovery, self-review and merging remain disabled. Review loop
+`07f6ce15-a3ae-4652-a364-73236535edac`, run
+`run_881da42ee1a210faec3bd88c9fa14cc0`, started on PR head
+`181261882ac83c7a2c581778a1c53028b2e2d30e`. Its actual native execution header
+confirms Codex `0.159.2`, `gpt-6.1-sol`, OpenAI and medium reasoning. This
+establishes the selected model's real coding execution; the review was still
+running when recorded and does not establish consumer acceptance.
