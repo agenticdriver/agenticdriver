@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-09-30T02:57:38.967255+00:00",
+  "sdkCommit": "e06619b82b336747ea02f70b82e63d689b33f7bd",
+  "platform": "Linux x86_64",
+  "archiveSha256": "b0f195d37973be7b08c3b705d7fbbcd948dacb4a3c2176ee52ca29f7159bdc21",
+  "binarySha256": "574b0234656c44564f3ff3b013225c86f14ae79b67d0f3b45f6aaf1b1625440e",
+  "selectedModel": "gemini-3.8-flash-low",
+  "credentialsLoaded": false,
+  "installedNativeCliReplaced": false,
+  "result": {
+    "toolCount": 57,
+    "modelMatches": true,
+    "agentMatches": true,
+    "strictPermissions": true,
+    "status": "unsupported-tools",
+    "promptSubmitted": false,
+    "liveCertified": false,
+    "version": "1.2.13"
+  }
+}

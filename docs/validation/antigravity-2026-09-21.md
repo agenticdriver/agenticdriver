@@ -68,6 +68,26 @@ The [sanitized readiness receipt](antigravity-2026-09-27.json) preserves the
 version, digests and probe result. The follow-up is recorded on
 [AD-052](https://github.com/agenticdriver/agenticdriver/issues/47#issuecomment-5855788238).
 
+## 1.2.13 recheck — 2026-09-30
+
+The official [1.2.13 Linux x64 release](https://github.com/google-antigravity/antigravity-cli/releases/tag/1.2.13)
+was downloaded separately and its archive matched the public asset digest:
+`b0f195d37973be7b08c3b705d7fbbcd948dacb4a3c2176ee52ca29f7159bdc21`.
+The existing installed CLI and native account profiles were not replaced.
+
+The actual no-prompt inspection again reported **57 tools** with the selected
+empty-tool agent, requested `gemini-3.8-flash-low` model and strict permissions.
+It remains `unsupported-tools`, with `promptSubmitted: false` and
+`liveCertified: false`. No user credentials/configuration were loaded and no
+generation or tool invocation was requested. This is a capability inspection;
+the requested model identifier is not a fresh account-availability measurement.
+
+The [new sanitized receipt](antigravity-2026-09-30.json) records the SDK source,
+archive/executable hashes and actual result. [Upstream #1015](https://github.com/google-antigravity/antigravity-cli/issues/1015)
+remained open at the check. AD-052 stays open; an existing sign-in does not resolve
+this advertised-capability mismatch. No alternate account or API billing mode
+was substituted.
+
 ## Reproduce without inference
 
 From this SDK checkout on Linux with Bubblewrap installed:
