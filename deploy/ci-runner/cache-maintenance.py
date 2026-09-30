@@ -7,7 +7,7 @@ PRIVATE_DAEMON = "tcp://127.0.0.1:2375"
 MINIMUM_FREE = 8 * 1024 ** 3
 
 
-def maintenance_command(env):
+def maintenance_command(env, reclaim_all=False):
     required = {
         "GITHUB_REPOSITORY": "agenticdriver/agenticdriver",
         "GITHUB_REF": "refs/heads/sdk-roadmap",
@@ -22,8 +22,11 @@ def maintenance_command(env):
         raise ValueError("Cache maintenance refuses an overridden Docker context or builder")
     # Explicit host and builder defeat accidental selection of a shared host
     # daemon or another buildx builder. Never remove containers/images/volumes.
-    return ["docker", "--host", PRIVATE_DAEMON, "builder", "prune", "--builder", "default",
-            "--force", "--reserved-space", "2GB", "--max-used-space", "8GB", "--min-free-space", "16GB"]
+    command = ["docker", "--host", PRIVATE_DAEMON, "builder", "prune", "--builder", "default", "--force"]
+    if reclaim_all:
+        # All unused BuildKit records, including internal/frontend cache; never images.
+        return command + ["--all", "--reserved-space", "0", "--max-used-space", "0", "--min-free-space", "16GB"]
+    return command + ["--reserved-space", "2GB", "--max-used-space", "8GB", "--min-free-space", "16GB"]
 
 
 def maintain(env=None, run=subprocess.run, disk_usage=shutil.disk_usage):
@@ -32,6 +35,10 @@ def maintain(env=None, run=subprocess.run, disk_usage=shutil.disk_usage):
     run(command, check=True, capture_output=True, text=True, env=env)
     # /work is the shared CI volume, not the application or runner home.
     free = disk_usage("/work").free
+    if free < MINIMUM_FREE:
+        print("Low storage after normal cleanup; reclaiming unused private SDK build cache", flush=True)
+        run(maintenance_command(env, reclaim_all=True), check=True, capture_output=True, text=True, env=env)
+        free = disk_usage("/work").free
     print(f"Private CI build-cache maintenance complete; {free / 1024 ** 3:.1f} GiB free on /work")
     if free < MINIMUM_FREE:
         raise ValueError("Less than 8 GiB remains after private cache cleanup; inspect storage before compiling")

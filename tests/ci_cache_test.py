@@ -36,6 +36,8 @@ class CacheBoundaryTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     cache.maintain({**ENV, **override}, run)
                 run.assert_not_called()
+                with self.assertRaises(ValueError):
+                    cache.maintenance_command({**ENV, **override}, reclaim_all=True)
 
     def test_absent_environment_is_not_authorization(self):
         with self.assertRaises(ValueError):
@@ -46,7 +48,18 @@ class CacheBoundaryTests(unittest.TestCase):
         run = Mock()
         with self.assertRaisesRegex(ValueError, "Less than 8 GiB"):
             cache.maintain(ENV, run, lambda _: SimpleNamespace(free=cache.MINIMUM_FREE - 1))
-        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_count, 2)
+        for call in run.call_args_list:
+            self.assertEqual(call.args[0][:7], ["docker", "--host", cache.PRIVATE_DAEMON, "builder", "prune", "--builder", "default"])
+            self.assertFalse(any(arg in {"system", "image", "volume", "container"} for arg in call.args[0]))
+
+    def test_private_cache_reclamation_recovers_storage_without_lowering_guard(self):
+        run = Mock()
+        usage = Mock(side_effect=[SimpleNamespace(free=cache.MINIMUM_FREE - 1), SimpleNamespace(free=cache.MINIMUM_FREE)])
+        self.assertEqual(cache.maintain(ENV, run, usage), cache.MINIMUM_FREE)
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(run.call_args.args[0][7:], ["--force", "--all", "--reserved-space", "0", "--max-used-space", "0", "--min-free-space", "16GB"])
+        self.assertEqual(usage.call_count, 2)
 
 
 if __name__ == "__main__":

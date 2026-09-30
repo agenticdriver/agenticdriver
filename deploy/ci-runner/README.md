@@ -68,8 +68,10 @@ The [BuildKit cache limits](https://docs.docker.com/reference/cli/docker/buildx/
 retain up to 8 GB of unused build cache, reserve 2 GB for reuse, and target 16 GB
 of free space. These are cleanup targets, not a filesystem quota: layers used
 by images and active builds cannot necessarily be reclaimed. The helper checks
-the shared work filesystem after pruning and refuses to start compiling below
-8 GiB free. It never prunes containers, images, volumes, the host Docker daemon,
+the shared work filesystem after pruning. If less than 8 GiB remains, it reclaims
+all unused cache records from that same private builder, retaining no reserved
+cache, and checks again. It still refuses to start compiling below 8 GiB free.
+It never prunes containers, images, volumes, the host Docker daemon,
 application data, runner registration or provider credentials. Other projects
 can still fill the shared host filesystem; investigate that separately instead
 of expanding this cleanup's scope.
@@ -82,7 +84,7 @@ its registration and volumes:
 gh api repos/agenticdriver/agenticdriver/actions/runners \
   --jq '.runners[] | {name,status,busy}'
 ssh prometheus 'cd /var/docker/agenticdriver-ci && docker compose stop runner'
-ssh prometheus 'docker exec agenticdriver-ci-docker-1 docker builder prune --builder default --force --reserved-space 2GB --max-used-space 8GB --min-free-space 16GB'
+ssh prometheus 'docker exec agenticdriver-ci-docker-1 docker builder prune --builder default --all --force --reserved-space 0 --max-used-space 0 --min-free-space 16GB'
 ssh prometheus 'df -h /'
 ssh prometheus 'cd /var/docker/agenticdriver-ci && docker compose up -d runner'
 ```
