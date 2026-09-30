@@ -1,5 +1,17 @@
 # Release candidates and publication
 
+**0.2.0-rc.3 is published on npm, crates.io, Go and
+[GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.3).**
+It adds the desktop Overview and explicit local/remote managed Codex installation
+in all four clients and the shared provider panel. All seven exact-source checks
+passed on Prometheus; trusted registry publication and all nine public downloads
+were verified. The installed local desktop retains its original settings and
+previous runtime. [Complete receipt](validation/release-0.2.0-rc.3.md) ·
+[Adoption](rc.md) · [Managed runtimes](provider-runtimes.md).
+Python **0.2.0rc3** is a GitHub wheel/sdist while PyPI organization approval remains
+pending. Stable `latest` and `alpha` are unchanged. The three apps' accepted RC.2
+workflows remain prior evidence; RC.3 adoption has been handed off separately.
+
 **0.2.0-rc.2 is published on npm, crates.io, Go and
 [GitHub](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.2).**
 It includes the native Usagestat quota correction and stable 2.0.0 integration.

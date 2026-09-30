@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0-rc.3-88d2e1277914",
+  "keepsPreviousVersions": true,
+  "userConfigurationPreserved": true,
+  "providerCount": 0,
+  "remoteHostCount": 0,
+  "nativeBoot": true,
+  "appInteractionRerun": false,
+  "previousVersion": "0.2.0-rc.2",
+  "archiveSha256": "e1192a674bf5e369bfa15ad7b1444de0d7fcfeef0cb392fcdc36edaf6113cf91"
+}

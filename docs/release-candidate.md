@@ -1,12 +1,16 @@
 # Release candidate gate
 
-**0.2.0-rc.3 is being qualified; it is not yet published.** This candidate adds
+**0.2.0-rc.3 passed its scoped gates and is published.** This candidate adds
 the desktop Overview and explicit local/remote Codex runtime installation to
 RC.2's scope. [AD-083 / #80](https://github.com/agenticdriver/agenticdriver/issues/80)
-tracks exact-source artifacts and publication. The
+tracks exact-source artifacts and publication. The [RC.3 receipt](validation/release-0.2.0-rc.3.md)
+records all seven Prometheus checks, exact public artifacts and registry
+provenance, the installed desktop upgrade and separate application handoffs. The
 [managed runtime receipt](validation/managed-runtime-2026-09-30.md) records real
 installation, cancellation, restart, language-client status and the selected Luna
-brand prompt. Python uses **0.2.0rc3**; protocol remains **1.0**.
+brand prompt. Python uses **0.2.0rc3**; protocol remains **1.0**. The three apps'
+accepted workflows currently remain RC.2 evidence; RC.3 publication does not
+automatically establish app acceptance.
 
 **0.2.0-rc.2 passed its scoped gates and is published.** It corrects native quota
 reads and qualifies the released Usagestat 2.0.0 ingestion contract. Python uses

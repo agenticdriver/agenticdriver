@@ -1,7 +1,7 @@
 # 0.2.0-alpha.6 application preview
 
 This page preserves the alpha.6 coordinates. New RC adoption is documented in
-[0.2.0-rc.2](rc.md); consult [release status](releases.md) for current availability.
+[0.2.0-rc.3](rc.md); consult [release status](releases.md) for current availability.
 
 Alpha.6 removes mock providers, fake connections, the fake embedding adapter,
 canned example outputs and simulated provider acceptance harnesses. New desktop

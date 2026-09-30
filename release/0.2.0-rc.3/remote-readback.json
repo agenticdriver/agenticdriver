@@ -1,0 +1,23 @@
+{
+  "source": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "sdkVersion": "0.2.0-rc.3",
+  "connectionPath": "existing trusted OpenSSH to separate loopback host",
+  "provider": "managed-codex",
+  "runtimeVersion": "0.157.0",
+  "accountStatus": "signed-in",
+  "subscription": "pro",
+  "reportedModels": 9,
+  "selectedCheapModelReported": true,
+  "managementExecutionProviders": [],
+  "managementConfigurationUnchanged": true,
+  "pairedGrantsUnchanged": true,
+  "runtimeStatusRead": true,
+  "protocol": "1.0",
+  "modelCalls": 0,
+  "managedRuntimePhase": "installed",
+  "officialArchiveSha256": "db3fe3adaa35c50edfb68a988a117782fe3492960fb63d7003eb6748ccc0657b",
+  "selectedProviderExecutableMatchesManagedRuntime": true,
+  "installedSdkFilesMatchReviewedArchive": true,
+  "reviewedFileCount": 409,
+  "freshClientFilesMatchReviewedArchive": true
+}

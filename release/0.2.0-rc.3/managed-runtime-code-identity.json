@@ -1,0 +1,24 @@
+{
+  "qualifiedSource": "57cd694e26e9ec444e3b17689597db689da9ce91",
+  "releaseSource": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "changedFiles": [
+    "CHANGELOG.md",
+    "apps/desktop/package-lock.json",
+    "apps/desktop/package.json",
+    "clients/python/pyproject.toml",
+    "clients/rust/Cargo.lock",
+    "clients/rust/Cargo.toml",
+    "deploy/ci-runner/README.md",
+    "deploy/ci-runner/cache-maintenance.py",
+    "docs/release-candidate.md",
+    "docs/validation/managed-runtime-2026-09-30.md",
+    "package-lock.json",
+    "package.json",
+    "release/config.json",
+    "site/.vitepress/config.mts",
+    "tests/ci_cache_test.py"
+  ],
+  "sdkAndDesktopRuntimeCodeUnchanged": true,
+  "realRun": "24f5308c-4586-4ad8-bfa0-d46ac75a2f47",
+  "newReleaseModelCalls": 0
+}

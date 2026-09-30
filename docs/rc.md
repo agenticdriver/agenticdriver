@@ -1,10 +1,13 @@
-# Adopt 0.2.0-rc.2
+# Adopt 0.2.0-rc.3
 
 The release candidate targets Linux x64 hosts and the desktop companion, with
-TypeScript/JavaScript, Python, Go and Rust clients. Wire protocol remains **1.0**. RC.2 carries the native quota correction and
-released Usagestat 2.0.0 integration. The [publication receipt](validation/release-0.2.0-rc.2.md)
-records source `91dc52292c627a6febed102a8198c56f35d3afc9`, package integrity and
-acceptance from all three apps.
+TypeScript/JavaScript, Python, Go and Rust clients. Wire protocol remains **1.0**.
+RC.3 adds the desktop Overview and explicit local/remote Codex installation,
+retaining RC.2's native quota correction and released Usagestat 2.0.0 integration.
+The [publication receipt](validation/release-0.2.0-rc.3.md) records source
+`f319f173f55069a2ca0f91969bac99c169a063d2`, package integrity and current adoption.
+The three apps' accepted workflows remain RC.2 evidence until their RC.3 updates
+pass their own checks.
 Check the [release inventory](releases.md) and [qualification gate](release-candidate.md)
 for the current download and acceptance status. A release candidate is an opt-in
 version; stable npm `latest` remains **0.1.0**.
@@ -12,31 +15,36 @@ version; stable npm `latest` remains **0.1.0**.
 ## Install an exact version
 
 ```sh
-npm install --save-exact @agenticdriver/sdk@0.2.0-rc.2
-go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.2
+npm install --save-exact @agenticdriver/sdk@0.2.0-rc.3
+go get github.com/agenticdriver/agenticdriver/clients/go@v0.2.0-rc.3
 ```
 
-Rust: use `agenticdriver = "=0.2.0-rc.2"` in `Cargo.toml`.
+Rust: use `agenticdriver = "=0.2.0-rc.3"` in `Cargo.toml`.
 Commit the version and lockfile. The npm archive SHA-256 is
-`1e4bc9e639612ecc1d97913fd915d72deb9bbe72c5034aa1e8928a4e06cf9f9a`.
+`23db3a8269357b1e4f2568a4836588c3c70e8bf60e3869e5d940b362ebe3f070`.
 Verify other download digests against the release `ASSET-SHA256SUMS`.
 
-Python uses **0.2.0rc2**. Download
-`agenticdriver-0.2.0rc2-py3-none-any.whl` from the
-[RC release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.2),
+Python uses **0.2.0rc3**. Download
+`agenticdriver-0.2.0rc3-py3-none-any.whl` from the
+[RC release](https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.3),
 verify its entry in `ASSET-SHA256SUMS`, then install it in a virtual environment:
 
 ```sh
-python -m pip install ./agenticdriver-0.2.0rc2-py3-none-any.whl
+python -m pip install ./agenticdriver-0.2.0rc3-py3-none-any.whl
 ```
 
 The selected PyPI organization is still awaiting approval. No personal publisher
 or unrelated PyPI package is substituted. The source distribution is also
 included in the release downloads.
 
-The Linux desktop download is `AgenticDriver-0.2.0-rc.2-linux-x64.tar.gz`.
+The Linux desktop download is `AgenticDriver-0.2.0-rc.3-linux-x64.tar.gz`.
 After checking its digest, extract it and launch `agenticdriver-desktop`.
-Node and Electron are bundled; native provider CLIs remain separate dependencies.
+Node and Electron are bundled. Native provider CLIs are separate dependencies;
+RC.3 can explicitly install the qualified Codex 0.157.0 Linux x64 executable on
+the selected local or remote host. Its [managed runtime guide](provider-runtimes.md)
+covers download verification, progress, cancellation and explicit executable
+selection. Installation creates no provider, sign-in or application execution
+grant and makes no model call. Other native runtimes use official manual routes.
 The [desktop guide](desktop.md) covers private state, user-local installation,
 upgrades and retained previous versions. There is no automatic updater.
 

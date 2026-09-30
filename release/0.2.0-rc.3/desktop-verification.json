@@ -1,0 +1,20 @@
+{
+  "at": "2026-09-30T01:57:32.922Z",
+  "source": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "archiveSha256": "e1192a674bf5e369bfa15ad7b1444de0d7fcfeef0cb392fcdc36edaf6113cf91",
+  "version": "0.2.0-rc.3",
+  "checks": {
+    "freshProfileEmpty": true,
+    "statusDoesNotDownload": true,
+    "explicitOfficialInstallCompleted": true,
+    "providerConfigurationUnchanged": true,
+    "stagingAndLockRemoved": true,
+    "realUsagestatSnapshots": 6,
+    "installDoesNotCreateProvidersOrGrants": true,
+    "runtimeSurvivesRestart": true,
+    "usageSettingsSurviveRestart": true,
+    "sharedInstallerBundled": true
+  },
+  "modelCalls": 0,
+  "nativeAccountsChanged": false
+}

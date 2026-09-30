@@ -1,0 +1,34 @@
+{
+  "source": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "npm": {
+    "version": "0.2.0-rc.3",
+    "integrity": "sha512-hLmEdjlS089cOHSde46UKX6QWKxNLeTh+PzDql7Qn5b4CV1aBnz+fTZyZeGcdogBd6uFZxnqOCgDY2euMN46JA==",
+    "sha256": "23db3a8269357b1e4f2568a4836588c3c70e8bf60e3869e5d940b362ebe3f070",
+    "publicBytesMatch": true,
+    "distTags": {
+      "latest": "0.1.0",
+      "alpha": "0.2.0-alpha.6",
+      "rc": "0.2.0-rc.3"
+    },
+    "sameSourceProvenance": true,
+    "verifiedRegistrySignatures": 7,
+    "verifiedAttestations": 2,
+    "freshRegistryInstall": true
+  },
+  "rust": {
+    "version": "0.2.0-rc.3",
+    "reviewedContentsVerified": true,
+    "workflow": "https://github.com/agenticdriver/agenticdriver/actions/runs/36658030513"
+  },
+  "go": {
+    "version": "v0.2.0-rc.3",
+    "immutableSourceTagVerified": true,
+    "publicProxyInstallVerifiedByWorkflow": true,
+    "workflow": "https://github.com/agenticdriver/agenticdriver/actions/runs/36658033195"
+  },
+  "python": {
+    "version": "0.2.0rc3",
+    "pypi": "Selected organization approval remains pending; no upload or personal substitution",
+    "archives": "Reviewed wheel and sdist in GitHub release assets"
+  }
+}

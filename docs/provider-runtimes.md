@@ -7,9 +7,9 @@ executable for the new connection. Then choose an existing sign-in or start the
 separate [device sign-in](provider-sign-in.md). Installation never signs in,
 configures a provider, runs a model or grants application execution access.
 
-This is post-RC.2 source work on `sdk-roadmap`. Existing released RC.2 hosts omit
-this feature and keep their manual-install flow. Other native runtimes and
-platforms still use their official installation instructions.
+This feature is published in RC.3. Existing RC.2 hosts omit it and retain their
+manual-install flow. Other native runtimes and platforms still use their official
+installation instructions.
 
 The host pins the official OpenAI `rust-v0.157.0` Linux x64 musl archive and both
 its archive/executable SHA-256 digests. It downloads over certificate-verified

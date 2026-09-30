@@ -1,0 +1,76 @@
+{
+  "at": "2026-09-30T02:08:55.588603+00:00",
+  "source": "f319f173f55069a2ca0f91969bac99c169a063d2",
+  "tag": "v0.2.0-rc.3",
+  "releaseId": 399661225,
+  "url": "https://github.com/agenticdriver/agenticdriver/releases/tag/v0.2.0-rc.3",
+  "publishedAt": "2026-09-30T02:08:47Z",
+  "prerelease": true,
+  "tagCommitVerified": true,
+  "assets": [
+    {
+      "name": "agenticdriver-0.2.0-rc.3-candidate.zip",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/agenticdriver-0.2.0-rc.3-candidate.zip",
+      "size": 1537297,
+      "sha256": "873285a163275b64b12638deda32df83ce157d44f0c9fa18adcabd17f80121f7",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "AgenticDriver-0.2.0-rc.3-linux-x64.tar.gz",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/AgenticDriver-0.2.0-rc.3-linux-x64.tar.gz",
+      "size": 163607932,
+      "sha256": "e1192a674bf5e369bfa15ad7b1444de0d7fcfeef0cb392fcdc36edaf6113cf91",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "agenticdriver-0.2.0-rc.3.crate",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/agenticdriver-0.2.0-rc.3.crate",
+      "size": 168776,
+      "sha256": "8ce6125cc9d69cb36c99639028588fb09bd5452feed49b566c2b981fd4e400b1",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "agenticdriver-0.2.0rc3-py3-none-any.whl",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/agenticdriver-0.2.0rc3-py3-none-any.whl",
+      "size": 164029,
+      "sha256": "98469be49dce58ed2e81e0e737d197fe28d9573a21671c59d33634f0fb4b0172",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "agenticdriver-0.2.0rc3.tar.gz",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/agenticdriver-0.2.0rc3.tar.gz",
+      "size": 152539,
+      "sha256": "d2836b3a4e16cd514718f0867df6e04e1aaf0e0b82e53b84df389072e5e02243",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "agenticdriver-sdk-0.2.0-rc.3.tgz",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/agenticdriver-sdk-0.2.0-rc.3.tgz",
+      "size": 890394,
+      "sha256": "23db3a8269357b1e4f2568a4836588c3c70e8bf60e3869e5d940b362ebe3f070",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "ASSET-SHA256SUMS",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/ASSET-SHA256SUMS",
+      "size": 768,
+      "sha256": "30b72fb880805c16397afa2a1cf995989bd658ed2685d2a9f0468bc80fb3f661",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "manifest.json",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/manifest.json",
+      "size": 2859,
+      "sha256": "7d39498c5a3f8599750590ab97bd94592f2af46dff13568fd45fc72acf6a7485",
+      "anonymousDownloadVerified": true
+    },
+    {
+      "name": "SHA256SUMS",
+      "url": "https://github.com/agenticdriver/agenticdriver/releases/download/v0.2.0-rc.3/SHA256SUMS",
+      "size": 963,
+      "sha256": "1f0bcee34634ee1f219835df84db399be679a24ab4e82c19584303660f01c42b",
+      "anonymousDownloadVerified": true
+    }
+  ],
+  "anonymousHttpsDownloadsVerified": true
+}

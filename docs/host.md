@@ -18,7 +18,7 @@ The stable package is `@agenticdriver/sdk@0.1.0`. For the host features describe
 below, install the [alpha.6 package](alpha.md) in an application directory:
 
 ```bash
-npm install --save-exact @agenticdriver/sdk@0.2.0-rc.2
+npm install --save-exact @agenticdriver/sdk@0.2.0-rc.3
 npx --no-install agenticdriver init --provider codex \
   --provider-id my-codex --account-id my-codex-account \
   --binary /absolute/path/to/codex \
