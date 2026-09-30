@@ -31,6 +31,10 @@ import { UsageStatClient } from "@agenticdriver/sdk/usagestat";
 import { providerPresentation } from "@agenticdriver/sdk/catalog";
 import { connectionFailure, invitationPreview } from "./connection-status.mjs";
 import {
+  providerSetupSummary,
+  connectionSetupSummary,
+} from "./setup-status.mjs";
+import {
   managedTunnels,
   TunnelInputSchema,
   TunnelSchema,
@@ -74,6 +78,13 @@ const stateSchema = z
   .strict();
 export const RequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("overview") }).strict(),
+  z
+    .object({
+      action: z.literal("setup-status"),
+      hostId: id,
+      refresh: z.boolean().default(false),
+    })
+    .strict(),
   z.object({ action: z.literal("start") }).strict(),
   z
     .object({
@@ -568,10 +579,68 @@ export async function desktopController(
       })),
     };
   }
+  async function setupStatus(hostId, refresh) {
+    const [checkResult, usageObservation] = await Promise.allSettled([
+      checkHost(hostId),
+      usage(),
+    ]);
+    if (checkResult.status === "rejected") throw checkResult.reason;
+    const check = checkResult.value;
+    const usageResult =
+      usageObservation.status === "fulfilled"
+        ? usageObservation.value
+        : {
+            url: state.usage.url,
+            sections: { providers: "unavailable", usage: "unavailable" },
+            snapshots: [],
+            checkedAt: new Date().toISOString(),
+          };
+    const result = {
+      hostId,
+      checkedAt: new Date().toISOString(),
+      host: { ...connection(hostId), check },
+      providers: { available: false },
+      connections: { available: false },
+      usage: {
+        url: usageResult.url,
+        sections: usageResult.sections,
+        snapshots: usageResult.snapshots.length,
+        checkedAt: usageResult.checkedAt,
+      },
+    };
+    if (check.status !== "connected") return result;
+    const selectedClient = await client(hostId);
+    const observations = await Promise.allSettled([
+      selectedClient.providers({ refresh }),
+      check.canManageProviders
+        ? selectedClient.management()
+        : Promise.resolve(undefined),
+      check.canManageProviders
+        ? selectedClient.connections()
+        : Promise.resolve(undefined),
+    ]);
+    const [providers, management, connections] = observations;
+    if (providers.status === "fulfilled") {
+      result.providers = providerSetupSummary(
+        providers.value,
+        management.status === "fulfilled" ? management.value : undefined,
+      );
+    } else result.providers.error = publicError(providers.reason);
+    if (management.status === "rejected")
+      result.providers.managementError = publicError(management.reason);
+    if (connections.status === "fulfilled" && connections.value) {
+      result.connections = connectionSetupSummary(connections.value);
+    } else if (connections.status === "rejected")
+      result.connections.error = publicError(connections.reason);
+    result.checkedAt = new Date().toISOString();
+    return result;
+  }
   async function handle(request) {
     switch (request.action) {
       case "overview":
         return overview();
+      case "setup-status":
+        return setupStatus(request.hostId, request.refresh);
       case "preview-invitation":
         return invitationPreview(request.invitation);
       case "preview-destination":

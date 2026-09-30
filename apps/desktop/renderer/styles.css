@@ -493,6 +493,57 @@ label.field {
   margin: 0;
   overflow: hidden;
 }
+.setup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.setup-step {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+.setup-step .chips {
+  align-items: center;
+  margin-bottom: 18px;
+}
+.step-number {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-right: auto;
+}
+.setup-step .actions {
+  margin-top: auto;
+  padding-top: 18px;
+}
+.setup-step .address {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, monospace;
+}
+.setup-accounts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.setup-accounts li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.setup-accounts strong {
+  font-size: 12px;
+  font-weight: 550;
+}
+.setup-checked {
+  margin-top: 22px;
+}
 .meter {
   height: 7px;
   border-radius: 8px;
@@ -741,7 +792,7 @@ agenticdriver-providers {
     font-size: 21px;
   }
   .sidebar nav {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
   }
   .nav {
@@ -749,6 +800,7 @@ agenticdriver-providers {
     font-size: 10px;
     gap: 5px;
     justify-content: center;
+    flex-direction: column;
   }
   .nav > span:first-child {
     font-size: 15px;
@@ -805,6 +857,9 @@ agenticdriver-providers {
     padding: 18px;
   }
   .fields {
+    grid-template-columns: 1fr;
+  }
+  .setup-grid {
     grid-template-columns: 1fr;
   }
   .summary-grid {

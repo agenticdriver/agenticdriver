@@ -32,7 +32,8 @@ const relative = (value) => {
     : "Not reported";
 };
 let overview,
-  view = "providers",
+  view = "overview",
+  setupData,
   providerPanel,
   usageData,
   links,
@@ -47,6 +48,11 @@ let destinationTimer,
   destinationSequence = 0;
 let renderedTunnels;
 const pages = {
+  overview: [
+    "GET CONNECTED",
+    "Your agents and connections",
+    "Choose a host, connect your accounts and give an application access.",
+  ],
   providers: [
     "PROVIDERS & ACCOUNTS",
     "Your agent workspace",
@@ -144,10 +150,122 @@ async function show(next) {
   $("#eyebrow").textContent = pages[view][0];
   $("#title").textContent = pages[view][1];
   $("#subtitle").textContent = pages[view][2];
-  if (view === "hosts") renderHosts();
+  $("#page-refresh").textContent =
+    view === "overview" ? "↻ Check setup" : "↻ Refresh";
+  if (view === "overview") await setup(current);
+  else if (view === "hosts") renderHosts();
   else if (view === "providers") await providers(current);
   else if (view === "connections") await connections(current);
   else await usage(current);
+}
+async function setup(current, refresh = false) {
+  const hostId = selected();
+  $("#overview-view").innerHTML =
+    '<div class="card"><p class="muted">Checking the selected host and usage service…</p></div>';
+  try {
+    const data = await request({ action: "setup-status", hostId, refresh });
+    if (current !== generation || hostId !== selected()) return;
+    setupData = data;
+    renderSetup();
+  } catch (error) {
+    if (current !== generation || hostId !== selected()) return;
+    $("#overview-view").innerHTML =
+      `<div class="card empty"><h2>Setup status unavailable</h2><p>${escape(error.message)}</p><button class="button" data-view="hosts">Open hosts</button></div>`;
+  }
+}
+function renderSetup() {
+  const data = setupData,
+    check = data.host.check;
+  const connected = check.status === "connected";
+  const providers = data.providers,
+    connections = data.connections;
+  const usageSections = Object.values(data.usage.sections);
+  const usageAvailable = usageSections.every(
+    (section) => section === "available",
+  );
+  const usagePartial =
+    !usageAvailable && usageSections.some((section) => section === "available");
+  const canManage =
+    connected && check.canManageProviders && !providers.managementError;
+  const button = (label, next, primary = false) =>
+    `<button class="button ${primary ? "primary" : ""}" data-view="${next}">${label}</button>`;
+  const card = (step, title, status, complete, content, controls) =>
+    `<section class="card setup-step"><div class="chips"><span class="step-number">${step}</span><span class="badge ${complete ? "green" : ""}">${status}</span></div><h2>${title}</h2>${content}<div class="actions">${controls}</div></section>`;
+  const summary = (label, count, detail) =>
+    `<div class="summary"><span>${label}</span><strong>${count ?? "Unknown"}</strong><p>${detail}</p></div>`;
+  const accountText = {
+    "signed-in": "Signed in",
+    "signed-out": "Sign-in needed",
+    unknown: "Account not reported",
+  };
+  const accountList = providers.entries?.length
+    ? `<ul class="setup-accounts">${providers.entries.map((item) => `<li><strong>${escape(item.name)}</strong><span class="help">${item.enabled === false ? "Disabled · " : ""}${escape(accountText[item.accountStatus])}${item.runtimeVersion ? ` · v${escape(item.runtimeVersion)}` : ""}${item.reportedModels === undefined ? " · Catalog not reported" : ` · ${item.reportedModels} models${item.catalogComplete ? "" : " (partial)"}`}${item.checkedAt ? `<br>Account checked ${escape(relative(item.checkedAt))}` : ""}</span></li>`).join("")}</ul>`
+    : "";
+  const providerError = providers.error ?? providers.managementError;
+  const activity = connections.activityComplete
+    ? String(connections.activeRequests)
+    : `${connections.activeRequests ?? 0}+ reported`;
+  $("#overview-view").innerHTML = `
+    <div class="notice">Setup checks read connection and account metadata. A signed-in account or reported model is not a completed model run.</div>
+    <div class="summary-grid">
+      ${summary("Provider connections", providers.available ? providers.count : undefined, providers.available ? `${providers.scope === "configured" ? "On the selected host" : "Visible to this connection"} · ${providers.signedIn} signed in` : "Host metadata unavailable")}
+      ${summary("Account-reported models", providers.available ? providers.reportedModels : undefined, "Discovery only · per-connection access applies")}
+      ${summary("Application grants", connections.available ? connections.count : undefined, connections.available ? `${activity} requests in progress · ${connections.invitations} open invitations` : "Management access is needed to inspect grants")}
+    </div>
+    <div class="setup-grid">
+      ${card(
+        "01",
+        "Choose where agents run",
+        connected ? "Credential accepted" : "Needs attention",
+        connected,
+        `<p class="muted">${escape(data.host.label)}<br><span class="address">${escape(data.host.url ?? "Start the local host to assign its address")}</span></p><div data-host-status="${escape(data.host.id)}">${hostStatus(data.host)}</div><p class="help">Use this computer’s accounts or a host on another machine. Provider credentials stay on that host.</p>`,
+        (selected() === "local" && !overview.local.running
+          ? '<button class="button primary" data-action="start">Start local host</button>'
+          : "") +
+          button(connected ? "Manage hosts" : "Open host setup", "hosts"),
+      )}
+      ${card(
+        "02",
+        "Connect your providers",
+        providers.available && providers.count
+          ? "Accounts configured"
+          : "Connect an account",
+        providers.signedIn > 0,
+        `<p class="muted">${providers.available && providers.count ? `${providers.count} ${providers.scope === "configured" ? "configured" : "granted"} connections · ${providers.signedIn} signed in${providers.enabled === undefined ? "" : ` · ${providers.enabled} enabled`}` : providers.available ? "Connect your first provider account. Use an existing native sign-in, sign in with ChatGPT or enter an API key." : "Connect or recover the selected host to inspect its providers."}</p>${providerError ? `<p class="notice warning">${escape(providerError.message)}</p>` : ""}${accountList}<p class="help">Install native runtimes on the selected host first. Provider setup shows the required version and its official instructions.</p>${connected && !canManage ? '<p class="help">This credential cannot manage providers. Ask the host operator for a management invitation, then reconnect in Hosts.</p>' : ""}`,
+        button(
+          canManage ? "Manage providers" : "View providers",
+          "providers",
+          canManage && providers.count === 0,
+        ),
+      )}
+      ${card(
+        "03",
+        "Give an application access",
+        connections.available && connections.count
+          ? "Access granted"
+          : "Connect an application",
+        connections.count > 0,
+        `<p class="muted">Create a one-use invitation, choose its provider access and lifetime, then paste it into your application’s AgenticDriver settings.</p>${connections.error ? `<p class="notice warning">${escape(connections.error.message)}</p>` : ""}<p class="help">${connections.available ? "An application grant permits requests; recent activity is an observation from this host session. HTTPS and SSH routes must be reachable from the application backend." : "Creating invitations and inspecting grants needs a management connection to this host."}</p>`,
+        button(
+          canManage ? "Connect an application" : "Open host settings",
+          canManage ? "connections" : "hosts",
+          canManage && connections.count === 0,
+        ),
+      )}
+      ${card(
+        "04",
+        "See usage and quotas",
+        usageAvailable
+          ? "Service available"
+          : usagePartial
+            ? "Partial readback"
+            : "Optional",
+        usageAvailable,
+        `<p class="muted">${usageAvailable ? `${data.usage.snapshots} snapshots returned by your Usagestat service.` : usagePartial ? "Some Usagestat reads succeeded. Open Usage to see which section needs attention." : "Connect your existing Usagestat service to see measured usage and account quotas."}</p><p class="address">${escape(data.usage.url)}</p><p class="help">Usage monitoring is optional. Readback does not enable run capture or create account bindings. Individual measurements may be stale or unavailable.</p>`,
+        button(usageAvailable ? "View usage" : "Configure usage", "usage"),
+      )}
+    </div>
+    <p class="help setup-checked">Checked ${escape(date(data.checkedAt))}. Choose Check setup to refresh provider/account metadata. Active runs continue during refresh.</p>`;
 }
 async function providers(current) {
   const mount = $("#provider-mount");
@@ -417,6 +535,11 @@ function renderUsage() {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest(".brand")) {
+    event.preventDefault();
+    void action(() => show("overview"));
+    return;
+  }
   const button = event.target.closest("button");
   if (!button) return;
   if (button.dataset.view) {
@@ -766,7 +889,8 @@ document.addEventListener("change", (event) => {
 $("#page-refresh").addEventListener("click", () => {
   void action(async () => {
     await refreshOverview();
-    if (view === "providers" && providerPanel)
+    if (view === "overview") await setup(generation, true);
+    else if (view === "providers" && providerPanel)
       await providerPanel.refresh(true);
     else if (view === "connections" && $("#connection-list")) {
       links = await request({ action: "connections", hostId: selected() });
@@ -777,7 +901,7 @@ $("#page-refresh").addEventListener("click", () => {
 });
 try {
   await refreshOverview();
-  await show("providers");
+  await show("overview");
 } catch (error) {
   notice(error.message, true);
 }
@@ -785,6 +909,8 @@ setInterval(() => {
   if (busy || document.hidden) return;
   void (async () => {
     await refreshOverview();
+    if (view === "overview" && setupData?.hostId !== selected())
+      await show("overview");
     if (view === "hosts") refreshHostStatuses();
     if (view === "connections" && $("#connection-list")) {
       const hostId = selected();

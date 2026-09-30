@@ -52,6 +52,23 @@ revoke grants on remote hosts; revoke those there first when appropriate.
 
 ## Use it
 
+The app opens on **Overview**, a four-step guide for its selected host, provider
+accounts, application access and optional usage service. **Check setup** refreshes
+real provider/account metadata without signing in or running a model. The overview
+shows configured connections when a management grant is available, otherwise only
+the providers granted to this connection. Disabled accounts, missing catalogs,
+partial activity and unavailable services stay explicit. Account email/name,
+credential references and runtime paths are omitted from this summary; use the
+provider panel's existing hidden identity controls when you need them.
+
+Each step opens its existing setup screen. Native runtimes must be installed on
+the selected execution computer; provider setup links their official instructions.
+Signed-in accounts and catalog entries are observations, not proof that a model
+call succeeds. Application grant counts do not imply continuous online presence.
+The overview's Usage step reads the desktop's configured Usagestat endpoint,
+independently of which execution host is selected. Individual snapshots retain
+their freshness/failure state in Usage; read availability does not enable ingestion.
+
 1. The app starts a separate empty local host with a stable loopback endpoint.
    Add a provider in **Providers**, using an existing official native session,
    [owned Codex device sign-in](provider-sign-in.md), a write-only API key or an

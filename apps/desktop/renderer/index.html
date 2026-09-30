@@ -9,12 +9,15 @@
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <a class="brand" href="#providers" aria-label="AgenticDriver home"
+        <a class="brand" href="#overview" aria-label="AgenticDriver home"
           ><span class="mark" aria-hidden="true">a<span>d</span></span
           ><span>AgenticDriver<small>YOUR AGENTS, CONNECTED</small></span></a
         >
         <nav aria-label="Main navigation">
-          <button data-view="providers" class="nav selected">
+          <button data-view="overview" class="nav selected">
+            <span aria-hidden="true">⌂</span>Overview
+          </button>
+          <button data-view="providers" class="nav">
             <span aria-hidden="true">◈</span>Providers
           </button>
           <button data-view="usage" class="nav">
@@ -40,7 +43,7 @@
         <header class="topbar">
           <div class="breadcrumb">
             Workspace <span>/</span>
-            <strong id="breadcrumb-view">Providers</strong>
+            <strong id="breadcrumb-view">Overview</strong>
           </div>
           <label class="host-select"
             ><span>Selected host</span
@@ -51,16 +54,18 @@
         </header>
         <div class="page-head">
           <div>
-            <p class="eyebrow" id="eyebrow">PROVIDERS & ACCOUNTS</p>
-            <h1 id="title">Your agent workspace</h1>
+            <p class="eyebrow" id="eyebrow">GET CONNECTED</p>
+            <h1 id="title">Your agents and connections</h1>
             <p id="subtitle">
-              Manage the providers and models available to your applications.
+              Choose a host, connect your accounts and give an application
+              access.
             </p>
           </div>
           <button id="page-refresh" class="button quiet">↻ Refresh</button>
         </div>
         <div id="notification" role="status" hidden></div>
-        <section id="providers-view" class="view">
+        <section id="overview-view" class="view" aria-live="polite"></section>
+        <section id="providers-view" class="view" hidden>
           <div id="provider-state"></div>
           <div id="provider-mount"></div>
         </section>
