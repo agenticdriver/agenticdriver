@@ -67,3 +67,17 @@ the three apps retain their [accepted RC.2 workflows](release-0.2.0-rc.2.md)
 until exact RC.3 adoption passes its own gates.
 
 [Public coordination receipt](../../release/0.2.0-rc.3/consumer-coordination.json)
+
+## First repair is under review
+
+The [Prometheus Looper pilot](looper-pilot-2026-09-30.md) now owns
+[Agent Orchestrator #26](https://github.com/hashimkarim/agent-orchestrator/issues/26)
+for the bounded verified declaration collection repair. Its real native Codex
+worker used `gpt-6-luna` with medium reasoning in an independent worktree and
+opened [draft PR #27](https://github.com/hashimkarim/agent-orchestrator/pull/27).
+Independent Prometheus checks passed, but review found incomplete import/path
+handling and requested a bounded fix pass on that draft. The actual RC.3
+declaration closure remains larger than the reference budget.
+Repository-wide discovery and automatic merging are disabled. The original
+consumer migration scopes and attempts remain unchanged; packet packing, audited
+scope repair and exact RC.3 app acceptance remain outstanding.

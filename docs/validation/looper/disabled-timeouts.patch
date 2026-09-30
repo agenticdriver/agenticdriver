@@ -1,0 +1,142 @@
+diff --git a/internal/config/config_test.go b/internal/config/config_test.go
+index 5e7b4b4..d380d0b 100644
+--- a/internal/config/config_test.go
++++ b/internal/config/config_test.go
+@@ -848,7 +848,7 @@ func TestValidateRejectsInvalidAgentTimeouts(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatalf("Normalize() error = %v", err)
+ 	}
+-	cfg.Agent.Timeouts.WorkerSeconds = 0
++	cfg.Agent.Timeouts.WorkerSeconds = -1
+ 
+ 	err = ValidateWithOptions(cfg, ValidateOptions{DefaultWorktreeRoot: t.TempDir()})
+ 	var validationErr *ConfigValidationError
+diff --git a/internal/config/validate.go b/internal/config/validate.go
+index 16e9d6e..e1251e6 100644
+--- a/internal/config/validate.go
++++ b/internal/config/validate.go
+@@ -649,8 +649,8 @@ func validateEnvironmentNames(values map[string]string, path string, issues *[]V
+ }
+ 
+ func validateAgentTimeoutSeconds(seconds int, path string, issues *[]ValidationIssue) {
+-	if seconds < 1 {
+-		*issues = append(*issues, ValidationIssue{Path: path, Message: "must be a positive integer"})
++	if seconds < 0 {
++		*issues = append(*issues, ValidationIssue{Path: path, Message: "must be an integer >= 0; zero disables the timeout"})
+ 		return
+ 	}
+ 
+diff --git a/internal/fixer/runner.go b/internal/fixer/runner.go
+index bde1a47..cb5edb5 100644
+--- a/internal/fixer/runner.go
++++ b/internal/fixer/runner.go
+@@ -1300,11 +1300,11 @@ func New(options Options) *Runner {
+ 		now = time.Now
+ 	}
+ 	agentTimeout := options.AgentTimeout
+-	if agentTimeout <= 0 {
++	if agentTimeout < 0 {
+ 		agentTimeout = defaultAgentTimeout
+ 	}
+ 	agentIdleTimeout := options.AgentIdleTimeout
+-	if agentIdleTimeout <= 0 {
++	if agentIdleTimeout < 0 {
+ 		agentIdleTimeout = 10 * time.Minute
+ 	}
+ 	claimTTL := options.ClaimTTL
+diff --git a/internal/planner/runner.go b/internal/planner/runner.go
+index b26eab9..29f30a0 100644
+--- a/internal/planner/runner.go
++++ b/internal/planner/runner.go
+@@ -477,11 +477,11 @@ func New(options Options) *Runner {
+ 		now = time.Now
+ 	}
+ 	agentTimeout := options.AgentTimeout
+-	if agentTimeout <= 0 {
++	if agentTimeout < 0 {
+ 		agentTimeout = defaultAgentTimeout
+ 	}
+ 	agentIdleTimeout := options.AgentIdleTimeout
+-	if agentIdleTimeout <= 0 {
++	if agentIdleTimeout < 0 {
+ 		agentIdleTimeout = 10 * time.Minute
+ 	}
+ 	claimTTL := options.ClaimTTL
+diff --git a/internal/reviewer/runner.go b/internal/reviewer/runner.go
+index 48e9453..7d7dfa8 100644
+--- a/internal/reviewer/runner.go
++++ b/internal/reviewer/runner.go
+@@ -779,11 +779,11 @@ func New(options Options) *Runner {
+ 		now = time.Now
+ 	}
+ 	agentTimeout := options.AgentTimeout
+-	if agentTimeout <= 0 {
++	if agentTimeout < 0 {
+ 		agentTimeout = defaultAgentTimeout
+ 	}
+ 	agentIdleTimeout := options.AgentIdleTimeout
+-	if agentIdleTimeout <= 0 {
++	if agentIdleTimeout < 0 {
+ 		agentIdleTimeout = 10 * time.Minute
+ 	}
+ 	claimTTL := options.ClaimTTL
+diff --git a/internal/worker/runner.go b/internal/worker/runner.go
+index 4e0fc8d..00f13aa 100644
+--- a/internal/worker/runner.go
++++ b/internal/worker/runner.go
+@@ -780,11 +780,11 @@ func New(options Options) *Runner {
+ 		now = time.Now
+ 	}
+ 	agentTimeout := options.AgentTimeout
+-	if agentTimeout <= 0 {
++	if agentTimeout < 0 {
+ 		agentTimeout = defaultAgentTimeout
+ 	}
+ 	agentIdleTimeout := options.AgentIdleTimeout
+-	if agentIdleTimeout <= 0 {
++	if agentIdleTimeout < 0 {
+ 		agentIdleTimeout = 15 * time.Minute
+ 	}
+ 	claimTTL := options.ClaimTTL
+diff --git a/internal/config/agenticdriver_timeouts_test.go b/internal/config/agenticdriver_timeouts_test.go
+new file mode 100644
+index 0000000..c9eac8c
+--- /dev/null
++++ b/internal/config/agenticdriver_timeouts_test.go
+@@ -0,0 +1,36 @@
++package config
++
++import "testing"
++
++func TestAgenticDriverExplicitDisabledTimeouts(t *testing.T) {
++	zero := 0
++	timeouts := &PartialAgentTimeoutConfig{
++		PlannerSeconds: &zero, WorkerSeconds: &zero, ReviewerSeconds: &zero, FixerSeconds: &zero,
++		PlannerIdleTimeoutSeconds: &zero, PlannerMaxRuntimeSeconds: &zero,
++		WorkerIdleTimeoutSeconds: &zero, WorkerMaxRuntimeSeconds: &zero,
++		ReviewerIdleTimeoutSeconds: &zero, ReviewerMaxRuntimeSeconds: &zero,
++		FixerIdleTimeoutSeconds: &zero, FixerMaxRuntimeSeconds: &zero,
++	}
++	cfg, err := Normalize(t.TempDir(), PartialConfig{Agent: &PartialAgentConfig{Timeouts: timeouts}})
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := ValidateWithOptions(cfg, ValidateOptions{DefaultWorktreeRoot: t.TempDir()}); err != nil {
++		t.Fatal(err)
++	}
++	if cfg.Agent.Timeouts != (AgentTimeoutConfig{}) {
++		t.Fatalf("disabled timeouts replaced: %#v", cfg.Agent.Timeouts)
++	}
++}
++
++func TestAgenticDriverNegativeTimeoutStillRejected(t *testing.T) {
++	negative := -1
++	cfg, err := Normalize(t.TempDir(), PartialConfig{Agent: &PartialAgentConfig{Timeouts: &PartialAgentTimeoutConfig{WorkerIdleTimeoutSeconds: &negative}}})
++	if err != nil {
++		t.Fatal(err)
++	}
++	err = ValidateWithOptions(cfg, ValidateOptions{DefaultWorktreeRoot: t.TempDir()})
++	if err == nil {
++		t.Fatal("negative inactivity timeout was accepted")
++	}
++}
