@@ -55,10 +55,10 @@ All thirteen original payloads and digests read back unchanged after startup.
 Private configuration and credentials matched before and after, with no new
 host/account/subject binding or execution grant. The regular execution host's
 process was unchanged and remains on SDK RC.2; its provider catalogs and existing
-application credential remained usable. The ordinary usage daemon on port 6736
-was unchanged and remains 2.0.0, as do the separate Prometheus RC.2 validation
-services. Application source, enabled choices and native account profiles were
-preserved.
+application credential remained usable. At this maintenance check, the ordinary
+usage daemon on port 6736 and separate Prometheus RC.2 validation services still
+ran 2.0.0; this operation did not alter them. Application source, enabled choices
+and native account profiles were preserved.
 
 Fresh registry RC.3 and the existing RC.2 SDK both used the upgraded normal
 service's capability handshake and read every original record: twenty-six complete
@@ -79,3 +79,23 @@ dashboard settings, RPM update hooks, other platforms or new provider polling.
 Usagestat owns those features and its own release evidence. No parallel SDK usage
 backend, app authentication migration, model/billing fallback or default execution
 timeout was introduced.
+
+## Later ordinary-daemon readback
+
+A later read-only check at 03:45 UTC observed the ordinary daemon on port 6736
+reporting 2.0.1. This check did not change its binary, service or configuration.
+Installed registry SDK RC.3 parsed its 97 advertised provider definitions and six
+actual native snapshots. Provider definitions do not represent connected accounts.
+The original metrics, source, state and `fetchedAt` fields matched the actual wire
+responses, and quota resources were derived through the supported native usage
+routes.
+
+The five existing memory-only administrative bindings again returned three
+available and two unavailable quotas. Returned identities and upstream instances
+matched those bindings and the exact scoped wire observations; five unbound
+subjects were rejected. No host binding, credential, provider refresh or model
+request was made. These reads retain each measurement's observation time; reading
+cached data does not make it fresh. Native administrative endpoints still require
+the consuming server to own application authorization and account mapping.
+
+[Current native readback receipt](../../release/0.2.0-rc.3/usagestat-2.0.1/native-live-readback.json)

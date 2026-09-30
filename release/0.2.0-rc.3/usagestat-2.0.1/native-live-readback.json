@@ -1,0 +1,24 @@
+{
+  "inspectedAt": "2026-09-30T03:45:25.693Z",
+  "usagestat": "2.0.1",
+  "sdk": "0.2.0-rc.3",
+  "connection": "ordinary loopback administrative native readback",
+  "advertisedProviders": 97,
+  "actualNativeSnapshots": 6,
+  "originalMetricsSourceStateAndFetchedAtPreserved": true,
+  "limitsDerivedFromNativeUsage": true,
+  "existingMemoryOnlyBindings": 5,
+  "availableBindings": 3,
+  "unavailableBindings": 2,
+  "unboundSubjectsRejected": 5,
+  "bindingsAddedToHost": 0,
+  "backendConfigurationChanged": false,
+  "refreshRequested": false,
+  "modelCalls": 0,
+  "credentialsRead": false,
+  "limitations": [
+    "Native administrative routes are not independently application-user scoped.",
+    "Cached measurements retain their actual observation time; read time is not freshness.",
+    "This does not qualify new provider probes or the dashboard/RPM features."
+  ]
+}
