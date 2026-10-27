@@ -5,7 +5,7 @@ Node.js 22.13 or newer. Applications in any supported language connect through t
 authenticated HTTP/HTTPS protocol; only the execution host needs Node.js.
 Optional [durable jobs](jobs.md) require Node 22.13+, explicit SQLite storage and
 retention, stable account bindings and separate token job grants.
-The unreleased [conditional handoff](jobs.md#conditional-host-handoff--unreleased)
+The unreleased [conditional handoff](jobs.md)
 supports inspecting and adopting an existing quiet queue through the host CLI.
 
 Programmatic hosts may omit `tokens` and supply application-owned

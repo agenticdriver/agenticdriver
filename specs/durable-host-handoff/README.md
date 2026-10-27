@@ -1,10 +1,14 @@
 # Durable host handoff
 
 Status: SDK storage/service/server implementation and selected native
-qualification complete. CLI integration and minimum-runtime lock correction
-are reviewed; their updated installed-package qualification is next.
+qualification complete for its recorded source. CLI integration and the
+minimum-runtime lock correction are reviewed, installed-package replay passed,
+and the revised source passed fresh native inference/recovery. An initially
+refused tier-label assumption was corrected to check native authentication;
+the failed preflight and subsequent actual reported tier remain in the evidence.
 Published RC.3 and the downstream RC.1 host are unchanged.
 No production deployment or package publication has occurred.
+The [choices ledger](choices.md) records the operator and storage tradeoffs.
 
 An application must be able to extend its existing durable host with a context
 resolver while preserving its queue, accepted keys, execution identity, grants
@@ -127,8 +131,14 @@ SDK source and CLI integration are complete and reviewed. Node 22.13's
 separate-process race exposed a raw file-descriptor close that could drop
 SQLite's locks; existing files now use metadata-only validation, and new files
 are closed under a staging name before atomic publication. The minimum-runtime
-checks pass. Complete updated installed-archive native qualification and CLI
-restart/replay before claiming this revised runtime qualified.
+checks and installed CLI restart/replay against the prior real job pass. The
+revised archive also passed fresh Codex/Luna/medium execution and unchanged
+restart/replay with exactly one metered run. The provider reported `prolite`;
+a tier-label assumption in the qualifier was corrected to require native
+ChatGPT authentication rather than a specific display label. Keep the original
+refusal and corrected qualification evidence. No fallback or sign-in change
+was performed. SDK source/CLI scope is complete; publication and downstream
+original-host integration remain separate.
 
 The earlier exact private archive passed a
 real Codex/Luna/medium request, unchanged job/run/events replay after restart,

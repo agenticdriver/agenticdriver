@@ -222,10 +222,10 @@ try {
     subscription: connection.connection.account.subscription,
     modelCatalogSource: connection.modelCatalog?.source,
   };
-  assert.match(
-    receipt.connection.subscription ?? "",
-    /\bpro\b/i,
-    "Preserve the existing native Pro billing route.",
+  assert.equal(
+    receipt.connection.method,
+    "ChatGPT",
+    "Preserve native ChatGPT authentication; API-key billing is not allowed.",
   );
   if (checkOnly) {
     receipt.status = "connection-checked";

@@ -153,3 +153,16 @@ The staging name is then removed. A concurrent opener seeing two links may
 conservatively refuse. A crash during publication can likewise leave an extra
 link requiring operator repair; it cannot silently substitute a new queue.
 This avoids changing process-wide umask or introducing a parallel lock owner.
+
+## Sound — high confidence: authenticate the native route, record its reported tier
+
+The qualification runner originally required the literal subscription label
+`pro`, although the user selected an existing native account rather than a tier
+name. The same configured route later reported `prolite` and the runner stopped
+before inference. Read-only checks confirmed a stable current native identity,
+ChatGPT authentication and the selected Luna catalog entry. The runner now
+requires native `ChatGPT` authentication explicitly; an API-key route refuses.
+The reported subscription remains recorded evidence. Exact account configuration,
+binary, model, reasoning, source-config preservation and metering bindings remain
+required. This removes a display-label assumption without selecting another
+account or billing mode.
