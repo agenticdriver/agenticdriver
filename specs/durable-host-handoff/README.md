@@ -1,7 +1,9 @@
 # Durable host handoff
 
 Status: SDK storage/service/server implementation and selected native
-qualification complete. Published RC.3 and the downstream RC.1 host are unchanged.
+qualification complete. CLI integration and minimum-runtime lock correction
+are reviewed; their updated installed-package qualification is next.
+Published RC.3 and the downstream RC.1 host are unchanged.
 No production deployment or package publication has occurred.
 
 An application must be able to extend its existing durable host with a context
@@ -12,11 +14,11 @@ arrived between inspection and acquisition.
 
 ## Current boundary
 
-[`SqliteJobStore`](../../src/sqlite-job-store.ts) runs retention and expired-lease
-recovery before each operation's checks. Even a read can change persisted state.
-[`JobStore`](../../src/job-store.ts) fences worker execution, but submission and
-cancellation have no worker-ownership argument. A new worker-only acquisition
-method therefore cannot, by itself, establish an all-writer handoff.
+Ordinary [`SqliteJobStore`](../../src/sqlite-job-store.ts) operations can run
+retention and expired-lease recovery. Handoff observation and refusal bypass
+that maintenance, and the acquired handle fences every mutation. The optional
+[`JobStore`](../../src/job-store.ts) capability owns the same boundary for custom
+stores; worker-only fencing would leave submission/cancellation outside it.
 
 The downstream read-only preflight correctly always refuses adoption. Its
 snapshot is diagnostic evidence, never a lock or permission to serve. Keep
@@ -121,7 +123,14 @@ storage behavior, not provider execution or application acceptance.
 
 ## Next agent prompt
 
-SDK source scope is complete and reviewed. The exact private archive passed a
+SDK source and CLI integration are complete and reviewed. Node 22.13's
+separate-process race exposed a raw file-descriptor close that could drop
+SQLite's locks; existing files now use metadata-only validation, and new files
+are closed under a staging name before atomic publication. The minimum-runtime
+checks pass. Complete updated installed-archive native qualification and CLI
+restart/replay before claiming this revised runtime qualified.
+
+The earlier exact private archive passed a
 real Codex/Luna/medium request, unchanged job/run/events replay after restart,
 and exactly one correctly bound usage record. See the [qualification receipt](../../docs/validation/durable-handoff-2026-10-27.md).
 

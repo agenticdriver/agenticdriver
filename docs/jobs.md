@@ -224,6 +224,19 @@ counter. Missing or uninitialized databases are rejected without creating their
 database file/schema. SQLite may create/update WAL coordination files, so this
 is not filesystem-immutable access.
 
+The installed host CLI uses the same contract:
+
+```sh
+agenticdriver inspect-jobs --config /private/host.json --json
+agenticdriver serve --config /private/host.json --handoff-snapshot SNAPSHOT_FROM_INSPECTION
+```
+
+Inspection exits successfully when observation succeeds, including when `quiet`
+is false; check its blockers rather than treating the exit code as permission to
+adopt. The startup flag applies only to that invocation and never edits the saved
+configuration. Missing storage is not initialized. The snapshot does not pin
+provider configuration or exclude older processes; review those separately.
+
 For a configured host, preserve the saved configuration and add the inspection
 request only to its runtime options:
 

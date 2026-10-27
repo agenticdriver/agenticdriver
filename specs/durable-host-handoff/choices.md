@@ -130,3 +130,26 @@ An old binary must still be excluded operationally. Tests pin both behaviors.
 
 **Verdict:** Sound. It states the actual safe boundary rather than inventing
 historical evidence or an automatic migration before the operator's opt-in.
+
+## Sound — medium confidence: conditional adoption is an invocation-only CLI choice
+
+An operator can inspect the configured queue and pass that digest to `serve`.
+The command uses the SDK's existing atomic acquisition, rather than adding a
+second queue owner or putting an enduring adoption flag in the configuration.
+Inspection success means observation succeeded; a blocked queue still reports
+its blockers. It does not grant startup authority. A later ordinary startup
+remains a separate operator choice. This keeps the existing host usable without
+requiring an application-specific launcher, while preserving saved selections.
+
+## Sound — high confidence: file checks must preserve SQLite's own locks
+
+Closing a raw file descriptor for a database can release every POSIX lock on
+that file held by the process, including locks belonging to another SQLite
+connection. Existing database validation therefore uses filesystem metadata
+without opening/closing the database outside SQLite. A new private inode is
+fully created and closed under a unique staging name before an atomic hard
+link publishes the configured pathname; an existing pathname is never replaced.
+The staging name is then removed. A concurrent opener seeing two links may
+conservatively refuse. A crash during publication can likewise leave an extra
+link requiring operator repair; it cannot silently substitute a new queue.
+This avoids changing process-wide umask or introducing a parallel lock owner.

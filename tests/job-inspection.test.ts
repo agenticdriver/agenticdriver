@@ -6,6 +6,9 @@ import {
   writeFile,
   readFile,
   readdir,
+  chmod,
+  link,
+  symlink,
 } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -206,3 +209,48 @@ test("closed-store inspection preserves database bytes while allowing SQLite WAL
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test(
+  "job database validation rejects unsafe existing files without changing the original",
+  { skip: process.platform === "win32" },
+  async () => {
+    const root = await mkdtemp(join(tmpdir(), "driver-job-file-boundary-"));
+    const path = join(root, "jobs.sqlite");
+    const store = await SqliteJobStore.open(path, options);
+    await store.close();
+    const original = await readFile(path);
+    async function refuses(candidate: string) {
+      await assert.rejects(SqliteJobStore.inspect(candidate), {
+        code: "JOB_STORAGE_UNSAFE",
+      });
+      await assert.rejects(SqliteJobStore.openExisting(candidate, options), {
+        code: "JOB_STORAGE_UNSAFE",
+      });
+      await assert.rejects(SqliteJobStore.open(candidate, options), {
+        code: "JOB_STORAGE_UNSAFE",
+      });
+      assert.deepEqual(await readFile(path), original);
+    }
+    try {
+      await chmod(path, 0o644);
+      await refuses(path);
+      await chmod(path, 0o600);
+      const alias = join(root, "alias.sqlite");
+      await symlink(path, alias);
+      await refuses(alias);
+      await rm(alias);
+      await link(path, alias);
+      await refuses(alias);
+      await rm(alias);
+      const reopened = await SqliteJobStore.openExisting(path, options);
+      await reopened.close();
+      assert.equal((await SqliteJobStore.inspect(path)).quiet, true);
+      assert.deepEqual(
+        (await readdir(root)).filter((name) => name.startsWith(".job-create-")),
+        [],
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  },
+);

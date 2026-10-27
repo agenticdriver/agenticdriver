@@ -1,5 +1,5 @@
-import { constants } from "node:fs";
-import { lstat, mkdir, open, realpath } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { link, lstat, mkdir, realpath, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { DriverError } from "./errors.js";
@@ -29,26 +29,36 @@ export async function openJobDatabase(
       "Use a private, host-owned directory for the job database.",
     );
   const canonical = join(await realpath(parent), basename(absolute));
-  const file = await open(
-    canonical,
-    (writable
-      ? constants.O_RDWR | (initialize ? constants.O_CREAT : 0)
-      : constants.O_RDONLY) | (constants.O_NOFOLLOW ?? 0),
-    0o600,
+  // Closing any raw descriptor for a database can drop SQLite's POSIX locks.
+  // Finish creating a private inode before publishing its database pathname.
+  const exists = await lstat(canonical).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (initialize && error.code === "ENOENT") return undefined;
+      throw error;
+    },
   );
-  let identity: string;
-  try {
-    const stat = await file.stat();
-    const exact = await file.stat({ bigint: true });
-    identity = `${exact.dev}:${exact.ino}`;
-    if (!stat.isFile() || stat.nlink !== 1 || !privateFile(stat))
-      throw new DriverError(
-        "JOB_STORAGE_UNSAFE",
-        "The job database must be a private regular file with one link.",
-      );
-  } finally {
-    await file.close();
+  if (!exists) {
+    const staging = join(parent, `.job-create-${randomUUID()}`);
+    try {
+      await writeFile(staging, "", { flag: "wx", mode: 0o600 });
+      await link(staging, canonical).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "EEXIST") throw error;
+      });
+    } finally {
+      await rm(staging, { force: true });
+    }
   }
+  const stat = await lstat(canonical, { bigint: true });
+  const identity = `${stat.dev}:${stat.ino}`;
+  if (
+    !stat.isFile() ||
+    stat.nlink !== 1n ||
+    !privateFile({ mode: Number(stat.mode), uid: Number(stat.uid) })
+  )
+    throw new DriverError(
+      "JOB_STORAGE_UNSAFE",
+      "The job database must be a private regular file with one link.",
+    );
   for (const suffix of ["-wal", "-shm", "-journal"]) {
     const stat = await lstat(canonical + suffix).catch(
       (error: NodeJS.ErrnoException) => {

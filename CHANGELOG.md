@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Expose durable-store inspection and conditional acquisition through `inspect-jobs` and `serve --handoff-snapshot`; register graceful shutdown before announcing host readiness.
+- Preserve SQLite POSIX locks while checking existing job files, including on the supported Node 22.13 runtime.
+
 - Add logical durable-store inspection and explicit conditional host handoff. Successful opt-in adoption retains accepted keys and upgrades SQLite ownership fencing; old handles cannot write through a replacement worker or run maintenance before rejection.
 - Preserve eligibility through payload retention and require existing storage for configured handoff. Unknown outcomes, changed snapshots and unsupported stores refuse without ordinary-startup fallback.
 - Drain work and close service-owned handles even when lease release fails, while preserving the error. Published RC.3 artifacts are unchanged.
