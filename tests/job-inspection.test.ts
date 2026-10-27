@@ -246,7 +246,9 @@ test(
       await reopened.close();
       assert.equal((await SqliteJobStore.inspect(path)).quiet, true);
       assert.deepEqual(
-        (await readdir(root)).filter((name) => name.startsWith(".job-create-")),
+        (await readdir(root)).filter((name) =>
+          name.startsWith(".sqlite-create-"),
+        ),
         [],
       );
     } finally {

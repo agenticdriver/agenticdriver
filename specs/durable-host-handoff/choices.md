@@ -166,3 +166,12 @@ The reported subscription remains recorded evidence. Exact account configuration
 binary, model, reasoning, source-config preservation and metering bindings remain
 required. This removes a display-label assumption without selecting another
 account or billing mode.
+
+## Sound — high confidence: one file boundary for both SQLite stores
+
+The vector store had the same raw-descriptor validation as the original job
+store. Both now consume the internal `sqlite-file` boundary, preserving their
+existing error codes and privacy checks. Schema ownership stays in each store.
+A real competing SQLite process checks that opening vector storage cannot drop
+another connection's locks. This shares the filesystem invariant without merging
+job execution and retrieval storage or adding a second locking mechanism.

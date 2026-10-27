@@ -1,6 +1,4 @@
-import { constants } from "node:fs";
-import { lstat, mkdir, open, realpath } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import { sqliteFile } from "./sqlite-file.js";
 import { setImmediate } from "node:timers/promises";
 import type { DatabaseSync } from "node:sqlite";
 import { DriverError } from "./errors.js";
@@ -36,54 +34,7 @@ export class SqliteVectorStore implements VectorStore {
     options: { maxChunks?: number; maxBytes?: number } = {},
   ): Promise<SqliteVectorStore> {
     const limits = storeLimits(options);
-    const absolute = resolve(path),
-      parent = dirname(absolute);
-    await mkdir(parent, { recursive: true, mode: 0o700 });
-    const directory = await lstat(parent);
-    if (
-      !directory.isDirectory() ||
-      directory.isSymbolicLink() ||
-      !privateFile(directory)
-    )
-      throw new DriverError(
-        "INDEX_STORAGE_UNSAFE",
-        "Use a private, host-owned directory for the vector database.",
-      );
-    const canonical = join(await realpath(parent), basename(absolute));
-    const file = await open(
-      canonical,
-      constants.O_CREAT | constants.O_RDWR | (constants.O_NOFOLLOW ?? 0),
-      0o600,
-    );
-    try {
-      const stat = await file.stat();
-      if (!stat.isFile() || stat.nlink !== 1 || !privateFile(stat))
-        throw new DriverError(
-          "INDEX_STORAGE_UNSAFE",
-          "The vector database must be a private regular file with one link.",
-        );
-    } finally {
-      await file.close();
-    }
-    for (const suffix of ["-wal", "-shm", "-journal"]) {
-      const stat = await lstat(canonical + suffix).catch(
-        (error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return undefined;
-          throw error;
-        },
-      );
-      if (
-        stat &&
-        (!stat.isFile() ||
-          stat.isSymbolicLink() ||
-          stat.nlink !== 1 ||
-          !privateFile(stat))
-      )
-        throw new DriverError(
-          "INDEX_STORAGE_UNSAFE",
-          "Vector database sidecar files must be private regular files.",
-        );
-    }
+    const { path: canonical } = await sqliteFile(path, true, "INDEX");
     let sqlite: typeof import("node:sqlite");
     try {
       sqlite = await import("node:sqlite");
@@ -380,12 +331,4 @@ export class SqliteVectorStore implements VectorStore {
       },
     );
   }
-}
-
-function privateFile(stat: { mode: number; uid: number }): boolean {
-  // Windows privacy follows the host directory's inherited ACL; POSIX mode bits are not an ACL verifier.
-  return (
-    process.platform === "win32" ||
-    ((stat.mode & 0o077) === 0 && stat.uid === process.getuid?.())
-  );
 }

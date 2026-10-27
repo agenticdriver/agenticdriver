@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Share lock-preserving SQLite file validation between durable jobs and vector storage.
+
 - Expose durable-store inspection and conditional acquisition through `inspect-jobs` and `serve --handoff-snapshot`; register graceful shutdown before announcing host readiness.
 - Preserve SQLite POSIX locks while checking existing job files, including on the supported Node 22.13 runtime.
 

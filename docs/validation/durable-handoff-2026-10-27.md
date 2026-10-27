@@ -157,3 +157,15 @@ adoption until a supported artifact is selected there.
 First opt-in adoption upgrades SQLite layout to v2. Older incompatible processes
 must be excluded operationally. Unknown erased v1 outcomes remain blockers;
 this feature neither invents reconciliation evidence nor repeats started work.
+
+## Shared vector-storage boundary follow-up
+
+The corrected filesystem boundary also serves vector storage, whose previous
+raw open/close had the same lock hazard. A real SQLite/Python competing-process
+regression fails against the previous vector implementation on Node 22.13 and
+passes after sharing the corrected boundary. It checks SQLite busy/locked codes,
+not arbitrary I/O failure. Independent review and typecheck passed; the full SDK
+check passed **65 tests**, with one existing live-Usagestat skip, and build.
+This is storage-level verification without provider execution. The native-run
+receipts above remain bound to their recorded sources; no new inference or
+retrieval-model qualification is claimed for this extraction.
