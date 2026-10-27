@@ -8,6 +8,7 @@ import {
   readFile,
   readdir,
   readlink,
+  realpath,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -270,6 +271,7 @@ test(
   { skip: process.platform !== "linux" },
   async () => {
     const f = await fixture();
+    const databasePath = await realpath(f.path);
     let service: JobService | undefined;
     let locker: DatabaseSync | undefined;
     const descriptors = async () =>
@@ -279,7 +281,7 @@ test(
             async (fd) => await readlink(`/proc/self/fd/${fd}`).catch(() => ""),
           ),
         )
-      ).filter((target) => target === f.path).length;
+      ).filter((target) => target === databasePath).length;
     try {
       const baseline = await descriptors();
       service = await JobService.open(f.driver, {

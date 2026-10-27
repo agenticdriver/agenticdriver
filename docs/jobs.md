@@ -269,3 +269,6 @@ No HTTP operation, client protocol change, provider/account/model fallback or
 authentication migration is introduced. Existing language clients keep using
 the durable job protocol. Ordinary recovery remains a separately selected mode;
 conditional handoff never performs it on a refused attempt.
+
+The [source qualification](validation/durable-handoff-2026-10-27.md) records the
+actual native run, account-bound metering, restart/replay proof and scope limits.

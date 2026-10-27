@@ -1,7 +1,7 @@
 # Durable host handoff
 
-Status: SDK storage/service/server implementation reviewed; real native
-qualification pending. Published RC.3 and the downstream RC.1 host are unchanged.
+Status: SDK storage/service/server implementation and selected native
+qualification complete. Published RC.3 and the downstream RC.1 host are unchanged.
 No production deployment or package publication has occurred.
 
 An application must be able to extend its existing durable host with a context
@@ -121,19 +121,16 @@ storage behavior, not provider execution or application acceptance.
 
 ## Next agent prompt
 
-Run the reviewed real-connection qualifier against a private installed archive,
-first with `--check-only`, then one native Codex/Luna/medium request. Keep the
-Prometheus native sign-in and saved configuration untouched; use a new private
-loopback host and receipt directory. Retain uncertain accepted work rather than
-repeating it. Verify unchanged job/run/events and actual account-bound reported
-usage after restart. The storage/service implementation has independent review
-and focused tests, including real competing processes and SQLite failure cleanup.
+SDK source scope is complete and reviewed. The exact private archive passed a
+real Codex/Luna/medium request, unchanged job/run/events replay after restart,
+and exactly one correctly bound usage record. See the [qualification receipt](../../docs/validation/durable-handoff-2026-10-27.md).
 
-Finish source docs/evidence and review the exact source. SDK release, original
-host deployment and consumer rollout remain separate follow-ups. Do not disable
-the downstream always-refusing RC.1 preflight until a supported artifact is
-actually selected there. Runtime migration occurs only on successful opt-in
-acquisition; it never happens on inspection or refusal.
+Keep publication, original-host deployment and consumer adoption separate. Do
+not disable the downstream always-refusing RC.1 preflight until a supported
+artifact is selected there. Unknown erased legacy outcomes still need actual
+reconciliation evidence; no automatic authority is added. Preserve the exact
+validated runtime source/archive when publishing; later evidence docs do not
+change the qualified runtime. No production service or original store changed.
 
 ## Plan review
 
