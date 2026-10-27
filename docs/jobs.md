@@ -209,3 +209,7 @@ interface for custom stores. Implementations must atomically claim accepted
 keys, fence expired/released workers, persist before acknowledgement, retain
 tombstones, and never return started work to the queue. Production qualification must exercise these boundaries against a selected real
 provider and deployment. The old canned-response jobs example was removed.
+
+Original-store adoption is not currently supported by a quietness check and
+ordinary acquisition. The planned atomic boundary and its verification gates
+are in the [durable host handoff plan](../specs/durable-host-handoff/README.md).
