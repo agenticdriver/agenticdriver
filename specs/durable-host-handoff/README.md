@@ -1,7 +1,8 @@
 # Durable host handoff
 
-Status: planned; original-store serving remains unavailable. No SDK release,
-live adoption or inference is part of this planning checkpoint.
+Status: logical inspection implemented; atomic acquisition and writer fencing
+remain pending. Original-store serving is unavailable. No SDK release, live
+adoption or inference is part of this source pass.
 
 An application must be able to extend its existing durable host with a context
 resolver while preserving its queue, accepted keys, execution identity, grants
@@ -42,6 +43,14 @@ API by adding an advisory marker. Deployment must stop incompatible processes
 and establish exclusive operational ownership. Qualify that prerequisite
 separately; do not advertise the new SDK API as protection against such writers.
 
+Inspection preserves job/lease rows and never initializes a database or runs
+maintenance. SQLite can create or update WAL coordination files even with a
+read-only connection; filesystem immutability is not claimed. Do not bypass
+SQLite locking with its `immutable` option on a mutable live store: it disables
+change detection and can return incorrect results. See the SQLite [WAL
+contract](https://www.sqlite.org/wal.html#read_only_databases) and [immutable
+warning](https://www.sqlite.org/uri.html#uriimmutable).
+
 ## Slices
 
 1. **Specify the store capability and retained evidence.** Add a versioned,
@@ -55,7 +64,7 @@ separately; do not advertise the new SDK API as protection against such writers.
    additive custom-store behavior and explicit format-transition policy before
    runtime implementation. The precise TypeScript names/layout are delegated to
    the implementer within those constraints; they are not existing SDK support.
-2. **Implement the SQLite transaction and fences.** Use a genuinely read-only
+2. **Implement the SQLite transaction and fences.** Use a logically read-only
    inspection path that neither initializes nor migrates storage. Conditional
    acquisition compares the observation and checks quietness under the same
    write transaction before maintenance. Refusal rolls back everything. Validate
@@ -104,13 +113,18 @@ storage behavior, not provider execution or application acceptance.
 
 ## Next agent prompt
 
-Resolve slice 1 against live default `sdk-roadmap` RC.3 store/service code and
-its public consumers.
-Before writing code, settle how stale writes are fenced and how incompatible
-running binaries are excluded. Do not implement only a quiet predicate around
-ordinary acquire, alter an original job database, enable the downstream host,
-or publish a package from this plan. Keep the existing read-only preflight's
-refusal until every required contract is supported and reviewed.
+Implement conditional acquisition and the persistent all-writer generation on
+live default RC.3. `SqliteJobStore.inspect` now supplies diagnostic snapshot and
+blockers without maintenance. It does not yet prove a durable change counter or
+provide startup authority. Its six storage tests, full source checks and
+independent review pass; the review clarified SQLite bookkeeping semantics.
+
+Reuse the shared file/layout boundary. Preserve normal v1 behavior while making
+format transition explicit only on successful opt-in adoption. Unknown erased
+outcomes must remain blockers; retain classification before future retention.
+Bind one mutation handle to acquired generation and fence before maintenance.
+Do not alter original job databases, enable the downstream host or publish a
+package. Keep downstream refusal until the entire contract is supported.
 
 ## Plan review
 

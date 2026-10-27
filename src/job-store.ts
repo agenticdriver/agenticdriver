@@ -40,3 +40,13 @@ export interface JobStore {
   fail(owner: string, id: string, error: ErrorInfo): Promise<void>;
   cancel(subject: string, id: string): Promise<JobRecord>;
 }
+
+/** Diagnostic only: a snapshot digest is neither a lock nor permission to acquire. */
+export interface JobStoreInspection {
+  snapshot: string;
+  acceptedKeys: number;
+  states: Record<string, number>;
+  lease: "none" | "active" | "expired";
+  blockers: Array<"lease" | "pending" | "unreconciled" | "unclassified">;
+  quiet: boolean;
+}

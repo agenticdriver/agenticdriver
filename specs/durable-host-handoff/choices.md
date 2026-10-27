@@ -63,3 +63,25 @@ reconciliation decision maker. The SDK continues to refuse unresolved work.
 
 **Verdict:** Sound. Safety facts must persist for as long as the decision relies
 on them. Exact metadata layout remains delegated to the storage-contract slice.
+
+## Sound — medium confidence: logical inspection allows SQLite coordination files
+
+**When:** inspection implementation review.
+
+**Choice:** Inspecting a closed WAL database can create SQLite's WAL and shared
+memory files even through a read-only connection. Inspection promises unchanged
+job/lease data, no database/schema initialization and no retention or recovery;
+it explicitly does not promise an untouched directory. A closed-store regression
+checks database bytes and the allowed bookkeeping boundary.
+
+**Gap:** The initial spec used “read-only” without distinguishing logical data
+from SQLite coordination. Independent review reproduced that distinction. The
+SQLite immutable option would disable locking/change detection and be unsafe on
+a database another process can change, so it is not used as a workaround.
+
+**Reach:** Operators who require zero filesystem effects must not treat this
+API as that guarantee. Inspection is a diagnostic observation, never an adoption
+receipt. No original/live store has been inspected by this implementation.
+
+**Verdict:** Sound. It uses SQLite's real consistent-read mechanism and states
+its limits rather than building a second snapshot engine or bypassing locking.

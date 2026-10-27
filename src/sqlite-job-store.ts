@@ -1,11 +1,14 @@
-import { constants } from "node:fs";
-import { lstat, mkdir, open, realpath } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { DriverError } from "./errors.js";
 import { JobStoreOptionsSchema, type JobStoreOptions } from "./job-types.js";
-import type { JobStore, JobRecord, NewJob } from "./job-store.js";
+import { openJobDatabase } from "./job-database.js";
+import type {
+  JobStoreInspection,
+  JobStore,
+  JobRecord,
+  NewJob,
+} from "./job-store.js";
 import type { ErrorInfo, RunEvent } from "./types.js";
 
 const interruption = new DriverError(
@@ -15,9 +18,6 @@ const interruption = new DriverError(
   "uncertain",
 ).toJSON();
 const terminal = (state: string) => state !== "queued" && state !== "running";
-const privateFile = (stat: { mode: number; uid: number }) =>
-  process.platform === "win32" ||
-  ((stat.mode & 0o077) === 0 && stat.uid === process.getuid?.());
 
 /** Local, single-worker durable queue. SQLite transactions fence competing host processes. */
 export class SqliteJobStore implements JobStore {
@@ -37,95 +37,78 @@ export class SqliteJobStore implements JobStore {
         "INVALID_JOB_CONFIG",
         "Configure job retention and positive bounded storage capacities.",
       );
-    const absolute = resolve(path),
-      parent = dirname(absolute);
-    await mkdir(parent, { recursive: true, mode: 0o700 });
-    const directory = await lstat(parent);
-    if (
-      !directory.isDirectory() ||
-      directory.isSymbolicLink() ||
-      !privateFile(directory)
-    )
-      throw new DriverError(
-        "JOB_STORAGE_UNSAFE",
-        "Use a private, host-owned directory for the job database.",
-      );
-    const canonical = join(await realpath(parent), basename(absolute));
-    const file = await open(
-      canonical,
-      constants.O_CREAT | constants.O_RDWR | (constants.O_NOFOLLOW ?? 0),
-      0o600,
-    );
+    const { db } = await openJobDatabase(path, true);
+    return new SqliteJobStore(db, parsed.data);
+  }
+
+  /** Observe logical state without initializing a database, expiring payloads or recovering leases.
+   * SQLite may create/update WAL coordination files; this is not filesystem-immutable access.
+   * The digest describes this snapshot, not a lock or a durable change counter.
+   */
+  static async inspect(path: string): Promise<JobStoreInspection> {
+    const { db, identity } = await openJobDatabase(path, false);
     try {
-      const stat = await file.stat();
-      if (!stat.isFile() || stat.nlink !== 1 || !privateFile(stat))
-        throw new DriverError(
-          "JOB_STORAGE_UNSAFE",
-          "The job database must be a private regular file with one link.",
-        );
-    } finally {
-      await file.close();
-    }
-    for (const suffix of ["-wal", "-shm", "-journal"]) {
-      const stat = await lstat(canonical + suffix).catch(
-        (error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return undefined;
-          throw error;
-        },
-      );
-      if (
-        stat &&
-        (!stat.isFile() ||
-          stat.isSymbolicLink() ||
-          stat.nlink !== 1 ||
-          !privateFile(stat))
-      )
-        throw new DriverError(
-          "JOB_STORAGE_UNSAFE",
-          "Job database sidecars must be private regular files.",
-        );
-    }
-    let sqlite: typeof import("node:sqlite");
-    try {
-      sqlite = await import("node:sqlite");
-    } catch {
-      throw new DriverError(
-        "SQLITE_UNAVAILABLE",
-        "The SQLite job store requires Node 22.13 or later.",
-      );
-    }
-    const db = new sqlite.DatabaseSync(canonical);
-    try {
-      const tables = db
-        .prepare(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-        )
+      db.exec("PRAGMA query_only=ON; PRAGMA trusted_schema=OFF; BEGIN");
+      const jobs = db.prepare("SELECT * FROM ad_jobs ORDER BY id").all();
+      const leases = db
+        .prepare("SELECT * FROM ad_job_worker ORDER BY id")
         .all();
-      if (
-        tables.length &&
-        (db.prepare("PRAGMA user_version").get()?.user_version !== 1 ||
-          tables.length !== 2 ||
-          !tables.every((row) =>
-            ["ad_jobs", "ad_job_worker"].includes(String(row.name)),
-          ))
-      )
-        throw new DriverError(
-          "JOB_STORAGE_MISMATCH",
-          "Use a dedicated AgenticDriver job database; automatic migrations are not enabled.",
-        );
-      db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON;
-        PRAGMA busy_timeout=0; PRAGMA trusted_schema=OFF;
-        CREATE TABLE IF NOT EXISTS ad_jobs (
-          id TEXT PRIMARY KEY, subject TEXT NOT NULL, key_hash TEXT NOT NULL,
-          fingerprint TEXT NOT NULL, state TEXT NOT NULL, expires_at INTEGER,
-          payload TEXT, bytes INTEGER NOT NULL, reserved INTEGER NOT NULL,
-          UNIQUE(subject, key_hash));
-        CREATE TABLE IF NOT EXISTS ad_job_worker (id INTEGER PRIMARY KEY CHECK(id=1), owner TEXT NOT NULL, expires_at INTEGER NOT NULL);
-        PRAGMA user_version=1;`);
-      return new SqliteJobStore(db, parsed.data);
-    } catch (error) {
+      const states: Record<string, number> = {};
+      const blockers = new Set<JobStoreInspection["blockers"][number]>();
+      if (leases.length) blockers.add("lease");
+      for (const job of jobs) {
+        const state = String(job.state);
+        states[state] = (states[state] ?? 0) + 1;
+        if (state === "queued" || state === "running") blockers.add("pending");
+        else if (state !== "completed" && state !== "cancelled")
+          blockers.add("unreconciled");
+        if (job.payload === null) {
+          // A retained key does not preserve erased outcome evidence in the v1 layout.
+          blockers.add("unclassified");
+          continue;
+        }
+        try {
+          const record = JSON.parse(String(job.payload)) as JobRecord;
+          if (
+            record.schema !== "agenticdriver.job.v1" ||
+            record.info?.id !== job.id ||
+            record.info.state !== state ||
+            !Array.isArray(record.events)
+          ) {
+            blockers.add("unclassified");
+          } else if (
+            record.events.some(
+              (event) =>
+                (event.type === "run.failed" ||
+                  event.type === "run.cancelled") &&
+                event.error.outcome === "uncertain",
+            )
+          ) {
+            blockers.add("unreconciled");
+          }
+        } catch {
+          blockers.add("unclassified");
+        }
+      }
+      const snapshot = createHash("sha256")
+        .update(JSON.stringify({ identity, jobs, leases }))
+        .digest("hex");
+      db.exec("COMMIT");
+      return {
+        snapshot,
+        acceptedKeys: jobs.length,
+        states,
+        lease:
+          leases.length === 0
+            ? "none"
+            : leases.some((row) => Number(row.expires_at) > Date.now())
+              ? "active"
+              : "expired",
+        blockers: [...blockers].sort(),
+        quiet: blockers.size === 0,
+      };
+    } finally {
       db.close();
-      throw error;
     }
   }
 

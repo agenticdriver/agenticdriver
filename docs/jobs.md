@@ -213,3 +213,12 @@ provider and deployment. The old canned-response jobs example was removed.
 Original-store adoption is not currently supported by a quietness check and
 ordinary acquisition. The planned atomic boundary and its verification gates
 are in the [durable host handoff plan](../specs/durable-host-handoff/README.md).
+
+`SqliteJobStore.inspect(path)` observes an existing store in a consistent read
+transaction without running retention or lease recovery. Its digest identifies
+that snapshot and file, not ownership or a change counter. An erased payload
+has unknown eligibility; a terminal state alone does not certify safety. The
+report is diagnostic and never grants startup authority. SQLite may create or
+update its WAL coordination files during this logically read-only access; it
+does not promise filesystem immutability. Missing or uninitialized databases
+are rejected without creating their database files or schema.
