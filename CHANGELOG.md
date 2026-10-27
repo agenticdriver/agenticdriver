@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add logical durable-store inspection and explicit conditional host handoff. Successful opt-in adoption retains accepted keys and upgrades SQLite ownership fencing; old handles cannot write through a replacement worker or run maintenance before rejection.
+- Preserve eligibility through payload retention and require existing storage for configured handoff. Unknown outcomes, changed snapshots and unsupported stores refuse without ordinary-startup fallback.
+- Drain work and close service-owned handles even when lease release fails, while preserving the error. Published RC.3 artifacts are unchanged.
+
 ## 0.2.0-rc.3 — candidate
 
 - Added the desktop Overview with real host, provider, account-catalog, application-grant and Usagestat setup status. Partial or unavailable checks remain unknown; metadata does not imply successful model execution.

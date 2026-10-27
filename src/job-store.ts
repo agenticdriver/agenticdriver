@@ -29,6 +29,15 @@ export type NewJob = Omit<
 export interface JobStore {
   close?(): Promise<void>;
   acquire(owner: string, leaseMs: number): Promise<void>;
+  /** Atomically adopt an unchanged quiet store. Return a fresh, generation-bound handle.
+   * Refusal cannot run maintenance. Every write path must fence before maintenance;
+   * the returned handle cannot be rebound to another worker after lease loss/release.
+   */
+  acquireQuiet?(
+    owner: string,
+    leaseMs: number,
+    snapshot: string,
+  ): Promise<JobStore>;
   renew(owner: string, leaseMs: number): Promise<void>;
   release(owner: string): Promise<void>;
   submit(job: NewJob): Promise<JobRecord>;

@@ -1,8 +1,8 @@
 # Durable host handoff
 
-Status: logical inspection implemented; atomic acquisition and writer fencing
-remain pending. Original-store serving is unavailable. No SDK release, live
-adoption or inference is part of this source pass.
+Status: SDK storage/service/server implementation reviewed; real native
+qualification pending. Published RC.3 and the downstream RC.1 host are unchanged.
+No production deployment or package publication has occurred.
 
 An application must be able to extend its existing durable host with a context
 resolver while preserving its queue, accepted keys, execution identity, grants
@@ -51,14 +51,22 @@ change detection and can return incorrect results. See the SQLite [WAL
 contract](https://www.sqlite.org/wal.html#read_only_databases) and [immutable
 warning](https://www.sqlite.org/uri.html#uriimmutable).
 
+Initial v1 adoption compares the current complete logical snapshot, not a
+history counter: a lease-only acquire/release cycle can return to the same
+snapshot. No started/accepted job can disappear through that cycle. Successful
+adoption invalidates every legacy handle before it can commit later work.
+After adoption, the persistent v2 generation also detects ownership cycles
+which leave no job rows changed. Excluding older incompatible binaries remains
+an operational prerequisite, not something a digest can enforce.
+
 ## Slices
 
 1. **Specify the store capability and retained evidence.** Add a versioned,
    optional handoff capability to the existing public store contract. An opaque
    observation binds store identity, logical revision and explicit blockers.
    Acquisition returns one lease-bound mutation handle; avoid optional owner
-   arguments scattered across write methods. Every committed relevant change
-   invalidates the observation. Persist the ownership generation across release,
+   arguments scattered across write methods. Adopted v2 ownership cycles invalidate the observation through their
+   persistent generation. Persist the ownership generation across release,
    and keep eligibility/uncertainty classification through payload retention.
    Unknown legacy records remain blockers. This slice defines the state table,
    additive custom-store behavior and explicit format-transition policy before
@@ -113,18 +121,19 @@ storage behavior, not provider execution or application acceptance.
 
 ## Next agent prompt
 
-Implement conditional acquisition and the persistent all-writer generation on
-live default RC.3. `SqliteJobStore.inspect` now supplies diagnostic snapshot and
-blockers without maintenance. It does not yet prove a durable change counter or
-provide startup authority. Its six storage tests, full source checks and
-independent review pass; the review clarified SQLite bookkeeping semantics.
+Run the reviewed real-connection qualifier against a private installed archive,
+first with `--check-only`, then one native Codex/Luna/medium request. Keep the
+Prometheus native sign-in and saved configuration untouched; use a new private
+loopback host and receipt directory. Retain uncertain accepted work rather than
+repeating it. Verify unchanged job/run/events and actual account-bound reported
+usage after restart. The storage/service implementation has independent review
+and focused tests, including real competing processes and SQLite failure cleanup.
 
-Reuse the shared file/layout boundary. Preserve normal v1 behavior while making
-format transition explicit only on successful opt-in adoption. Unknown erased
-outcomes must remain blockers; retain classification before future retention.
-Bind one mutation handle to acquired generation and fence before maintenance.
-Do not alter original job databases, enable the downstream host or publish a
-package. Keep downstream refusal until the entire contract is supported.
+Finish source docs/evidence and review the exact source. SDK release, original
+host deployment and consumer rollout remain separate follow-ups. Do not disable
+the downstream always-refusing RC.1 preflight until a supported artifact is
+actually selected there. Runtime migration occurs only on successful opt-in
+acquisition; it never happens on inspection or refusal.
 
 ## Plan review
 
