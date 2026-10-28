@@ -29,6 +29,15 @@ export type NewJob = Omit<
 export interface JobStore {
   close?(): Promise<void>;
   acquire(owner: string, leaseMs: number): Promise<void>;
+  /** Atomically adopt an unchanged quiet store. Return a fresh, generation-bound handle.
+   * Refusal cannot run maintenance. Every write path must fence before maintenance;
+   * the returned handle cannot be rebound to another worker after lease loss/release.
+   */
+  acquireQuiet?(
+    owner: string,
+    leaseMs: number,
+    snapshot: string,
+  ): Promise<JobStore>;
   renew(owner: string, leaseMs: number): Promise<void>;
   release(owner: string): Promise<void>;
   submit(job: NewJob): Promise<JobRecord>;
@@ -39,4 +48,14 @@ export interface JobStore {
   /** Fail before dispatch, or mark an already-started job interrupted/uncertain. */
   fail(owner: string, id: string, error: ErrorInfo): Promise<void>;
   cancel(subject: string, id: string): Promise<JobRecord>;
+}
+
+/** Diagnostic only: a snapshot digest is neither a lock nor permission to acquire. */
+export interface JobStoreInspection {
+  snapshot: string;
+  acceptedKeys: number;
+  states: Record<string, number>;
+  lease: "none" | "active" | "expired";
+  blockers: Array<"lease" | "pending" | "unreconciled" | "unclassified">;
+  quiet: boolean;
 }

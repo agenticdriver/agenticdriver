@@ -1,11 +1,14 @@
-import { constants } from "node:fs";
-import { lstat, mkdir, open, realpath } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { DriverError } from "./errors.js";
 import { JobStoreOptionsSchema, type JobStoreOptions } from "./job-types.js";
-import type { JobStore, JobRecord, NewJob } from "./job-store.js";
+import { openJobDatabase, jobGeneration } from "./job-database.js";
+import type {
+  JobStoreInspection,
+  JobStore,
+  JobRecord,
+  NewJob,
+} from "./job-store.js";
 import type { ErrorInfo, RunEvent } from "./types.js";
 
 const interruption = new DriverError(
@@ -15,21 +18,36 @@ const interruption = new DriverError(
   "uncertain",
 ).toJSON();
 const terminal = (state: string) => state !== "queued" && state !== "running";
-const privateFile = (stat: { mode: number; uid: number }) =>
-  process.platform === "win32" ||
-  ((stat.mode & 0o077) === 0 && stat.uid === process.getuid?.());
 
 /** Local, single-worker durable queue. SQLite transactions fence competing host processes. */
 export class SqliteJobStore implements JobStore {
   private closed = false;
+  private owner?: string;
+  private acquired = false;
   private constructor(
     private readonly db: DatabaseSync,
     private readonly options: ReturnType<typeof JobStoreOptionsSchema.parse>,
+    private readonly location: { path: string; identity: string },
+    private generation: number,
   ) {}
 
   static async open(
     path: string,
     input: JobStoreOptions,
+  ): Promise<SqliteJobStore> {
+    return SqliteJobStore.load(path, input, "initialize");
+  }
+  /** Open an existing store without creating its file or schema. */
+  static async openExisting(
+    path: string,
+    input: JobStoreOptions,
+  ): Promise<SqliteJobStore> {
+    return SqliteJobStore.load(path, input, "existing");
+  }
+  private static async load(
+    path: string,
+    input: JobStoreOptions,
+    mode: "initialize" | "existing",
   ): Promise<SqliteJobStore> {
     const parsed = JobStoreOptionsSchema.safeParse(input);
     if (!parsed.success)
@@ -37,99 +55,95 @@ export class SqliteJobStore implements JobStore {
         "INVALID_JOB_CONFIG",
         "Configure job retention and positive bounded storage capacities.",
       );
-    const absolute = resolve(path),
-      parent = dirname(absolute);
-    await mkdir(parent, { recursive: true, mode: 0o700 });
-    const directory = await lstat(parent);
-    if (
-      !directory.isDirectory() ||
-      directory.isSymbolicLink() ||
-      !privateFile(directory)
-    )
-      throw new DriverError(
-        "JOB_STORAGE_UNSAFE",
-        "Use a private, host-owned directory for the job database.",
-      );
-    const canonical = join(await realpath(parent), basename(absolute));
-    const file = await open(
-      canonical,
-      constants.O_CREAT | constants.O_RDWR | (constants.O_NOFOLLOW ?? 0),
-      0o600,
+    const opened = await openJobDatabase(path, mode);
+    return new SqliteJobStore(
+      opened.db,
+      parsed.data,
+      opened,
+      opened.generation,
     );
+  }
+
+  /** Observe logical state without initializing a database, expiring payloads or recovering leases.
+   * SQLite may create/update WAL coordination files; this is not filesystem-immutable access.
+   * The digest describes this snapshot, not a lock or a durable change counter.
+   */
+  static async inspect(path: string): Promise<JobStoreInspection> {
+    const { db, identity } = await openJobDatabase(path, "read");
     try {
-      const stat = await file.stat();
-      if (!stat.isFile() || stat.nlink !== 1 || !privateFile(stat))
-        throw new DriverError(
-          "JOB_STORAGE_UNSAFE",
-          "The job database must be a private regular file with one link.",
-        );
+      db.exec("PRAGMA query_only=ON; PRAGMA trusted_schema=OFF; BEGIN");
+      const observation = SqliteJobStore.observation(db, identity);
+      db.exec("COMMIT");
+      return observation;
     } finally {
-      await file.close();
-    }
-    for (const suffix of ["-wal", "-shm", "-journal"]) {
-      const stat = await lstat(canonical + suffix).catch(
-        (error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return undefined;
-          throw error;
-        },
-      );
-      if (
-        stat &&
-        (!stat.isFile() ||
-          stat.isSymbolicLink() ||
-          stat.nlink !== 1 ||
-          !privateFile(stat))
-      )
-        throw new DriverError(
-          "JOB_STORAGE_UNSAFE",
-          "Job database sidecars must be private regular files.",
-        );
-    }
-    let sqlite: typeof import("node:sqlite");
-    try {
-      sqlite = await import("node:sqlite");
-    } catch {
-      throw new DriverError(
-        "SQLITE_UNAVAILABLE",
-        "The SQLite job store requires Node 22.13 or later.",
-      );
-    }
-    const db = new sqlite.DatabaseSync(canonical);
-    try {
-      const tables = db
-        .prepare(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-        )
-        .all();
-      if (
-        tables.length &&
-        (db.prepare("PRAGMA user_version").get()?.user_version !== 1 ||
-          tables.length !== 2 ||
-          !tables.every((row) =>
-            ["ad_jobs", "ad_job_worker"].includes(String(row.name)),
-          ))
-      )
-        throw new DriverError(
-          "JOB_STORAGE_MISMATCH",
-          "Use a dedicated AgenticDriver job database; automatic migrations are not enabled.",
-        );
-      db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON;
-        PRAGMA busy_timeout=0; PRAGMA trusted_schema=OFF;
-        CREATE TABLE IF NOT EXISTS ad_jobs (
-          id TEXT PRIMARY KEY, subject TEXT NOT NULL, key_hash TEXT NOT NULL,
-          fingerprint TEXT NOT NULL, state TEXT NOT NULL, expires_at INTEGER,
-          payload TEXT, bytes INTEGER NOT NULL, reserved INTEGER NOT NULL,
-          UNIQUE(subject, key_hash));
-        CREATE TABLE IF NOT EXISTS ad_job_worker (id INTEGER PRIMARY KEY CHECK(id=1), owner TEXT NOT NULL, expires_at INTEGER NOT NULL);
-        PRAGMA user_version=1;`);
-      return new SqliteJobStore(db, parsed.data);
-    } catch (error) {
       db.close();
-      throw error;
     }
   }
 
-  private transaction<T>(work: (now: number) => T): T {
+  private static observation(
+    db: DatabaseSync,
+    identity: string,
+  ): JobStoreInspection {
+    const jobs = db.prepare("SELECT * FROM ad_jobs ORDER BY id").all();
+    const leases = db.prepare("SELECT * FROM ad_job_worker ORDER BY id").all();
+    const states = new Map<string, number>();
+    const blockers = new Set<JobStoreInspection["blockers"][number]>();
+    if (leases.length) blockers.add("lease");
+    for (const job of jobs) {
+      const state = String(job.state);
+      states.set(state, (states.get(state) ?? 0) + 1);
+      if (state === "queued" || state === "running") blockers.add("pending");
+      else if (state !== "completed" && state !== "cancelled")
+        blockers.add("unreconciled");
+      if (job.payload === null) {
+        if (job.handoff_safe !== 1) blockers.add("unclassified");
+        continue;
+      }
+      try {
+        const record = JSON.parse(String(job.payload)) as JobRecord;
+        if (
+          record.schema !== "agenticdriver.job.v1" ||
+          record.info?.id !== job.id ||
+          record.info.state !== state ||
+          !Array.isArray(record.events)
+        ) {
+          blockers.add("unclassified");
+        } else if (
+          record.events.some(
+            (event) =>
+              (event.type === "run.failed" || event.type === "run.cancelled") &&
+              event.error.outcome === "uncertain",
+          )
+        ) {
+          blockers.add("unreconciled");
+        }
+      } catch {
+        blockers.add("unclassified");
+      }
+    }
+    const generation = jobGeneration(db);
+    const snapshot = createHash("sha256")
+      .update(JSON.stringify({ identity, generation, jobs, leases }))
+      .digest("hex");
+    return {
+      snapshot,
+      acceptedKeys: jobs.length,
+      states: Object.fromEntries(states),
+      lease:
+        leases.length === 0
+          ? "none"
+          : leases.some((row) => Number(row.expires_at) > Date.now())
+            ? "active"
+            : "expired",
+      blockers: [...blockers].sort(),
+      quiet: blockers.size === 0,
+    };
+  }
+
+  private transaction<T>(
+    work: (now: number) => T,
+    mode: "ordinary" | "acquire" | "handoff" = "ordinary",
+  ): T {
     if (this.closed)
       throw new DriverError("JOB_STORE_CLOSED", "The job store is closed.");
     let began = false;
@@ -137,7 +151,21 @@ export class SqliteJobStore implements JobStore {
       this.db.exec("BEGIN IMMEDIATE");
       began = true;
       const now = Date.now();
-      this.maintain(now);
+      const generation = jobGeneration(this.db);
+      if (generation !== this.generation) this.lost();
+      if (generation > 0 && mode === "ordinary") this.lease(this.owner ?? "");
+      if (generation > 0 && mode === "acquire") {
+        const lease = this.db
+          .prepare("SELECT expires_at FROM ad_job_worker WHERE id=1")
+          .get();
+        if (lease && Number(lease.expires_at) > now)
+          throw new DriverError(
+            "JOB_WORKER_BUSY",
+            "A live worker already owns this job store.",
+            true,
+          );
+      }
+      if (mode !== "handoff") this.maintain(now);
       // Retention/recovery must remain committed even when the requested lookup
       // returns JOB_EXPIRED or a stale worker's write is rejected.
       this.db.exec("SAVEPOINT job_operation");
@@ -285,6 +313,18 @@ export class SqliteJobStore implements JobStore {
         bytes,
         reserved,
       );
+    if (jobGeneration(this.db) > 0) {
+      const safe =
+        ["completed", "cancelled"].includes(record.info.state) &&
+        !record.events.some(
+          (event) =>
+            (event.type === "run.failed" || event.type === "run.cancelled") &&
+            event.error.outcome === "uncertain",
+        );
+      this.db
+        .prepare("UPDATE ad_jobs SET handoff_safe=? WHERE id=?")
+        .run(safe ? 1 : 0, record.info.id);
+    }
   }
   private end(
     record: JobRecord,
@@ -324,20 +364,109 @@ export class SqliteJobStore implements JobStore {
     this.save(record, true);
   }
 
+  private lost(): never {
+    throw new DriverError(
+      "JOB_LEASE_LOST",
+      "This handle no longer owns execution. Open a new handle to reconcile ownership.",
+      false,
+      "uncertain",
+    );
+  }
+  private checkOwner(owner: string) {
+    if (this.generation > 0 && owner !== this.owner) this.lost();
+  }
+  private advanceGeneration() {
+    if (jobGeneration(this.db) > 0)
+      this.db.exec(
+        "UPDATE ad_job_generation SET generation=generation+1 WHERE id=1",
+      );
+    return jobGeneration(this.db);
+  }
   async acquire(owner: string, leaseMs: number) {
-    this.transaction((now) => {
+    if (this.generation > 0 && this.acquired) this.lost();
+    const generation = this.transaction((now) => {
       if (this.db.prepare("SELECT owner FROM ad_job_worker WHERE id=1").get())
         throw new DriverError(
           "JOB_WORKER_BUSY",
           "A live worker already owns this job store.",
           true,
         );
+      const next = this.advanceGeneration();
       this.db
         .prepare("INSERT INTO ad_job_worker VALUES(1,?,?)")
         .run(owner, now + leaseMs);
-    });
+      return next;
+    }, "acquire");
+    this.generation = generation;
+    this.owner = owner;
+    this.acquired = true;
+  }
+  async acquireQuiet(
+    owner: string,
+    leaseMs: number,
+    snapshot: string,
+  ): Promise<SqliteJobStore> {
+    if (
+      !owner ||
+      !Number.isSafeInteger(leaseMs) ||
+      leaseMs < 1 ||
+      !/^[a-f0-9]{64}$/.test(snapshot)
+    )
+      throw new DriverError(
+        "INVALID_JOB_HANDOFF",
+        "Supply an owner, positive lease duration and inspection snapshot.",
+      );
+    const opened = await openJobDatabase(this.location.path, "existing");
+    const bound = new SqliteJobStore(
+      opened.db,
+      this.options,
+      opened,
+      opened.generation,
+    );
+    try {
+      if (opened.identity !== this.location.identity)
+        throw new DriverError(
+          "JOB_STORAGE_MISMATCH",
+          "The original job database identity changed.",
+        );
+      const generation = this.transaction((now) => {
+        const observed = SqliteJobStore.observation(
+          this.db,
+          this.location.identity,
+        );
+        if (observed.snapshot !== snapshot)
+          throw new DriverError(
+            "JOB_HANDOFF_CHANGED",
+            "Job storage changed after inspection. Inspect and reconcile again.",
+          );
+        if (!observed.quiet)
+          throw new DriverError(
+            "JOB_HANDOFF_BLOCKED",
+            "Job storage requires reconciliation before adoption.",
+          );
+        if (this.generation === 0) {
+          this.db
+            .exec(`ALTER TABLE ad_jobs ADD COLUMN handoff_safe INTEGER NOT NULL DEFAULT 0;
+            UPDATE ad_jobs SET handoff_safe=1;
+            CREATE TABLE ad_job_generation (id INTEGER PRIMARY KEY CHECK(id=1), generation INTEGER NOT NULL);
+            INSERT INTO ad_job_generation VALUES(1,1); PRAGMA user_version=2;`);
+        } else this.advanceGeneration();
+        this.db
+          .prepare("INSERT INTO ad_job_worker VALUES(1,?,?)")
+          .run(owner, now + leaseMs);
+        return jobGeneration(this.db);
+      }, "handoff");
+      bound.generation = generation;
+      bound.owner = owner;
+      bound.acquired = true;
+      return bound;
+    } catch (error) {
+      await bound.close();
+      throw error;
+    }
   }
   async renew(owner: string, leaseMs: number) {
+    this.checkOwner(owner);
     this.transaction((now) => {
       this.lease(owner);
       this.db
@@ -346,10 +475,12 @@ export class SqliteJobStore implements JobStore {
     });
   }
   async release(owner: string) {
+    this.checkOwner(owner);
     this.transaction((now) => {
       this.lease(owner);
       this.interruptRunning(now);
       this.db.exec("DELETE FROM ad_job_worker");
+      this.advanceGeneration();
     });
   }
   async submit(input: NewJob): Promise<JobRecord> {
@@ -409,6 +540,7 @@ export class SqliteJobStore implements JobStore {
     return this.transaction(() => this.get(id, subject));
   }
   async queued(owner: string) {
+    this.checkOwner(owner);
     return this.transaction(() => {
       this.lease(owner);
       return this.db
@@ -420,6 +552,7 @@ export class SqliteJobStore implements JobStore {
     });
   }
   async start(owner: string, id: string) {
+    this.checkOwner(owner);
     return this.transaction((now) => {
       this.lease(owner);
       const record = this.get(id);
@@ -433,6 +566,7 @@ export class SqliteJobStore implements JobStore {
     });
   }
   async append(owner: string, id: string, event: RunEvent) {
+    this.checkOwner(owner);
     this.transaction((now) => {
       this.lease(owner);
       const record = this.get(id);
@@ -477,6 +611,7 @@ export class SqliteJobStore implements JobStore {
     });
   }
   async fail(owner: string, id: string, error: ErrorInfo) {
+    this.checkOwner(owner);
     this.transaction((now) => {
       this.lease(owner);
       const record = this.get(id);
