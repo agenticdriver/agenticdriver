@@ -175,3 +175,10 @@ existing error codes and privacy checks. Schema ownership stays in each store.
 A real competing SQLite process checks that opening vector storage cannot drop
 another connection's locks. This shares the filesystem invariant without merging
 job execution and retrieval storage or adding a second locking mechanism.
+
+## Sound — high confidence: exercise storage from the installed archive
+
+The package gate opens both SQLite stores through public installed exports.
+This catches a missing internal helper or broken distribution import which
+source-only tests cannot establish. It uses empty real stores, requests no
+provider execution and retains the gate's existing export/security assertions.

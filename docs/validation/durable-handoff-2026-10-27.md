@@ -169,3 +169,9 @@ check passed **65 tests**, with one existing live-Usagestat skip, and build.
 This is storage-level verification without provider execution. The native-run
 receipts above remain bound to their recorded sources; no new inference or
 retrieval-model qualification is claimed for this extraction.
+
+The fresh npm installation gate now also exercises both stores through their
+public package exports: job inspection/conditional acquisition/release and
+vector-store creation/reopen. It passed on Node 26 and Node 22.13.0. This verifies
+that the shared internal helper is included and works in the distributed archive,
+rather than relying only on source-checkout imports. No inference is requested.
