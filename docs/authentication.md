@@ -41,14 +41,18 @@ for identity, OAuth clients, consent and credentials. AgenticDriver authenticate
 OAuth access tokens and maps their scopes to concrete driver resources. It does
 not create another user, password, session or refresh-token database.
 
-The tested integration pins Better Auth and `@better-auth/oauth-provider` to
-**1.7.3**, with AuthYard's **`@authplane/better-auth` 0.2.0**, protocol 1, on
-Node 24+. The connector comes from AuthYard's packed artifact, not npm. Read
+The integration pins Better Auth, `@better-auth/core` and
+`@better-auth/oauth-provider` exactly to **1.7.15** (`@better-auth/utils` 0.5.1),
+with AuthYard's **`@authyard/better-auth` 0.3.1**, protocol 1, on Node 24+.
+Better Auth 1.7.15 fixes GHSA-965c-763c-88jm and GHSA-r4xp-prcw-77qf, which
+affect 1.7.3. The connector comes from AuthYard's packed artifact, not npm, and
+accepts only its exact Better Auth version. Read
 [AuthYard's installation and protocol](https://github.com/hashimkarim/authyard/blob/0b9a3ccb9fa5993c91f02e0684d8d7caa8cdcc56/docs/connector-protocol.md)
 and its supported version matrix before upgrading. AuthYard's hosted control
 plane is `https://alpha.authyard.dev`; the local source is
-`/mnt/shared/Git/authyard`. Follow its control-plane-first migration instructions
-when adopting the forthcoming `@authyard/better-auth` package name.
+`/mnt/shared/Git/authyard`. Upgrade the control plane before the application:
+older control planes reject connector 0.3.1. Follow AuthYard's
+`docs/authyard-migration.md` when moving from `@authplane/better-auth`.
 
 The SDK's core still supports Node 22.13.0. Its `better-auth` and `pairing`
 exports have no dependency on a bundled auth server. The application hosting
@@ -66,7 +70,7 @@ import {
   oauthDeviceAuthorization,
   DEVICE_CODE_GRANT_TYPE,
 } from "@better-auth/oauth-provider";
-import { controlPlane } from "@authplane/better-auth";
+import { controlPlane } from "@authyard/better-auth";
 
 const plugins = [
   oauthProvider({

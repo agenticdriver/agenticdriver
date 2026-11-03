@@ -72,7 +72,7 @@ const unavailable = () =>
     true,
   );
 
-/** Better Auth 1.7.3 OAuth introspection. Pair its runtime with the supported AuthYard connector. */
+/** Better Auth 1.7.15 OAuth introspection. Pair its runtime with the supported AuthYard connector. */
 export function betterAuthAuthentication(
   options: BetterAuthAuthenticationOptions,
 ): HostAuthentication {

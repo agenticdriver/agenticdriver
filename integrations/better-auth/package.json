@@ -7,9 +7,10 @@
   },
   "scripts": {},
   "dependencies": {
-    "@authplane/better-auth": "file:vendor/authplane-better-auth-0.2.0.tgz",
-    "@better-auth/core": "1.7.3",
-    "@better-auth/oauth-provider": "1.7.3",
-    "better-auth": "1.7.3"
+    "@authyard/better-auth": "file:vendor/authyard-better-auth-0.3.1.tgz",
+    "@better-auth/core": "1.7.15",
+    "@better-auth/oauth-provider": "1.7.15",
+    "@better-auth/utils": "0.5.1",
+    "better-auth": "1.7.15"
   }
 }
