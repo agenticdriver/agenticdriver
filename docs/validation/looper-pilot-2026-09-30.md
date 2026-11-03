@@ -42,7 +42,7 @@ inference. Pure package tests are permitted separately from model qualification.
 Upstream `0.16.0` rejects zero agent timeouts and replaces them with role defaults
 in its runners. The pilot uses the reproducible local build
 `0.16.0-agenticdriver.1` with the
-[disabled-timeout patch](looper/disabled-timeouts.patch). This patch permits zero,
+[disabled-timeout patch](https://github.com/agenticdriver/agenticdriver/blob/sdk-roadmap/docs/validation/looper/disabled-timeouts.patch). This patch permits zero,
 preserves explicit zero through all four role constructors, and retains negative
 value and duration-overflow validation. All legacy, inactivity and maximum-runtime
 agent timeout fields are explicitly zero. Claim leases, shutdown handling and
