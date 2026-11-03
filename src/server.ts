@@ -11,7 +11,9 @@ import { createServer as httpsServer } from "node:https";
 import { AgenticDriver } from "./driver.js";
 import {
   JobService,
+  JobHandoffSchema,
   type JobStore,
+  type JobHandoff,
   type JobWorkerOptions,
   type JobOperation,
   type JobSubmit,
@@ -83,7 +85,8 @@ export interface ServerOptions {
   diagnosticHeaders?: boolean;
   /** Explicit store and current token policy; accepted work survives HTTP disconnects. */
   jobs?: JobWorkerOptions & {
-    store: JobStore | (() => Promise<JobStore>);
+    store: JobStore | ((handoff?: JobHandoff) => Promise<JobStore>);
+    handoff?: JobHandoff;
     onError?(error: unknown): void;
   };
   /** Static service credentials, or authentication, never both. */
@@ -131,6 +134,14 @@ const diagnosticOperation = (path: string | undefined) =>
 
 /** An authenticated, scoped execution host. Bind loopback, or provide TLS for remote listening. */
 export async function serve(driver: AgenticDriver, options: ServerOptions) {
+  if (
+    options.jobs?.handoff !== undefined &&
+    !JobHandoffSchema.safeParse(options.jobs.handoff).success
+  )
+    throw new DriverError(
+      "INVALID_JOB_HANDOFF",
+      "Supply a valid job-store inspection snapshot.",
+    );
   const host = options.host ?? "127.0.0.1";
   if (!isLoopback(host) && !options.tls)
     throw new DriverError(
@@ -804,7 +815,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
     // Do not claim queued work until TLS and the listener have started successfully.
     jobStore =
       typeof options.jobs?.store === "function"
-        ? await options.jobs.store()
+        ? await options.jobs.store(options.jobs.handoff)
         : options.jobs?.store;
     if (options.jobs && jobStore)
       jobs = await JobService.open(driver, {

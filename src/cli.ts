@@ -19,6 +19,8 @@ import {
 import { DriverError, publicError } from "./errors.js";
 import { managedHost } from "./management.js";
 import { serve } from "./server.js";
+import { JobHandoffSchema } from "./job-types.js";
+import { SqliteJobStore } from "./sqlite-job-store.js";
 
 const help = `AgenticDriver — local and secure remote execution host
 
@@ -27,7 +29,8 @@ const help = `AgenticDriver — local and secure remote execution host
   agenticdriver connect --invite-file PATH --connection PATH
   agenticdriver panel --connection PATH [--port 7444]
   agenticdriver init [--config PATH] [--provider KIND] [--model ID | --catalog-only]
-  agenticdriver serve [--config PATH] [--host HOST] [--port PORT] [--json]
+  agenticdriver serve [--config PATH] [--host HOST] [--port PORT] [--handoff-snapshot SHA256] [--json]
+  agenticdriver inspect-jobs [--config PATH] [--json]
   agenticdriver status [--config PATH] [--url URL] [--token-id ID] [--refresh] [--json]
   agenticdriver doctor [--config PATH] [--json]
   agenticdriver run --provider ID --model ID [--input TEXT] [--config PATH] [--json]
@@ -51,6 +54,9 @@ connect consumes an invitation from a private file and saves a private client pr
 Remote setup uses --host, --tls-cert-file, --tls-key-file and --client-url (HTTPS).
 Invitations are credentials: paste them only into the intended application.
 Provider credentials are referenced by configuration, never printed by diagnostics.
+inspect-jobs observes configured SQLite job storage without maintenance or initialization.
+serve --handoff-snapshot requires that unchanged store to be quiet and fences stale SDK writers.
+Stop incompatible older hosts before adoption; a snapshot is diagnostic, not a lock.
 `;
 type Values = Record<string, string | boolean | undefined>;
 function argument(values: Values, name: string): string | undefined {
@@ -108,7 +114,9 @@ function commandOptions(command: string) {
     };
   if (command === "connect")
     return { ...common, ...strings(["invite-file", "connection"]) };
-  if (command === "serve") return { ...common, ...strings(["host", "port"]) };
+  if (command === "serve")
+    return { ...common, ...strings(["host", "port", "handoff-snapshot"]) };
+  if (command === "inspect-jobs") return common;
   if (command === "doctor") return common;
   if (command === "status")
     return {
@@ -132,7 +140,7 @@ function commandOptions(command: string) {
     };
   throw new DriverError(
     "INVALID_ARGUMENT",
-    "Choose setup, pair, connect, init, serve, status, doctor or run. Use --help for command options.",
+    "Choose setup, pair, connect, init, serve, inspect-jobs, status, doctor or run. Use --help for command options.",
   );
 }
 async function initialize(path: string, values: Values) {
@@ -437,7 +445,31 @@ async function main(): Promise<number> {
   if (command === "setup")
     print(await initialize(path, { ...values, management: true }), json);
   let config: HostConfig = await readHostConfig(path);
+  if (command === "inspect-jobs") {
+    if (!config.jobs)
+      throw new DriverError(
+        "JOBS_DISABLED",
+        "Configure durable job storage before inspecting it.",
+      );
+    print(
+      await SqliteJobStore.inspect(resolve(dirname(path), config.jobs.path)),
+      json,
+    );
+    return 0;
+  }
   if (command === "serve" || command === "setup") {
+    const snapshot = argument(values, "handoff-snapshot");
+    const handoff = snapshot === undefined ? undefined : { snapshot };
+    if (handoff && !JobHandoffSchema.safeParse(handoff).success)
+      throw new DriverError(
+        "INVALID_ARGUMENT",
+        "Supply the exact SHA-256 snapshot from inspect-jobs.",
+      );
+    if (handoff && !config.jobs)
+      throw new DriverError(
+        "JOBS_DISABLED",
+        "Conditional handoff requires configured durable job storage.",
+      );
     config = validateHostConfig({
       ...config,
       listen: {
@@ -446,16 +478,30 @@ async function main(): Promise<number> {
       },
     });
     const runtime = await managedHost(path);
+    const options = await configuredServer(config, path);
+    if (handoff) options.jobs = { ...options.jobs!, handoff };
     const server = await serve(
       runtime.driver,
       withConnections(
         {
-          ...(await configuredServer(config, path)),
+          ...options,
           management: runtime.management,
         },
         runtime.connections,
       ),
     );
+    let closing = false;
+    const stopped = new Promise<void>((resolve, reject) => {
+      const stop = () => {
+        if (closing) return;
+        closing = true;
+        process.off("SIGINT", stop);
+        process.off("SIGTERM", stop);
+        void server.close().then(resolve, reject);
+      };
+      process.on("SIGINT", stop);
+      process.on("SIGTERM", stop);
+    });
     print(
       {
         event: "listening",
@@ -486,18 +532,7 @@ async function main(): Promise<number> {
         json,
       );
     }
-    let closing = false;
-    await new Promise<void>((resolve, reject) => {
-      const stop = () => {
-        if (closing) return;
-        closing = true;
-        process.off("SIGINT", stop);
-        process.off("SIGTERM", stop);
-        void server.close().then(resolve, reject);
-      };
-      process.on("SIGINT", stop);
-      process.on("SIGTERM", stop);
-    });
+    await stopped;
     return 0;
   }
   if (command === "doctor") {

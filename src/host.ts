@@ -599,17 +599,18 @@ export async function configuredServer(
     jobs: config.jobs
       ? {
           ...config.jobs.worker,
-          store: () =>
-            SqliteJobStore.open(
-              resolve(dirname(configPath), config.jobs!.path),
-              {
-                retentionMs: config.jobs!.retentionMs,
-                maxJobs: config.jobs!.maxJobs,
-                maxJobsPerSubject: config.jobs!.maxJobsPerSubject,
-                maxBytes: config.jobs!.maxBytes,
-                maxJobBytes: config.jobs!.maxJobBytes,
-              },
-            ),
+          store: (handoff) => {
+            const open = handoff
+              ? SqliteJobStore.openExisting
+              : SqliteJobStore.open;
+            return open(resolve(dirname(configPath), config.jobs!.path), {
+              retentionMs: config.jobs!.retentionMs,
+              maxJobs: config.jobs!.maxJobs,
+              maxJobsPerSubject: config.jobs!.maxJobsPerSubject,
+              maxBytes: config.jobs!.maxBytes,
+              maxJobBytes: config.jobs!.maxJobBytes,
+            });
+          },
         }
       : undefined,
   };

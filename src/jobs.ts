@@ -6,6 +6,8 @@ import { FairScheduler, type AdmissionTicket } from "./scheduling.js";
 import { newOperation, operationKey } from "./operations.js";
 import {
   JobEventsRequestSchema,
+  JobHandoffSchema,
+  type JobHandoff,
   JobIdentitySchema,
   JobOperationSchema,
   JobSubmitSchema,
@@ -34,6 +36,8 @@ const principalSchema = z.object({
 export type JobPrincipal = z.input<typeof principalSchema>;
 export interface JobServiceOptions extends JobWorkerOptions {
   store: JobStore;
+  /** Explicit conditional adoption; unsupported stores refuse instead of falling back. */
+  handoff?: JobHandoff;
   /** Resolve current authority at every API call, before dispatch and while work is active. */
   resolvePrincipal(
     id: string,
@@ -46,6 +50,8 @@ export interface JobServiceOptions extends JobWorkerOptions {
 /** Explicit detached execution. This service owns no application checkpoints or canonical domain state. */
 export class JobService {
   private readonly owner = randomUUID();
+  private store: JobStore;
+  private ownsStore = false;
   private readonly controller = new AbortController();
   private readonly active = new Map<
     string,
@@ -63,6 +69,7 @@ export class JobService {
     private readonly driver: AgenticDriver,
     private readonly options: JobServiceOptions,
   ) {
+    this.store = options.store;
     const parsed = JobWorkerOptionsSchema.safeParse({
       leaseMs: options.leaseMs,
       pollIntervalMs: options.pollIntervalMs,
@@ -82,7 +89,25 @@ export class JobService {
     options: JobServiceOptions,
   ): Promise<JobService> {
     const service = new JobService(driver, options);
-    await options.store.acquire(service.owner, service.worker.leaseMs);
+    if (options.handoff !== undefined) {
+      const request = JobHandoffSchema.safeParse(options.handoff);
+      if (!request.success)
+        throw new DriverError(
+          "INVALID_JOB_HANDOFF",
+          "Supply a valid job-store inspection snapshot.",
+        );
+      if (!options.store.acquireQuiet)
+        throw new DriverError(
+          "JOB_HANDOFF_UNSUPPORTED",
+          "This store does not support conditional acquisition. No ordinary worker was started.",
+        );
+      service.store = await options.store.acquireQuiet(
+        service.owner,
+        service.worker.leaseMs,
+        request.data.snapshot,
+      );
+      service.ownsStore = service.store !== options.store;
+    } else await service.store.acquire(service.owner, service.worker.leaseMs);
     service.timer = setInterval(
       () => service.kick(),
       service.worker.pollIntervalMs,
@@ -213,7 +238,7 @@ export class JobService {
     const request = this.validate(parsed.data.request);
     this.scope(request, principal);
     const account = this.account(request, principal.subject);
-    const record = await this.options.store.submit({
+    const record = await this.store.submit({
       request,
       subject: principal.subject,
       principal: principalId,
@@ -240,10 +265,7 @@ export class JobService {
       undefined,
       ceiling,
     );
-    const record = await this.options.store.read(
-      principal.subject,
-      parsed.data.id,
-    );
+    const record = await this.store.read(principal.subject, parsed.data.id);
     this.scope(record.request, principal);
     return record;
   }
@@ -262,10 +284,7 @@ export class JobService {
     ceiling?: JobPrincipal,
   ): Promise<JobInfo> {
     const record = await this.lookup(input, principalId, "cancel", ceiling);
-    const cancelled = await this.options.store.cancel(
-      record.subject,
-      record.info.id,
-    );
+    const cancelled = await this.store.cancel(record.subject, record.info.id);
     this.active
       .get(record.info.id)
       ?.controller.abort(
@@ -347,7 +366,7 @@ export class JobService {
   }
   private renew() {
     if (this.renewing || this.controller.signal.aborted) return;
-    this.renewing = this.options.store
+    this.renewing = this.store
       .renew(this.owner, this.worker.leaseMs)
       .catch((error) => this.fatal(error))
       .finally(() => {
@@ -374,7 +393,7 @@ export class JobService {
       entry.controller.abort(this.controller.signal.reason);
   }
   private async pump() {
-    const records = await this.options.store.queued(this.owner);
+    const records = await this.store.queued(this.owner);
     for (const entry of this.active.values()) {
       if (!entry.controller.signal.aborted) {
         try {
@@ -390,7 +409,7 @@ export class JobService {
           entry.controller.abort(publicError(error));
         }
       }
-      const current = await this.options.store
+      const current = await this.store
         .read(entry.record.subject, entry.record.info.id)
         .catch((error: unknown) => {
           if (error instanceof DriverError && error.code === "JOB_EXPIRED")
@@ -473,7 +492,7 @@ export class JobService {
         await this.principal(record.principal, "submit", record.subject),
       );
       controller.signal.throwIfAborted();
-      if (!(await this.options.store.start(this.owner, record.info.id))) return;
+      if (!(await this.store.start(this.owner, record.info.id))) return;
       for await (const event of this.driver.stream(request, {
         runId: record.info.runId,
         diagnosticQueuedAt: Date.parse(record.info.createdAt),
@@ -483,7 +502,7 @@ export class JobService {
       })) {
         // The generator is suspended here. Commit a tool.called event before requesting
         // the next item, which is what permits the underlying tool implementation to run.
-        await this.options.store.append(this.owner, record.info.id, event);
+        await this.store.append(this.owner, record.info.id, event);
       }
     } catch (error) {
       if (this.controller.signal.aborted) return;
@@ -492,7 +511,7 @@ export class JobService {
         ["BUSY", "QUEUE_FULL"].includes(error.code)
       )
         return;
-      await this.options.store.fail(
+      await this.store.fail(
         this.owner,
         record.info.id,
         publicError(error, controller.signal).toJSON(),
@@ -510,14 +529,25 @@ export class JobService {
       this.controller.abort();
       await Promise.allSettled([this.pumping, this.renewing]);
       // Fence before waiting for arbitrary provider/tool teardown. No job is re-queued.
-      await this.options.store.release(this.owner).catch((error: unknown) => {
+      const failures: unknown[] = [];
+      try {
+        await this.store.release(this.owner);
+      } catch (error) {
         if (!(error instanceof DriverError && error.code === "JOB_LEASE_LOST"))
-          throw error;
-      });
+          failures.push(error);
+      }
       for (const entry of this.active.values()) entry.controller.abort();
       await Promise.allSettled(
         [...this.active.values()].map((entry) => entry.pending),
       );
+      if (this.ownsStore) {
+        try {
+          await this.store.close?.();
+        } catch (error) {
+          failures.push(error);
+        }
+      }
+      if (failures.length) throw failures[0];
     })());
   }
 }

@@ -46,6 +46,8 @@ try {
    import { createRequire } from 'node:module';
    import { validateHostConfig } from '@agenticdriver/sdk/host';
    import { providerPanelHtml } from '@agenticdriver/sdk/ui';
+   import { SqliteJobStore } from '@agenticdriver/sdk';
+   import { join } from 'node:path';
    assert(!('mockProvider' in providers));
    assert(!('DeterministicEmbeddingAdapter' in retrieval));
    assert.equal(typeof retrieval.LocalEmbeddingAdapter, 'function');
@@ -53,12 +55,29 @@ try {
    assert(providerPanelHtml().includes('agenticdriver-providers'));
    assert.deepEqual(validateHostConfig({version:1,providers:[]}).providers,[]);
    await assert.rejects(import('@agenticdriver/sdk/provider-conformance'),{code:'ERR_PACKAGE_PATH_NOT_EXPORTED'});
+   const jobsPath = join(process.cwd(), 'jobs.sqlite');
+   const jobs = await SqliteJobStore.open(jobsPath, {retentionMs:60000});
+   try {
+     const before = await SqliteJobStore.inspect(jobsPath);
+     const owned = await jobs.acquireQuiet('installed-package', 60000, before.snapshot);
+     try { await owned.release('installed-package'); }
+     finally { await owned.close(); }
+     const after = await SqliteJobStore.inspect(jobsPath);
+     assert.equal(after.quiet, true);
+     assert.equal(after.lease, 'none');
+     assert.equal(after.acceptedKeys, 0);
+   } finally { await jobs.close(); }
+   const vectorPath = join(process.cwd(), 'vectors.sqlite');
+   const vectors = await retrieval.SqliteVectorStore.open(vectorPath);
+   await vectors.close();
+   const reopened = await retrieval.SqliteVectorStore.open(vectorPath);
+   await reopened.close();
  `,
     ],
     { cwd: dir, stdio: "pipe" },
   );
   console.log(
-    "Fresh npm installation: real provider exports, empty configuration and panel verified; removed adapters absent.",
+    "Fresh npm installation: provider exports, empty configuration, panel and SQLite storage lifecycle verified; removed adapters absent.",
   );
 } finally {
   await rm(dir, { recursive: true, force: true });
