@@ -75,8 +75,8 @@ it. An empty allowlist denies every model. A discovered catalog never broadens
 this permission or changes an application's saved provider/model enablement.
 
 `modelCatalog` contains `source`, `models` and `complete`. On successful discovery,
-its source is `provider` and it includes every reported ID within the probe
-bounds, including IDs outside the host's execution allowlist. On a
+its source is `provider` and it includes reported IDs within the adapter's catalog
+scope and probe bounds, including IDs outside the host's execution allowlist. On a
 failed or unsupported probe, its source is `configured` when an allowlist exists,
 otherwise `unavailable`. Those inventories are unverified and `complete` is false.
 The old successful inventory is not presented as current after a failed refresh.
@@ -87,8 +87,14 @@ data in total. A page/model limit produces `complete: false`; malformed response
 and repeated pagination cursors produce an unavailable status. OpenAI and xAI
 catalogs can include models for other API operations; a catalog entry alone does
 not certify compatibility with text generation or every adapter capability.
-Gemini's inventory likewise includes reported embedding and other model IDs;
-discovery does not add their operations to the generation adapter.
+Gemini API catalogs include only models whose `supportedGenerationMethods`
+explicitly contains `generateContent`, following Google's
+[Models API example](https://ai.google.dev/api/models#method:-models.list).
+Embedding, prediction and count-only entries, and entries without declared
+methods, are omitted. This selects the adapter's operation; it does not certify
+text output, tools, billing or account access. Filtering retains pagination even
+when a page has no eligible models. A complete empty catalog is a successful
+metadata result, independent of the configured execution allowlist.
 
 Applications should show these separate facts without automatically enabling a
 newly discovered model:
