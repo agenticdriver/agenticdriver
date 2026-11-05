@@ -111,8 +111,10 @@ export async function collectAnthropic(
         context.emitText(text);
       } else if (delta.type === "input_json_delta") {
         const text = string(delta.partial_json);
-        partialInputs.set(i, (partialInputs.get(i) ?? "") + text);
-        if (text) context.reportProgress();
+        if (text) {
+          partialInputs.set(i, (partialInputs.get(i) ?? "") + text);
+          context.reportProgress();
+        }
       } else if (
         delta.type === "thinking_delta" ||
         delta.type === "signature_delta"

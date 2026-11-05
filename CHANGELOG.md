@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve Anthropic's initial tool arguments when a streaming JSON fragment is empty, allowing valid zero-argument application tools to execute.
+
 - Add opt-in Claude Code application-tool proposals through the existing SDK approval/tool loop, with explicit restricted MCP ownership and portable tool-result continuation.
 
 - Share lock-preserving SQLite file validation between durable jobs and vector storage.

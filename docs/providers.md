@@ -54,6 +54,11 @@ adapter remains a separately selected connection.
 [Current zero-inference controls and acceptance limits](validation/claude-tools-2026-11-05.md)
 record what has actually been exercised.
 
+The [four-language API tool checks](validation/api-tools-2026-11-05.md) record
+actual OpenAI Responses execution, application approvals and reported usage.
+Implementation availability and qualification of a particular account/model
+remain separate.
+
 ## Subscription mode is provider-specific
 
 Codex supports a ChatGPT sign-in as well as API-key authentication, and OpenAI
