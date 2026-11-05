@@ -27,3 +27,15 @@ The next ephemeral Claude process receives application messages, tool IDs,
 arguments and completed results as a labelled JSON transcript, without private
 native state. This avoids an unbounded native process waiting through approval
 and does not claim native session resumption or native API-role injection.
+
+## Sound: error precedence and generated configuration contracts
+
+An unexpected native operation must remain a failure even when a delayed
+tool confirmation subsequently requests normal proposal shutdown. Process
+cancellation preserves an existing failure; a parser failure arriving after
+the expected shutdown also remains authoritative. Generic process regressions
+cover both event orders without a model substitute.
+
+Claude's optional tool setting is represented in the generated host and
+management schemas as well as runtime validation. The schemas come from the
+existing Zod owners; no parallel client representation is introduced.

@@ -106,7 +106,7 @@ export function runProcess(
       killTimer.unref();
     };
     const abort = () => {
-      failure =
+      failure ??=
         options.signal.reason instanceof DriverError
           ? options.signal.reason
           : new DriverError(

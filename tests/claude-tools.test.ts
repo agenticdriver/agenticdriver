@@ -246,3 +246,34 @@ test("a parser failure after a requested proposal interrupt remains the actual p
     (error) => error === policy && error !== interrupt.signal.reason,
   );
 });
+
+test("a requested interruption after a parser failure cannot replace that failure", async () => {
+  const { runProcess } = await import("../src/providers/cli-process.js");
+  const { DriverError } = await import("../src/errors.js");
+  const interrupt = new AbortController();
+  const expected = new DriverError(
+    "NATIVE_TOOL_PROPOSED",
+    "Proposal confirmed",
+  );
+  const policy = new DriverError(
+    "CLI_POLICY_VIOLATION",
+    "Unexpected operation",
+  );
+  const operation = runProcess(
+    process.execPath,
+    [
+      "-e",
+      "process.on('SIGTERM',()=>{});process.stdout.write('invalid\\n');setInterval(()=>{},1000)",
+    ],
+    {
+      env: {},
+      signal: interrupt.signal,
+      onLine() {
+        setImmediate(() => interrupt.abort(expected));
+        throw policy;
+      },
+    },
+  );
+  await assert.rejects(operation, (error) => error === policy);
+  assert.equal(interrupt.signal.reason, expected);
+});
