@@ -1,7 +1,8 @@
 # Claude application-tool implementation and readiness
 
-This is unreleased implementation/readiness evidence, not a successful real
-Claude tool run or consumer application acceptance. No inference was submitted.
+This records unreleased implementation, a refused subscription preflight and a
+successful separately selected API-billed native application run. Each receipt
+applies only to its recorded source, connection and model.
 
 The implementation adds explicit `applicationTools: "mcp"` to Claude Code's
 factory/host configuration. It reuses the proposal-only MCP owner with Codex;
@@ -66,7 +67,8 @@ be labelled by what was exercised; no inference was run to establish them here.
 A separately authorized API-billed native connection now uses a fresh private
 home and the host's existing secret resolver. Its credential remains on the local
 execution host; it was not copied to Prometheus or used to repair that native
-profile. No model prompt has been submitted through this new mode yet.
+profile. The initial controls below submitted no model prompt; subsequent
+installed-package execution is recorded separately.
 
 The local probe used the separately installed official Linux x64 Claude Code
 **2.1.282** binary; the existing global runtime was preserved. Executable SHA-256:
@@ -79,8 +81,40 @@ that probe's owned helper process confirmed its API-key environment was empty.
 Neither probe sent a user message; both record **zero model requests**. These
 are source/control checks, not immutable installed-package application acceptance.
 
-The final reviewed artifact still needs a bounded real native API SDK run using
-**claude-haiku-4-5-20251001**, with an actual selected tool call, incorporated
-result, denial/cancellation control evidence and reported usage. That run must
-have its own explicit authorization and receipt; the direct Anthropic API
-qualification is separate evidence.
+## Installed API-mode application acceptance
+
+A fresh consumer installed the exact development archive from source
+`7527b98bddc266bcdf5a2f80b6195ef6f0d482c0`, SHA-256
+`48fc33a6510e20ebd117927cbe02650483224b43be8f3c1ff158357731fbfd05`.
+It used the pinned official **Claude Code 2.1.282** binary above, explicit
+**API-key** authentication and **claude-haiku-4-5-20251001**, verified in the
+current native catalog. This did not reuse or repair the subscription profile.
+
+One SDK run, bounded to two model steps, called the real `read_brand_brief`
+application tool exactly once. The SDK approval occurred before the callback;
+no owned native CLI/helper descendants remained at either boundary. The next
+native step received the actual tool result through portable application history.
+
+The brief described an 18L repairable Amsterdam commuter backpack for ages
+25–40, recycled fabric, replaceable buckles and a €120–160 price range. The model
+produced three distinct names/taglines/positions and retained the exact source ID
+and claim limits. Parent review accepted the grounded brainstorming artifact;
+these remain creative proposals without trademark clearance. The response used
+a Markdown JSON fence despite the compact-JSON instruction, so consumers needing
+strict JSON must validate output format.
+
+Reported usage was **2,271 input / 1,159 output / 0 cached tokens**, with both
+steps covered. Usage is `cli-report`, with `authMode: api-key`. Only the final
+step reported an API-equivalent cost estimate, so full-run cost is unknown.
+There were no retries. Owned processes and temporary operation directories were
+removed. Pre-submission SDK cancellation passed with zero model steps; this run
+did not establish real approval denial or cancellation during active inference.
+
+Private acceptance receipt SHA-256:
+`d6c3bc2bea68dfc7477ce8db03a8861dddfe02858114372cdf5ce7192667dc9b`.
+Brand artifact SHA-256:
+`59058ab0194cf31d39f43d2ab76cd9f3da9eefb5e5e4e038c51ed8ef52d9fec6`.
+Preflight SHA-256:
+`76adf9a598714a2021e229db4f0f31ef108b6bc8a5f60c9e33acc9be8ea52f29`.
+Installed MCP control SHA-256:
+`35db7c3742f9c73e17a4acf7eb518d52b222879406b70945ba8d3ae33232a7f9`.

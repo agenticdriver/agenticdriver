@@ -52,8 +52,9 @@ The existing secret resolver owns credentials; no new auth store is introduced.
 API operations use a fresh private home, bare runtime startup, and explicit
 credential environment. Authentication must report `api_key`. The proposal helper
 receives an empty API-key environment. Actual zero-prompt native checks observed
-both the intended authentication method and owned MCP isolation; they do not
-prove model execution. Usage stays `cli-report`, with `authMode: api-key` and
+both the intended authentication method and owned MCP isolation. The separate
+installed application receipt demonstrates execution without repairing native
+subscription access. Usage stays `cli-report`, with `authMode: api-key` and
 native cost-estimate limitations. Host/factory/CLI support ships first; a guided
 setup method remains a separate interface task.
 

@@ -2,11 +2,11 @@
 
 Development source supports qualified opt-in application tools with **Codex CLI
 0.157.0 on Linux x64**. An unreleased **Claude Code 2.1.282 Linux x64**
-implementation uses the same contract; its real application acceptance is
-blocked until the selected native account is signed in. The registry's original
-SDK 0.1.0 predates this feature. Native tools remain disabled by default.
+implementation uses the same contract and passed a real application run through
+its explicit API-key mode. The selected subscription profile remains signed out.
+The registry's original SDK 0.1.0 predates this feature. Native tools remain disabled by default.
 See the [Claude readiness evidence](validation/claude-tools-2026-11-05.md) for
-the current account blocker and actual zero-prompt controls.
+the separate subscription blocker, controls and API-mode application acceptance.
 
 ```ts
 import { codex } from "@agenticdriver/sdk/providers";

@@ -18,7 +18,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased MCP tools need real acceptance       |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased opt-in MCP tools on qualified Linux x64       |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
@@ -51,11 +51,12 @@ explicit `applicationTools: "mcp"` option. Usage remains native `cli-report`;
 CLI cost estimates do not become invoice evidence. The direct `anthropic()` API
 adapter remains a separately selected connection.
 
-[Current zero-inference controls and acceptance limits](validation/claude-tools-2026-11-05.md)
+[Current native controls and API-mode application acceptance](validation/claude-tools-2026-11-05.md)
 record what has actually been exercised.
 
 The [four-language API tool checks](validation/api-tools-2026-11-05.md) record
-actual OpenAI Responses execution, application approvals and reported usage.
+actual OpenAI Responses and Anthropic Messages execution, application approvals,
+reported usage and content-review limits.
 Implementation availability and qualification of a particular account/model
 remain separate.
 

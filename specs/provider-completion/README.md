@@ -9,7 +9,7 @@ The existing four-language clients and transport remain the execution contract.
 1. **Gemini catalog route eligibility — implemented.** The API catalog must
    expose only models that support generateContent; explicit host model
    allowlists retain their existing authority. See the discovery tests.
-2. **Claude native application tools — implemented; real acceptance pending.**
+2. **Claude native application tools — implemented; API-mode application run passed.**
    Opt-in Linux x64 Claude Code 2.1.282 uses a private per-turn MCP proposal
    helper. Native proposals are matched to helper confirmations, then the native
    process is interrupted/reaped before SDK validation, approval and application
@@ -21,12 +21,12 @@ The existing four-language clients and transport remain the execution contract.
    established supported disabled-idle contract. A stale test result must not
    stand in for current runtime qualification. Preserve actual account selection;
    do not silently switch to API billing.
-4. **Claude native API billing — implemented; execution acceptance pending.**
+4. **Claude native API billing — implemented; installed application run passed.**
    An explicit factory credential or host `apiKeyRef` selects an isolated fresh
    native home, never the subscription profile. API-key authentication and owned
-   MCP controls passed with zero model requests on the local pinned runtime.
+   MCP controls passed before the separately recorded real installed run.
    Guided setup does not offer this method yet. Direct API-provider acceptance
-   remains a separate workstream with its own actual receipts.
+   has separate receipts and content-review limits.
 
 ## Authority and verification
 
@@ -47,14 +47,18 @@ fake successful provider or fabricated model completion.
 
 ## Next pickup
 
-The selected Prometheus native profile reports signed out; restoring it remains
-an account-owner action. A separately selected local API-billed native connection
-now passes zero-prompt auth and MCP controls. Finish parent review and build a
-fresh combined immutable artifact before the separately authorized bounded
-useful tool-result-incorporating native API run. Retain private native receipts
-and publish sanitized evidence; do not claim that API billing repaired the
-subscription connection. Continue other API/provider acceptance from their own
-receipts. Continue native Google/Grok only when their actual controls satisfy the
-SDK contract; do not mark blocked provider cells complete.
+The installed immutable candidate completed a real Claude Code API-mode brand
+workflow with one approval/callback and two native steps. OpenAI and direct
+Anthropic API tool/approval/streaming/usage checks passed from published clients
+in all four languages; Anthropic content acceptance remains partial. See the
+[API evidence](../../docs/validation/api-tools-2026-11-05.md) and
+[native evidence](../../docs/validation/claude-tools-2026-11-05.md).
+
+The selected Prometheus subscription profile remains signed out. Guided native
+API setup, active provider cancellation/real denial qualification, broader
+platform qualification and consumer upgrades remain separate work. Continue
+native Google/Grok only when their actual controls satisfy the SDK contract;
+Gemini/xAI API execution still needs an available explicitly selected credential.
+This development pass is not a release or complete consuming-app acceptance.
 
 [Choices](choices.md) record the tradeoffs behind this slice.
