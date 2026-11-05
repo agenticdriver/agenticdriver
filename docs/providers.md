@@ -18,7 +18,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased MCP tools need real acceptance |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased MCP tools need real acceptance       |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
@@ -30,6 +30,29 @@ requests cannot choose binaries, arguments, environment variables, or directorie
 Custom local or enterprise integrations can use the [provider extension kit](provider-extensions.md).
 It supplies a versioned construction contract, trusted host registration and
 real service integration without changes to the runtime or language clients.
+
+## Explicit Claude native API billing
+
+Development source also supports `claudeCode({ apiKey })`. This selects a separate
+native CLI connection, with default ID `claude-code-api` and `authMode: "api-key"`;
+it does not repair or reuse a signed-out subscription connection. Supply a string
+or the existing async secret resolver. A host config uses `kind: "claude-code"`
+with `apiKeyRef` instead of `accountDirectory`. The CLI equivalent is
+`init --provider claude-code --api-key-env ANTHROPIC_API_KEY`. Use a separate
+provider ID/account binding; management rejects changing an existing instance's
+billing mode. The guided setup does not yet offer this additional method.
+
+Each operation receives a fresh private native home, `--bare`, and only its
+explicit API credential. Native authentication must report the API-key method
+before a prompt is submitted. Native sign-in, alternate accounts and ambient API
+keys are never fallback routes. The owned proposal helper receives no API key.
+This mode requires the reviewed Claude Code 2.1.282 binary and supports the same
+explicit `applicationTools: "mcp"` option. Usage remains native `cli-report`;
+CLI cost estimates do not become invoice evidence. The direct `anthropic()` API
+adapter remains a separately selected connection.
+
+[Current zero-inference controls and acceptance limits](validation/claude-tools-2026-11-05.md)
+record what has actually been exercised.
 
 ## Subscription mode is provider-specific
 

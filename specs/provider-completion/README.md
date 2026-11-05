@@ -9,7 +9,7 @@ The existing four-language clients and transport remain the execution contract.
 1. **Gemini catalog route eligibility — implemented.** The API catalog must
    expose only models that support generateContent; explicit host model
    allowlists retain their existing authority. See the discovery tests.
-2. **Claude native application tools — implemented; real acceptance blocked.**
+2. **Claude native application tools — implemented; real acceptance pending.**
    Opt-in Linux x64 Claude Code 2.1.282 uses a private per-turn MCP proposal
    helper. Native proposals are matched to helper confirmations, then the native
    process is interrupted/reaped before SDK validation, approval and application
@@ -21,11 +21,12 @@ The existing four-language clients and transport remain the execution contract.
    established supported disabled-idle contract. A stale test result must not
    stand in for current runtime qualification. Preserve actual account selection;
    do not silently switch to API billing.
-4. **API execution qualification — missing selected API account.** Adapters are
-   implemented, but the saved host contains native Codex/Claude sessions only.
-   API completion needs an explicitly selected real account/model/credential,
-   realistic application examples and reported metering. Subscription sign-ins
-   are not generic API keys.
+4. **Claude native API billing — implemented; execution acceptance pending.**
+   An explicit factory credential or host `apiKeyRef` selects an isolated fresh
+   native home, never the subscription profile. API-key authentication and owned
+   MCP controls passed with zero model requests on the local pinned runtime.
+   Guided setup does not offer this method yet. Direct API-provider acceptance
+   remains a separate workstream with its own actual receipts.
 
 ## Authority and verification
 
@@ -46,14 +47,14 @@ fake successful provider or fabricated model completion.
 
 ## Next pickup
 
-The selected Prometheus native profile currently reports signed out through both
-the SDK and native `auth status` (zero inference submitted). Restore that exact
-native sign-in before a new installed-archive acceptance run; never substitute
-account, model or billing. Finish parent review and repeat the bounded useful
-tool-result-incorporating run with the corrected immutable artifact. Retain
-private native receipts and publish sanitized evidence. Then qualify the other
-implemented API routes when a selected credential/model exists. Continue native
-Google/Grok only when their actual controls satisfy the SDK contract. Do not
-rebuild existing API adapters or mark blocked provider cells complete.
+The selected Prometheus native profile reports signed out; restoring it remains
+an account-owner action. A separately selected local API-billed native connection
+now passes zero-prompt auth and MCP controls. Finish parent review and build a
+fresh combined immutable artifact before the separately authorized bounded
+useful tool-result-incorporating native API run. Retain private native receipts
+and publish sanitized evidence; do not claim that API billing repaired the
+subscription connection. Continue other API/provider acceptance from their own
+receipts. Continue native Google/Grok only when their actual controls satisfy the
+SDK contract; do not mark blocked provider cells complete.
 
 [Choices](choices.md) record the tradeoffs behind this slice.

@@ -54,6 +54,8 @@ connect consumes an invitation from a private file and saves a private client pr
 Remote setup uses --host, --tls-cert-file, --tls-key-file and --client-url (HTTPS).
 Invitations are credentials: paste them only into the intended application.
 Provider credentials are referenced by configuration, never printed by diagnostics.
+Claude Code accepts explicit --api-key-env for a separate API-billed native connection; omit it for the existing sign-in.
+Its API mode cannot select --account-directory or --base-url.
 inspect-jobs observes configured SQLite job storage without maintenance or initialization.
 serve --handoff-snapshot requires that unchanged store to be quiet and fences stale SDK writers.
 Stop incompatible older hosts before adoption; a snapshot is diagnostic, not a lock.
@@ -150,7 +152,10 @@ async function initialize(path: string, values: Values) {
       "PROVIDER_REQUIRED",
       "Select a real provider with --provider. Use the desktop for an empty host with guided provider setup.",
     );
-  const id = argument(values, "provider-id") ?? kind;
+  const nativeApi =
+    kind === "claude-code" && values["api-key-env"] !== undefined;
+  const id =
+    argument(values, "provider-id") ?? (nativeApi ? "claude-code-api" : kind);
   const catalogOnly = values["catalog-only"] === true;
   if (catalogOnly && values.model !== undefined)
     throw new DriverError(
@@ -168,12 +173,14 @@ async function initialize(path: string, values: Values) {
   ].includes(kind);
   const cli = ["codex", "claude-code", "gemini-cli"].includes(kind);
   if (
-    (!api && (values["api-key-env"] || values["base-url"])) ||
+    (!api && !nativeApi && values["api-key-env"]) ||
+    (!api && values["base-url"]) ||
+    (nativeApi && values["account-directory"]) ||
     (!cli && (values.binary || values["account-directory"]))
   )
     throw new DriverError(
       "INVALID_ARGUMENT",
-      "API secret/endpoint options apply to API providers; binary/account-directory options apply to native CLI providers.",
+      "The selected provider and billing mode do not support these credential, endpoint or native account options.",
     );
   const filename = `driver-${randomUUID()}.token`,
     tokenRef = join("credentials", filename);
@@ -182,7 +189,7 @@ async function initialize(path: string, values: Values) {
     id,
     accountId: argument(values, "account-id"),
     ...(catalogOnly ? { models: [] } : model ? { models: [model] } : {}),
-    ...(api
+    ...(api || nativeApi
       ? {
           apiKeyRef: {
             env:
@@ -204,7 +211,9 @@ async function initialize(path: string, values: Values) {
     ...(cli
       ? {
           binary: argument(values, "binary"),
-          accountDirectory: argument(values, "account-directory"),
+          ...(!nativeApi
+            ? { accountDirectory: argument(values, "account-directory") }
+            : {}),
         }
       : {}),
   };

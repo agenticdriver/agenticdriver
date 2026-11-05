@@ -1,5 +1,7 @@
 import { cliEnvironment, runProcess } from "./cli-process.js";
 export { runProcess } from "./cli-process.js";
+import { claudeApiEnvironment } from "./claude-api-environment.js";
+import type { ApiProviderOptions } from "./http.js";
 import { nativeMcpBridge } from "./native-mcp-bridge.js";
 import { codexAppServer } from "./codex-app-server.js";
 import { cliVersion, claudeAccount } from "./connection-metadata.js";
@@ -48,11 +50,26 @@ export function codex(options: CodexProviderOptions = {}) {
     CodexReasoningEffortSchema.parse(options.reasoningEffort);
   return codexAppServer(options);
 }
-export interface ClaudeCodeProviderOptions extends CliProviderOptions {
-  /** Opt in to the qualified proposal-only MCP bridge. */
+export type ClaudeCodeProviderOptions = Omit<
+  CliProviderOptions,
+  "accountDirectory"
+> & {
+  /** Opt in to the reviewed proposal-only MCP bridge. */
   applicationTools?: "mcp";
-}
+} & (
+    | { accountDirectory?: string; apiKey?: never }
+    | { apiKey: ApiProviderOptions["apiKey"]; accountDirectory?: never }
+  );
 export function claudeCode(options: ClaudeCodeProviderOptions = {}) {
+  if (
+    Object.hasOwn(options, "apiKey") &&
+    (options.accountDirectory !== undefined ||
+      !["string", "function"].includes(typeof options.apiKey))
+  )
+    throw new DriverError(
+      "INVALID_CONFIG",
+      "Use either an explicit API credential or a native account directory for this Claude connection.",
+    );
   if (options.applicationTools !== undefined)
     z.literal("mcp").parse(options.applicationTools);
   if (
@@ -75,6 +92,7 @@ function localCli(
 ): ProviderAdapter {
   const toolsEnabled =
     vendor === "claude-code" && options.applicationTools === "mcp";
+  const apiMode = vendor === "claude-code" && Object.hasOwn(options, "apiKey");
   if (options.accountDirectory && !isAbsolute(options.accountDirectory))
     throw new Error("The CLI account directory must be absolute.");
   const binary =
@@ -90,10 +108,17 @@ function localCli(
       }[vendor]
     ] = options.accountDirectory;
   let checked: Promise<void> | undefined;
-  const checkFeatures = async (signal: AbortSignal, cwd?: string) => {
-    if (toolsEnabled) {
+  const checkFeatures = async (
+    signal: AbortSignal,
+    cwd?: string,
+    runtimeEnv = env,
+  ) => {
+    const controlEnv = apiMode
+      ? { ...runtimeEnv, ANTHROPIC_API_KEY: undefined }
+      : runtimeEnv;
+    if (toolsEnabled || apiMode) {
       const version = await runProcess(binary, ["--version"], {
-        env,
+        env: controlEnv,
         cwd,
         signal,
       });
@@ -104,7 +129,7 @@ function localCli(
         );
     }
     const help = await runProcess(binary, ["--help"], {
-      env,
+      env: controlEnv,
       cwd,
       signal,
       includeStderr: true,
@@ -117,6 +142,7 @@ function localCli(
             "--strict-mcp-config",
             "--tools",
             "--disable-slash-commands",
+            ...(apiMode ? ["--bare"] : []),
             ...(toolsEnabled
               ? [
                   "--allowedTools",
@@ -141,16 +167,18 @@ function localCli(
   return {
     usageSource: "cli-report",
     info: {
-      id: options.id ?? vendor,
+      id: options.id ?? (apiMode ? "claude-code-api" : vendor),
       name:
         options.name ??
-        {
-          codex: "Codex CLI",
-          "claude-code": "Claude Code",
-          "gemini-cli": "Gemini CLI",
-        }[vendor],
+        (apiMode
+          ? "Claude Code API"
+          : {
+              codex: "Codex CLI",
+              "claude-code": "Claude Code",
+              "gemini-cli": "Gemini CLI",
+            }[vendor]),
       vendor,
-      authMode: "cli-session",
+      authMode: apiMode ? "api-key" : "cli-session",
       capabilities: {
         tools: toolsEnabled,
         textStreaming: true,
@@ -170,33 +198,52 @@ function localCli(
       };
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-inspect-"));
       try {
+        const runtimeEnv = apiMode
+          ? await claudeApiEnvironment(options.apiKey!, cwd, signal)
+          : env;
         const version = await runProcess(binary, ["--version"], {
-          env,
+          env: apiMode
+            ? { ...runtimeEnv, ANTHROPIC_API_KEY: undefined }
+            : runtimeEnv,
           cwd,
           signal,
         });
         connection.runtime = cliVersion(vendor, version);
-        await checkFeatures(signal, cwd);
+        await checkFeatures(signal, cwd, runtimeEnv);
         if (vendor === "gemini-cli")
           return { code: "CLI_STATUS_UNKNOWN", connection };
         let exitCode: number | null = null;
         // Parse only allowlisted display fields; discard raw output and paths.
-        const status = await runProcess(binary, ["auth", "status", "--json"], {
-          env,
-          cwd,
-          signal,
-          acceptedExitCodes: [0, 1],
-          onExit: (code) => {
-            exitCode = code;
-          },
-        });
-        connection.account = claudeAccount(status, exitCode === 0);
-        if (exitCode === 0) {
-          const catalog = await claudeCatalog(binary, claudeArguments(), {
-            env,
+        const status = await runProcess(
+          binary,
+          [...(apiMode ? ["--bare"] : []), "auth", "status", "--json"],
+          {
+            env: runtimeEnv,
             cwd,
             signal,
-          });
+            acceptedExitCodes: [0, 1],
+            onExit: (code) => {
+              exitCode = code;
+            },
+          },
+        );
+        const account = claudeAccount(status, exitCode === 0);
+        if (
+          apiMode &&
+          (account.status !== "signed-in" || account.method !== "api_key")
+        )
+          return { code: "AUTH_REJECTED", connection };
+        connection.account = account;
+        if (exitCode === 0) {
+          const catalog = await claudeCatalog(
+            binary,
+            claudeArguments(undefined, undefined, apiMode),
+            {
+              env: runtimeEnv,
+              cwd,
+              signal,
+            },
+          );
           if (catalog)
             return { code: "CLI_CATALOG_AVAILABLE", ...catalog, connection };
         }
@@ -206,6 +253,8 @@ function localCli(
         };
       } catch (error) {
         signal.throwIfAborted();
+        if (error instanceof DriverError && error.code === "AUTH_REQUIRED")
+          return { code: "AUTH_REQUIRED", connection };
         if (
           error instanceof DriverError &&
           (error.code === "CLI_UNAVAILABLE" ||
@@ -225,13 +274,43 @@ function localCli(
           "CLI text adapters do not expose application tools.",
         );
       context.signal.throwIfAborted();
-      await preflight();
+      if (!apiMode) await preflight();
       context.signal.throwIfAborted();
       const cwd = await mkdtemp(join(tmpdir(), "agenticdriver-"));
       let bridge: Awaited<ReturnType<typeof nativeMcpBridge>> | undefined;
       const interrupt = new AbortController();
       const signal = AbortSignal.any([context.signal, interrupt.signal]);
       try {
+        const runtimeEnv = apiMode
+          ? await claudeApiEnvironment(options.apiKey!, cwd, signal)
+          : env;
+        if (apiMode) {
+          await checkFeatures(
+            AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
+            cwd,
+            runtimeEnv,
+          );
+          let signedIn = false;
+          const status = await runProcess(
+            binary,
+            ["--bare", "auth", "status", "--json"],
+            {
+              cwd,
+              env: runtimeEnv,
+              signal,
+              acceptedExitCodes: [0, 1],
+              onExit: (code) => {
+                signedIn = code === 0;
+              },
+            },
+          );
+          const account = claudeAccount(status, signedIn);
+          if (account.status !== "signed-in" || account.method !== "api_key")
+            throw new DriverError(
+              "AUTH_REQUIRED",
+              "The explicit Claude API connection did not select API-key authentication.",
+            );
+        }
         if (toolsEnabled && request.tools.length) {
           bridge = await nativeMcpBridge({
             directory: cwd,
@@ -246,8 +325,14 @@ function localCli(
             fail: (error) => interrupt.abort(error),
           });
         }
-        const operation = await cliOperation(vendor, request.model, cwd);
-        if (bridge) operation.args = claudeArguments(request.model, bridge);
+        const operation = await cliOperation(
+          vendor,
+          request.model,
+          cwd,
+          apiMode,
+        );
+        if (bridge)
+          operation.args = claudeArguments(request.model, bridge, apiMode);
         context.signal.throwIfAborted();
         const prompt = toolsEnabled
           ? claudeToolHistory(request)
@@ -262,7 +347,7 @@ function localCli(
         try {
           output = await runProcess(binary, operation.args, {
             cwd,
-            env: { ...env, ...operation.env },
+            env: { ...runtimeEnv, ...operation.env },
             signal,
             input: prompt,
             onLine: stream.accept,
@@ -295,8 +380,10 @@ function localCli(
 function claudeArguments(
   model?: string,
   bridge?: Awaited<ReturnType<typeof nativeMcpBridge>>,
+  apiMode = false,
 ): string[] {
   return [
+    ...(apiMode ? ["--bare"] : []),
     "--print",
     "--output-format",
     "stream-json",
@@ -317,6 +404,7 @@ function claudeArguments(
             [bridge.name]: {
               command: bridge.config.command,
               args: bridge.config.args,
+              ...(apiMode ? { env: { ANTHROPIC_API_KEY: "" } } : {}),
             },
           }
         : {},
@@ -347,10 +435,11 @@ async function cliOperation(
   vendor: Exclude<Vendor, "codex">,
   model: string,
   cwd: string,
+  apiMode = false,
 ) {
   if (vendor === "claude-code")
     return {
-      args: claudeArguments(model),
+      args: claudeArguments(model, undefined, apiMode),
       env: {},
     };
   const settings = join(cwd, "settings.json"),

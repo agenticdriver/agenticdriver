@@ -45,6 +45,9 @@ const claudeCli = cli.extend({
   kind: z.literal("claude-code"),
   applicationTools: z.literal("mcp").optional(),
 });
+const claudeApiCli = claudeCli
+  .omit({ accountDirectory: true })
+  .extend({ apiKeyRef: SecretReferenceSchema });
 const codexCli = cli.extend({
   kind: z.literal("codex"),
   reasoningEffort: CodexReasoningEffortSchema.optional(),
@@ -55,6 +58,7 @@ export const HostProviderConfigSchema = z.union([
   api,
   cli,
   claudeCli,
+  claudeApiCli,
   codexCli,
   z
     .object({

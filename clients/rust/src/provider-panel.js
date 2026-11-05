@@ -1018,7 +1018,7 @@ function registerProviderPanel(registry = customElements) {
       let advanced = this.field("Instance ID", "id", p.id, "Unique on this host. Use a new ID for a different account.") + this.field("Account ID", "accountId", p.accountId, method?.interaction === "device-code" ? "A stable account ID is created if left empty." : "Optional stable identity for usage tracking.");
       if (native(p.kind)) {
         advanced += this.field("Binary path", "binary", "binary" in p ? p.binary : void 0, "Official runtime executable on this host. Empty uses its standard command.");
-        if (method?.interaction !== "device-code")
+        if (method?.interaction !== "device-code" && !("apiKeyRef" in p))
           advanced += this.field("Account directory", "accountDirectory", "accountDirectory" in p ? p.accountDirectory : void 0, "Absolute path to the signed-in account on this host.");
         if (p.kind === "codex")
           advanced += this.field("Reasoning effort", "reasoningEffort", p.reasoningEffort, "Optional. Supported values depend on the selected model.");
@@ -1026,7 +1026,7 @@ function registerProviderPanel(registry = customElements) {
       if ("apiKeyRef" in p) {
         if (p.kind === "openai-compatible")
           fields += this.field("API endpoint", "baseUrl", p.baseUrl, "Required. The endpoint must support OpenAI Chat Completions.");
-        else
+        else if (p.kind !== "claude-code")
           advanced += this.field("API endpoint", "baseUrl", p.baseUrl, `Optional endpoint override for ${definition.protocol}.`);
         if (method?.interaction === "api-key")
           fields += this.field("API key", "apiKey", this.apiKey, "Write only. Stored privately on the connected host when you save.", false, true);
@@ -1051,12 +1051,16 @@ function registerProviderPanel(registry = customElements) {
       if (this.adding)
         fields += this.field("Instance ID", "id", p.id, "Unique on this host. Use a new ID for a different account.");
       fields += this.field("Account ID", "accountId", p.accountId, "Stable account identity used for usage tracking.", !this.adding);
-      if (native(p.kind))
-        fields += this.field("Binary path", "binary", "binary" in p ? p.binary : void 0, "Executable on the connected host. Empty uses its standard command.") + this.field("Account directory", "accountDirectory", "accountDirectory" in p ? p.accountDirectory : void 0, "Use the provider's signed-in account directory on that host.");
+      if (native(p.kind)) {
+        fields += this.field("Binary path", "binary", "binary" in p ? p.binary : void 0, "Executable on the connected host. Empty uses its standard command.");
+        if (!("apiKeyRef" in p))
+          fields += this.field("Account directory", "accountDirectory", "accountDirectory" in p ? p.accountDirectory : void 0, "Use the provider's signed-in account directory on that host.");
+      }
       if (p.kind === "codex")
         fields += this.field("Reasoning effort", "reasoningEffort", p.reasoningEffort, "Optional. Supported values depend on the selected model.");
       if ("apiKeyRef" in p) {
-        fields += this.field("API endpoint", "baseUrl", p.baseUrl, "Optional vendor endpoint. Compatible APIs require an explicit URL.");
+        if (p.kind !== "claude-code")
+          fields += this.field("API endpoint", "baseUrl", p.baseUrl, "Optional vendor endpoint. Compatible APIs require an explicit URL.");
         if ("env" in p.apiKeyRef)
           fields += this.field("Credential environment variable", "env", p.apiKeyRef.env, "Read from the host environment.");
         else if ("file" in p.apiKeyRef)

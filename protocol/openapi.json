@@ -2006,6 +2006,89 @@
                       "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                     }
                   },
+                  "kind": { "type": "string", "const": "claude-code" },
+                  "binary": { "type": "string", "minLength": 1 },
+                  "applicationTools": { "type": "string", "const": "mcp" },
+                  "apiKeyRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "env": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                          }
+                        },
+                        "required": ["env"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "file": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          }
+                        },
+                        "required": ["file"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "keychain": {
+                            "type": "object",
+                            "properties": {
+                              "service": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "account": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              }
+                            },
+                            "required": ["service", "account"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["keychain"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": ["id", "kind", "apiKeyRef"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "enabled": { "type": "boolean" },
+                  "accountId": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "models": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
+                    }
+                  },
                   "kind": { "type": "string", "const": "codex" },
                   "accountDirectory": { "type": "string", "minLength": 1 },
                   "binary": { "type": "string", "minLength": 1 },
@@ -2355,6 +2438,89 @@
                     "applicationTools": { "type": "string", "const": "mcp" }
                   },
                   "required": ["id", "kind"],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "enabled": { "type": "boolean" },
+                    "accountId": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "models": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
+                      }
+                    },
+                    "kind": { "type": "string", "const": "claude-code" },
+                    "binary": { "type": "string", "minLength": 1 },
+                    "applicationTools": { "type": "string", "const": "mcp" },
+                    "apiKeyRef": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "env": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                            }
+                          },
+                          "required": ["env"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 4096
+                            }
+                          },
+                          "required": ["file"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "keychain": {
+                              "type": "object",
+                              "properties": {
+                                "service": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                }
+                              },
+                              "required": ["service", "account"],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": ["keychain"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["id", "kind", "apiKeyRef"],
                   "additionalProperties": false
                 },
                 {

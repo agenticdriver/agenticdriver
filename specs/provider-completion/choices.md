@@ -39,3 +39,25 @@ cover both event orders without a model substitute.
 Claude's optional tool setting is represented in the generated host and
 management schemas as well as runtime validation. The schemas come from the
 existing Zod owners; no parallel client representation is introduced.
+
+## Sound — medium confidence: explicit native API billing is a separate connection
+
+The native Claude runtime is useful with either a subscription sign-in or an
+explicit API credential. A strict configuration union selects one mode; the API
+variant cannot name a native account directory or endpoint override. An existing
+instance cannot change modes through management. This preserves account/usage
+identity and prevents a failed key from silently using a signed-in subscription.
+The existing secret resolver owns credentials; no new auth store is introduced.
+
+API operations use a fresh private home, bare runtime startup, and explicit
+credential environment. Authentication must report `api_key`. The proposal helper
+receives an empty API-key environment. Actual zero-prompt native checks observed
+both the intended authentication method and owned MCP isolation; they do not
+prove model execution. Usage stays `cli-report`, with `authMode: api-key` and
+native cost-estimate limitations. Host/factory/CLI support ships first; a guided
+setup method remains a separate interface task.
+
+API feature checks belong to the current operation's private home and caller
+signal, not a cached promise holding another operation's environment. Version
+and help subprocesses receive no API credential. This also keeps first-call
+cancellation on the existing process-reaping and profile-cleanup path.

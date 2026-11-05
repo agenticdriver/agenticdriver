@@ -410,6 +410,14 @@ export function configuredProviders(
         ? { ...adapter, info: { ...adapter.info, models: [] } }
         : adapter;
     }
+    if (p.kind === "claude-code" && "apiKeyRef" in p) {
+      return claudeCode({
+        ...shared,
+        binary: p.binary,
+        applicationTools: p.applicationTools,
+        apiKey: () => singleLineSecret(secrets, p.apiKeyRef),
+      });
+    }
     if ("apiKeyRef" in p) {
       const values = {
         ...shared,

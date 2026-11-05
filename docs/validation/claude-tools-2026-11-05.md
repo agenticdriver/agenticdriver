@@ -60,3 +60,27 @@ one bounded SDK run with at most two model steps. It must actually call the
 selected public-release-note tool, incorporate its exact source hash/facts in
 an email draft, and report actual usage. Denial and cancellation evidence must
 be labelled by what was exercised; no inference was run to establish them here.
+
+## Explicit native API-mode controls
+
+A separately authorized API-billed native connection now uses a fresh private
+home and the host's existing secret resolver. Its credential remains on the local
+execution host; it was not copied to Prometheus or used to repair that native
+profile. No model prompt has been submitted through this new mode yet.
+
+The local probe used the separately installed official Linux x64 Claude Code
+**2.1.282** binary; the existing global runtime was preserved. Executable SHA-256:
+`3afe8535c0cc33f0e24f7b25dab7a1727b8b592196f8496a8bc302ba2161eed3`.
+With the actual selected credential, native `--bare auth status --json` reported
+**signed-in / api_key** in the isolated home. The API credential was absent from
+native login-helper environment channels. An initialize/control-only MCP probe
+observed exactly the connected owned `read_release_notes` tool. Inspection of
+that probe's owned helper process confirmed its API-key environment was empty.
+Neither probe sent a user message; both record **zero model requests**. These
+are source/control checks, not immutable installed-package application acceptance.
+
+The final reviewed artifact still needs a bounded real native API SDK run using
+**claude-haiku-4-5-20251001**, with an actual selected tool call, incorporated
+result, denial/cancellation control evidence and reported usage. That run must
+have its own explicit authorization and receipt; the direct Anthropic API
+qualification is separate evidence.
