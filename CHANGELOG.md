@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add opt-in Claude Code application-tool proposals through the existing SDK approval/tool loop, with explicit restricted MCP ownership and portable tool-result continuation.
+
 - Share lock-preserving SQLite file validation between durable jobs and vector storage.
 
 - Expose durable-store inspection and conditional acquisition through `inspect-jobs` and `serve --handoff-snapshot`; register graceful shutdown before announcing host readiness.

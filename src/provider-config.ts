@@ -36,11 +36,15 @@ const api = z
 const cli = z
   .object({
     ...common,
-    kind: z.enum(["claude-code", "gemini-cli"]),
+    kind: z.literal("gemini-cli"),
     accountDirectory: z.string().min(1).optional(),
     binary: z.string().min(1).optional(),
   })
   .strict();
+const claudeCli = cli.extend({
+  kind: z.literal("claude-code"),
+  applicationTools: z.literal("mcp").optional(),
+});
 const codexCli = cli.extend({
   kind: z.literal("codex"),
   reasoningEffort: CodexReasoningEffortSchema.optional(),
@@ -50,6 +54,7 @@ export const CodexProviderConfigSchema = codexCli;
 export const HostProviderConfigSchema = z.union([
   api,
   cli,
+  claudeCli,
   codexCli,
   z
     .object({

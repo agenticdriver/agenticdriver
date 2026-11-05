@@ -433,9 +433,11 @@ export function configuredProviders(
     ]({
       ...shared,
       binary: p.binary,
-      ...(p.kind === "codex"
+      ...(p.kind === "codex" || p.kind === "claude-code"
         ? {
-            reasoningEffort: p.reasoningEffort,
+            ...(p.kind === "codex"
+              ? { reasoningEffort: p.reasoningEffort }
+              : {}),
             applicationTools: p.applicationTools,
           }
         : {}),

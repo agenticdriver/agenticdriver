@@ -22,7 +22,7 @@ const invalid = () =>
   );
 
 /** The helper proposes actions only. Application callbacks never enter native MCP. */
-export async function codexMcpBridge(options: {
+export async function nativeMcpBridge(options: {
   directory: string;
   tools: ToolDefinition[];
   interrupt(): void;
@@ -37,6 +37,7 @@ export async function codexMcpBridge(options: {
   const prefix = randomUUID();
   let interrupting = false,
     stopped = false;
+  let failure: DriverError | undefined;
   const reconcile = () => {
     for (const entry of calls) {
       if (entry.confirmed) continue;
@@ -102,7 +103,8 @@ export async function codexMcpBridge(options: {
         reconcile();
       } catch {
         response.writeHead(400).end();
-        options.fail(invalid());
+        failure = invalid();
+        options.fail(failure);
       }
     },
   );
@@ -136,7 +138,7 @@ export async function codexMcpBridge(options: {
       config: {
         command: process.execPath,
         args: [
-          fileURLToPath(new URL("./codex-mcp-helper.js", import.meta.url)),
+          fileURLToPath(new URL("./native-mcp-helper.js", import.meta.url)),
           path,
         ],
         required: true,
@@ -185,6 +187,7 @@ export async function codexMcpBridge(options: {
         return interrupting;
       },
       finish() {
+        if (failure) throw failure;
         if (
           !interrupting ||
           !calls.length ||

@@ -18,7 +18,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text only                                             |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate

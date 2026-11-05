@@ -1,8 +1,8 @@
 # Native application tools
 
 Development source supports opt-in application tools with **Codex CLI 0.157.0
-on Linux x64**. The registry's original SDK 0.1.0 predates this feature. Other
-native adapters and the default Codex configuration remain text only.
+and Claude Code 2.1.282 on Linux x64**. The registry's original SDK 0.1.0
+predates this feature. Native tools remain disabled by default.
 
 ```ts
 import { codex } from "@agenticdriver/sdk/providers";
@@ -16,7 +16,7 @@ const provider = codex({
 });
 ```
 
-The same `applicationTools: "mcp"` setting is accepted on a Codex provider in
+The same `applicationTools: "mcp"` setting is accepted on a Codex or Claude Code provider in
 host JSON or a revision-checked `configureProvider` request. It enables the
 adapter's `tools` capability. Register and select tools through the existing
 [application-tool contract](application-tools.md) and grant remote callers the
@@ -48,8 +48,19 @@ thread resumption. The native MCP timeout covers proposal transport only;
 application work and human approval happen after that native process has closed.
 There is no default application-tool, approval, run or inactivity deadline.
 
-Inherited MCP servers, hooks, plugins, agents and local execution capabilities
-remain disabled by the qualified adapter controls. Codex's internal sandboxed
+Claude Code uses the same opt-in with `claudeCode({ applicationTools: "mcp", ... })`.
+Its text default retains native safe mode. Tool mode replaces that blanket flag
+with restricted execution, empty filesystem setting sources, no built-in tools,
+strict owned MCP, disabled slash commands/Chrome/permission prompts, and settings
+disabling hooks, memory and fallback. Runtime initialization must expose exactly
+the owned MCP tool inventory. The SDK rejects permission requests and native tools.
+Claude continuation uses an explicit JSON application transcript containing calls
+and results, rather than Codex's native role-injection interface. Private native
+session state is not replayed. Interrupted proposal-turn usage is reported only
+when the native assistant event provides it; missing cost remains unknown.
+
+Inherited MCP servers, hooks and local execution capabilities remain disabled
+by the qualified adapter controls. Codex's internal sandboxed
 JavaScript, clock and MCP metadata operations remain native utilities; they are
 not SDK application callbacks. Global native instructions/skill descriptions can
 still enter context, and these controls are not an OS isolation boundary. Keep

@@ -3,8 +3,8 @@ import test from "node:test";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { codexMcpBridge } from "../src/providers/codex-mcp-bridge.js";
-import { codex } from "../src/providers/local-cli.js";
+import { nativeMcpBridge } from "../src/providers/native-mcp-bridge.js";
+import { codex, claudeCode } from "../src/providers/local-cli.js";
 import { HostProviderConfigSchema } from "../src/provider-config.js";
 import type { DriverError } from "../src/errors.js";
 
@@ -17,7 +17,7 @@ async function setup() {
   const directory = await mkdtemp(join(tmpdir(), "agenticdriver-bridge-test-"));
   let interrupts = 0;
   const errors: DriverError[] = [];
-  const bridge = await codexMcpBridge({
+  const bridge = await nativeMcpBridge({
     directory,
     tools: [tool],
     interrupt: () => {
@@ -59,9 +59,22 @@ async function setup() {
   };
 }
 
-test("native tools are opt-in and cannot be configured for other providers", () => {
+test("native tools are opt-in and unavailable on unqualified providers", () => {
   assert.equal(codex().info.capabilities.tools, false);
-  for (const kind of ["claude-code", "gemini-cli", "mock"])
+  assert.equal(claudeCode().info.capabilities.tools, false);
+  assert.equal(
+    claudeCode({ applicationTools: "mcp" }).info.capabilities.tools,
+    true,
+  );
+  assert.equal(
+    HostProviderConfigSchema.safeParse({
+      kind: "claude-code",
+      id: "provider",
+      applicationTools: "mcp",
+    }).success,
+    true,
+  );
+  for (const kind of ["gemini-cli", "mock"])
     assert.equal(
       HostProviderConfigSchema.safeParse({
         kind,
