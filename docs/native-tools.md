@@ -1,8 +1,12 @@
 # Native application tools
 
-Development source supports opt-in application tools with **Codex CLI 0.157.0
-and Claude Code 2.1.282 on Linux x64**. The registry's original SDK 0.1.0
-predates this feature. Native tools remain disabled by default.
+Development source supports qualified opt-in application tools with **Codex CLI
+0.157.0 on Linux x64**. An unreleased **Claude Code 2.1.282 Linux x64**
+implementation uses the same contract; its real application acceptance is
+blocked until the selected native account is signed in. The registry's original
+SDK 0.1.0 predates this feature. Native tools remain disabled by default.
+See the [Claude readiness evidence](validation/claude-tools-2026-11-05.md) for
+the current account blocker and actual zero-prompt controls.
 
 ```ts
 import { codex } from "@agenticdriver/sdk/providers";
@@ -48,7 +52,7 @@ thread resumption. The native MCP timeout covers proposal transport only;
 application work and human approval happen after that native process has closed.
 There is no default application-tool, approval, run or inactivity deadline.
 
-Claude Code uses the same opt-in with `claudeCode({ applicationTools: "mcp", ... })`.
+Claude Code implements the same opt-in with `claudeCode({ applicationTools: "mcp", ... })`.
 Its text default retains native safe mode. Tool mode replaces that blanket flag
 with restricted execution, empty filesystem setting sources, no built-in tools,
 strict owned MCP, disabled slash commands/Chrome/permission prompts, and settings

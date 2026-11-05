@@ -18,7 +18,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased MCP tools need real acceptance |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
@@ -102,14 +102,17 @@ used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
   Native shell, file, image, agent, MCP and goal operations are unavailable in
   the default text registry. Global `AGENTS.md` and skill descriptions still enter
   the prompt. See the [native evidence and limits](validation/codex-2026-09-25.md).
-- Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
+- Claude Code defaults to restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions. Development
   source explicitly disables fallback chains and switching models after a flagged
   response; a refusal remains a refusal on the selected model. Its separately
   qualified [metadata probe](validation/claude-catalog-2026-09-26.md) does not submit
   a prompt. The [dated execution qualification](validation/claude-2026-09-26.md)
-  covers native Linux 2.1.282 and two inexpensive live Haiku 4.5 checks, including
+  covers native Linux 2.1.282 text execution and two inexpensive live Haiku 4.5 checks, including
   cancellation, Usagestat capture and provider-specific billing/deployment limits.
+  The unreleased [application-tool opt-in](native-tools.md) uses explicit
+  restricted MCP ownership; its current real acceptance is blocked by the
+  selected native account being signed out.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
   disabled hooks/extensions/MCP/skills/agents/auto-memory, an empty context configuration, and a
   supplemental deny-tools policy. Host administrators' policies still apply.

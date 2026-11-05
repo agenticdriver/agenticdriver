@@ -9,7 +9,7 @@ The existing four-language clients and transport remain the execution contract.
 1. **Gemini catalog route eligibility — implemented.** The API catalog must
    expose only models that support generateContent; explicit host model
    allowlists retain their existing authority. See the discovery tests.
-2. **Claude native application tools — implementation under qualification.**
+2. **Claude native application tools — implemented; real acceptance blocked.**
    Opt-in Linux x64 Claude Code 2.1.282 uses a private per-turn MCP proposal
    helper. Native proposals are matched to helper confirmations, then the native
    process is interrupted/reaped before SDK validation, approval and application
@@ -46,7 +46,11 @@ fake successful provider or fabricated model completion.
 
 ## Next pickup
 
-Finish Claude installed-archive real qualification and parent review; retain
+The selected Prometheus native profile currently reports signed out through both
+the SDK and native `auth status` (zero inference submitted). Restore that exact
+native sign-in before a new installed-archive acceptance run; never substitute
+account, model or billing. Finish parent review and repeat the bounded useful
+tool-result-incorporating run with the corrected immutable artifact. Retain
 private native receipts and publish sanitized evidence. Then qualify the other
 implemented API routes when a selected credential/model exists. Continue native
 Google/Grok only when their actual controls satisfy the SDK contract. Do not
