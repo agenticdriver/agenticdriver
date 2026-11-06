@@ -8,6 +8,8 @@ import { abortable, DriverError } from "./errors.js";
 import { validateEmbeddingInput, type EmbeddingAdapter } from "./embeddings.js";
 import {
   RetrievalDeleteSchema,
+  RetrievalRetireSchema,
+  RetrievalRetireResultSchema,
   RetrievalIdSchema,
   RetrievalIndexRequestSchema,
   RetrievalResultSchema,
@@ -15,6 +17,8 @@ import {
   VectorIndexSchema,
   validSource,
   type RetrievalDelete,
+  type RetrievalRetire,
+  type RetrievalRetireResult,
   type RetrievalDeleteResult,
   type RetrievalIndexRequest,
   type RetrievalIndexResult,
@@ -36,7 +40,7 @@ import {
 import type { ContextAttachment, ContextSource } from "./context-types.js";
 import type { ExecutionContext } from "./types.js";
 
-export type RetrievalOperation = "search" | "index" | "delete";
+export type RetrievalOperation = "search" | "index" | "delete" | "retire";
 export interface RetrievalAuthorization {
   namespace: string;
   /** Current app-owned revisions. An empty map grants no source access. */
@@ -114,6 +118,11 @@ export class RetrievalService {
       );
       this.corpora.set(id, { ...corpus, index });
     }
+  }
+  get supportsRetirement(): boolean {
+    return [...this.corpora.values()].some(
+      (corpus) => typeof corpus.store.retire === "function",
+    );
   }
   private corpus(id: string): Corpus {
     const corpus = this.corpora.get(id);
@@ -499,6 +508,42 @@ export class RetrievalService {
       unavailable();
     await this.checkedScope(corpus, "search", scope, context);
     context.signal.throwIfAborted();
+  }
+  async retire(
+    input: RetrievalRetire,
+    context: ExecutionContext,
+  ): Promise<RetrievalRetireResult> {
+    const request = parse(RetrievalRetireSchema, input),
+      corpus = this.corpus(request.corpus);
+    const scope = await this.scope(
+      corpus,
+      "retire",
+      [request.sourceId],
+      context,
+    );
+    if (!matches(scope, request.sourceId, request.revision)) unavailable();
+    if (!corpus.store.retire)
+      throw new DriverError(
+        "RETIREMENT_UNAVAILABLE",
+        "This corpus store does not support persistent source retirement.",
+      );
+    await this.ready(corpus, context);
+    await this.checkedScope(corpus, "retire", scope, context);
+    context.signal.throwIfAborted();
+    const acknowledgment = await abortable(
+      corpus.store.retire(scope, request.sourceId, request.revision, context),
+      context.signal,
+    );
+    const result = RetrievalRetireResultSchema.safeParse({
+      ...acknowledgment,
+      ...request,
+    });
+    if (!result.success)
+      throw new DriverError(
+        "INVALID_RETIREMENT_ACK",
+        "The corpus store did not acknowledge a committed retirement fence.",
+      );
+    return result.data;
   }
   async delete(
     input: RetrievalDelete,

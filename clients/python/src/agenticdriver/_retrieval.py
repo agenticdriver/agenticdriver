@@ -51,3 +51,6 @@ def valid_index_result(value, request):
 
 def valid_delete_result(value, request):
     return isinstance(value, dict) and all(value.get(k) == request[k] for k in ("corpus", "sourceId", "revision")) and type(value.get("deleted")) is bool
+
+def valid_retire_result(value, request):
+    return valid_delete_result(value, request) and value.get("retired") is True

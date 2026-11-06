@@ -43,6 +43,8 @@ import {
   RetrievalSearchSchema,
   RetrievalIndexRequestSchema,
   RetrievalDeleteSchema,
+  RetrievalRetireSchema,
+  RetrievalRetireResultSchema,
   RetrievalResultSchema,
   RetrievalIndexResultSchema,
   RetrievalDeleteResultSchema,
@@ -163,6 +165,12 @@ const schemas = {
     target: "draft-2020-12",
   }),
   RetrievalDelete: z.toJSONSchema(RetrievalDeleteSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalRetire: z.toJSONSchema(RetrievalRetireSchema, {
+    target: "draft-2020-12",
+  }),
+  RetrievalRetireResult: z.toJSONSchema(RetrievalRetireResultSchema, {
     target: "draft-2020-12",
   }),
   RetrievalResult: z.toJSONSchema(RetrievalResultSchema, {
@@ -565,6 +573,7 @@ const document = {
         ["index", "RetrievalIndexRequest", "RetrievalIndexResult"],
         ["ingest", "IngestRequest", "IngestResult"],
         ["delete", "RetrievalDelete", "RetrievalDeleteResult"],
+        ["retire", "RetrievalRetire", "RetrievalRetireResult"],
       ].map(([operation, input, output]) => [
         `/v1/retrieval/${operation}`,
         {

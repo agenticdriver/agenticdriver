@@ -97,10 +97,7 @@ fn valid_definition(d: &ProviderDefinition) -> bool {
         && text(&d.name, 100)
         && text(&d.description, 1000)
         && text(&d.protocol, 100)
-        && matches!(
-            d.category.as_str(),
-            "native" | "api" | "compatible"
-        )
+        && matches!(d.category.as_str(), "native" | "api" | "compatible")
         && (1..=8).contains(&d.methods.len())
         && d.requirements.as_ref().is_none_or(|s| text(s, 2000))
         && d.docs_url

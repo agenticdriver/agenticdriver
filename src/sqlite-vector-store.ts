@@ -19,21 +19,87 @@ import {
   type VectorStore,
 } from "./vector-store.js";
 
+const retirementTable = `CREATE TABLE ad_vector_retirements(
+  corpus TEXT NOT NULL, namespace TEXT NOT NULL, source_id TEXT NOT NULL, revision TEXT NOT NULL,
+  PRIMARY KEY(corpus, namespace, source_id), FOREIGN KEY(corpus) REFERENCES ad_vector_indexes(corpus))`;
+const retirementTriggers = ["INSERT", "UPDATE"].map(
+  (operation) =>
+    `CREATE TRIGGER ad_vector_retired_${operation.toLowerCase()} BEFORE ${operation} ON ad_vector_documents
+  WHEN EXISTS(SELECT 1 FROM ad_vector_retirements r WHERE r.corpus=NEW.corpus AND r.namespace=NEW.namespace AND r.source_id=NEW.source_id)
+  BEGIN SELECT RAISE(ABORT, 'SOURCE_RETIRED'); END`,
+);
+
+function existingSchema(db: DatabaseSync, fenced: boolean): boolean {
+  const tables = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+    )
+    .all();
+  const version = db.prepare("PRAGMA user_version").get()?.user_version;
+  const names = [
+    "ad_vector_indexes",
+    "ad_vector_documents",
+    "ad_vector_chunks",
+    ...(fenced ? ["ad_vector_retirements"] : []),
+  ];
+  if (
+    tables.length &&
+    (version !== (fenced ? 2 : 1) ||
+      tables.length !== names.length ||
+      !tables.every((row) => names.includes(String(row.name))))
+  )
+    indexMismatch();
+  if (!tables.length && version !== 0) indexMismatch();
+  if (tables.length && fenced) {
+    const guards = db
+      .prepare("SELECT sql FROM sqlite_master WHERE type='trigger'")
+      .all();
+    if (
+      guards.length !== retirementTriggers.length ||
+      !retirementTriggers.every((sql) => guards.some((row) => row.sql === sql))
+    )
+      indexMismatch();
+  }
+  return tables.length > 0;
+}
+
 /** Persistent bounded exact cosine search; no extension, network service or approximate index required. */
 export class SqliteVectorStore implements VectorStore {
   private readonly queue = new StoreQueue();
   private closed = false;
+  readonly retire: VectorStore["retire"];
   private constructor(
     private readonly db: DatabaseSync,
     private readonly limits: ReturnType<typeof storeLimits>,
-  ) {}
+    private readonly maxRetiredSources?: number,
+  ) {
+    this.retire =
+      maxRetiredSources === undefined
+        ? undefined
+        : this.retireSource.bind(this);
+  }
 
   /** A dedicated host-owned database in a private directory. Requires Node >=22.13. */
   static async open(
     path: string,
-    options: { maxChunks?: number; maxBytes?: number } = {},
+    options: {
+      maxChunks?: number;
+      maxBytes?: number;
+      retirement?: { maxSources: number };
+    } = {},
   ): Promise<SqliteVectorStore> {
     const limits = storeLimits(options);
+    const maxSources = options.retirement?.maxSources;
+    if (
+      options.retirement !== undefined &&
+      (!Number.isSafeInteger(maxSources) ||
+        maxSources! < 1 ||
+        maxSources! > 1_000_000)
+    )
+      throw new DriverError(
+        "INVALID_CONFIG",
+        "Retirement capacity must be a positive integer of at most one million permanent source markers.",
+      );
     const { path: canonical } = await sqliteFile(path, true, "INDEX");
     let sqlite: typeof import("node:sqlite");
     try {
@@ -46,29 +112,17 @@ export class SqliteVectorStore implements VectorStore {
     }
     const db = new sqlite.DatabaseSync(canonical);
     try {
-      // Fail closed on unrelated databases. No automatic schema migration or index replacement.
-      const tables = db
-        .prepare(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-        )
-        .all();
-      const version = db.prepare("PRAGMA user_version").get()?.user_version;
-      if (
-        tables.length &&
-        (version !== 1 ||
-          tables.length !== 3 ||
-          !tables.every((row) =>
-            [
-              "ad_vector_indexes",
-              "ad_vector_documents",
-              "ad_vector_chunks",
-            ].includes(String(row.name)),
-          ))
-      )
-        indexMismatch();
-      db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON;
-        PRAGMA foreign_keys=ON; PRAGMA busy_timeout=0; PRAGMA trusted_schema=OFF;
-        CREATE TABLE IF NOT EXISTS ad_vector_indexes(corpus TEXT PRIMARY KEY, descriptor TEXT NOT NULL);
+      const fenced = maxSources !== undefined;
+      // Validate before changing an existing database's journal settings, then
+      // recheck either format under the initialization write transaction.
+      existingSchema(db, fenced);
+      db.exec(
+        "PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=0; PRAGMA trusted_schema=OFF;",
+      );
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        const existing = existingSchema(db, fenced);
+        db.exec(`CREATE TABLE IF NOT EXISTS ad_vector_indexes(corpus TEXT PRIMARY KEY, descriptor TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS ad_vector_documents(
           corpus TEXT NOT NULL, namespace TEXT NOT NULL, source_id TEXT NOT NULL,
           revision TEXT NOT NULL, digest TEXT NOT NULL, chunks INTEGER NOT NULL, bytes INTEGER NOT NULL,
@@ -78,8 +132,20 @@ export class SqliteVectorStore implements VectorStore {
           payload TEXT NOT NULL, PRIMARY KEY(corpus, namespace, chunk_id),
           FOREIGN KEY(corpus, namespace, source_id) REFERENCES ad_vector_documents(corpus, namespace, source_id) ON DELETE CASCADE);
         CREATE INDEX IF NOT EXISTS ad_vector_source ON ad_vector_chunks(corpus, namespace, source_id, chunk_id);
-        PRAGMA user_version=1;`);
-      return new SqliteVectorStore(db, limits);
+        `);
+
+        if (fenced) {
+          if (!existing)
+            db.exec(retirementTable + ";" + retirementTriggers.join(";"));
+        }
+        db.exec(`PRAGMA user_version=${fenced ? 2 : 1}`);
+        if (fenced) existingSchema(db, true);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+      return new SqliteVectorStore(db, limits, maxSources);
     } catch (error) {
       db.close();
       throw error;
@@ -183,6 +249,14 @@ export class SqliteVectorStore implements VectorStore {
   ): Promise<void> {
     return this.run(context, () =>
       this.transaction(() => {
+        if (
+          this.maxRetiredSources !== undefined &&
+          this.retirement(scope, document.sourceId)
+        )
+          throw new DriverError(
+            "SOURCE_RETIRED",
+            "This source ID is permanently retired. Select a new immutable source ID.",
+          );
         const old = this.document(scope, document.sourceId);
         if ((old?.digest ?? null) !== expectedDigest) revisionConflict();
         const payloads = chunks.map((chunk) => JSON.stringify(chunk));
@@ -294,6 +368,55 @@ export class SqliteVectorStore implements VectorStore {
         throw error;
       }
     });
+  }
+  private retirement(scope: VectorScope, sourceId: string) {
+    return this.db
+      .prepare(
+        "SELECT revision FROM ad_vector_retirements WHERE corpus=? AND namespace=? AND source_id=?",
+      )
+      .get(scope.corpus, scope.namespace, sourceId);
+  }
+  private async retireSource(
+    scope: VectorScope,
+    sourceId: string,
+    revision: string,
+    context: ExecutionContext,
+  ) {
+    return this.run(context, () =>
+      this.transaction(() => {
+        const old = this.document(scope, sourceId),
+          marker = this.retirement(scope, sourceId);
+        if (
+          (old && old.revision !== revision) ||
+          (marker && marker.revision !== revision)
+        )
+          revisionConflict();
+        if (!marker) {
+          const count = Number(
+            this.db
+              .prepare("SELECT COUNT(*) AS n FROM ad_vector_retirements")
+              .get()!.n,
+          );
+          if (count >= this.maxRetiredSources!)
+            throw new DriverError(
+              "RETIREMENT_FULL",
+              "Permanent source retirement capacity is full. Increase the host limit; retirement markers cannot be evicted.",
+            );
+          this.db
+            .prepare(
+              "INSERT INTO ad_vector_retirements(corpus, namespace, source_id, revision) VALUES(?,?,?,?)",
+            )
+            .run(scope.corpus, scope.namespace, sourceId, revision);
+        }
+        this.db
+          .prepare(
+            "DELETE FROM ad_vector_documents WHERE corpus=? AND namespace=? AND source_id=?",
+          )
+          .run(scope.corpus, scope.namespace, sourceId);
+        context.signal.throwIfAborted();
+        return { retired: true as const, deleted: old !== undefined };
+      }),
+    );
   }
   async delete(
     scope: VectorScope,

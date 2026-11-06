@@ -38,6 +38,7 @@ import {
 } from "./secrets.js";
 import { UsageStatClient, jsonlUsageSink } from "./usagestat.js";
 import { ContextMediaTypeSchema } from "./context-types.js";
+import { RetrievalIdSchema } from "./retrieval-types.js";
 import { validateInputMediaTypes } from "./providers/http.js";
 import { UsageIdSchema, UsageOptionsSchema } from "./usage.js";
 import type { ProviderAdapter } from "./types.js";
@@ -102,6 +103,7 @@ export const HostConfigSchema = z
                   )
                   .max(1000)
                   .optional(),
+                retire: RetrievalIdSchema.array().max(256).optional(),
               })
               .strict()
               .optional(),

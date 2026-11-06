@@ -49,6 +49,8 @@ from .retrieval import (
     RetrievalIndexResult,
     RetrievalDelete,
     RetrievalDeleteResult,
+    RetrievalRetire,
+    RetrievalRetireResult,
 )
 
 from .jobs import JobState, JobSubmit, JobIdentity, JobEventsRequest, JobInfo, JobEventPage
@@ -66,6 +68,8 @@ __all__ += [
     "RetrievalIndexResult",
     "RetrievalDelete",
     "RetrievalDeleteResult",
+    "RetrievalRetire",
+    "RetrievalRetireResult",
 ]
 
 from .ingestion import (

@@ -1,5 +1,5 @@
 """Scoped retrieval over app-authorized sources; vector data stays on the host."""
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, TypeAlias
 from .context import ContextSource, SourceLocation
 from .ingestion import IngestionManifest
 
@@ -67,3 +67,8 @@ class RetrievalDelete(_Corpus):
 
 class RetrievalDeleteResult(RetrievalDelete):
     deleted: bool
+
+RetrievalRetire: TypeAlias = RetrievalDelete
+
+class RetrievalRetireResult(RetrievalDeleteResult):
+    retired: Literal[True]

@@ -40,6 +40,7 @@ export function protocolInfo(
     idempotency?: boolean;
     contextReferences?: boolean;
     retrieval?: boolean;
+    retrievalRetirement?: boolean;
     pdfIngestion?: boolean;
   } = {},
 ): ProtocolInfo {
@@ -69,6 +70,7 @@ export function protocolInfo(
       ...(options.retrieval
         ? ["scoped-retrieval", "retrieval-indexing", "document-ingestion"]
         : []),
+      ...(options.retrievalRetirement ? ["retrieval-retirement"] : []),
       ...(options.pdfIngestion ? ["pdf-ingestion"] : []),
       ...(options.idempotency ? ["idempotency"] : []),
     ],

@@ -197,6 +197,8 @@ let answer = client.run(&request)?;
 
 All clients preserve and validate retrieval metadata, scope, source-manifest relationships and `run.progress` with phase `context`. Runs have no default inactivity timeout or total deadline. Explicit `idleTimeoutMs` includes actual embedding, authorization and vector-scan progress; heartbeat comments do not reset it. Standalone calls have no execution deadline; ingestion also accepts an explicit inactivity timeout. TypeScript/Go accept caller cancellation. Python has [typed sync and asyncio clients](../clients/python/README.md), including async task cancellation and stream context managers. Rust has [native async and optional blocking clients](../clients/rust/README.md): dropping an async future or stream closes its response; blocking streams retain callback cancellation.
 
+For cleanup that must prevent a late index commit from restoring an immutable source, use [permanent source retirement](source-retirement.md). Ordinary deletion does not supply that guarantee.
+
 ## Storage and limits
 
 | Bound                                         | Default / maximum                                           |

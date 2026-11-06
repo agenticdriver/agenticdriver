@@ -580,6 +580,14 @@
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
                 }
+              },
+              "retire": {
+                "maxItems": 256,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                }
               }
             },
             "additionalProperties": false

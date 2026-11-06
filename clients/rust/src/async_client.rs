@@ -2,8 +2,8 @@
 use crate::{
     ingestion, protocol_error, retrieval, validation, DriverError, Error, Event, IngestRequest,
     IngestResult, ProtocolInfo, Provider, Result, RetrievalDelete, RetrievalDeleteResult,
-    RetrievalIndexRequest, RetrievalIndexResult, RetrievalResult, RetrievalSearch, RunRequest,
-    RunResult, PROTOCOL_VERSION,
+    RetrievalIndexRequest, RetrievalIndexResult, RetrievalResult, RetrievalRetire,
+    RetrievalRetireResult, RetrievalSearch, RunRequest, RunResult, PROTOCOL_VERSION,
 };
 use reqwest::{Client as HttpClient, Response};
 use serde::Deserialize;
@@ -163,6 +163,24 @@ impl AsyncAgenticClient {
             return Err(protocol_error(
                 "INVALID_RESPONSE",
                 "Mismatched deletion receipt.",
+            ));
+        }
+        Ok(result)
+    }
+    pub async fn retire_context(&self, request: &RetrievalRetire) -> Result<RetrievalRetireResult> {
+        let result: RetrievalRetireResult = read_json(
+            self.request(
+                "v1/retrieval/retire",
+                Some(&serde_json::to_value(request)?),
+                false,
+            )
+            .await?,
+        )
+        .await?;
+        if !retrieval::retirement_receipt(&result, request) {
+            return Err(protocol_error(
+                "INVALID_RESPONSE",
+                "Invalid retirement receipt.",
             ));
         }
         Ok(result)

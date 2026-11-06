@@ -30,7 +30,7 @@ from ._sessions import valid_session_snapshot, valid_session_delete
 from ._jobs import valid_job, valid_job_page
 from .jobs import JobSubmit, JobIdentity, JobInfo, JobEventsRequest, JobEventPage
 from .models import SessionCreate, SessionIdentity, SessionSnapshot, SessionDeleteResult
-from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result
+from ._retrieval import valid_retrieval, valid_index_result, valid_delete_result, valid_retire_result
 from ._transport import (
     TERMINAL_EVENTS,
     check_version,
@@ -46,6 +46,8 @@ from .retrieval import (
     RetrievalIndexResult,
     RetrievalDelete,
     RetrievalDeleteResult,
+    RetrievalRetire,
+    RetrievalRetireResult,
 )
 from .ingestion import IngestRequest, IngestResult
 from .models import ToolExecutionIdentity, ToolExecutionResult, ToolExecutionReceipt
@@ -267,6 +269,13 @@ class AgenticClient:
                     "The driver returned an invalid deletion receipt.",
                 )
             return cast(RetrievalDeleteResult, result)
+
+    def retire_context(self, request: RetrievalRetire) -> RetrievalRetireResult:
+        with self._request("v1/retrieval/retire", request) as response:
+            result = self._json(response)
+            if not valid_retire_result(result, request):
+                raise DriverError("INVALID_RESPONSE", "The driver returned an invalid retirement receipt.")
+            return cast(RetrievalRetireResult, result)
 
     def submit_job(self, request: JobSubmit) -> JobInfo:
         return self._job_request("submit", request)

@@ -72,6 +72,14 @@ type RetrievalDeleteResult struct {
 	Deleted bool `json:"deleted"`
 }
 
+// Retirement uses the same identity payload with independent permanent authority.
+type RetrievalRetire = RetrievalDelete
+type RetrievalRetireResult struct {
+	RetrievalDelete
+	Deleted bool `json:"deleted"`
+	Retired bool `json:"retired"`
+}
+
 var embeddingModelPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._:/\[\]-]{0,199}$`)
 
 func retrievalValid(data []byte) bool {
@@ -254,6 +262,26 @@ func (c *Client) DeleteContext(ctx context.Context, request RetrievalDelete) (*R
 	var result RetrievalDeleteResult
 	data, _ := json.Marshal(raw)
 	if json.Unmarshal(data, &result) != nil || result.RetrievalDelete != request || !boolValue(raw["deleted"]) {
+		return nil, invalidRetrieval()
+	}
+	return &result, nil
+}
+
+func (c *Client) RetireContext(ctx context.Context, request RetrievalRetire) (*RetrievalRetireResult, error) {
+	response, err := c.request(ctx, "v1/retrieval/retire", request, false)
+	if err != nil {
+		return nil, err
+	}
+	var raw wireObject
+	if err = decode(response, &raw); err != nil {
+		return nil, err
+	}
+	return retirementReceipt(raw, request)
+}
+func retirementReceipt(raw wireObject, request RetrievalRetire) (*RetrievalRetireResult, error) {
+	var result RetrievalRetireResult
+	data, _ := json.Marshal(raw)
+	if json.Unmarshal(data, &result) != nil || result.RetrievalDelete != request || !boolValue(raw["deleted"]) || !result.Retired {
 		return nil, invalidRetrieval()
 	}
 	return &result, nil

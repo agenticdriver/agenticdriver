@@ -45,6 +45,7 @@ import {
   RetrievalSearchSchema,
   RetrievalIndexRequestSchema,
   RetrievalDeleteSchema,
+  RetrievalRetireSchema,
 } from "./retrieval-types.js";
 import { IngestRequestSchema } from "./ingestion-types.js";
 import type { RetrievalOperation } from "./retrieval.js";
@@ -107,7 +108,7 @@ const diagnosticOperations = new Map<string, HostDiagnostic["operation"]>([
   ["/v1/runs", "run"],
   ["/v1/providers", "discovery"],
   ["/v1/protocol", "protocol"],
-  ...["ingest", "index", "search", "delete"].map(
+  ...["ingest", "index", "search", "delete", "retire"].map(
     (part): [string, HostDiagnostic["operation"]] => [
       `/v1/retrieval/${part}`,
       "retrieval",
@@ -341,6 +342,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             idempotency: driver.supportsIdempotency,
             contextReferences: driver.supportsContextReferences,
             retrieval: driver.supportsRetrieval,
+            retrievalRetirement: driver.supportsRetirement,
             pdfIngestion: driver.supportsPdfIngestion,
           }),
         );
@@ -501,6 +503,7 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
           "/v1/retrieval/search": "search",
           "/v1/retrieval/index": "index",
           "/v1/retrieval/delete": "delete",
+          "/v1/retrieval/retire": "retire",
           "/v1/retrieval/ingest": "ingest",
         } as Record<string, RetrievalOperation | "ingest">
       )[req.url ?? ""];
@@ -618,7 +621,9 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
             ? RetrievalSearchSchema
             : retrievalOperation === "index"
               ? RetrievalIndexRequestSchema
-              : RetrievalDeleteSchema;
+              : retrievalOperation === "retire"
+                ? RetrievalRetireSchema
+                : RetrievalDeleteSchema;
       const parsedRetrieval = retrievalOperation
         ? retrievalSchema.safeParse(body)
         : undefined;
@@ -728,10 +733,15 @@ export async function serve(driver: AgenticDriver, options: ServerOptions) {
                     RetrievalIndexRequestSchema.parse(retrievalRequest),
                     runOptions,
                   )
-                : await driver.deleteContext(
-                    RetrievalDeleteSchema.parse(retrievalRequest),
-                    runOptions,
-                  );
+                : retrievalOperation === "retire"
+                  ? await driver.retireContext(
+                      RetrievalRetireSchema.parse(retrievalRequest),
+                      runOptions,
+                    )
+                  : await driver.deleteContext(
+                      RetrievalDeleteSchema.parse(retrievalRequest),
+                      runOptions,
+                    );
         json(res, 200, result);
         return;
       }
@@ -989,6 +999,8 @@ function statusFor(code: string) {
       "OPERATION_UNCERTAIN",
       "TOOL_OUTCOME_UNCERTAIN",
       "SOURCE_CONFLICT",
+      "SOURCE_RETIRED",
+      "RETIREMENT_FULL",
       "CHUNK_CONFLICT",
       "INDEX_INCOMPATIBLE",
     ].includes(code)
@@ -1058,6 +1070,7 @@ function statusFor(code: string) {
       "PDF_ENCRYPTED",
       "PDF_PERMISSIONS",
       "RETRIEVAL_UNAVAILABLE",
+      "RETIREMENT_UNAVAILABLE",
       "NO_RETRIEVAL_EVIDENCE",
     ].includes(code)
   )

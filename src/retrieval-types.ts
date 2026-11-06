@@ -76,6 +76,9 @@ export const RetrievalDeleteSchema = z
   })
   .strict();
 export type RetrievalDelete = z.infer<typeof RetrievalDeleteSchema>;
+/** Same source identity payload; retirement has separate authority and permanent semantics. */
+export const RetrievalRetireSchema = RetrievalDeleteSchema;
+export type RetrievalRetire = z.infer<typeof RetrievalRetireSchema>;
 
 export const RetrievalHitSchema = z
   .object({
@@ -123,6 +126,10 @@ export const RetrievalDeleteResultSchema = RetrievalDeleteSchema.extend({
   deleted: z.boolean(),
 });
 export type RetrievalDeleteResult = z.infer<typeof RetrievalDeleteResultSchema>;
+export const RetrievalRetireResultSchema = RetrievalDeleteResultSchema.extend({
+  retired: z.literal(true),
+});
+export type RetrievalRetireResult = z.infer<typeof RetrievalRetireResultSchema>;
 
 export function validSource(
   source: z.infer<typeof ContextSourceSchema>,

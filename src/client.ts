@@ -79,11 +79,14 @@ import {
   RetrievalResultSchema,
   RetrievalIndexResultSchema,
   RetrievalDeleteResultSchema,
+  RetrievalRetireResultSchema,
   validRetrievalLinks,
   validRetrievalSelection,
   type RetrievalSearch,
   type RetrievalIndexRequest,
   type RetrievalDelete,
+  type RetrievalRetire,
+  type RetrievalRetireResult,
   type RetrievalResult,
   type RetrievalIndexResult,
   type RetrievalDeleteResult,
@@ -602,6 +605,27 @@ export class AgenticClient {
       throw new DriverError(
         "INVALID_RESPONSE",
         "The deletion receipt does not match the requested source.",
+      );
+    return result;
+  }
+  async retireContext(
+    request: RetrievalRetire,
+    options: ClientRequestOptions = {},
+  ): Promise<RetrievalRetireResult> {
+    const result = await this.retrievalRequest(
+      "v1/retrieval/retire",
+      request,
+      RetrievalRetireResultSchema,
+      options.signal,
+    );
+    if (
+      result.corpus !== request.corpus ||
+      result.sourceId !== request.sourceId ||
+      result.revision !== request.revision
+    )
+      throw new DriverError(
+        "INVALID_RESPONSE",
+        "The retirement receipt does not match the requested source.",
       );
     return result;
   }

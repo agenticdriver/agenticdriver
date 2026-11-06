@@ -639,6 +639,56 @@
         }
       }
     },
+    "/v1/retrieval/retire": {
+      "post": {
+        "operationId": "retireContext",
+        "parameters": [
+          { "$ref": "#/components/parameters/ProtocolVersion" },
+          { "$ref": "#/components/parameters/OptionalEvents" }
+        ],
+        "description": "Requires an explicit token corpus/operation grant and application authorization. No automatic retries or execution deadline. Disconnect cancels pending work; reconcile an unacknowledged mutation before replacing it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RetrievalRetire" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scoped retrieval result or source mutation receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrievalRetireResult"
+                }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, validation, capacity, or execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            },
+            "headers": {
+              "AgenticDriver-Version": {
+                "schema": { "const": "1.0" },
+                "description": "The host's selected wire version."
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health",
@@ -1184,7 +1234,12 @@
                 }
               },
               "retrieval": {
-                "default": { "search": [], "index": [], "delete": [] },
+                "default": {
+                  "search": [],
+                  "index": [],
+                  "delete": [],
+                  "retire": []
+                },
                 "type": "object",
                 "properties": {
                   "search": {
@@ -1206,6 +1261,15 @@
                     }
                   },
                   "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "retire": {
                     "default": [],
                     "maxItems": 256,
                     "type": "array",
@@ -1302,7 +1366,12 @@
                 }
               },
               "retrieval": {
-                "default": { "search": [], "index": [], "delete": [] },
+                "default": {
+                  "search": [],
+                  "index": [],
+                  "delete": [],
+                  "retire": []
+                },
                 "type": "object",
                 "properties": {
                   "search": {
@@ -1324,6 +1393,15 @@
                     }
                   },
                   "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "retire": {
                     "default": [],
                     "maxItems": 256,
                     "type": "array",
@@ -1428,7 +1506,12 @@
                 }
               },
               "retrieval": {
-                "default": { "search": [], "index": [], "delete": [] },
+                "default": {
+                  "search": [],
+                  "index": [],
+                  "delete": [],
+                  "retire": []
+                },
                 "type": "object",
                 "properties": {
                   "search": {
@@ -1450,6 +1533,15 @@
                     }
                   },
                   "delete": {
+                    "default": [],
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                    }
+                  },
+                  "retire": {
                     "default": [],
                     "maxItems": 256,
                     "type": "array",
@@ -1576,7 +1668,12 @@
                       }
                     },
                     "retrieval": {
-                      "default": { "search": [], "index": [], "delete": [] },
+                      "default": {
+                        "search": [],
+                        "index": [],
+                        "delete": [],
+                        "retire": []
+                      },
                       "type": "object",
                       "properties": {
                         "search": {
@@ -1598,6 +1695,15 @@
                           }
                         },
                         "delete": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "retire": {
                           "default": [],
                           "maxItems": 256,
                           "type": "array",
@@ -1720,7 +1826,12 @@
                       }
                     },
                     "retrieval": {
-                      "default": { "search": [], "index": [], "delete": [] },
+                      "default": {
+                        "search": [],
+                        "index": [],
+                        "delete": [],
+                        "retire": []
+                      },
                       "type": "object",
                       "properties": {
                         "search": {
@@ -1742,6 +1853,15 @@
                           }
                         },
                         "delete": {
+                          "default": [],
+                          "maxItems": 256,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+                          }
+                        },
+                        "retire": {
                           "default": [],
                           "maxItems": 256,
                           "type": "array",
@@ -5129,6 +5249,48 @@
           }
         },
         "required": ["corpus", "sourceId", "revision"],
+        "additionalProperties": false
+      },
+      "RetrievalRetire": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          }
+        },
+        "required": ["corpus", "sourceId", "revision"],
+        "additionalProperties": false
+      },
+      "RetrievalRetireResult": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$"
+          },
+          "deleted": { "type": "boolean" },
+          "retired": { "type": "boolean", "const": true }
+        },
+        "required": ["corpus", "sourceId", "revision", "deleted", "retired"],
         "additionalProperties": false
       },
       "RetrievalResult": {

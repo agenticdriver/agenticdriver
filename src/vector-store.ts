@@ -1,7 +1,11 @@
 import { setImmediate } from "node:timers/promises";
 import { DriverError, abortable } from "./errors.js";
 import type { ExecutionContext } from "./types.js";
-import type { RetrievalHit, VectorIndex } from "./retrieval-types.js";
+import type {
+  RetrievalHit,
+  RetrievalRetireResult,
+  VectorIndex,
+} from "./retrieval-types.js";
 
 export interface VectorScope {
   corpus: string;
@@ -47,6 +51,13 @@ export interface VectorStore {
     minScore: number,
     context: ExecutionContext,
   ): Promise<VectorSearchResult>;
+  /** Resolves only after a persistent fence and deletion commit; ordinary deletion is unchanged. */
+  retire?(
+    scope: VectorScope,
+    sourceId: string,
+    revision: string,
+    context: ExecutionContext,
+  ): Promise<Pick<RetrievalRetireResult, "retired" | "deleted">>;
   delete(
     scope: VectorScope,
     sourceId: string,

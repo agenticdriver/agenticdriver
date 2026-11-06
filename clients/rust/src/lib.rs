@@ -66,7 +66,8 @@ mod validation;
 pub use events::{EventPayload, ProgressPhase, ToolCall};
 pub use retrieval::{
     RetrievalChunk, RetrievalDelete, RetrievalDeleteResult, RetrievalHit, RetrievalIndexRequest,
-    RetrievalIndexResult, RetrievalRequest, RetrievalResult, RetrievalSearch, VectorIndex,
+    RetrievalIndexResult, RetrievalRequest, RetrievalResult, RetrievalRetire,
+    RetrievalRetireResult, RetrievalSearch, VectorIndex,
 };
 
 pub type Result<T> = std::result::Result<T, Error>;

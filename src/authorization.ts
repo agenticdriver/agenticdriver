@@ -21,8 +21,9 @@ export const AccessPolicySchema = z
         search: RetrievalIdSchema.array().max(256).default([]),
         index: RetrievalIdSchema.array().max(256).default([]),
         delete: RetrievalIdSchema.array().max(256).default([]),
+        retire: RetrievalIdSchema.array().max(256).default([]),
       })
-      .default({ search: [], index: [], delete: [] }),
+      .default({ search: [], index: [], delete: [], retire: [] }),
   })
   .refine(
     (policy) =>

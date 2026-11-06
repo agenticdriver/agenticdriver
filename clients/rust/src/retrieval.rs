@@ -100,6 +100,16 @@ pub struct RetrievalDeleteResult {
     pub deleted: bool,
 }
 
+/// The identity payload is shared; retirement has separate permanent authority.
+pub type RetrievalRetire = RetrievalDelete;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RetrievalRetireResult {
+    #[serde(flatten)]
+    pub request: RetrievalRetire,
+    pub deleted: bool,
+    pub retired: bool,
+}
+
 pub(crate) fn valid(value: &Value) -> bool {
     use crate::context::{bounded, digest, id, source_valid};
     let (Some(index), Some(hits)) = (
@@ -243,4 +253,42 @@ pub(crate) fn receipt(value: &Value, corpus: &str, id: &str, revision: &str) -> 
         && value
             .get("ingestion")
             .is_none_or(|v| crate::ingestion::valid(v) && v["chunks"] == value["chunks"])
+}
+
+#[cfg(any(test, feature = "blocking", feature = "async"))]
+pub(crate) fn retirement_receipt(
+    result: &RetrievalRetireResult,
+    request: &RetrievalRetire,
+) -> bool {
+    &result.request == request && result.retired
+}
+
+#[cfg(test)]
+mod retirement_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn retirement_requires_an_explicit_fence_for_the_exact_source() {
+        let request = RetrievalRetire {
+            corpus: "library".into(),
+            source_id: "paper-immutable".into(),
+            revision: "revision-1".into(),
+        };
+        let ordinary_delete = json!({"corpus":"library","sourceId":"paper-immutable","revision":"revision-1","deleted":false});
+        assert!(serde_json::from_value::<RetrievalRetireResult>(ordinary_delete.clone()).is_err());
+        let mut fenced = ordinary_delete;
+        fenced["retired"] = json!(true);
+        let result: RetrievalRetireResult = serde_json::from_value(fenced.clone()).unwrap();
+        assert!(retirement_receipt(&result, &request));
+        let other = RetrievalRetire {
+            corpus: request.corpus.clone(),
+            source_id: request.source_id.clone(),
+            revision: "other-revision".into(),
+        };
+        assert!(!retirement_receipt(&result, &other));
+        fenced["retired"] = json!(false);
+        let result: RetrievalRetireResult = serde_json::from_value(fenced).unwrap();
+        assert!(!retirement_receipt(&result, &request));
+    }
 }

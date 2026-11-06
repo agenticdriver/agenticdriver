@@ -35,6 +35,7 @@ import type {
   RetrievalSearch,
   RetrievalIndexRequest,
   RetrievalDelete,
+  RetrievalRetire,
   RetrievalResult,
 } from "./retrieval-types.js";
 import { Ajv, type ValidateFunction } from "ajv";
@@ -278,6 +279,9 @@ export class AgenticDriver {
   get supportsContextReferences(): boolean {
     return this.contextOptions.resolve !== undefined;
   }
+  get supportsRetirement(): boolean {
+    return this.options.retrieval?.supportsRetirement ?? false;
+  }
   get supportsRetrieval(): boolean {
     return this.options.retrieval !== undefined;
   }
@@ -388,6 +392,15 @@ export class AgenticDriver {
   ) {
     return this.retrieve(
       (service, context) => service.index(request, context),
+      options,
+    );
+  }
+  retireContext(
+    request: RetrievalRetire,
+    options: RunOptions & { reportProgress?: () => void } = {},
+  ) {
+    return this.retrieve(
+      (service, context) => service.retire(request, context),
       options,
     );
   }
