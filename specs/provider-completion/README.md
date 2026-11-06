@@ -32,10 +32,11 @@ reviewed native runtime still lacks a supported disabled-idle contract. Gemini/x
 API execution needs an explicitly available selected credential. Broader platform
 qualification and consumer upgrades remain separate from implementation.
 
-Real active-inference cancellation and approval-denial qualification remains open:
-the 2026-11-06 API attempt lost observations to a receipt-storage quota failure and
-was not retried. Future qualifiers must persist request boundaries before moving
-on and use a filesystem that enforces private ownership and permissions.
+Real OpenAI interactive denial and active response cancellation now passed on the
+selected API account/model. Antigravity also passed active SDK-stream cancellation
+and local process cleanup. Earlier quota/step-limit/harness failures remain
+separate evidence; their accepted or uncertain requests were not replayed. These
+checks do not qualify other provider/account routes or remote billing cessation.
 
 Antigravity's old advertised-tool mismatch is preserved as historical evidence,
 not a blocker for the qualified replacement gate. The new route remains text-only

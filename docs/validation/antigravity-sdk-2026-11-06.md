@@ -76,8 +76,8 @@ model evidence.
 
 This qualifies the recorded text workflow and native-action rejection on this
 Linux route. It does not qualify application tools, native session continuation,
-images/PDF inputs, other platforms/runtimes, active-inference cancellation or
-hostile-tenant OS isolation. User/project customizations are isolated, while the
+images/PDF inputs, other platforms/runtimes or hostile-tenant OS isolation.
+The separate cancellation follow-up below records its narrower actual scope. User/project customizations are isolated, while the
 native runtime and execution host remain trusted. No default model deadline is
 added; print timeout stays disabled. Actual billing cost is unknown.
 
@@ -87,3 +87,15 @@ Durable event journal SHA-256:
 `b69863ec945144c0e2a883cd3c86d355c44c38a76b5877a7d57c923f3f9a1aec`.
 Earlier unverified harness receipt SHA-256:
 `44ee61c33d21445ddca3bfe42b1fb0adb4128d4745505fe9c51454bfe7b75db3`.
+
+## Active cancellation follow-up
+
+The same installed archive later ran a distinct long email-workspace acceptance
+plan and cancelled immediately after the first actual SDK text delta. Three owned
+native processes were present at abort. The SDK emitted `run.cancelled`; after
+stream completion no owned native process remained. The remaining temporary
+operation directory disappeared during a 269 ms cleanup observation. This is
+local process/directory cleanup evidence, not proof of remote compute cessation.
+The cancelled step reported no complete usage, so tokens and billing remain
+unknown. There was no retry. Private receipt SHA-256:
+`85e89f5d4a836a87bcdd94f5b52d00d1c66d55de959b6debf8c35e2e8d84d9b6`.
