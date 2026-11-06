@@ -3,7 +3,7 @@ import {
   ContextMediaTypeSchema,
   type ContextMediaType,
 } from "../context-types.js";
-import { DriverError } from "../errors.js";
+import { abortable, DriverError } from "../errors.js";
 import { readLimited, secureBaseUrl } from "../security.js";
 import { readSse } from "../client.js";
 import { fetchWithSafeRetries } from "./retry.js";
@@ -95,10 +95,15 @@ export function streamTransport(
     retry?: RetryPolicy,
   ): Promise<unknown> => {
     const { signal } = context;
-    const key =
-      typeof options.apiKey === "function"
-        ? await options.apiKey()
-        : options.apiKey;
+    signal.throwIfAborted();
+    const key = await abortable(
+      Promise.resolve(
+        typeof options.apiKey === "function"
+          ? options.apiKey()
+          : options.apiKey,
+      ),
+      signal,
+    );
     if (!key)
       throw new DriverError(
         "AUTH_REQUIRED",

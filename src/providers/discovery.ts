@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { abortable } from "../errors.js";
 import { readLimited, secureBaseUrl } from "../security.js";
 import type { ProviderInspection } from "../types.js";
 import type { ApiProviderOptions } from "./http.js";
@@ -46,10 +47,15 @@ export function apiInspection(
   }: {
     signal: AbortSignal;
   }): Promise<ProviderInspection> => {
-    const key =
-      typeof options.apiKey === "function"
-        ? await options.apiKey()
-        : options.apiKey;
+    signal.throwIfAborted();
+    const key = await abortable(
+      Promise.resolve(
+        typeof options.apiKey === "function"
+          ? options.apiKey()
+          : options.apiKey,
+      ),
+      signal,
+    );
     signal.throwIfAborted();
     if (!key) return { code: "AUTH_REQUIRED" };
     const headers: Record<string, string> = { Accept: "application/json" };

@@ -61,3 +61,19 @@ Gemini/xAI API execution still needs an available explicitly selected credential
 This development pass is not a release or complete consuming-app acceptance.
 
 [Choices](choices.md) record the tradeoffs behind this slice.
+
+## Current follow-up
+
+Credential-resolution cancellation is covered for API execution and discovery.
+Installed multi-language package and pure contract checks passed against the
+consolidated working checkout, including Rust 1.89 feature combinations. Fresh
+npm installation and private SQLite lifecycle checks passed on the host filesystem.
+The 2026-11-06 real denial/active-cancellation attempt lost its observations to a
+receipt-storage quota failure and was not retried; its outcomes remain unknown.
+Future real qualifiers must persist request boundaries before proceeding. Native
+Antigravity/Grok upstream controls remain blockers after current read-only checks.
+The installed Antigravity 1.4.4 check still advertised 60 tools without a prompt;
+the latest 1.5.1 archive matched the prior recorded hash, but a new extraction
+failed under temporary storage pressure and was not counted as execution.
+Grok's reviewed source revision remains unchanged. Private research receipt
+SHA-256: `9c50cbbe5cc5afb71b664619ec70e5f54485394557b891b18ef71c3fe67d6411`.

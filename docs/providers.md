@@ -22,8 +22,9 @@ application or host; this SDK does not silently pick a model or change billing m
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
-a secrets manager. Options also include `id`, `name`, `models`, and an optional
-server-owned `baseUrl`. `models` is an allowlist, not just presentation metadata.
+a secrets manager. Execution and catalog discovery stop waiting for that resolver
+when cancelled; the resolver owns stopping its underlying work. Options also
+include `id`, `name`, `models`, and an optional server-owned `baseUrl`. `models` is an allowlist, not just presentation metadata.
 CLI options include a trusted `binary` and absolute `accountDirectory`; remote
 requests cannot choose binaries, arguments, environment variables, or directories.
 

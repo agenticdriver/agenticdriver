@@ -62,3 +62,12 @@ API feature checks belong to the current operation's private home and caller
 signal, not a cached promise holding another operation's environment. Version
 and help subprocesses receive no API credential. This also keeps first-call
 cancellation on the existing process-reaping and profile-cleanup path.
+
+## Sound: cancellation includes host credential waits
+
+API execution and discovery use the existing abortable owner while resolving a
+host credential. Cancellation stops the adapter wait before provider dispatch;
+the host resolver still owns its underlying work. This keeps a stalled secret
+service from retaining an adapter operation after its caller has cancelled.
+Pure resolver regressions fail on the original wait without network or model
+substitution.

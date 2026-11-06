@@ -16,6 +16,10 @@ usage records or provider calls.
 The built-in store uses a dedicated SQLite database in a private, host-owned
 directory and requires Node 22.13+. It commits before acknowledging submission
 or advancing execution past an event. It does not install a database service.
+The filesystem must preserve private ownership and permissions: a shared mount
+that keeps reporting permissive modes after `chmod` cannot hold this store. Use
+a private host data directory on a filesystem that enforces those permissions;
+do not weaken storage checks to accommodate the mount.
 
 ```ts
 import { AgenticDriver, SqliteJobStore } from "@agenticdriver/sdk";
