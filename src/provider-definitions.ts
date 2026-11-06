@@ -46,10 +46,11 @@ const definitions: ProviderDefinition[] = [
     name: "Claude Code",
     category: "native",
     protocol: "Claude Code CLI",
-    description: "Connect an existing official Claude Code account.",
-    methods: [existingSession],
+    description:
+      "Connect Claude Code with an existing sign-in or explicit API billing.",
+    methods: [existingSession, ...apiMethods],
     requirements:
-      "Install Claude Code and sign in through its official runtime on this host first. Account discovery is qualified against 2.1.282; a model listing is not a live execution test. Subscription use in third-party products is subject to the provider's supported integration terms.",
+      "Install the qualified Claude Code 2.1.282 runtime on this host. Choose an existing sign-in or a separate API-key connection; saving does not test a model. Account discovery is qualified against 2.1.282; a model listing is not a live execution test. Subscription use in third-party products is subject to the provider's supported integration terms.",
     docsUrl: "https://code.claude.com/docs/en/agent-sdk/overview",
   },
   {

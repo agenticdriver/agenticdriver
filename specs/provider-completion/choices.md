@@ -55,8 +55,8 @@ receives an empty API-key environment. Actual zero-prompt native checks observed
 both the intended authentication method and owned MCP isolation. The separate
 installed application receipt demonstrates execution without repairing native
 subscription access. Usage stays `cli-report`, with `authMode: api-key` and
-native cost-estimate limitations. Host/factory/CLI support ships first; a guided
-setup method remains a separate interface task.
+native cost-estimate limitations. Guided setup uses the existing write-only host credential flow and removes
+subscription-profile fields when API billing is selected.
 
 API feature checks belong to the current operation's private home and caller
 signal, not a cached promise holding another operation's environment. Version

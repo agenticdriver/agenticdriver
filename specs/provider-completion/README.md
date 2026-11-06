@@ -25,7 +25,7 @@ The existing four-language clients and transport remain the execution contract.
    An explicit factory credential or host `apiKeyRef` selects an isolated fresh
    native home, never the subscription profile. API-key authentication and owned
    MCP controls passed before the separately recorded real installed run.
-   Guided setup does not offer this method yet. Direct API-provider acceptance
+   Guided setup offers these credential choices. Direct API-provider acceptance
    has separate receipts and content-review limits.
 
 ## Authority and verification
@@ -54,8 +54,7 @@ in all four languages; Anthropic content acceptance remains partial. See the
 [API evidence](../../docs/validation/api-tools-2026-11-05.md) and
 [native evidence](../../docs/validation/claude-tools-2026-11-05.md).
 
-The selected Prometheus subscription profile remains signed out. Guided native
-API setup, active provider cancellation/real denial qualification, broader
+The selected Prometheus subscription profile remains signed out. Active provider cancellation/real denial qualification, broader
 platform qualification and consumer upgrades remain separate work. Continue
 native Google/Grok only when their actual controls satisfy the SDK contract;
 Gemini/xAI API execution still needs an available explicitly selected credential.

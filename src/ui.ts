@@ -858,13 +858,35 @@ export function registerProviderPanel(
       }
       if (action === "setup-method") {
         this.setupMethod = button.dataset.method!;
+        if (this.draft?.kind === "claude-code") {
+          if (
+            this.setupMethod === "existing-session" &&
+            "apiKeyRef" in this.draft
+          ) {
+            const { apiKeyRef: _credential, ...session } = this.draft;
+            this.draft = session;
+          } else if (
+            ["api-key", "secret-reference"].includes(this.setupMethod)
+          ) {
+            const connection = { ...this.draft };
+            if ("accountDirectory" in connection)
+              delete connection.accountDirectory;
+            this.draft = {
+              ...connection,
+              apiKeyRef: { env: "ANTHROPIC_API_KEY" },
+            };
+          }
+        }
         if (
           this.setupMethod === "api-key" &&
           this.draft &&
           "apiKeyRef" in this.draft
         )
           this.draft.apiKeyRef = {
-            env: keyEnv[this.draft.kind] ?? "PROVIDER_API_KEY",
+            env:
+              this.draft.kind === "claude-code"
+                ? "ANTHROPIC_API_KEY"
+                : (keyEnv[this.draft.kind] ?? "PROVIDER_API_KEY"),
           };
         this.apiKey = "";
         this.render();

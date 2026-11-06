@@ -40,7 +40,7 @@ or the existing async secret resolver. A host config uses `kind: "claude-code"`
 with `apiKeyRef` instead of `accountDirectory`. The CLI equivalent is
 `init --provider claude-code --api-key-env ANTHROPIC_API_KEY`. Use a separate
 provider ID/account binding; management rejects changing an existing instance's
-billing mode. The guided setup does not yet offer this additional method.
+billing mode. Guided setup offers the same explicit API-key and host-credential choices.
 
 Each operation receives a fresh private native home, `--bare`, and only its
 explicit API credential. Native authentication must report the API-key method
