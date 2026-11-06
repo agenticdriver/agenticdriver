@@ -77,3 +77,12 @@ the latest 1.5.1 archive matched the prior recorded hash, but a new extraction
 failed under temporary storage pressure and was not counted as execution.
 Grok's reviewed source revision remains unchanged. Private research receipt
 SHA-256: `9c50cbbe5cc5afb71b664619ec70e5f54485394557b891b18ef71c3fe67d6411`.
+
+## Local Antigravity execution
+
+A separately authorized direct CLI brand run succeeded with the existing native
+profile and exact `gemini-3.8-flash-low`, with reported usage and no observed tool
+calls. The same installed binary subsequently passed model/agent/strict selection
+but still advertised 60 tools in the SDK readiness probe. This closes the local
+model-execution unknown; SDK adapter enforcement remains open. See the
+[actual local evidence](../../docs/validation/antigravity-local-2026-11-06.md).

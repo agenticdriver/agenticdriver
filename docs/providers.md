@@ -1,12 +1,13 @@
 # Provider adapters
 
-The selected **Local Antigravity sign-in** is confirmed. Its 1.2.7 headless
-initialization still advertises native tools despite the requested empty tool
-list, so an Antigravity SDK adapter and live application certification remain
-pending. See the [readiness evidence and no-prompt check](validation/antigravity-2026-09-21.md).
-This limitation does not require signing in again or switching to API billing.
+Local Antigravity completed a real brand prompt on its existing native profile.
+The [current local execution evidence](validation/antigravity-local-2026-11-06.md)
+records the model, binary, usage and separate SDK readiness result. The restricted
+SDK adapter remains blocked by an advertised native-tool mismatch; successful CLI
+execution does not establish that boundary. No new sign-in or API billing
+fallback is needed for the recorded local route.
 
-Documentation reviewed on 2026-09-21. Model IDs are deliberately supplied by the
+Model IDs are deliberately supplied by the
 application or host; this SDK does not silently pick a model or change billing modes.
 
 | Factory                                 | Instance default    | Authentication                        | Application tool loop                                 |
