@@ -71,3 +71,20 @@ the host resolver still owns its underlying work. This keeps a stalled secret
 service from retaining an adapter operation after its caller has cancelled.
 Pure resolver regressions fail on the original wait without network or model
 substitution.
+
+## Antigravity: execution denial replaces catalog absence as the boundary
+
+The advertised tool catalog is not an execution authority. The text adapter uses
+owned deny-all pre-tool hooks and native strict resource rules in an isolated
+configuration. It first proves a blocked control turn in the same process before
+sending application content. That proof must include zero model usage, the owned
+hook nonce and the version of the mounted executable. Owned helpers, settings,
+configuration and the phase file are read-only inside the native process view;
+provider credentials remain in the selected host profile through read-only mounts.
+
+Post-invocation termination limits the loop, but does not prevent tools: the
+actual write-canary trace ran its pre-tool denial before the post-invocation hook.
+The adapter rejects native tool steps and advertises no application-tool support.
+An empty catalog is no longer the proposed guard, and a successful native answer
+alone is not proof of this replacement boundary. Installed SDK acceptance and an
+independent review remain required before shipping it.

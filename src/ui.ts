@@ -86,6 +86,7 @@ const labels: Record<string, string> = {
   codex: "Codex",
   "claude-code": "Claude Code",
   "gemini-cli": "Gemini CLI",
+  antigravity: "Antigravity",
   openai: "OpenAI API",
   anthropic: "Anthropic API",
   gemini: "Gemini API",
@@ -94,7 +95,7 @@ const labels: Record<string, string> = {
   "openai-compatible": "Compatible API",
 };
 const native = (kind: string) =>
-  ["codex", "claude-code", "gemini-cli"].includes(kind);
+  ["codex", "claude-code", "gemini-cli", "antigravity"].includes(kind);
 const categories: Record<string, string> = {
   native: "Native account",
   api: "API account",

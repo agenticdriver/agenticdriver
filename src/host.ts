@@ -20,6 +20,7 @@ import { FileOperationStore } from "./operations.js";
 import { isLoopback, secureBaseUrl } from "./security.js";
 import {
   anthropic,
+  antigravity,
   claudeCode,
   codex,
   gemini,
@@ -436,9 +437,12 @@ export function configuredProviders(
         p.kind
       ](values);
     }
-    return { codex, "claude-code": claudeCode, "gemini-cli": geminiCli }[
-      p.kind
-    ]({
+    return {
+      codex,
+      "claude-code": claudeCode,
+      "gemini-cli": geminiCli,
+      antigravity,
+    }[p.kind]({
       ...shared,
       binary: p.binary,
       ...(p.kind === "codex" || p.kind === "claude-code"

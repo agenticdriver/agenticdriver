@@ -124,7 +124,7 @@
     "test:python": "python3 scripts/test-clients.py --python-only",
     "test:rust": "python3 scripts/test-clients.py --rust-only",
     "test:package": "node scripts/test-package.mjs",
-    "check:antigravity": "tsx scripts/check-antigravity.ts",
+    "check:antigravity": "npm run build && tsx scripts/check-antigravity.ts",
     "protocol": "tsx scripts/protocol.ts",
     "format": "prettier --write src tests examples protocol docs README.md package.json tsconfig*.json",
     "prepack": "npm run build",

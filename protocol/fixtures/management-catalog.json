@@ -4,6 +4,7 @@
   "supportedKinds": [
     "codex",
     "claude-code",
+    "antigravity",
     "gemini-cli",
     "openai",
     "anthropic",
@@ -62,6 +63,24 @@
       ],
       "requirements": "Install the qualified Claude Code 2.1.282 runtime on this host. Choose an existing sign-in or a separate API-key connection; saving does not test a model. Account discovery is qualified against 2.1.282; a model listing is not a live execution test. Subscription use in third-party products is subject to the provider's supported integration terms.",
       "docsUrl": "https://code.claude.com/docs/en/agent-sdk/overview"
+    },
+    {
+      "kind": "antigravity",
+      "name": "Antigravity",
+      "category": "native",
+      "protocol": "Antigravity CLI",
+      "description": "Use an existing Antigravity sign-in for isolated text generation.",
+      "methods": [
+        {
+          "id": "existing-session",
+          "label": "Use an existing sign-in",
+          "description": "Use the official runtime's signed-in account on this host. Credentials stay with that runtime. Saving settings does not start sign-in or test a model.",
+          "interaction": "external",
+          "credentialOwner": "native-runtime"
+        }
+      ],
+      "requirements": "Requires qualified Antigravity CLI 1.5.1 and Bubblewrap on Linux x64. Native actions are blocked; application tools are unavailable. Existing native credentials stay on this host. Saving does not execute a model.",
+      "docsUrl": "https://antigravity.google/docs/cli/headless/"
     },
     {
       "kind": "gemini-cli",

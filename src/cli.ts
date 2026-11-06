@@ -44,7 +44,7 @@ run reads stdin when --input is omitted, and accepts --url, --token-id,
 and provider retries are disabled by default. --json streams JSONL events for run.
 
 Providers: openai, anthropic, gemini, xai, xai-responses, openai-compatible, codex,
-claude-code and gemini-cli.
+claude-code, gemini-cli and antigravity.
 
 --config overrides AGENTICDRIVER_CONFIG and the OS user configuration directory.
 --help shows this help; --version shows the installed package version.
@@ -171,7 +171,9 @@ async function initialize(path: string, values: Values) {
     "xai-responses",
     "openai-compatible",
   ].includes(kind);
-  const cli = ["codex", "claude-code", "gemini-cli"].includes(kind);
+  const cli = ["codex", "claude-code", "gemini-cli", "antigravity"].includes(
+    kind,
+  );
   if (
     (!api && !nativeApi && values["api-key-env"]) ||
     (!api && values["base-url"]) ||

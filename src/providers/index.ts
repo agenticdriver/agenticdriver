@@ -10,3 +10,5 @@ export type {
   CodexProviderOptions,
   ClaudeCodeProviderOptions,
 } from "./local-cli.js";
+
+export { antigravity } from "./antigravity.js";

@@ -229,7 +229,10 @@
                   "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/\\[\\]-]{0,199}$"
                 }
               },
-              "kind": { "type": "string", "const": "gemini-cli" },
+              "kind": {
+                "type": "string",
+                "enum": ["gemini-cli", "antigravity"]
+              },
               "accountDirectory": { "type": "string", "minLength": 1 },
               "binary": { "type": "string", "minLength": 1 }
             },

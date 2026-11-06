@@ -54,6 +54,18 @@ const definitions: ProviderDefinition[] = [
     docsUrl: "https://code.claude.com/docs/en/agent-sdk/overview",
   },
   {
+    kind: "antigravity",
+    name: "Antigravity",
+    category: "native",
+    protocol: "Antigravity CLI",
+    description:
+      "Use an existing Antigravity sign-in for isolated text generation.",
+    methods: [existingSession],
+    requirements:
+      "Requires qualified Antigravity CLI 1.5.1 and Bubblewrap on Linux x64. Native actions are blocked; application tools are unavailable. Existing native credentials stay on this host. Saving does not execute a model.",
+    docsUrl: "https://antigravity.google/docs/cli/headless/",
+  },
+  {
     kind: "gemini-cli",
     name: "Gemini CLI",
     category: "native",

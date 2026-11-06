@@ -36,7 +36,7 @@ const api = z
 const cli = z
   .object({
     ...common,
-    kind: z.literal("gemini-cli"),
+    kind: z.enum(["gemini-cli", "antigravity"]),
     accountDirectory: z.string().min(1).optional(),
     binary: z.string().min(1).optional(),
   })

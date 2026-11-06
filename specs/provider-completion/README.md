@@ -86,3 +86,12 @@ calls. The same installed binary subsequently passed model/agent/strict selectio
 but still advertised 60 tools in the SDK readiness probe. This closes the local
 model-execution unknown; SDK adapter enforcement remains open. See the
 [actual local evidence](../../docs/validation/antigravity-local-2026-11-06.md).
+
+## Antigravity replacement boundary in progress
+
+A real isolated hook spike reused the selected sign-in without copying credentials,
+completed an email draft and denied a requested brand-brief file write before any
+file appeared. Implement the text-only native factory and existing host/setup
+contracts around that owner. Verify zero-usage startup proof, read-only controls,
+explicit model selection, native-action rejection and process cleanup against a
+fresh installed package. Run independent boundary review before publication.
