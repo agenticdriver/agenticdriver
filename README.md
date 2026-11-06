@@ -45,8 +45,8 @@ for the exact provider, model, tool mode and operating system exercised.
 - API adapters for OpenAI, Anthropic, Gemini, xAI/Grok, and compatible endpoints.
 - A [provider extension kit](docs/provider-extensions.md) with pinned host registration, an independent endpoint adapter example.
 - Optional [operational diagnostics and OpenTelemetry](docs/diagnostics.md), with content redaction, bounded export and no additional usage backend.
-- Text adapters for installed Codex, Claude Code, and Gemini CLI sessions, plus
-  an opt-in [Codex application-tool bridge](docs/native-tools.md).
+- Text adapters for installed Codex, Claude Code, Gemini CLI and qualified
+  Linux Antigravity sessions, plus opt-in [Codex and Claude application tools](docs/native-tools.md).
 - A bounded model/tool/result loop, tool argument validation, host and interactive application approvals,
   validated JSON output, optional inactivity timeouts, and cancellation.
 - A Node.js execution host with HTTPS, bearer authentication, provider/tool

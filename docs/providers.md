@@ -1,11 +1,9 @@
 # Provider adapters
 
-Local Antigravity completed a real brand prompt on its existing native profile.
-The [current local execution evidence](validation/antigravity-local-2026-11-06.md)
-records the model, binary, usage and separate SDK readiness result. The restricted
-SDK adapter remains blocked by an advertised native-tool mismatch; successful CLI
-execution does not establish that boundary. No new sign-in or API billing
-fallback is needed for the recorded local route.
+Development source supports isolated Antigravity text execution on Linux x64.
+The [installed SDK qualification](validation/antigravity-sdk-2026-11-06.md)
+records the real native account route, startup gate, model usage and rejected
+native action. Application tools remain unavailable for this adapter.
 
 Model IDs are deliberately supplied by the
 application or host; this SDK does not silently pick a model or change billing modes.
@@ -21,6 +19,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
 | `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased opt-in MCP tools on qualified Linux x64       |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
+| `antigravity()` (unreleased) | `antigravity` | Existing native Antigravity sign-in | Text only; owned native-action denial on qualified Linux x64 |
 
 An API key may be a string or an async credential resolver, so a host can integrate
 a secrets manager. Execution and catalog discovery stop waiting for that resolver
@@ -32,6 +31,42 @@ requests cannot choose binaries, arguments, environment variables, or directorie
 Custom local or enterprise integrations can use the [provider extension kit](provider-extensions.md).
 It supplies a versioned construction contract, trusted host registration and
 real service integration without changes to the runtime or language clients.
+
+## Antigravity native text
+
+`antigravity()` uses the selected existing native profile with qualified CLI
+**1.5.1** and Bubblewrap on **Linux x64**. Host JSON and CLI init use provider kind
+`antigravity`; guided setup offers the existing-sign-in method and uses the shared
+provider-icons library. Supply an absolute trusted `binary` or use host PATH
+lookup. `accountDirectory` defaults to `~/.gemini/antigravity-cli` and selects the
+native profile, not application data. No API key or alternate account is supplied.
+Missing sign-in reports `CLI_AUTH_REQUIRED`.
+
+Each operation gets a private home and empty workspace. The existing native auth
+state is mounted read-only; inherited user/project hooks, MCP and plugins are not
+loaded. Owned hooks/settings/control files are read-only inside the native view.
+A blocked control turn must prove zero model usage, the owned hook nonce and the
+mounted binary version before application content is sent. Native strict resource
+rules and a deny-all pre-tool hook block actions; any native tool event fails the
+SDK run. The advertised catalog may still list tools and is not an execution grant.
+
+This is a text adapter: no SDK application tools, images/PDF input or native
+session continuation. Portable application history is supplied as text. Native
+post-invocation termination bounds the native loop; it does not replace the
+pre-tool denial. Usage is `cli-report`; cost and subscription charge are unknown.
+The native print timeout is disabled; only startup/catalog checks are bounded.
+Use the existing SDK cancellation and explicit inactivity controls for runs.
+
+The temporary filesystem must enforce private ownership and permissions. Check
+this host without model execution using:
+
+```sh
+npm run check:antigravity -- --binary /absolute/path/to/agy --model gemini-3.8-flash-low
+```
+
+This command exercises the same production startup gate and closes before the
+application turn. It does not certify a model response. The native runtime and
+host remain trusted components; this is not hostile-tenant OS isolation.
 
 ## Explicit Claude native API billing
 

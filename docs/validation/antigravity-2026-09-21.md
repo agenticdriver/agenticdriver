@@ -40,7 +40,7 @@ advertised-capability mismatch, not evidence that a tool executed or escaped
 isolation.
 
 The sanitized event is in
-[the regression fixture](../../tests/fixtures/antigravity-1.2.7-init.json).
+[the regression fixture](https://github.com/agenticdriver/agenticdriver/blob/6b4f3141b3ed28e34a51d3dd298b906ffafa0f81/tests/fixtures/antigravity-1.2.7-init.json).
 The vendor tracker reports the same mismatch on earlier versions; our result
 independently reproduces it on 1.2.7. We cannot treat the requested empty tool
 list as an enforceable boundary from this evidence.
@@ -88,7 +88,14 @@ remained open at the check. AD-052 stays open; an existing sign-in does not reso
 this advertised-capability mismatch. No alternate account or API billing mode
 was substituted.
 
-## Reproduce without inference
+## Historical empty-catalog probe
+
+This section records the original probe contract. Current development source
+uses an [owned execution gate](antigravity-sdk-2026-11-06.md); the current
+`check:antigravity` command checks that production boundary. Reproducing the
+original output requires its recorded historical SDK source.
+
+### Original command
 
 From this SDK checkout on Linux with Bubblewrap installed:
 

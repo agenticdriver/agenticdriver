@@ -85,6 +85,7 @@ provider credentials remain in the selected host profile through read-only mount
 Post-invocation termination limits the loop, but does not prevent tools: the
 actual write-canary trace ran its pre-tool denial before the post-invocation hook.
 The adapter rejects native tool steps and advertises no application-tool support.
-An empty catalog is no longer the proposed guard, and a successful native answer
-alone is not proof of this replacement boundary. Installed SDK acceptance and an
-independent review remain required before shipping it.
+An empty catalog is no longer the guard, and a successful native answer alone is
+not proof of this replacement boundary. Independent review and the installed SDK
+email/native-write qualification passed; the actual receipt and its limits live
+in [the execution evidence](../../docs/validation/antigravity-sdk-2026-11-06.md).

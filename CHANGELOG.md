@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added isolated Linux x64 Antigravity 1.5.1 text execution using existing native sign-in, owned startup proof and native-action denial; host/CLI/setup use `antigravity`.
+
 - Preserve Anthropic's initial tool arguments when a streaming JSON fragment is empty, allowing valid zero-argument application tools to execute.
 
 - Add opt-in Claude Code application-tool proposals through the existing SDK approval/tool loop, with explicit restricted MCP ownership and portable tool-result continuation.
