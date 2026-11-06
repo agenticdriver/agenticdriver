@@ -12,7 +12,7 @@ import type {
 import type { CodexProviderOptions } from "./local-cli.js";
 import { cliEnvironment, runProcess } from "./cli-process.js";
 import { codexCliFailure } from "./codex-cli-errors.js";
-import { codexMcpBridge } from "./codex-mcp-bridge.js";
+import { nativeMcpBridge } from "./native-mcp-bridge.js";
 import { cliVersion, codexAccount } from "./connection-metadata.js";
 import { codexHistory } from "./codex-history.js";
 
@@ -306,7 +306,7 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
       let end: () => void;
       const protocol = new AbortController();
       const signal = AbortSignal.any([context.signal, protocol.signal]);
-      let bridge: Awaited<ReturnType<typeof codexMcpBridge>> | undefined;
+      let bridge: Awaited<ReturnType<typeof nativeMcpBridge>> | undefined;
       let interruptAcknowledged = false;
       let historyPending = false;
       const rpc = (id: number, method: string, params: unknown) =>
@@ -337,7 +337,7 @@ export function codexAppServer(options: CodexProviderOptions): ProviderAdapter {
       let bootstrapRetry = false;
       try {
         if (request.tools.length)
-          bridge = await codexMcpBridge({
+          bridge = await nativeMcpBridge({
             directory: cwd,
             tools: request.tools,
             fail: (error) => protocol.abort(error),

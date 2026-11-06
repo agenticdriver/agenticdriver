@@ -88,3 +88,9 @@ export const JobWorkerOptionsSchema = z
   })
   .strict();
 export type JobWorkerOptions = z.input<typeof JobWorkerOptionsSchema>;
+
+/** Operator-only startup request, not a job submission or application authority. */
+export const JobHandoffSchema = z
+  .object({ snapshot: z.string().regex(/^[a-f0-9]{64}$/) })
+  .strict();
+export type JobHandoff = z.infer<typeof JobHandoffSchema>;

@@ -1311,7 +1311,7 @@ export function registerProviderPanel(
           "binary" in p ? p.binary : undefined,
           "Official runtime executable on this host. Empty uses its standard command.",
         );
-        if (method?.interaction !== "device-code")
+        if (method?.interaction !== "device-code" && !("apiKeyRef" in p))
           advanced += this.field(
             "Account directory",
             "accountDirectory",
@@ -1334,7 +1334,7 @@ export function registerProviderPanel(
             p.baseUrl,
             "Required. The endpoint must support OpenAI Chat Completions.",
           );
-        else
+        else if (p.kind !== "claude-code")
           advanced += this.field(
             "API endpoint",
             "baseUrl",
@@ -1408,20 +1408,21 @@ export function registerProviderPanel(
         "Stable account identity used for usage tracking.",
         !this.adding,
       );
-      if (native(p.kind))
-        fields +=
-          this.field(
-            "Binary path",
-            "binary",
-            "binary" in p ? p.binary : undefined,
-            "Executable on the connected host. Empty uses its standard command.",
-          ) +
-          this.field(
+      if (native(p.kind)) {
+        fields += this.field(
+          "Binary path",
+          "binary",
+          "binary" in p ? p.binary : undefined,
+          "Executable on the connected host. Empty uses its standard command.",
+        );
+        if (!("apiKeyRef" in p))
+          fields += this.field(
             "Account directory",
             "accountDirectory",
             "accountDirectory" in p ? p.accountDirectory : undefined,
             "Use the provider's signed-in account directory on that host.",
           );
+      }
       if (p.kind === "codex")
         fields += this.field(
           "Reasoning effort",
@@ -1430,12 +1431,13 @@ export function registerProviderPanel(
           "Optional. Supported values depend on the selected model.",
         );
       if ("apiKeyRef" in p) {
-        fields += this.field(
-          "API endpoint",
-          "baseUrl",
-          p.baseUrl,
-          "Optional vendor endpoint. Compatible APIs require an explicit URL.",
-        );
+        if (p.kind !== "claude-code")
+          fields += this.field(
+            "API endpoint",
+            "baseUrl",
+            p.baseUrl,
+            "Optional vendor endpoint. Compatible APIs require an explicit URL.",
+          );
         if ("env" in p.apiKeyRef)
           fields += this.field(
             "Credential environment variable",

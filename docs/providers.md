@@ -18,7 +18,7 @@ application or host; this SDK does not silently pick a model or change billing m
 | `xaiResponses({ apiKey })` (unreleased) | `xai`               | xAI API key; Responses                | Yes                                                   |
 | `openaiCompatible({ baseUrl, apiKey })` | `openai-compatible` | Compatible API key                    | Yes, if endpoint supports functions                   |
 | `codex()`                               | `codex`             | Official CLI's existing session       | Text; opt-in application tools on qualified Linux x64 |
-| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text only                                             |
+| `claudeCode()`                          | `claude-code`       | Official CLI's existing session       | Text; unreleased opt-in MCP tools on qualified Linux x64       |
 | `geminiCli()`                           | `gemini-cli`        | Official CLI's cached authentication  | Text only                                             |
 
 An API key may be a string or an async credential resolver, so a host can integrate
@@ -30,6 +30,35 @@ requests cannot choose binaries, arguments, environment variables, or directorie
 Custom local or enterprise integrations can use the [provider extension kit](provider-extensions.md).
 It supplies a versioned construction contract, trusted host registration and
 real service integration without changes to the runtime or language clients.
+
+## Explicit Claude native API billing
+
+Development source also supports `claudeCode({ apiKey })`. This selects a separate
+native CLI connection, with default ID `claude-code-api` and `authMode: "api-key"`;
+it does not repair or reuse a signed-out subscription connection. Supply a string
+or the existing async secret resolver. A host config uses `kind: "claude-code"`
+with `apiKeyRef` instead of `accountDirectory`. The CLI equivalent is
+`init --provider claude-code --api-key-env ANTHROPIC_API_KEY`. Use a separate
+provider ID/account binding; management rejects changing an existing instance's
+billing mode. The guided setup does not yet offer this additional method.
+
+Each operation receives a fresh private native home, `--bare`, and only its
+explicit API credential. Native authentication must report the API-key method
+before a prompt is submitted. Native sign-in, alternate accounts and ambient API
+keys are never fallback routes. The owned proposal helper receives no API key.
+This mode requires the reviewed Claude Code 2.1.282 binary and supports the same
+explicit `applicationTools: "mcp"` option. Usage remains native `cli-report`;
+CLI cost estimates do not become invoice evidence. The direct `anthropic()` API
+adapter remains a separately selected connection.
+
+[Current native controls and API-mode application acceptance](validation/claude-tools-2026-11-05.md)
+record what has actually been exercised.
+
+The [four-language API tool checks](validation/api-tools-2026-11-05.md) record
+actual OpenAI Responses and Anthropic Messages execution, application approvals,
+reported usage and content-review limits.
+Implementation availability and qualification of a particular account/model
+remain separate.
 
 ## Subscription mode is provider-specific
 
@@ -102,14 +131,17 @@ used by `GEMINI_CLI_HOME`; it is not the `.gemini` directory itself.
   Native shell, file, image, agent, MCP and goal operations are unavailable in
   the default text registry. Global `AGENTS.md` and skill descriptions still enter
   the prompt. See the [native evidence and limits](validation/codex-2026-09-25.md).
-- Claude Code uses restricted mode, safe mode, no tools, strict empty MCP
+- Claude Code defaults to restricted mode, safe mode, no tools, strict empty MCP
   configuration, no session persistence, and noninteractive permissions. Development
   source explicitly disables fallback chains and switching models after a flagged
   response; a refusal remains a refusal on the selected model. Its separately
   qualified [metadata probe](validation/claude-catalog-2026-09-26.md) does not submit
   a prompt. The [dated execution qualification](validation/claude-2026-09-26.md)
-  covers native Linux 2.1.282 and two inexpensive live Haiku 4.5 checks, including
+  covers native Linux 2.1.282 text execution and two inexpensive live Haiku 4.5 checks, including
   cancellation, Usagestat capture and provider-specific billing/deployment limits.
+  The unreleased [application-tool opt-in](native-tools.md) uses explicit
+  restricted MCP ownership; its current real acceptance is blocked by the
+  selected native account being signed out.
 - Gemini CLI uses a settings override with an empty effective tool allowlist,
   disabled hooks/extensions/MCP/skills/agents/auto-memory, an empty context configuration, and a
   supplemental deny-tools policy. Host administrators' policies still apply.

@@ -5,4 +5,8 @@ export { xaiResponses } from "./xai.js";
 export { xai, openaiCompatible } from "./compatible.js";
 export { codex, claudeCode, geminiCli } from "./local-cli.js";
 export type { ApiProviderOptions } from "./http.js";
-export type { CliProviderOptions, CodexProviderOptions } from "./local-cli.js";
+export type {
+  CliProviderOptions,
+  CodexProviderOptions,
+  ClaudeCodeProviderOptions,
+} from "./local-cli.js";

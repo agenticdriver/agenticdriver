@@ -109,7 +109,11 @@ export async function managedHost(
         if (
           previous &&
           (previous.kind !== change.provider.kind ||
-            previous.accountId !== change.provider.accountId)
+            previous.accountId !== change.provider.accountId ||
+            (previous.kind === "claude-code" &&
+              change.provider.kind === "claude-code" &&
+              Object.hasOwn(previous, "apiKeyRef") !==
+                Object.hasOwn(change.provider, "apiKeyRef")))
         )
           throw new DriverError(
             "PROVIDER_IDENTITY_CHANGED",

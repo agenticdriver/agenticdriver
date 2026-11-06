@@ -209,3 +209,79 @@ interface for custom stores. Implementations must atomically claim accepted
 keys, fence expired/released workers, persist before acknowledgement, retain
 tombstones, and never return started work to the queue. Production qualification must exercise these boundaries against a selected real
 provider and deployment. The old canned-response jobs example was removed.
+
+## Conditional host handoff — unreleased
+
+A stopped host can be extended without replacing its queue through an explicit
+conditional acquisition. This source-only capability is not in published RC.3.
+A separate quietness check followed by ordinary acquisition is insufficient:
+accepted work or another worker may appear between those operations.
+
+`SqliteJobStore.inspect(path)` observes an existing store in a consistent read
+transaction without retention or lease recovery. Its digest compares the current
+logical snapshot and file identity; it is not ownership or a historical change
+counter. Missing or uninitialized databases are rejected without creating their
+database file/schema. SQLite may create/update WAL coordination files, so this
+is not filesystem-immutable access.
+
+The installed host CLI uses the same contract:
+
+```sh
+agenticdriver inspect-jobs --config /private/host.json --json
+agenticdriver serve --config /private/host.json --handoff-snapshot SNAPSHOT_FROM_INSPECTION
+```
+
+Inspection exits successfully when observation succeeds, including when `quiet`
+is false; check its blockers rather than treating the exit code as permission to
+adopt. The startup flag applies only to that invocation and never edits the saved
+configuration. Missing storage is not initialized. The snapshot does not pin
+provider configuration or exclude older processes; review those separately.
+
+For a configured host, preserve the saved configuration and add the inspection
+request only to its runtime options:
+
+```ts
+const observed = await SqliteJobStore.inspect(originalJobsPath);
+const options = await configuredServer(savedConfig, savedConfigPath);
+if (!options.jobs) throw new Error("The original host has no durable store");
+options.jobs.handoff = { snapshot: observed.snapshot };
+const host = await serve(driver, options);
+```
+
+The configured factory opens the existing database rather than creating a
+replacement. Acquisition atomically compares the snapshot and checks quietness
+before maintenance or migration. Changed state, any lease (including expired),
+pending work or uncertain/unknown outcomes refuse without changing job/lease
+rows. Refusal never falls back to ordinary acquisition. Inspect/reconcile again;
+started work is never automatically retried.
+
+Successful first adoption explicitly upgrades the SQLite layout to version 2,
+retaining original records and accepted keys. It adds a persistent ownership
+generation and a per-job eligibility bit which survives payload erasure. Normal
+version-1 startup does not perform that upgrade. Erased version-1 outcome evidence
+is unknown and blocks adoption; a terminal state alone does not certify safety.
+Initial version-1 comparison cannot detect a lease-only cycle returning to the
+same state. Adoption fences every cooperating legacy handle, while later
+version-2 generations also invalidate those ownership cycles.
+
+Older SDK binaries cannot open the new layout and cannot honor generation
+fencing if already running. Stop/exclude incompatible processes before adoption.
+The SDK does not provide exclusion against an administrator or arbitrary SQL
+writer. Preserve deployment ownership separately from application permissions.
+
+`JobService.open(..., { store, handoff: { snapshot }, resolvePrincipal })` owns the
+fresh acquired handle and closes it after shutdown/drain, including on release
+failure. The original caller-provided handle remains caller-owned and stale.
+Direct users of `store.acquireQuiet(owner, leaseMs, snapshot)` must use and close
+its returned handle. A released/lost version-2 handle cannot be rebound; open a
+fresh handle for another worker. Custom stores may implement this optional
+capability only with the same atomic refusal and all-writer fence guarantees.
+Unsupported stores reject requested handoff before dispatch.
+
+No HTTP operation, client protocol change, provider/account/model fallback or
+authentication migration is introduced. Existing language clients keep using
+the durable job protocol. Ordinary recovery remains a separately selected mode;
+conditional handoff never performs it on a refused attempt.
+
+The [source qualification](validation/durable-handoff-2026-10-27.md) records the
+actual native run, account-bound metering, restart/replay proof and scope limits.

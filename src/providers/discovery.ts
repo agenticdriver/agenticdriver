@@ -22,6 +22,18 @@ const googlePage = z.object({
   nextPageToken: z.string().max(4096).optional(),
 });
 
+export function parseGoogleGenerationCatalogPage(raw: unknown) {
+  const value = googlePage.parse(raw);
+  return {
+    models: (value.models ?? [])
+      .filter((model) =>
+        model.supportedGenerationMethods?.includes("generateContent"),
+      )
+      .map((model) => model.name.replace(/^models\//, "")),
+    nextPageToken: value.nextPageToken || undefined,
+  };
+}
+
 /** Uses only the configured endpoint's GET catalog. No model calls, redirects or fallback accounts. */
 export function apiInspection(
   options: ApiProviderOptions,
@@ -95,11 +107,9 @@ export function apiInspection(
         const raw: unknown = JSON.parse(body);
         let ids: string[], next: string | undefined;
         if (auth === "google") {
-          const value = googlePage.parse(raw);
-          ids = (value.models ?? []).map((model) =>
-            model.name.replace(/^models\//, ""),
-          );
-          next = value.nextPageToken || undefined;
+          const value = parseGoogleGenerationCatalogPage(raw);
+          ids = value.models;
+          next = value.nextPageToken;
         } else if (auth === "anthropic") {
           const value = anthropicPage.parse(raw);
           ids = value.data.map((model) => model.id);

@@ -410,6 +410,14 @@ export function configuredProviders(
         ? { ...adapter, info: { ...adapter.info, models: [] } }
         : adapter;
     }
+    if (p.kind === "claude-code" && "apiKeyRef" in p) {
+      return claudeCode({
+        ...shared,
+        binary: p.binary,
+        applicationTools: p.applicationTools,
+        apiKey: () => singleLineSecret(secrets, p.apiKeyRef),
+      });
+    }
     if ("apiKeyRef" in p) {
       const values = {
         ...shared,
@@ -433,9 +441,11 @@ export function configuredProviders(
     ]({
       ...shared,
       binary: p.binary,
-      ...(p.kind === "codex"
+      ...(p.kind === "codex" || p.kind === "claude-code"
         ? {
-            reasoningEffort: p.reasoningEffort,
+            ...(p.kind === "codex"
+              ? { reasoningEffort: p.reasoningEffort }
+              : {}),
             applicationTools: p.applicationTools,
           }
         : {}),
@@ -599,17 +609,18 @@ export async function configuredServer(
     jobs: config.jobs
       ? {
           ...config.jobs.worker,
-          store: () =>
-            SqliteJobStore.open(
-              resolve(dirname(configPath), config.jobs!.path),
-              {
-                retentionMs: config.jobs!.retentionMs,
-                maxJobs: config.jobs!.maxJobs,
-                maxJobsPerSubject: config.jobs!.maxJobsPerSubject,
-                maxBytes: config.jobs!.maxBytes,
-                maxJobBytes: config.jobs!.maxJobBytes,
-              },
-            ),
+          store: (handoff) => {
+            const open = handoff
+              ? SqliteJobStore.openExisting
+              : SqliteJobStore.open;
+            return open(resolve(dirname(configPath), config.jobs!.path), {
+              retentionMs: config.jobs!.retentionMs,
+              maxJobs: config.jobs!.maxJobs,
+              maxJobsPerSubject: config.jobs!.maxJobsPerSubject,
+              maxBytes: config.jobs!.maxBytes,
+              maxJobBytes: config.jobs!.maxJobBytes,
+            });
+          },
         }
       : undefined,
   };
